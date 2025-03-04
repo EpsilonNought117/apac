@@ -2,16 +2,19 @@ cmake_minimum_required(VERSION 3.8)
 
 project(libapac C)
 
-# Ensure MSVC is used
+# Ensure MSVC is 64-bit
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     message(FATAL_ERROR "MSVC is required to build libapac.")
+endif()
+
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "Only 64-bit builds are supported.")
 endif()
 
 # Enable MASM support
 enable_language(ASM_MASM)
 
 # Options
-option(VERBOSE_OUTPUT "Enable verbose output during compilation" OFF)
 option(BUILD_SHARED_LIB "Build libapac as a shared (DLL) library" OFF)
 
 # Manually list C source files
@@ -26,44 +29,40 @@ set(ASM_SOURCES
     # src/asm/some_file.asm
 )
 
-# Public headers
-set(PUBLIC_HEADERS include/apac.h)
-
-# Library type
+# Default to static unless explicitly building shared
 if(BUILD_SHARED_LIB)
-    add_library(libapac SHARED ${C_SOURCES} ${ASM_SOURCES})
+    add_library(apac_shared SHARED ${C_SOURCES} ${ASM_SOURCES})
     message(STATUS "Building libapac as a shared library (DLL)")
+
+    set_target_properties(apac_shared PROPERTIES OUTPUT_NAME "apac_shared")
+
+    set_target_properties(apac_shared PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_INSTALL_PREFIX}/lib"  # .lib (import library)
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_INSTALL_PREFIX}/bin"  # .dll
+    )
+
+    target_include_directories(apac_shared INTERFACE "include" PRIVATE "src")
+
+    install(TARGETS apac_shared
+        CONFIGURATIONS Release
+        LIBRARY DESTINATION lib    # .lib (import library)
+        RUNTIME DESTINATION bin    # .dll
+    )
+
 else()
-    add_library(libapac STATIC ${C_SOURCES} ${ASM_SOURCES})
+    add_library(apac_static STATIC ${C_SOURCES} ${ASM_SOURCES})
     message(STATUS "Building libapac as a static library")
-endif()
 
-# Set output directories
-set_target_properties(libapac PROPERTIES
-    C_STANDARD 11
-    C_STANDARD_REQUIRED ON
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib"  # Moves .lib out of build dir
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/bin"  # Moves .dll out of build dir
-)
+    set_target_properties(apac_static PROPERTIES OUTPUT_NAME "apac_static")
 
-# Include directories
-target_include_directories(libapac
-    PUBLIC "include"  # Exposes only apac.h
-    PRIVATE "src"      # Internal headers
-)
+    set_target_properties(apac_static PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_INSTALL_PREFIX}/lib"  # Static .lib
+    )
 
-# Install rules
-install(TARGETS libapac
-    LIBRARY DESTINATION lib    # .lib (import library)
-    RUNTIME DESTINATION bin    # .dll (shared library)
-)
+    target_include_directories(apac_static INTERFACE "include" PRIVATE "src")
 
-install(FILES include/apac.h DESTINATION include)
-
-# Verbose output
-if(VERBOSE_OUTPUT)
-    message(STATUS "Compiling files:")
-    foreach(FILE ${C_SOURCES})
-        message(STATUS "  ${FILE}")
-    endforeach()
+    install(TARGETS apac_static
+        CONFIGURATIONS Release
+        ARCHIVE DESTINATION lib    # .lib (static library)
+    )
 endif()
