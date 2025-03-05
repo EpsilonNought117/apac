@@ -22,7 +22,7 @@ typedef enum apac_err
 #endif
 
 #ifndef APAC_REPORT_ERR
-    #define APAC_REPORT_ERR(x) fprinft(stderr, "APAC ERROR: %s\n", x)
+    #define APAC_REPORT_ERR(x) fprintf(stderr, "APAC ERROR: %s\n", x)
 #endif
 
 // for getCPUSpec()
@@ -44,6 +44,8 @@ APAC_API void setMemFuncs(
     void (*ptr3)(void*)
 );
 
-// for apacInit() which auto initializes above functions with default behaviour
+// for apacInitDefault() which auto initializes above functions with default behaviour
+
+APAC_API void apacInitDefault(void);
 
 #endif

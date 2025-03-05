@@ -8,12 +8,23 @@ void setMemFuncs(
 {
     if (!ptr1 && !ptr2 && !ptr3)
     {
-        apac_malloc = malloc;
-        apac_realloc = realloc;
-        apac_free = free;
+        apac_malloc = &malloc;
+        apac_realloc = &realloc;
+        apac_free = &free;
+    }
+    else if (ptr1 && ptr2 && ptr3)
+    {
+        apac_malloc = ptr1;
+        apac_realloc = ptr2;
+        apac_free = ptr3;
     }
     else
     {
-        
+        APAC_REPORT_ERR("Improper arguments passed in setMemFuncs.\nDefaulting to malloc and friends.");
+        apac_malloc = &malloc;
+        apac_realloc = &realloc;
+        apac_free = &free;   
     }
+
+    return;
 }

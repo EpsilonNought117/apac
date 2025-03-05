@@ -18,11 +18,9 @@ void getCPUSpec(void)
     }
     else
     {
-        __cpuid(specBuffer, 0x1);
-
-
+        // __cpuid(specBuffer, 0x1);
+        // Will add more flags as needed over time
     }
-    
     
     return;
 }
