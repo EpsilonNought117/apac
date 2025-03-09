@@ -1,4 +1,5 @@
-# Ignore the intermediate build files
+# Ignore all files in 'out' directory
 
+out/
 build/
-install/
+.vs/
