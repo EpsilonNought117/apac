@@ -16,13 +16,9 @@ void getCPUSpec(void)
         adx_chk = (specBuffer[1] & (1 << 19)) >> 19;
         bmi2_chk = (specBuffer[1] & (1 << 8)) >> 8;
     }
-    else
-    {
-        __cpuid(specBuffer, 0x1);
-
-
-    }
     
+    // __cpuid(specBuffer, 0x1);
+    // Will add more flags as needed over time
     
     return;
 }

@@ -18,11 +18,11 @@ typedef enum apac_err
 }   apac_err;
 
 #ifndef APAC_ASSERT
-    #define APAC_ASSERT(x) asset(x)
+    #define APAC_ASSERT(x) assert(x)
 #endif
 
 #ifndef APAC_REPORT_ERR
-    #define APAC_REPORT_ERR(x) fprinft(stderr, "APAC ERROR: %s\n", x)
+    #define APAC_REPORT_ERR(x) fprintf(stderr, "APAC ERROR: %s\n", x)
 #endif
 
 // for getCPUSpec()
@@ -34,9 +34,9 @@ APAC_API void getCPUSpec(void);
 
 // for setMemFuncs()
 
-extern APAC_API void* (*apac_malloc)(size_t);
-extern APAC_API void* (*apac_realloc)(void*, size_t);
-extern APAC_API void (*apac_free)(void*);
+APAC_API extern void* (*apac_malloc)(size_t);
+APAC_API extern void* (*apac_realloc)(void*, size_t);
+APAC_API extern void (*apac_free)(void*);
 
 APAC_API void setMemFuncs(
     void* (*ptr1)(size_t),
@@ -44,6 +44,8 @@ APAC_API void setMemFuncs(
     void (*ptr3)(void*)
 );
 
-// for apacInit() which auto initializes above functions with default behaviour
+// for apacInitDefault() which auto initializes above functions with default behaviour
+
+APAC_API void apacInitDefault(void);
 
 #endif
