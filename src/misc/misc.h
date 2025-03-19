@@ -18,7 +18,7 @@ typedef enum apac_err
 }   apac_err;
 
 #ifndef APAC_ASSERT
-    #define APAC_ASSERT(x) asset(x)
+    #define APAC_ASSERT(x) assert(x)
 #endif
 
 #ifndef APAC_REPORT_ERR
@@ -34,9 +34,9 @@ APAC_API void getCPUSpec(void);
 
 // for setMemFuncs()
 
-extern APAC_API void* (*apac_malloc)(size_t);
-extern APAC_API void* (*apac_realloc)(void*, size_t);
-extern APAC_API void (*apac_free)(void*);
+APAC_API extern void* (*apac_malloc)(size_t);
+APAC_API extern void* (*apac_realloc)(void*, size_t);
+APAC_API extern void (*apac_free)(void*);
 
 APAC_API void setMemFuncs(
     void* (*ptr1)(size_t),
