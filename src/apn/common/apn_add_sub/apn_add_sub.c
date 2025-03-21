@@ -31,5 +31,7 @@ ap_seg_t apn_add(ap_seg_t* result, ap_seg_t* op1, ap_seg_t* op2, ap_size_t size1
 
 	ap_seg_t carry = _apn_add_n(result, max_ptr, min_ptr, min_size);
 
-	
+
+
+	return carry;
 }

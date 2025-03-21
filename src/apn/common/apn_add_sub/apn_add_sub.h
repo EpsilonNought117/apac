@@ -7,7 +7,7 @@
 /**
 * Adds two operand arrays of type ap_seg_t and stores them in result and returns carry
 * 
-* Input -> operand1, operand2, size (of both operands)
+* Input -> result, operand1, operand2, size (same for both operands)
 * Output -> Carry out resulting from multiprecision add (0 or 1)
 * NOTE -> Does not perform any memory allocation in result and assumes that result has (size) segments of space
 */
@@ -16,7 +16,7 @@ APAC_API ap_seg_t apn_add_n(ap_seg_t* result, ap_seg_t* op1, ap_seg_t* op2, ap_s
 /**
 * Adds two operand arrays of type ap_seg_t and stores them in result and returns carry
 * 
-* Input -> operand1, operand2, size1, size2
+* Input -> result, operand1, operand2, size1, size2
 * Output -> Carry out resulting from multiprecision add (0 or 1)
 * NOTE -> Does not perform any memory allocation in result and assumes that result has max(size1, size2) segments of space
 */
@@ -25,9 +25,9 @@ APAC_API ap_seg_t apn_add(ap_seg_t* result, ap_seg_t* op1, ap_seg_t* op2, ap_siz
 /**
 * Adds one integer value of type ap_seg_t to and operand array of type ap_seg_t to and stores in result, returning any carry
 * 
-* Input -> operand1, val, size (of operand1)
+* Input -> result, operand1, val, size (of operand1)
 * Output -> Carry out
-* NOTE -> Does not perform any memory allocation in result and assumes result has at least (size) segments of space
+* NOTE -> Does not perform any memory allocation in result and assumes that result has (size) segments of space
 */
 APAC_API ap_seg_t apn_add_one(ap_seg_t* result, ap_seg_t* op1, ap_size_t size, ap_seg_t val);
 

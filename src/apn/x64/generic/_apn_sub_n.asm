@@ -14,16 +14,16 @@ _apn_sub_n PROC FRAME
 
 .pushframe
     push    r12
-.pushreg    R12
+.pushreg    r12
 
     push    r13
-.pushreg    R13
+.pushreg    r13
 
     push    rsi
-.pushreg    RSI
+.pushreg    rsi
 
     push    rdi
-.pushreg    RDI
+.pushreg    rdi
 .endprolog
 
     xor     rax, rax

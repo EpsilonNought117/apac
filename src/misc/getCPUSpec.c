@@ -15,13 +15,13 @@ void getCPUSpec(void)
     {
         __cpuidex(specBuffer, 7, 0);
 
-        adx_chk = (specBuffer[1] & (1 << 19)) >> 19;
-        bmi2_chk = (specBuffer[1] & (1 << 8)) >> 8;
-        avx2_chk = (specBuffer[1] & (1 << 5)) >> 5;
+        adx_chk = (uint8_t)((specBuffer[1] & (1 << 19)) >> 19);
+        bmi2_chk = (uint8_t )((specBuffer[1] & (1 << 8)) >> 8);
+        avx2_chk = (uint8_t)((specBuffer[1] & (1 << 5)) >> 5);
     }
     
     __cpuid(specBuffer, 0x1);
-    avx_chk = (specBuffer[2] & (1 << 28)) >> 28;
+    avx_chk = (uint8_t)((specBuffer[2] & (1 << 28)) >> 28);
     
     return;
 }
