@@ -16,7 +16,7 @@ enable_language(ASM_MASM)
 option(BUILD_SHARED_LIB "Build libapac as a shared (DLL) library" OFF)
 
 # Define supported microarchitectures
-set(SUPPORTED_UARCHES "raptorlake" "alderlake" "generic")
+set(SUPPORTED_UARCHES "alderlake" "generic")
 
 # Set the default microarchitecture if not specified
 if(NOT DEFINED TARGET_UARCH)
@@ -34,14 +34,19 @@ message(STATUS "Building for microarchitecture: ${TARGET_UARCH}")
 
 # Manually list common C source files
 set(C_SOURCES
+    # MISC C SOURCES
     src/misc/setMemFuncs.c
     src/misc/getCPUSpec.c
     src/misc/apacInitDefault.c
+
+    # APN C SOURCES
+    src/apn/common/apn_add_sub/apn_add_sub.c
+    src/apn/common/apn_cpy/apn_cpy.c
 )
 
 # Set up paths
-set(GENERIC_ASM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/generic")
-set(UARCH_ASM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/${TARGET_UARCH}")
+set(GENERIC_ASM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/apn/x64/generic")
+set(UARCH_ASM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/apn/x64/${TARGET_UARCH}")
 
 # Find all generic assembly files
 file(GLOB GENERIC_ASM_FILES LIST_DIRECTORIES false "${GENERIC_ASM_PATH}/*.asm")
@@ -80,16 +85,20 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose build type: Debug or Release" FORCE)
 endif()
 
+# Enforce specific optimization flags for MSVC
+if(MSVC)
+    add_compile_options(
+        "$<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:/O2>"   # Optimize C files in Release mode
+        "$<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:/Od>"        # Disable optimizations for C files in Debug mode
+        "$<$<COMPILE_LANGUAGE:C>:/W4>"                               # Enable warnings for C files
+        "$<$<COMPILE_LANGUAGE:C>:/WX>"                               # Treat warnings as errors for C files
+    )
+endif()
+
 # Default install location (inside project)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install" CACHE PATH "Install location" FORCE)
 endif()
-
-# Custom target to remove the install directory before installing
-add_custom_target(remove_old_install
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_INSTALL_PREFIX}"
-    COMMENT "Removing old install directory: ${CMAKE_INSTALL_PREFIX}"
-)
 
 # Build either the shared OR static library (not both)
 if(BUILD_SHARED_LIB)

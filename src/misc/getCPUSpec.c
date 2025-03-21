@@ -2,6 +2,8 @@
 
 uint8_t adx_chk = 0;
 uint8_t bmi2_chk = 0;
+uint8_t avx2_chk = 0;
+uint8_t avx_chk = 0;
 
 void getCPUSpec(void)
 {
@@ -15,10 +17,11 @@ void getCPUSpec(void)
 
         adx_chk = (specBuffer[1] & (1 << 19)) >> 19;
         bmi2_chk = (specBuffer[1] & (1 << 8)) >> 8;
+        avx2_chk = (specBuffer[1] & (1 << 5)) >> 5;
     }
     
-    // __cpuid(specBuffer, 0x1);
-    // Will add more flags as needed over time
+    __cpuid(specBuffer, 0x1);
+    avx_chk = (specBuffer[2] & (1 << 28)) >> 28;
     
     return;
 }

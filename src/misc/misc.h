@@ -29,6 +29,8 @@ typedef enum apac_err
 
 extern uint8_t adx_chk;
 extern uint8_t bmi2_chk;
+extern uint8_t avx2_chk;
+extern uint8_t avx_chk;
 
 APAC_API void getCPUSpec(void);
 
