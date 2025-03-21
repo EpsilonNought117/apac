@@ -8,6 +8,6 @@
 * 
 * Input ->
 */
-APAC_API void apn_cpy(ap_seg_t* result, ap_seg_t* op1, ap_size_t size);
+APAC_API void apn_cpy(u64* result, u64* op1, u64 size);
 
 #endif

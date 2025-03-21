@@ -10,7 +10,7 @@
     ;   r8  -> op2 (ap_seg_t*)
     ;   r9  -> size (ap_size_t)
     
-_apn_add_n PROC FRAME
+_adc_apn_add_n PROC
 
 .pushframe
     push    r12
@@ -78,6 +78,7 @@ end_of_func:
     pop     r13
     pop     r12
     ret
-_apn_add_n ENDP
+
+_adc_apn_add_n ENDP
 
 END
