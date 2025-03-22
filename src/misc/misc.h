@@ -1,11 +1,10 @@
 #ifndef APAC_MISC_H
 #define APAC_MISC_H
 
-#include <stdlib.h>
-#include <intrin.h>
-#include <stdint.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <assert.h>
+#include "getCPUSpec/getCPUSpec.h"
 
 #include "../apacExport.h"
 
@@ -24,15 +23,6 @@ typedef enum apac_err
 #ifndef APAC_REPORT_ERR
     #define APAC_REPORT_ERR(x) fprintf(stderr, "APAC ERROR: %s\n", x)
 #endif
-
-// for getCPUSpec()
-
-extern uint8_t adx_chk;
-extern uint8_t bmi2_chk;
-extern uint8_t avx2_chk;
-extern uint8_t avx_chk;
-
-APAC_API void getCPUSpec(void);
 
 // for setMemFuncs()
 

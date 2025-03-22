@@ -5,10 +5,10 @@
 
     ;   Function Arguments
     ;
-    ;   rcx -> result (ap_seg_t*)   
-    ;   rdx -> op1 (ap_seg_t*)
-    ;   r8  -> op2 (ap_seg_t*)
-    ;   r9  -> size (ap_size_t)
+    ;   rcx -> result (u64*)   
+    ;   rdx -> op1 (u64*)
+    ;   r8  -> op2 (u64*)
+    ;   r9  -> size (u64)
 
 _sbb_apn_sub_n PROC FRAME
 

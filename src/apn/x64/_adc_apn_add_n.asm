@@ -5,10 +5,10 @@
 
     ;   Function Arguments
     ;
-    ;   rcx -> result (ap_seg_t*)   
-    ;   rdx -> op1 (ap_seg_t*)
-    ;   r8  -> op2 (ap_seg_t*)
-    ;   r9  -> size (ap_size_t)
+    ;   rcx -> result (u64*)   
+    ;   rdx -> op1 (u64*)
+    ;   r8  -> op2 (u64*)
+    ;   r9  -> size (u64)
     
 _adc_apn_add_n PROC
 
@@ -47,7 +47,7 @@ unroll_four_times:
     setc    al
     shr     r9, 2                    ; Divide size by 4 (handling in chunks)
     jz      end_of_func              ; If no full chunks, end
-    bt      ax, 0                    ; set carry for unrolled loop
+    bt      ax, 0                    ; set carry flag for unrolled loop
 
 main_loop:
 

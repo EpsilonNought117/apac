@@ -19,7 +19,7 @@ option(BUILD_SHARED_LIB "Build libapac as a shared (DLL) library" OFF)
 set(C_SOURCES
     # MISC C SOURCES
     src/misc/setMemFuncs.c
-    src/misc/getCPUSpec.c
+    src/misc/getCPUSpec/getCPUSpec.c
     src/misc/apacInitDefault.c
 
     # APN C SOURCES
@@ -28,7 +28,12 @@ set(C_SOURCES
 )
 
 # Manually list assembly source files
-set(ASM_SOURCES)
+set(ASM_SOURCES
+    
+    src/apn/x64/_adc_apn_add_n.asm
+    src/apn/x64/_sbb_apn_sub_n.asm
+    
+)
 
 # Combine all source files
 set(ALL_SOURCES ${C_SOURCES} ${ASM_SOURCES})
@@ -78,8 +83,5 @@ else()
 
     install(TARGETS apac ARCHIVE DESTINATION "lib")
 endif()
-
-# Install the single header file
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/apac.h" DESTINATION "include")
 
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
