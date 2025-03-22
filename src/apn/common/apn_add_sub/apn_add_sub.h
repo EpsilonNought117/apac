@@ -10,7 +10,7 @@
 * Output -> Carry out resulting from multiprecision add (0 or 1)
 * NOTE -> Does not perform any memory allocation in result and assumes that result has (size) segments of space
 */
-APAC_API u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
+APAC_API u8 apn_add_n(u64* result, u64* op1, u64* op2, u64 size);
 
 /**
 * Adds two operand arrays of type u64 and stores them in result and returns carry
@@ -19,7 +19,7 @@ APAC_API u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
 * Output -> Carry out resulting from multiprecision add (0 or 1)
 * NOTE -> Does not perform any memory allocation in result and assumes that result has max(size1, size2) segments of space
 */
-APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
+APAC_API u8 apn_add(u64* result, u64* op1, u64* op2, u64 size1, u64 size2);
 
 /**
 * Adds one integer value of type u64 to an operand array of type u64 to and stores in result, returning any carry
@@ -28,18 +28,7 @@ APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 
 * Output -> Carry out
 * NOTE -> Does not perform any memory allocation in result and assumes that result has (size) segments of space
 */
-APAC_API u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val);
+APAC_API u8 apn_add_one(u64* result, u64* op1, u64 size, u64 val);
 
-/**
-*
-*
-*/
-APAC_API u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
-
-APAC_API u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
-
-APAC_API u8 apn_sub_one(u64* result, const u64* op1, const u64 size, u64 val);
-
-APAC_API u8 apn_negate(u64* result, const u64* op1, u64 size);
 
 #endif
