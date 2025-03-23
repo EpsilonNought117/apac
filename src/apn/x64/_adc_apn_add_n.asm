@@ -10,7 +10,7 @@
     ;   r8  -> op2 (u64*)
     ;   r9  -> size (u64)
     
-_adc_apn_add_n PROC
+_adc_apn_add_n PROC FRAME
 
 .pushframe
     push    r12

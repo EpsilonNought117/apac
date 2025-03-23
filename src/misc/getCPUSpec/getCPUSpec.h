@@ -3,7 +3,7 @@
 
 #include <intrin.h>
 #include <stdint.h>
-#include "../apacExport.h"
+#include "../../apacExport.h"
 
 // for getCPUSpec()
 

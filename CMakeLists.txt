@@ -17,6 +17,12 @@ option(BUILD_SHARED_LIB "Build libapac as a shared (DLL) library" OFF)
 
 # Manually list common C source files
 set(C_SOURCES
+    # BENCHMARK TOOLS C SOURCES
+
+    Benchmarks/benchmark_tools/getCPUTime_Freq.c
+    Benchmarks/benchmark_tools/pinToCoreZero.c
+    Benchmarks/benchmark_tools/toggle_tb.c
+
     # MISC C SOURCES
     src/misc/setMemFuncs.c
     src/misc/getCPUSpec/getCPUSpec.c

@@ -1,11 +1,11 @@
 #ifndef APAC_MISC_H
 #define APAC_MISC_H
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "getCPUSpec/getCPUSpec.h"
 
+#include "getCPUSpec/getCPUSpec.h"
 #include "../apacExport.h"
 
 typedef enum apac_err

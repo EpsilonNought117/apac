@@ -1,6 +1,8 @@
 #ifndef APAC_H
 #define APAC_H
 
+#include "../Benchmarks/benchmark_tools/benchmarkTools.h"
+
 #include "../src/apacExport.h"
 #include "../src/misc/misc.h"
 #include "../src/misc/getCPUSpec/getCPUSpec.h"

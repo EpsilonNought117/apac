@@ -1,4 +1,5 @@
 #include "misc.h"
+#include <stdlib.h>
 
 void* (*apac_malloc)(size_t) = NULL;
 void* (*apac_realloc)(void*, size_t) = NULL;

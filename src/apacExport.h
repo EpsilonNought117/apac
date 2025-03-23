@@ -12,5 +12,4 @@
     #define APAC_API
 #endif
 
-
 #endif
