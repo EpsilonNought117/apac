@@ -10,7 +10,11 @@ void pinThreadToCoreZero(void)
 
 	if (!SetThreadAffinityMask(curr_thread, (DWORD_PTR)FIRST_CORE_MASK))
 	{
-		fprintf(stderr, "Failed to pin the thread to core zero!");
+		fprintf(stderr, "\nFailed to pin the thread to core zero!\n");
+	}
+	else
+	{
+		fprintf(stdout, "\nSuccessfully pinned thread to core zero!\n");
 	}
 
 	return;

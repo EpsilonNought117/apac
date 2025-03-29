@@ -19,15 +19,15 @@ u8 apn_add(u64* result, u64* op1, u64* op2, u64 size1, u64 size2)
 	u64* max_ptr = (size1 < size2 ? op2 : op1);
 	
 	u8 carry = _adc_apn_add_n(result, op1, op2, min_size);
-	u64 i = min_size;
+	u64 counter = min_size;
 
-	while (carry && (i < max_size))
+	while (carry && (counter < max_size))
 	{
-		carry = _addcarry_u64(carry, 0, max_ptr[i], &result[i]);
-		i++;
+		carry = _addcarry_u64(carry, 0, max_ptr[counter], &result[counter]);
+		counter++;
 	}
 
-	apn_cpy(&result[i], &max_ptr[i], (max_size - i));
+	apn_cpy(&result[counter], &max_ptr[counter], (max_size - counter));
 	return carry;
 }
 
@@ -45,4 +45,6 @@ u8 apn_add_one(u64* result, u64* op1, u64 size, u64 val)
 	apn_cpy(&result[counter], &op1[counter], (size - counter));
 	return carry;
 }
+
+
 

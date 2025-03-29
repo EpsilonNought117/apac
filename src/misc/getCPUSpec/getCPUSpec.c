@@ -4,7 +4,7 @@ uint8_t adx_chk = 0;
 uint8_t bmi2_chk = 0;
 uint8_t avx2_chk = 0;
 uint8_t avx_chk = 0;
-uint8_t sse3_chk = 0;
+uint8_t avx512f_chk = 0;
 
 
 void getCPUSpec(void)
@@ -18,8 +18,9 @@ void getCPUSpec(void)
         __cpuidex(specBuffer, 7, 0);
 
         adx_chk = (uint8_t)((specBuffer[1] & (1 << 19)) >> 19);
-        bmi2_chk = (uint8_t )((specBuffer[1] & (1 << 8)) >> 8);
+        bmi2_chk = (uint8_t)((specBuffer[1] & (1 << 8)) >> 8);
         avx2_chk = (uint8_t)((specBuffer[1] & (1 << 5)) >> 5);
+        avx512f_chk = (uint8_t)((specBuffer[1] & (1 << 16)) >> 16);
     }
     
     __cpuid(specBuffer, 0x1);

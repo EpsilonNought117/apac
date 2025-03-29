@@ -11,7 +11,7 @@ extern uint8_t adx_chk;
 extern uint8_t bmi2_chk;
 extern uint8_t avx2_chk;
 extern uint8_t avx_chk;
-extern uint8_t sse3_chk;
+extern uint8_t avx512f_chk;
 
 APAC_API void getCPUSpec(void);
 
