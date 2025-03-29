@@ -1,7 +1,7 @@
 #ifndef APAC_H
 #define APAC_H
 
-#include "../src/benchmarkTools.h"
+#include "../src/benchmark_tools/benchmarkTools.h"
 
 #include "../src/apacExport.h"
 #include "../src/misc/misc.h"

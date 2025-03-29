@@ -1,4 +1,3 @@
-
 .code
 
 	option casemap:none
@@ -16,73 +15,67 @@ _adc_apn_add_n PROC FRAME
     push    r12
 .pushreg    r12
 
-    push    rbx
-.pushreg    rbx
+    push    r13
+.pushreg    r13
+
+    push    rsi
+.pushreg    rsi
+
+    push    rdi
+.pushreg    rdi
 .endprolog
 
-    xor     rax, rax
-
-    ; saved regs
-    xor     rbx, rbx
-    xor     r12, r12
-    
-    xor     r10, r10
-    mov     r11, r9
-    and     r11, 3
+    xor     rax,    rax
+    xor     r10,    r10
+    mov     r11,    r9
+    and     r11,    3
     jz      unroll_loop_outer
 
 small_loop:
     
-    mov     rax, [rdx + rbx*8]
-    adc     rax, [r8 + rbx*8]
-    mov     [rcx + rbx*8], rax
+    mov     rsi,    QWORD PTR [rdx + r10*8]
+    adc     rsi,    QWORD PTR [r8  + r10*8]
+    mov     QWORD PTR [rcx + r10*8],    rsi
 
-    inc     rbx
+    inc     r10
     dec     r11
     jnz     small_loop
 
 unroll_loop_outer:
      
-    setc    al
-    shr     r9, 2
-    jz      end_of_func
-
-    lea     r10, [rdx + rbx*8]
-    lea     r11, [r8  + rbx*8]
-    lea     r12, [rcx + rbx*8]
-    xor     rbx, rbx
-    bt      ax, 0
+    setc   al
+    shr    r9,  2
+    jz     end_of_func
+    bt     ax,  0
 
 main_loop:
     
-    mov     rax, [r10]
-    adc     rax, [r11]
-    mov     [r12], rsi
+    mov     rsi,    QWORD PTR [rdx + r10*8     ]
+    mov     rdi,    QWORD PTR [rdx + r10*8 +  8]
+    mov     r13,    QWORD PTR [rdx + r10*8 + 16]
+    mov     r12,    QWORD PTR [rdx + r10*8 + 24] 
 
-    mov     rax, [r10 + 8]
-    adc     rax, [r11 + 8]
-    mov     [r12 + 8], rax
+    adc     rsi,    QWORD PTR [r8 + r10*8     ]
+    adc     rdi,    QWORD PTR [r8 + r10*8 +  8]
+    adc     r13,    QWORD PTR [r8 + r10*8 + 16]
+    adc     r12,    QWORD PTR [r8 + r10*8 + 24]
 
-    mov     rax, [r10 + 16]
-    adc     rax, [r11 + 16]
-    mov     [r12 + 16], rax
+    mov     QWORD PTR [rcx + r10*8     ],   rsi
+    mov     QWORD PTR [rcx + r10*8 +  8],   rdi
+    mov     QWORD PTR [rcx + r10*8 + 16],   r13
+    mov     QWORD PTR [rcx + r10*8 + 24],   r12
 
-    mov     rax, [r10 + 24]
-    adc     rax, [r11 + 24]
-    mov     [r12 + 24], rax
-
-    lea     r10, [r10 + 32]
-    lea     r11, [r11 + 32]
-    lea     r12, [r12 + 32]
+    lea     r10,    QWORD PTR [r10 + 4]
     dec     r9
     jnz     main_loop
 
 end_of_func:
-    setc    bl
-    xor     rax, rax
-    mov     al, bl
 
-    pop     rbx
+    setc    al
+
+    pop     rdi
+    pop     rsi
+    pop     r13
     pop     r12
     ret
 

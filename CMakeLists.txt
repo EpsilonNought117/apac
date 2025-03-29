@@ -28,8 +28,8 @@ set(apac
 )
 
 if(BUILD_SHARED_LIBS)
-    target_compile_definitions(apac_shared PRIVATE BUILD_SHARED_LIBS)
     add_library(apac_shared SHARED ${apac})
+    target_compile_definitions(apac_shared PRIVATE BUILD_SHARED_LIBS)
 else()
     add_library(apac_static STATIC ${apac})
 endif()
