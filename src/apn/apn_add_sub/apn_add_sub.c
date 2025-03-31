@@ -1,11 +1,8 @@
-#include "apn_add_sub.h"
-#include <intrin.h>
-#include <immintrin.h>
-#include "../apn_cpy/apn_cpy.h"
+#include "../../../include/apac.h"
 
-extern u8 _adc_apn_add_n(u64* result, u64* op1, u64* op2, u64 size);
-
-extern u8 _sbb_apn_sub_n(u64* result, u64* op1, u64* op2, u64 size);
+extern u8 _apn_add_n(u64* result, u64* op1, u64* op2, u64 size);	// asm code
+	
+extern u8 _apn_sub_n(u64* result, u64* op1, u64* op2, u64 size);	// asm code
 
 u8 apn_add_n(u64* result, u64* op1, u64* op2, u64 size)
 {

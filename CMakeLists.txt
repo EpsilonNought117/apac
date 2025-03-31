@@ -10,23 +10,28 @@ endif()
 
 enable_language(ASM_MASM)
 
-set(apac
-    src/benchmark_tools/getCPUTime_Freq.c
-    src/benchmark_tools/pinToCoreZero.c
-    src/benchmark_tools/toggle_tb.c
+# Define the target architectures
+set(TARGET_X64_UARCH alderlake generic)
 
+set(apac
     src/misc/setMemFuncs.c
-    src/misc/getCPUSpec/getCPUSpec.c
+    src/misc/getCPUSpec.c
     src/misc/apacInitDefault.c
 
-    src/apn/x64/apn_add_sub/apn_add_sub.c
-    src/apn/x64/apn_cpy/apn_cpy.c
-    src/apn/x64/apn_negate/apn_negate.c
-
-    src/apn/x64/assembly/_adc_apn_add_n.asm
-    src/apn/x64/assembly/_sbb_apn_sub_n.asm
+    src/apn/apn_add_sub/apn_add_sub.c
+    src/apn/apn_cpy/apn_cpy.c
+    src/apn/apn_negate/apn_negate.c
+    src/apn/apn_mul/apn_mul.c
 )
 
+# Assembly source files based on microarchitecture
+set(apn_assembly_dir src/apn/assembly)
+foreach(uarch IN LISTS TARGET_X64_UARCH)
+    file(GLOB asm_files "${apn_assembly_dir}/${uarch}/*.asm")
+    list(APPEND apac ${asm_files})
+endforeach()
+
+# Build shared or static library based on BUILD_SHARED_LIBS
 if(BUILD_SHARED_LIBS)
     add_library(apac_shared SHARED ${apac})
     target_compile_definitions(apac_shared PRIVATE BUILD_SHARED_LIBS)

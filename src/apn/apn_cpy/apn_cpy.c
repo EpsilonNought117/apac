@@ -1,6 +1,4 @@
-#include "apn_cpy.h"
-#include "../../../misc/getCPUSpec/getCPUSpec.h"
-#include <immintrin.h>
+#include "../../../include/apac.h"
 
 static void _avx512_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 {

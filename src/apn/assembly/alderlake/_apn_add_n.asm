@@ -9,7 +9,7 @@
     ;   r8  -> op2 (u64*)
     ;   r9  -> size (u64)
 
-_sbb_apn_sub_n PROC FRAME
+_apn_add_n PROC FRAME
 
 .pushframe
     push    r12
@@ -34,7 +34,7 @@ _sbb_apn_sub_n PROC FRAME
 small_loop:
     
     mov     rsi,    QWORD PTR [rdx + r10*8]
-    sbb     rsi,    QWORD PTR [r8  + r10*8]
+    adc     rsi,    QWORD PTR [r8  + r10*8]
     mov     QWORD PTR [rcx + r10*8],    rsi
 
     inc     r10
@@ -55,10 +55,10 @@ main_loop:
     mov     r13,    QWORD PTR [rdx + r10*8 + 16]
     mov     r12,    QWORD PTR [rdx + r10*8 + 24] 
 
-    sbb     rsi,    QWORD PTR [r8 + r10*8     ]
-    sbb     rdi,    QWORD PTR [r8 + r10*8 +  8]
-    sbb     r13,    QWORD PTR [r8 + r10*8 + 16]
-    sbb     r12,    QWORD PTR [r8 + r10*8 + 24]
+    adc     rsi,    QWORD PTR [r8 + r10*8     ]
+    adc     rdi,    QWORD PTR [r8 + r10*8 +  8]
+    adc     r13,    QWORD PTR [r8 + r10*8 + 16]
+    adc     r12,    QWORD PTR [r8 + r10*8 + 24]
 
     mov     QWORD PTR [rcx + r10*8     ],   rsi
     mov     QWORD PTR [rcx + r10*8 +  8],   rdi
@@ -79,6 +79,6 @@ end_of_func:
     pop     r12
     ret
 
-_sbb_apn_sub_n ENDP
+_apn_add_n ENDP
 
 END
