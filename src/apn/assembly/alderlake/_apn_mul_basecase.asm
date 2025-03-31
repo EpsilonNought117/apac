@@ -45,6 +45,8 @@ _apn_mul_basecase PROC FRAME
     xor     rbx, rbx
 
     xchg    rbx, rdx        ; use rdx for the mulx ops
+    xor     r13, r13
+    xor     r14, r14
     
     ; now rbx contains op1 
 
@@ -79,8 +81,8 @@ single_loop_end:
     lea     r14, [r10 + rax]                ; r14 = size2 + i
     adc     QWORD PTR [rcx + r14*8], rdi    ; result[i + size2] += (most recent) high64 + CF
     inc     rax                             ; i++
-    cmp     rax, r9                         ; check if i < size1
-    jae     single_loop_begin
+    cmp     r9, rax                         ; check if i < size1
+    jnz     single_loop_begin
 
 end_of_func:
 
