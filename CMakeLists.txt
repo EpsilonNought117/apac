@@ -13,6 +13,7 @@ enable_language(ASM_MASM)
 # Define the target architectures
 set(TARGET_X64_UARCH alderlake generic)
 
+# Base source files
 set(apac
     src/misc/setMemFuncs.c
     src/misc/getCPUSpec.c
@@ -24,11 +25,25 @@ set(apac
     src/apn/apn_mul/apn_mul.c
 )
 
-# Assembly source files based on microarchitecture
-set(apn_assembly_dir src/apn/assembly)
+# Explicit list of assembly files for each UARCH
+set(alderlake
+    src/apn/assembly/alderlake/_apn_add_n.asm
+    src/apn/assembly/alderlake/_apn_sub_n.asm
+    src/apn/assembly/alderlake/_apn_mul_basecase.asm
+)
+
+set(generic
+
+    
+)
+
+# Add corresponding assembly files based on selected microarchitecture
 foreach(uarch IN LISTS TARGET_X64_UARCH)
-    file(GLOB asm_files "${apn_assembly_dir}/${uarch}/*.asm")
-    list(APPEND apac ${asm_files})
+    if(uarch STREQUAL "alderlake")
+        list(APPEND apac ${alderlake})
+    elseif(uarch STREQUAL "generic")
+        list(APPEND apac ${generic})
+    endif()
 endforeach()
 
 # Build shared or static library based on BUILD_SHARED_LIBS

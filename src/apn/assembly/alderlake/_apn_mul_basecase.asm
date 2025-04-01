@@ -31,6 +31,9 @@ _apn_mul_basecase PROC FRAME
     
     push    r14
 .pushreg    r14
+
+    push    r15
+.pushreg    r15
 .endprolog
 
     mov     r10, QWORD PTR [rsp + 88] ; contains size2
@@ -56,22 +59,24 @@ single_loop_begin:
     xor     rdi, rdi            ; high64
     xor     r12, r12            ; low64    
     xor     r11, r11            ; j
+    xor     r15, r15            
 
-    mov     r13, r10                        ; r13 = (copy of) size2
+    mov     r13, r10                        ; r13 = size2
     mov     rdx, QWORD PTR [rbx + rax*8]    ; rdx = op1[i]
-
+    
 single_loop:
     
     ; hot loop
 
     adc     rsi, rdi                                ; temp_reg = high64 + CF
-    mulx    rdi, r12, QWORD PTR [r8 + r11*8]        ; op1[i] * op2[j] (implicit rdx)
+    mulx    r14, r12, QWORD PTR [r8 + r11*8]        ; r14:r12 = op1[i] * op2[j] (implicit rdx)
 
     add     rsi, r12                                ; temp_reg += low64
-    adc     rdi, rdi                                ; high64 += CF
+    adc     rdi, r14                                ; high64 += CF
     lea     r14, [rax + r11]                        ; r14 = i + j
-    adc     QWORD PTR [rcx + r14*8], rsi            ; result[i + j] += temp_reg
+    add     QWORD PTR [rcx + r14*8], rsi            ; result[i + j] += temp_reg
 
+    mov     rsi, r15
     inc     r11                 ; j++
     dec     r13                 ; for checking loop termination
     jnz     single_loop
@@ -79,13 +84,14 @@ single_loop:
 single_loop_end:
     
     lea     r14, [r10 + rax]                ; r14 = size2 + i
-    adc     QWORD PTR [rcx + r14*8], rdi    ; result[i + size2] += (most recent) high64 + CF
+    adc     QWORD PTR [rcx + r14*8], rdi    ; result[i + size2] = (most recent) high64 + CF
     inc     rax                             ; i++
     cmp     r9, rax                         ; check if i < size1
     jnz     single_loop_begin
 
 end_of_func:
 
+    pop     r15
     pop     r14
     pop     r13
     pop     r12

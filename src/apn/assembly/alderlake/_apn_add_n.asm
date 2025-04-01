@@ -11,31 +11,33 @@
 
 _apn_add_n PROC FRAME
 
+    ; testing 5x loop unroll on Golden Cove UARCH (Alder Lake P-Core)
+
 .pushframe
-    push    r12
-.pushreg    r12
-
-    push    r13
-.pushreg    r13
-
-    push    rsi
-.pushreg    rsi
-
     push    rdi
 .pushreg    rdi
 .endprolog
 
-    xor     rax,    rax
+    xor     rdi,    rdi
+    mov     rax,    r9
+    xchg    rdi,    rdx
+
+    mov     r10,    3
+    div     r10
+    mov     r11,    rdx
+    mov     r9,     rax
+
     xor     r10,    r10
-    mov     r11,    r9
-    and     r11,    3
+    xchg    rdx,    rdi
+
+    test    r11,    r11
     jz      unroll_loop_outer
 
 small_loop:
     
-    mov     rsi,    QWORD PTR [rdx + r10*8]
-    adc     rsi,    QWORD PTR [r8  + r10*8]
-    mov     QWORD PTR [rcx + r10*8],    rsi
+    mov     rax,    QWORD PTR [rdx + r10*8]
+    adc     rax,    QWORD PTR [r8  + r10*8]
+    mov     QWORD PTR [rcx + r10*8],    rax
 
     inc     r10
     dec     r11
@@ -43,40 +45,34 @@ small_loop:
 
 unroll_loop_outer:
      
-    setc   al
-    shr    r9,  2
+    setc   dil          ; set dil to contain carry
+    test   r9,  r9
     jz     end_of_func
-    bt     ax,  0
+    bt     di,  0       ; propagate carry between small and unrolled loop
 
 main_loop:
     
-    mov     rsi,    QWORD PTR [rdx + r10*8     ]
-    mov     rdi,    QWORD PTR [rdx + r10*8 +  8]
-    mov     r13,    QWORD PTR [rdx + r10*8 + 16]
-    mov     r12,    QWORD PTR [rdx + r10*8 + 24] 
+    mov     rax,    QWORD PTR [rdx + r10*8     ]
+    adc     rax,    QWORD PTR [r8  + r10*8     ]
+    mov     QWORD PTR [rcx + r10*8     ],    rax
+    
+    mov     rax,    QWORD PTR [rdx + r10*8 +  8]
+    adc     rax,    QWORD PTR [r8  + r10*8 +  8]
+    mov     QWORD PTR [rcx + r10*8 +  8],    rax
 
-    adc     rsi,    QWORD PTR [r8 + r10*8     ]
-    adc     rdi,    QWORD PTR [r8 + r10*8 +  8]
-    adc     r13,    QWORD PTR [r8 + r10*8 + 16]
-    adc     r12,    QWORD PTR [r8 + r10*8 + 24]
+    mov     rax,    QWORD PTR [rdx + r10*8 + 16]
+    adc     rax,    QWORD PTR [r8  + r10*8 + 16]
+    mov     QWORD PTR [rcx + r10*8 + 16],    rax
 
-    mov     QWORD PTR [rcx + r10*8     ],   rsi
-    mov     QWORD PTR [rcx + r10*8 +  8],   rdi
-    mov     QWORD PTR [rcx + r10*8 + 16],   r13
-    mov     QWORD PTR [rcx + r10*8 + 24],   r12
-
-    lea     r10,    QWORD PTR [r10 + 4]
+    lea     r10,    [r10 + 3]
     dec     r9
     jnz     main_loop
 
 end_of_func:
 
-    setc    al
+    movzx   rax, dil
 
     pop     rdi
-    pop     rsi
-    pop     r13
-    pop     r12
     ret
 
 _apn_add_n ENDP
