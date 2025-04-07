@@ -33,7 +33,6 @@ set(alderlake
 )
 
 set(generic
-
     
 )
 

@@ -8,98 +8,119 @@
     ;   rdx -> op1 (const u64*)
     ;   r8  -> op2 (const u64*)
     ;   r9  -> size1 (u64)
-    ;   [rsp + 40] -> size2 (u64) (eventually in r10)
+    ;   [rsp + 40] -> size2 (u64)
+
+    ; ASSUMES ALL ZERO'D LIMBS IN RESULT
 
 _apn_mul_basecase PROC FRAME
-
 .pushframe
 
     push    rbx
 .pushreg    rbx
 
+    push    rbp
+.pushreg    rbp
+    
     push    rsi
 .pushreg    rsi
-
+    
     push    rdi
 .pushreg    rdi
 
     push    r12
 .pushreg    r12
-
+    
     push    r13
 .pushreg    r13
-    
-    push    r14
-.pushreg    r14
-
-    push    r15
-.pushreg    r15
 .endprolog
 
-    mov     r10, QWORD PTR [rsp + 88] ; contains size2
+    xor     rax, rax    ; i
+    xor     rbx, rbx    
+    xor     rbp, rbp
 
-    ; 11 * 8 = 88 bytes
-    ; 6 pushed registers (48-bytes total) +
-    ; 1 return address (8-bytes) + 
-    ; 4-element shadow space (32-bytes)
-    ; 5th Argument (8-bytes) -> value to mov
-
-    xor     rax, rax
-    xor     rbx, rbx
-
-    xchg    rbx, rdx        ; use rdx for the mulx ops
-    xor     r13, r13
-    xor     r14, r14
+    xchg    rbx, rdx    ; rbx <- op1
+    xchg    rbp, rcx    ; rbp <- result
+   
+loop_outer:
     
-    ; now rbx contains op1 
+    xor     rsi, rsi    ; low64
+    xor     rdi, rdi    ; high64
 
-single_loop_begin:
+    ; r10 = result[i + j] (for adcx)
+    ; r12 = result[i + j + 1] (for adox)
+    ; no need to zero them out as they get over-written by mov's
 
-    xor     rsi, rsi            ; temp_reg and aux
-    xor     rdi, rdi            ; high64
-    xor     r12, r12            ; low64    
-    xor     r11, r11            ; j
-    xor     r15, r15            
+    mov     r13, rax    ; indexer for result
 
-    mov     r13, r10                        ; r13 = size2
-    mov     rdx, QWORD PTR [rbx + rax*8]    ; rdx = op1[i]
+    xor     r11, r11    ; j
+    mov     rcx, QWORD PTR [rsp + 88]       ; size2 (for jrcxz)
+    mov     rdx, QWORD PTR [rbx + rax*8]    ; op1[i]
+
+    test    rcx, 1
+    jz      loop_inner_twice
+
+one_time_iter:
+
+    mulx    rdi, rsi, QWORD PTR [r8 + r11*8]
+
+    mov     r10, QWORD PTR [rbp + r13*8]
+    adcx    r10, rsi
+    mov     QWORD PTR [rbp + r13*8], r10
+
+    mov     r12, QWORD PTR [rbp + r13*8 + 8]
+    adox    r12, rdi
+    mov     QWORD PTR [rbp + r13*8 + 8], r12
     
-single_loop:
+    lea     r11, [r11 + 1]
+    lea     r13, [r13 + 1]
+    lea     rcx, [rcx - 1]
+
+loop_inner_twice:
+
+    mulx    rdi, rsi, QWORD PTR [r8 + r11*8]
+
+    mov     r10, QWORD PTR [rbp + r13*8]
+    adcx    r10, rsi
+    mov     QWORD PTR [rbp + r13*8], r10
+
+    mov     r12, QWORD PTR [rbp + r13*8 + 8]
+    adox    r12, rdi
+    mov     QWORD PTR [rbp + r13*8 + 8], r12
+
+    mulx    rdi, rsi, QWORD PTR [r8 + r11*8 + 8]
+
+    mov     r10, QWORD PTR [rbp + r13*8 + 8]
+    adcx    r10, rsi
+    mov     QWORD PTR [rbp + r13*8 + 8], r10
+
+    mov     r12, QWORD PTR [rbp + r13*8 + 16]
+    adox    r12, rdi
+    mov     QWORD PTR [rbp + r13*8 + 16], r12
+
+    lea     r11, [r11 + 2]
+    lea     r13, [r13 + 2]
+    lea     rcx, [rcx - 2]
+    jrcxz   loop_end
+    jmp     loop_inner_twice
+
+loop_end:
     
-    ; hot loop
+    mov     r12, 0
+    mov     r10, QWORD PTR [rbp + r13*8]
+    adcx    r10, r12
+    mov     QWORD PTR [rbp + r13*8], r10
 
-    adc     rsi, rdi                                ; temp_reg = high64 + CF
-    mulx    r14, r12, QWORD PTR [r8 + r11*8]        ; r14:r12 = op1[i] * op2[j] (implicit rdx)
+    inc     rax
+    cmp     r9, rax
+    jnz     loop_outer
 
-    add     rsi, r12                                ; temp_reg += low64
-    adc     rdi, r14                                ; high64 += CF
-    lea     r14, [rax + r11]                        ; r14 = i + j
-    add     QWORD PTR [rcx + r14*8], rsi            ; result[i + j] += temp_reg
-
-    mov     rsi, r15
-    inc     r11                 ; j++
-    dec     r13                 ; for checking loop termination
-    jnz     single_loop
-
-single_loop_end:
-    
-    lea     r14, [r10 + rax]                ; r14 = size2 + i
-    adc     QWORD PTR [rcx + r14*8], rdi    ; result[i + size2] = (most recent) high64 + CF
-    inc     rax                             ; i++
-    cmp     r9, rax                         ; check if i < size1
-    jnz     single_loop_begin
-
-end_of_func:
-
-    pop     r15
-    pop     r14
     pop     r13
     pop     r12
     pop     rdi
     pop     rsi
+    pop     rbp
     pop     rbx
-	ret     0
-
+    ret     0
 _apn_mul_basecase ENDP
 
 END
