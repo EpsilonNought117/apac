@@ -104,7 +104,7 @@ typedef int64_t  i64;
 * Note:
 *   - Does not perform memory allocation; result must have 'size' allocated segments.
 */
-APAC_API u8 apn_add_n(u64* result, u64* op1, u64* op2, u64 size);
+APAC_API u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
 /**
 * Adds two operand arrays of type u64 segment-wise and stores the result, returning the carry (0 or 1).
@@ -122,7 +122,7 @@ APAC_API u8 apn_add_n(u64* result, u64* op1, u64* op2, u64 size);
 * Note:
 *   - Does not perform memory allocation; result must have max(size1, size2) allocated segments.
 */
-APAC_API u8 apn_add(u64* result, u64* op1, u64* op2, u64 size1, u64 size2);
+APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 /**
 * Adds a single u64 value to an operand array and stores the result, returning any carry (0 or 1).
@@ -139,7 +139,7 @@ APAC_API u8 apn_add(u64* result, u64* op1, u64* op2, u64 size1, u64 size2);
 * Note:
 *   - Does not perform memory allocation; result must have 'size' allocated segments.
 */
-APAC_API u8 apn_add_one(u64* result, u64* op1, u64 size, u64 val);
+APAC_API u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val);
 
 /**
 * Subtracts two operand arrays of type u64 segment-wise and stores the result, returning the borrow (0 or 1).
@@ -156,7 +156,7 @@ APAC_API u8 apn_add_one(u64* result, u64* op1, u64 size, u64 val);
 * Note:
 *   - Does not perform memory allocation; result must have 'size' allocated segments.
 */
-APAC_API u8 apn_sub_n(u64* result, u64* op1, u64* op2, u64 size);
+APAC_API u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
 /**
 * Subtracts two operand arrays of type u64 segment-wise and stores the result, returning the borrow (0 or 1).
@@ -175,7 +175,7 @@ APAC_API u8 apn_sub_n(u64* result, u64* op1, u64* op2, u64 size);
 *   - Does not perform memory allocation; result must have max(size1, size2) allocated segments.
 *   - size1 must be greater than or equal to size2.
 */
-APAC_API u8 apn_sub(u64* result, u64* op1, u64* op2, u64 size1, u64 size2);
+APAC_API u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 /**
 * Subtracts a single u64 value from an operand array and stores the result, returning any borrow (0 or 1).
@@ -192,7 +192,7 @@ APAC_API u8 apn_sub(u64* result, u64* op1, u64* op2, u64 size1, u64 size2);
 * Note:
 *   - Does not perform memory allocation; result must have 'size' allocated segments.
 */
-APAC_API u8 apn_sub_one(u64* result, u64* op1, u64 size, u64 val);
+APAC_API u8 apn_sub_one(u64* result, const u64* op1, u64 size, u64 val);
 
 /**
 * Copies (size) number of segments from op1 to result.
@@ -214,7 +214,7 @@ APAC_API void apn_cpy(u64* result, const u64* op1, u64 size);
 * Note:
 *   - Modifies op1 in place.
 */
-APAC_API void apn_negate(u64* op1, u64 size);
+APAC_API void apn_negate(u64* result, const u64* op1, u64 size);
 
 /**
 * 

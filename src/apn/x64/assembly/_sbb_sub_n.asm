@@ -28,6 +28,7 @@ _sbb_sub_n PROC FRAME
     xor     rax,    rax
     xor     r10,    r10
     mov     r11,    r9
+    clc
     and     r11,    3
     jz      unroll_loop_outer
 

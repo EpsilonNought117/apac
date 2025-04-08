@@ -28,10 +28,18 @@ _adc_mulx_mul_basecase PROC FRAME
     xor     rax, rax    ; i
     xor     rbx, rbx    ; will hold op1
     xchg    rbx, rdx    ; now rbx contains op1
-    xor     r12, r12    ; temp_reg + aux_carry
+
+    test    r9, r9
+    jz      end_of_func
+
+    mov     r12, QWORD PTR [rsp + 80]
+
+    test    r12, r12
+    jz      end_of_func 
 
 loop_outer:
 
+    xor     r12, r12    ; temp_reg + aux_carry
     xor     rsi, rsi    ; low64
     xor     rdi, rdi    ; high64
     xor     r11, r11    ; j
@@ -60,6 +68,8 @@ loop_end:
     inc     rax
     cmp     r9, rax
     jnz     loop_outer
+
+end_of_func:
 
     pop     r13
     pop     r12
