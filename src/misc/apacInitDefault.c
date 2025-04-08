@@ -1,8 +1,7 @@
-#include "misc.h"
-#include <stdlib.h>
+#include "../../include/apac.h"
 
 void apacInitDefault(void)
 {
-    setMemFuncs(&malloc, &realloc, &free);
+    setMemFuncs(NULL, NULL, NULL);
     getCPUSpec();
 }
