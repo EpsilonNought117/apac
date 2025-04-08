@@ -9,7 +9,7 @@
     ;   r8  -> op2 (u64*)
     ;   r9  -> size (u64)
 
-_apn_add_n PROC FRAME
+_adc_add_n PROC FRAME
 
 .pushframe
     push    r12
@@ -79,6 +79,6 @@ end_of_func:
     pop     r12
     ret
 
-_apn_add_n ENDP
+_adc_add_n ENDP
 
 END

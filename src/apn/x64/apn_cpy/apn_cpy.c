@@ -1,4 +1,4 @@
-#include "../../../include/apac.h"
+#include "../../../../include/apac.h"
 
 static void _avx512_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 {
@@ -64,18 +64,26 @@ static void _sse_apn_cpy_4unroll(uint64_t* result, const uint64_t* op1, uint64_t
     }
 }
 
+static void (*_apn_cpy_ptr)(u64* result, const u64* op1, u64 size) = NULL;
+
 void apn_cpy(u64* result, const u64* op1, u64 size)
 {
-    if (size > 32 && avx512f_chk)
+    if (_apn_cpy_ptr == NULL)
     {
-        _avx512_apn_cpy_4unroll(result, op1, size);
+        if (avx512f_chk)
+        {
+            _apn_cpy_ptr = &_avx512_apn_cpy_4unroll;
+        }
+        else if (avx_chk)
+        {
+            _apn_cpy_ptr = &_avx_apn_cpy_4unroll;
+        }
+        else
+        {
+            _apn_cpy_ptr = &_sse_apn_cpy_4unroll;
+        }
     }
-	else if (size > 16 && avx_chk)
-	{
-        _avx_apn_cpy_4unroll(result, op1, size);
-	}
-	else
-	{
-        _sse_apn_cpy_4unroll(result, op1, size);
-	}
+
+    _apn_cpy_ptr(result, op1, size);
+    return;
 }
