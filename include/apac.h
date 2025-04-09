@@ -137,7 +137,8 @@ APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 
 *   - Carry out resulting from op1[0] + val.
 *
 * Note:
-*   - Does not perform memory allocation; result must have 'size' allocated segments.
+*   - Does not perform memory allocation; result must have size1 allocated segments.
+*   - size1 must be greater than or equal to size2.
 */
 APAC_API u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val);
 
@@ -172,7 +173,7 @@ APAC_API u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
 *   - Borrow out resulting from op1[segment] - op2[segment].
 *
 * Note:
-*   - Does not perform memory allocation; result must have max(size1, size2) allocated segments.
+*   - Does not perform memory allocation; result must have size1 allocated segments.
 *   - size1 must be greater than or equal to size2.
 */
 APAC_API u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
