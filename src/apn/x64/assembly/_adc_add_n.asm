@@ -10,33 +10,20 @@
     ;   r9  -> size (u64)
 
 _adc_add_n PROC FRAME
-
 .pushframe
-    push    r12
-.pushreg    r12
-
-    push    r13
-.pushreg    r13
-
-    push    rsi
-.pushreg    rsi
-
-    push    rdi
-.pushreg    rdi
 .endprolog
 
-    xor     rax,    rax
-    xor     r10,    r10
-    mov     r11,    r9
-    clc
-    and     r11,    3
+    xor     rax, rax        ; carry store and accumulator for adc
+    xor     r10, r10        ; indexing variable
+    mov     r11, r9         
+    and     r11, 3          ; handle remaining limbs case first
     jz      unroll_loop_outer
 
 small_loop:
     
-    mov     rsi,    QWORD PTR [rdx + r10*8]
-    adc     rsi,    QWORD PTR [r8  + r10*8]
-    mov     QWORD PTR [rcx + r10*8],    rsi
+    mov     rax, QWORD PTR [rdx + r10*8]
+    adc     rax, QWORD PTR [r8  + r10*8]
+    mov     QWORD PTR [rcx + r10*8], rax
 
     inc     r10
     dec     r11
@@ -44,42 +31,41 @@ small_loop:
 
 unroll_loop_outer:
      
-    setc   al
-    shr    r9,  2
-    jz     end_of_func
-    bt     ax,  0
+    setc    al
+    mov     r11, r9
+    shr     r11, 2      ; r11 = r11 / 4 (for handling 4 chunks at once)
+    bt      ax, 0       ; restore carry flag if destroyed by shr
+    
+    ; bt (bit-test) doesn't affect zero flag
+
+    jz      end_of_func
 
 main_loop:
     
-    mov     rsi,    QWORD PTR [rdx + r10*8     ]
-    mov     rdi,    QWORD PTR [rdx + r10*8 +  8]
-    mov     r13,    QWORD PTR [rdx + r10*8 + 16]
-    mov     r12,    QWORD PTR [rdx + r10*8 + 24] 
+    mov     rax, QWORD PTR [rdx + r10*8]
+    adc     rax, QWORD PTR [r8  + r10*8]
+    mov     QWORD PTR [rcx + r10*8], rax
 
-    adc     rsi,    QWORD PTR [r8 + r10*8     ]
-    adc     rdi,    QWORD PTR [r8 + r10*8 +  8]
-    adc     r13,    QWORD PTR [r8 + r10*8 + 16]
-    adc     r12,    QWORD PTR [r8 + r10*8 + 24]
+    mov     rax, QWORD PTR [rdx + r10*8 + 8]
+    adc     rax, QWORD PTR [r8  + r10*8 + 8]
+    mov     QWORD PTR [rcx + r10*8 + 8], rax
 
-    mov     QWORD PTR [rcx + r10*8     ],   rsi
-    mov     QWORD PTR [rcx + r10*8 +  8],   rdi
-    mov     QWORD PTR [rcx + r10*8 + 16],   r13
-    mov     QWORD PTR [rcx + r10*8 + 24],   r12
+    mov     rax, QWORD PTR [rdx + r10*8 + 16]
+    adc     rax, QWORD PTR [r8  + r10*8 + 16]
+    mov     QWORD PTR [rcx + r10*8 + 16], rax
 
-    lea     r10,    QWORD PTR [r10 + 4]
-    dec     r9
+    mov     rax, QWORD PTR [rdx + r10*8 + 16]
+    adc     rax, QWORD PTR [r8  + r10*8 + 16]
+    mov     QWORD PTR [rcx + r10*8 + 16], rax
+
+    lea     r10, [r10 + 4]
+    dec     r11
     jnz     main_loop
 
 end_of_func:
 
     setc    al
-
-    pop     rdi
-    pop     rsi
-    pop     r13
-    pop     r12
     ret
-
 _adc_add_n ENDP
 
 END
