@@ -32,6 +32,8 @@
 /*********************************         MISCELLANEOUS          ***********************************/
 /****************************************************************************************************/
 
+// for error handling and assertion
+
 typedef enum apac_err
 {
     APAC_OK,
@@ -40,12 +42,18 @@ typedef enum apac_err
 
 }   apac_err;
 
-#ifndef APAC_ASSERT
-#define APAC_ASSERT(x) assert(x)
+#ifndef APAC_REPORT_ERR
+#define APAC_REPORT_ERR(x) \
+    fprintf(stderr, "APAC ERROR [%s:%d]: %s\n", __FILE__, __LINE__, x)
 #endif
 
-#ifndef APAC_REPORT_ERR
-#define APAC_REPORT_ERR(x) fprintf(stderr, "APAC ERROR: %s\n", x)
+#ifndef APAC_ASSERT
+#define APAC_ASSERT(x)      \
+if (!(x))                   \
+{                           \
+    APAC_REPORT_ERR(#x);    \
+    abort();                \
+}                                                       
 #endif
 
 // for setMemFuncs()
