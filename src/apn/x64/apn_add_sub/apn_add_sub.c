@@ -9,6 +9,7 @@ extern u8 _sbb_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
 u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size)
 {
 	APAC_ASSERT(size != 0);
+	APAC_ASSERT(result && op1 && op2);
 
 	return _adc_add_n(result, op1, op2, size);
 }
@@ -17,6 +18,7 @@ u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 {
 	APAC_ASSERT(size1 != 0 && size2 != 0);
 	APAC_ASSERT(size1 >= size2);
+	APAC_ASSERT(result && op1 && op2);
 
 	u8 carry = _adc_add_n(result, op1, op2, size2);
 	u64 counter = size2;

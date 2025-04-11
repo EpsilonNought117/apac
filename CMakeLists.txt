@@ -34,6 +34,8 @@ set(x64_asm
     src/apn/x64/assembly/_adc_add_n.asm
     src/apn/x64/assembly/_sbb_sub_n.asm
     src/apn/x64/assembly/_adc_mulx_mul_basecase.asm
+    src/apn/x64/assembly/_adc_add_one.asm
+    src/apn/x64/assembly/_sbb_sub_one.asm
 )
 
 # Append assembly sources to the main source list
