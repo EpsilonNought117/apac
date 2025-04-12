@@ -1,5 +1,35 @@
 #include "../../../../include/apac.h"
 
+static void _avx512f_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
+{
+    __m512i mask = _mm512_set1_epi64(-1);
+
+    u64 blocks = size & ((u64)-32);
+    u64 counter = 0;
+
+    while (counter < blocks)
+    {
+        _mm512_storeu_epi64(&result[counter], _mm512_xor_epi32(mask, _mm512_loadu_epi64(&op1[counter])));
+        _mm512_storeu_epi64(&result[counter + 8], _mm512_xor_epi32(mask, _mm512_loadu_epi64(&op1[counter + 8])));
+        _mm512_storeu_epi64(&result[counter + 16], _mm512_xor_epi32(mask, _mm512_loadu_epi64(&op1[counter + 16])));
+        _mm512_storeu_epi64(&result[counter + 32], _mm512_xor_epi32(mask, _mm512_loadu_epi64(&op1[counter + 32])));
+
+        counter += 32;
+    }
+
+    while (counter < size)
+    {
+        result[counter] = ~op1[counter];
+        counter++;
+    }
+
+    // now result is one's compliment of op1
+    // add 1 to make two's complement
+
+    apn_add_one(result, result, size, 1);
+    return;
+}
+
 static void _avx2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
 {
     __m256i mask = _mm256_cmpeq_epi64(_mm256_setzero_si256(), _mm256_setzero_si256());
@@ -35,8 +65,11 @@ static void _avx2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
         counter++;
     }
 
-    // add 1 to result now
-    // will fill this later
+    // now result is one's compliment of op1
+    // add 1 to make two's complement
+
+    apn_add_one(result, result, size, 1);   // discard this carry
+    return;
 }
 
 static void _sse_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
@@ -72,18 +105,44 @@ static void _sse_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
         result[counter] = ~op1[counter];
         counter++;
     }
-    
-    // add 1 to result now
+
+    // now result is one's compliment of op1
+    // add 1 to make two's complement
+
+    apn_add_one(result, result, size, 1);   // discard this carry
+    return;
 }
 
-static void (*_apn_negate_ptr[])(u64*, const u64*, u64) = {
+static void (*_apn_negate_ptrs[])(u64*, const u64*, u64) = {
     _sse_apn_negate_4unroll,
-    _avx2_apn_negate_4unroll
+    _avx2_apn_negate_4unroll,
+    _avx512f_apn_negate_4unroll
 };
 
 static int _apn_negate_idx = -1; // Invalid index when starting
 
 void apn_negate(u64* result, const u64* op1, u64 size)
 {
-    
+    APAC_ASSERT(size != 0);
+    APAC_ASSERT(result != NULL);
+    APAC_ASSERT(op1 != NULL);
+
+    if (_apn_negate_idx == -1)
+    {
+        if (avx512f_chk)
+        {
+            _apn_negate_idx = 2;
+        }
+        else if (avx2_chk)
+        {
+            _apn_negate_idx = 1;
+        }
+        else
+        {
+            _apn_negate_idx = 0;
+        }
+    }
+
+    _apn_negate_ptrs[_apn_negate_idx](result, op1, size);
+    return;
 }

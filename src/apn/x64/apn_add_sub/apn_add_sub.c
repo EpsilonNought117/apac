@@ -4,36 +4,49 @@
 
 extern u8 _adc_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
 extern u8 _sbb_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
+extern u8 _adc_add_one(u64* result, const u64* op1, u64 size, u64 val);
+extern u8 _sbb_sub_one(u64* result, const u64* op1, u64 size, u64 val);
+extern u8 _adc_till_carry(u64* result, const u64* op1, u64 size, u64 val);
+extern u8 _sbb_till_borrow(u64* result, const u64* op1, u64 size, u64 val);
 
 /* PUBLIC API FUNCTIONS */
+
 u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size)
 {
 	APAC_ASSERT(size != 0);
-	APAC_ASSERT(result && op1 && op2);
+	APAC_ASSERT(result != NULL);
+	APAC_ASSERT(op1 != NULL);
+	APAC_ASSERT(op2 != NULL);
 
 	return _adc_add_n(result, op1, op2, size);
 }
 
 u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 {
-	APAC_ASSERT(size1 != 0 && size2 != 0);
+	APAC_ASSERT(size1 != 0);
+	APAC_ASSERT(size2 != 0);
 	APAC_ASSERT(size1 >= size2);
-	APAC_ASSERT(result && op1 && op2);
+	APAC_ASSERT(result != NULL);
+	APAC_ASSERT(op1 != NULL);
+	APAC_ASSERT(op2 != NULL);
 
 	u8 carry = _adc_add_n(result, op1, op2, size2);
-	u64 counter = size2;
+	
+	return _adc_add_one(&result[size2], &op1[size2], size1 - size2, carry);
+}
 
-	while (carry && counter < size1)
+u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val)
+{
+	APAC_ASSERT(size != 0);
+	APAC_ASSERT(op1 != NULL);
+	APAC_ASSERT(result != NULL);
+
+	if (result == op1)
 	{
-		carry = _addcarry_u64(carry, op1[counter], 0, &result[counter]);
-		counter++;
+		return _adc_till_carry(result, op1, size, val);
 	}
 
-	if (counter != size1)
-	{
-		apn_cpy(&result[counter], &op1[counter], size1 - counter);
-	}
-	return carry;
+	return _adc_add_one(result, op1, size, val);
 }
 
 

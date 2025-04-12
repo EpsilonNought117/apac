@@ -5,7 +5,7 @@
     ;   Function Arguments
     ;
     ;   rcx -> result (u64*)   
-    ;   rdx -> op1 (u64*)
+    ;   rdx -> op1 (const u64*)
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
@@ -28,7 +28,7 @@ _sbb_sub_one PROC FRAME
     mov     r11, r8     ; temp_size
 
     mov     rax, QWORD PTR [rdx + r10*8]
-    sub     rax, r9                         ; add val
+    sub     rax, r9                         ; sub val
     mov     QWORD PTR [rcx + r10*8], rax
     inc     r10
     dec     r11

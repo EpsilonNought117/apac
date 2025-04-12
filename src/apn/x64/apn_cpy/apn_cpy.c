@@ -1,6 +1,6 @@
 #include "../../../../include/apac.h"
 
-static void _avx512_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
+static void _avx512f_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 {
 	u64 blocks = size & ((u64)(-32)); // first process blocks of 32 limbs
 	u64 counter = 0;
@@ -93,7 +93,7 @@ static void _sse_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 static void (*_apn_cpy_ptrs[])(u64*, const u64*, u64) = {
 	_sse_apn_cpy_4unroll,
 	_avx_apn_cpy_4unroll,
-	_avx512_apn_cpy_4unroll
+	_avx512f_apn_cpy_4unroll
 };
 
 static int _apn_cpy_idx = -1; // invalid index when starting out

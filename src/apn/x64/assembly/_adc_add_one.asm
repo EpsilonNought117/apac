@@ -5,7 +5,7 @@
     ;   Function Arguments
     ;
     ;   rcx -> result (u64*)   
-    ;   rdx -> op1 (u64*)
+    ;   rdx -> op1 (const u64*)
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
