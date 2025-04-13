@@ -44,6 +44,7 @@ set(x64_specific
     src/apn/x64/assembly/_adc_add_one.asm
     src/apn/x64/assembly/_adc_till_carry.asm
     src/apn/x64/assembly/_adc_mulx_mul_basecase.asm
+    src/apn/x64/assembly/_adc_mul_basecase.asm
     src/apn/x64/assembly/_sbb_sub_n.asm
     src/apn/x64/assembly/_sbb_sub_one.asm
     src/apn/x64/assembly/_sbb_till_borrow.asm

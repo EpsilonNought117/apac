@@ -29,14 +29,6 @@ _adc_mulx_mul_basecase PROC FRAME
     xor     rbx, rbx    ; will hold op1
     xchg    rbx, rdx    ; now rbx contains op1
 
-    test    r9, r9
-    jz      end_of_func
-
-    mov     r12, QWORD PTR [rsp + 80]
-
-    test    r12, r12
-    jz      end_of_func 
-
 loop_outer:
 
     xor     r12, r12    ; temp_reg + aux_carry
@@ -44,8 +36,8 @@ loop_outer:
     xor     rdi, rdi    ; high64
     xor     r11, r11    ; j
     mov     r13, rax    ; indexer for result
-    mov     r10, [rsp + 80]     ; temp_size2
-    mov     rdx, [rbx + rax*8]  ; op1[i]
+    mov     r10, QWORD PTR [rsp + 80]     ; temp_size2
+    mov     rdx, QWORD PTR [rbx + rax*8]  ; op1[i]
 
 main_loop:
     
