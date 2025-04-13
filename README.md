@@ -10,7 +10,6 @@
 - Supports both **static** and **shared** library builds.
 - Customizable memory allocation functions.
 - High-performance low-level APIs that focus on speed and space efficiency.
-- Easy-to-use high-level APIs that focus on user convenience.
 - Performance-critical functions written directly in **assembly** or using **compiler intrinsics**
 
 ---
