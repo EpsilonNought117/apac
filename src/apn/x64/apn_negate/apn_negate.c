@@ -123,9 +123,9 @@ static int _apn_negate_idx = -1; // Invalid index when starting
 
 void apn_negate(u64* result, const u64* op1, u64 size)
 {
-    APAC_ASSERT(size != 0)
-    APAC_ASSERT(result != NULL)
-    APAC_ASSERT(op1 != NULL)
+    APAC_ASSERT(size != 0);
+    APAC_ASSERT(result != NULL);
+    APAC_ASSERT(op1 != NULL);
 
     if (_apn_negate_idx == -1)
     {
