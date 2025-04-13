@@ -26,7 +26,7 @@ static void _avx512f_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
     // now result is one's compliment of op1
     // add 1 to make two's complement
 
-    apn_add_one(result, result, size, 1);
+    apn_add_one(result, result, size, 1);   // discard in case carry produced (only one case)
     return;
 }
 
@@ -68,7 +68,7 @@ static void _avx2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
     // now result is one's compliment of op1
     // add 1 to make two's complement
 
-    apn_add_one(result, result, size, 1);   // discard this carry
+    apn_add_one(result, result, size, 1);   // discard this carry in case produced
     return;
 }
 

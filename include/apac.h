@@ -43,17 +43,11 @@ typedef enum apac_err
 }   apac_err;
 
 #ifndef APAC_REPORT_ERR
-#define APAC_REPORT_ERR(x) \
-    fprintf(stderr, "APAC ERROR [%s:%d]: %s\n", __FILE__, __LINE__, x)
+#define APAC_REPORT_ERR(x) fprintf(stderr, "APAC ERROR [%s:%d]: %s\n", __FILE__, __LINE__, x)
 #endif
 
 #ifndef APAC_ASSERT
-#define APAC_ASSERT(x)      \
-if (!(x))                   \
-{                           \
-    APAC_REPORT_ERR(#x);    \
-    abort();                \
-}                                                       
+#define APAC_ASSERT(x) assert(x)                                                    
 #endif
 
 // for setMemFuncs()
@@ -97,136 +91,68 @@ typedef int64_t  i64;
 /*********************************          APN FUNCTIONS         ***********************************/
 /****************************************************************************************************/
 
-/**
-* Adds two operand arrays of type u64 segment-wise and stores the result, returning the carry (0 or 1).
+
+/**               
+*                   IMPORTANT NOTES
+* 
+* 1) THESE FUNCTIONS DO NOT PERFORM ANY MEMORY ALLOCATIONS.
 *
-* Parameters:
-*   - result: Output array storing the sum.
-*   - op1: First input operand array.
-*   - op2: Second input operand array.
-*   - size: Number of segments in both operands.
-*
-* Returns:
-*   - Carry out resulting from op1[segment] + op2[segment].
-*
-* Note:
-*   - Does not perform memory allocation; result must have 'size' allocated segments.
+* 2) ASSERTS ARE USED FOR DEBUG BUILDS TO CATCH ANY ERRORS.
+* 
+* 3) THEY ASSUME THAT THE RESULT HAS REQUIRED NUMBER OF LIMBS.
+* 
+* 4) THEY DO NOT PERFORM ANY BOUNDS CHECKING IN RELEASE BUILDS.
+* 
+* 5) VERY LITTLE WORK IS DONE APART FROM THE ACTUAL COMPUTATION NEEDED.
+* 
+* 6) NO SIZE ARGUMENT SHOULD BE ZERO, ALWAYS PASS AT LEAST SIZE 1.
+* 
+*/
+
+/*
+    1) result must have "size" limbs
 */
 APAC_API u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
-/**
-* Adds two operand arrays of type u64 segment-wise and stores the result, returning the carry (0 or 1).
-*
-* Parameters:
-*   - result: Output array storing the sum.
-*   - op1: First input operand array.
-*   - op2: Second input operand array.
-*   - size1: Number of segments in op1.
-*   - size2: Number of segments in op2.
-*
-* Returns:
-*   - Carry out resulting from op1[segment] + op2[segment].
-*
-* Note:
-*   - Does not perform memory allocation; result must have max(size1, size2) allocated segments.
+/*
+    1) size1 must be greater than or equal to size2.
+    2) result must have size1 limbs
 */
 APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
-/**
-* Adds a single u64 value to an operand array and stores the result, returning any carry (0 or 1).
-*
-* Parameters:
-*   - result: Output array storing the sum.
-*   - op1: Input operand array.
-*   - size: Number of segments in op1.
-*   - val: Single u64 value to add.
-*
-* Returns:
-*   - Carry out resulting from op1[0] + val.
-*
-* Note:
-*   - Does not perform memory allocation; result must have size1 allocated segments.
-*   - size1 must be greater than or equal to size2.
+/*
+    1) result must have "size" limbs
 */
 APAC_API u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val);
 
-/**
-* Subtracts two operand arrays of type u64 segment-wise and stores the result, returning the borrow (0 or 1).
-*
-* Parameters:
-*   - result: Output array storing the difference.
-*   - op1: First input operand array.
-*   - op2: Second input operand array.
-*   - size: Number of segments in both operands.
-*
-* Returns:
-*   - Borrow out resulting from op1[segment] - op2[segment].
-*
-* Note:
-*   - Does not perform memory allocation; result must have 'size' allocated segments.
+/*
+    1) result must have "size" limbs
 */
 APAC_API u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
-/**
-* Subtracts two operand arrays of type u64 segment-wise and stores the result, returning the borrow (0 or 1).
-*
-* Parameters:
-*   - result: Output array storing the difference.
-*   - op1: First input operand array.
-*   - op2: Second input operand array.
-*   - size1: Number of segments in op1.
-*   - size2: Number of segments in op2.
-*
-* Returns:
-*   - Borrow out resulting from op1[segment] - op2[segment].
-*
-* Note:
-*   - Does not perform memory allocation; result must have size1 allocated segments.
-*   - size1 must be greater than or equal to size2.
+/*
+    1) size1 must be greater than or equal to size2.
+    2) result must have size1 limbs
 */
 APAC_API u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
-/**
-* Subtracts a single u64 value from an operand array and stores the result, returning any borrow (0 or 1).
-*
-* Parameters:
-*   - result: Output array storing the difference.
-*   - op1: Input operand array.
-*   - size: Number of segments in op1.
-*   - val: Single u64 value to subtract.
-*
-* Returns:
-*   - Borrow out resulting from op1[0] - val.
-*
-* Note:
-*   - Does not perform memory allocation; result must have 'size' allocated segments.
+/*
+    1) result must have "size" limbs
 */
 APAC_API u8 apn_sub_one(u64* result, const u64* op1, u64 size, u64 val);
 
-/**
-* Copies (size) number of segments from op1 to result.
-*
-* Input -> result, op1, size (of both op1 and result)
-* Output -> None
-*
-* NOTE -> Assumes both result and op1 have (size) amount of segments
+/*
+    1) result must have "size" number of limbs
 */
 APAC_API void apn_cpy(u64* result, const u64* op1, u64 size);
 
-/**
-* Computes the two's complement (negation) of a big integer stored as 64-bit segments.
-*
-* Parameters:
-*   - op1: Input/output operand array representing the big integer.
-*   - size: Number of segments in op1.
-*
-* Note:
-*   - Modifies op1 in place.
+/*
+    1) result must have "size" number of limbs
 */
 APAC_API void apn_negate(u64* result, const u64* op1, u64 size);
 
-/**
-* 
+/*
+    
 */
 APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
