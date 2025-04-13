@@ -1,6 +1,6 @@
 ﻿# ⚙️ libapac  
 
-**libapac** is a high-performance, single-threaded, arbitrary-precision arithmetic library written in C.
+**libapac** is a high-performance, single-threaded, arbitrary-precision arithmetic library.
 
 ---
 
@@ -8,8 +8,8 @@
 
 - 🖥️ Targeted for **x86-64** CPUs on **Windows** (ARM64 support planned).
 - 🧱 Supports both **static** and **shared** library builds.
+- ⚡ Optimized for speed using **C compiler intrinsics** and **handwritten assembly** routines.
 - 🧩 Customizable memory management through user-defined allocation functions.
-- ⚡ Optimized for speed using Intel compiler intrinsics and carefully tuned assembly routines.
 
 ---
 
