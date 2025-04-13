@@ -1,6 +1,6 @@
 ﻿# ⚙️ libapac  
 
-**libapac** is a high-performance, single-threaded, arbitrary-precision arithmetic library.
+**libapac** is a high-performance, single-threaded, arbitrary-precision arithmetic library with a C API.
 
 ---
 
