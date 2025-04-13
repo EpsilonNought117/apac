@@ -1,6 +1,6 @@
-﻿# libapac - A library for arbitrary precision arithmetic in C
+﻿# libapac - A library for arbitrary precision arithmetic in **C** and **Assembly**
 
-**libapac** is a high-performance, single-threaded, arbitrary precision arithmetic library written for C.
+**libapac** is a high-performance arbitrary precision arithmetic library
 
 ---
 
@@ -10,7 +10,7 @@
 - Supports both **static** and **shared** library builds.
 - Customizable memory allocation functions.
 - High-performance low-level APIs that focus on speed and space efficiency.
-- Performance-critical functions written directly in **assembly** or using **compiler intrinsics**
+- Performance-critical functions written in hand-rolled assembly or using C compiler intrinsics.
 
 ---
 
