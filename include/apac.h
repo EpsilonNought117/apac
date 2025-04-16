@@ -157,7 +157,7 @@ APAC_API void apn_cpy(u64* result, const u64* op1, u64 size);
 APAC_API void apn_negate(u64* result, const u64* op1, u64 size);
 
 /*
-    
+    1) No overlap permitted between result and either of the operands
 */
 APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
 

@@ -1,5 +1,5 @@
-.code 
-	
+.code
+
 	option casemap:none
 
 	;   Function Arguments
@@ -8,67 +8,69 @@
     ;   rdx -> op1 (const u64*)
     ;   r8  -> op2 (const u64*)
     ;   r9  -> size1 (u64)
-    ;   [rsp + 40] -> size2 (u64)
+    ;   [rsp + 40] -> size2 (u64) (where rsp is initially at function entering)
+
+    ;   ASSUMPTION
+    ;   (size1 >= size2)
 
 _adc_mulx_mul_basecase PROC FRAME
 
+	push	rbx
+.pushreg	rbx
+	push	rdi
+.pushreg	rdi
+	push	rsi
+.pushreg	rsi
+	push	r12
+.pushreg	r12
+	push	r13
+.pushreg	r13
 .pushframe
-    push    rbx
-.pushreg    rbx
-    push    rsi
-.pushreg    rsi
-    push    rdi
-.pushreg    rdi
-    push    r12
-.pushreg    r12
-    push    r13
-.pushreg    r13
 .endprolog
 
-    xor     rax, rax    ; i
-    xor     rbx, rbx    ; will hold op1
-    xchg    rbx, rdx    ; now rbx contains op1
+	xor		rax, rax	; i
+	xchg	rbx, rdx	; rbx <- op1 (const u64*)
 
 loop_outer:
 
-    xor     r12, r12    ; temp_reg + aux_carry
-    xor     rsi, rsi    ; low64
-    xor     rdi, rdi    ; high64
-    xor     r11, r11    ; j
-    mov     r13, rax    ; indexer for result
-    mov     r10, QWORD PTR [rsp + 80]     ; temp_size2
-    mov     rdx, QWORD PTR [rbx + rax*8]  ; op1[i]
+	xor		r12, r12	; temp_reg		
+	xor		r11, r11	; j
+	xor		rsi, rsi	; low64
+	xor		rdi, rdi	; high64
+	mov		r10, rax	; indexer for result
+	mov		r13, r9		; size1 in r13 for jnz
+	mov		rdx, QWORD PTR [r8 + rax*8] ; op2[i]
+	
+loop_inner:
+	
+	adc		r12, rdi
+	mulx	rdi, rsi, QWORD PTR [rbx + r11*8]	; rdi:rsi = rdx * op1[j]
 
-main_loop:
-    
-    adc     r12, rdi
-    mulx    rdi, rsi, QWORD PTR [r8 + r11*8]
+	add		r12, rsi
+	adc		rdi, 0
+	add		QWORD PTR [rcx + r10*8], r12
 
-    add     r12, rsi
-    adc     rdi, 0
-    add     QWORD PTR [rcx + r13*8], r12
-    
-    mov     r12, 0
-    inc     r13
-    inc     r11
-    dec     r10
-    jnz     main_loop
+	inc		r11
+	inc		r10
+	dec		r13
+	jnz		loop_inner
 
 loop_end:
-
-    adc     QWORD PTR [rcx + r13*8], rdi
-    inc     rax
-    cmp     r9, rax
-    jnz     loop_outer
+	
+	mov		r12, QWORD PTR [rsp + 80]	; size2 into r12 temporarily
+	adc		QWORD PTR [rcx + r10*8], rdi
+	inc		rax
+	cmp		r12, rax
+	jnz		loop_outer
 
 end_of_func:
 
-    pop     r13
-    pop     r12
-    pop     rdi
-    pop     rsi
-    pop     rbx
-    ret     0
+	pop		r13
+	pop		r12
+	pop		rsi
+	pop		rdi
+	pop		rbx
+	ret		0
 
 _adc_mulx_mul_basecase ENDP
 

@@ -43,8 +43,11 @@ set(x64_specific
     src/apn/x64/assembly/_adc_add_n.asm
     src/apn/x64/assembly/_adc_add_one.asm
     src/apn/x64/assembly/_adc_till_carry.asm
-    src/apn/x64/assembly/_adc_mulx_mul_basecase.asm
-    src/apn/x64/assembly/_adc_mul_basecase.asm
+
+    #src/apn/x64/assembly/_adx_mulx_mul_basecase.asm # for processors with ADX & BMI2 (BDW and beyond)
+    src/apn/x64/assembly/_adc_mulx_mul_basecase.asm # for processors with BMI2 but no ADX (before BDW after HSW)
+    src/apn/x64/assembly/_adc_mul_basecase.asm      # multiplication that runs on all x64 CPUs (before HSW)
+    
     src/apn/x64/assembly/_sbb_sub_n.asm
     src/apn/x64/assembly/_sbb_sub_one.asm
     src/apn/x64/assembly/_sbb_till_borrow.asm
@@ -61,7 +64,3 @@ else()
     add_library(apac_static STATIC ${apac})
 endif()
 
-# Conditionally build unit test executable
-if(BUILD_UNIT_TESTS)
-
-endif()

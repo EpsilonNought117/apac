@@ -90,13 +90,7 @@ static void _sse_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 	}
 }
 
-static void (*_apn_cpy_ptrs[])(u64*, const u64*, u64) = {
-	_sse_apn_cpy_4unroll,
-	_avx_apn_cpy_4unroll,
-	_avx512f_apn_cpy_4unroll
-};
-
-static int _apn_cpy_idx = -1; // invalid index when starting out
+void (*_apn_cpy_ptr)(u64*, const u64*, u64) = NULL;
 
 void apn_cpy(u64* result, const u64* op1, u64 size)
 {
@@ -105,22 +99,22 @@ void apn_cpy(u64* result, const u64* op1, u64 size)
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != op1);
 
-	if (_apn_cpy_idx == -1)
+	if (_apn_cpy_ptr == NULL)
 	{
 		if (avx512f_chk)
 		{
-			_apn_cpy_idx = 2;
+			_apn_cpy_ptr = _avx512f_apn_cpy_4unroll;
 		}
 		else if (avx_chk)
 		{
-			_apn_cpy_idx = 1;
+			_apn_cpy_ptr = _avx_apn_cpy_4unroll;
 		}
 		else
 		{
-			_apn_cpy_idx = 0;
+			_apn_cpy_ptr = _sse_apn_cpy_4unroll;
 		}
 	}
 
-	_apn_cpy_ptrs[_apn_cpy_idx](result, op1, size);
+	_apn_cpy_ptr(result, op1, size);
 	return;
 }

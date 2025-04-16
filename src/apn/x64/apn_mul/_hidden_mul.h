@@ -3,6 +3,9 @@
 
 #include "../../../../include/apac.h"
 
+/*
+	Calls multiplication routines written in assembly
+*/
 void _apn_basecase_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 void _apn_subtractive_karatsuba_mul(u64* result, const u64* op1, const u64* op2, u64 size, u8 depth, u64* work);

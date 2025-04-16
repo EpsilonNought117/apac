@@ -113,13 +113,7 @@ static void _sse_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
     return;
 }
 
-static void (*_apn_negate_ptrs[])(u64*, const u64*, u64) = {
-    _sse_apn_negate_4unroll,
-    _avx2_apn_negate_4unroll,
-    _avx512f_apn_negate_4unroll
-};
-
-static int _apn_negate_idx = -1; // Invalid index when starting
+void (*_apn_negate_ptr)(u64*, const u64*, u64) = NULL;
 
 void apn_negate(u64* result, const u64* op1, u64 size)
 {
@@ -127,22 +121,22 @@ void apn_negate(u64* result, const u64* op1, u64 size)
     APAC_ASSERT(result != NULL);
     APAC_ASSERT(op1 != NULL);
 
-    if (_apn_negate_idx == -1)
+    if (_apn_negate_ptr == NULL)
     {
         if (avx512f_chk)
         {
-            _apn_negate_idx = 2;
+            _apn_negate_ptr = _avx512f_apn_negate_4unroll;
         }
         else if (avx2_chk)
         {
-            _apn_negate_idx = 1;
+            _apn_negate_ptr = _avx2_apn_negate_4unroll;
         }
         else
         {
-            _apn_negate_idx = 0;
+            _apn_negate_ptr = _sse_apn_negate_4unroll;
         }
     }
 
-    _apn_negate_ptrs[_apn_negate_idx](result, op1, size);
+    _apn_negate_ptr(result, op1, size);
     return;
 }
