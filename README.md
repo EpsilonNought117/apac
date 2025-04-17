@@ -1,4 +1,4 @@
-﻿# libapac - A library for arbitrary precision arithmetic in C and Assembly
+﻿# libapac - A library for arbitrary precision arithmetic in C
 
 **libapac** is a high-performance arbitrary precision arithmetic library for scientific computing
 and number crunching with infinite precision, only limited by the amount of memory on your system.
