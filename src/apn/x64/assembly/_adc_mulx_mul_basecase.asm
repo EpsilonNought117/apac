@@ -50,6 +50,7 @@ loop_inner:
 	adc		rdi, 0
 	add		QWORD PTR [rcx + r10*8], r12
 
+	mov		r12, 0
 	inc		r11
 	inc		r10
 	dec		r13

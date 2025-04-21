@@ -42,17 +42,27 @@ typedef enum apac_err
 
 }   apac_err;
 
+#ifndef APAC_DISABLE_ASSERT
+
 #ifndef APAC_REPORT_ERR
-#define APAC_REPORT_ERR(x) fprintf(stderr, "APAC ERROR [%s:%d]: %s\n", __FILE__, __LINE__, x);
+#define APAC_REPORT_ERR(x) \
+    fprintf(stderr, "APAC ERROR [%s:%d]: %s\n", __FILE__, __LINE__, x);
 #endif
 
 #ifndef APAC_ASSERT
 #define APAC_ASSERT(x)      \
-if (!(x))                   \
-{                           \
-    APAC_REPORT_ERR(#x)     \
-    abort();                \
-}                   
+    if (!(x))               \
+    {                       \
+        APAC_REPORT_ERR(#x) \
+        abort();            \
+    }
+#endif
+
+#else
+
+#define APAC_REPORT_ERR(x) ((void)0)
+#define APAC_ASSERT(x)     ((void)0)
+
 #endif
 
 // for setMemFuncs()
@@ -95,7 +105,6 @@ typedef int64_t  i64;
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
 /****************************************************************************************************/
-
 
 /**               
 *                   IMPORTANT NOTES
@@ -158,7 +167,13 @@ APAC_API void apn_negate(u64* result, const u64* op1, u64 size);
 
 /*
     1) No overlap permitted between result and either of the operands
+    2) result must have 2 * size number of limbs
 */
 APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
+
+/*
+    1) Result must have size number of limbs
+*/
+APAC_API void apn_set(u64* result, u64 size, u64 val);
 
 #endif

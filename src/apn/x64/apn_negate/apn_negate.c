@@ -72,9 +72,9 @@ static void _avx2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
     return;
 }
 
-static void _sse_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
+static void _sse2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
 {
-	__m128i mask = _mm_cmpeq_epi64(_mm_setzero_si128(), _mm_setzero_si128());
+    __m128i mask = _mm_set1_epi64x(ULLONG_MAX);
 
     u64 blocks = size & ((u64)(-8));
 	u64 counter = 0;
@@ -133,7 +133,7 @@ void apn_negate(u64* result, const u64* op1, u64 size)
         }
         else
         {
-            _apn_negate_ptr = _sse_apn_negate_4unroll;
+            _apn_negate_ptr = _sse2_apn_negate_4unroll;
         }
     }
 

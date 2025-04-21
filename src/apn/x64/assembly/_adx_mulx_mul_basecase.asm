@@ -29,93 +29,167 @@ _adx_mulx_mul_basecase PROC FRAME
 .pushreg    r14
     push    r15
 .pushreg    r15
+    push    rbp
+.pushreg    rbp
 .pushframe
 .endprolog
 
     xor     rax, rax    ; i
-    xchg    rbx, rdx    ; now rbx contains op1 (const u64*)
-    xchg    rcx, r15    ; now r15 contains result (u64*)
-    mov     r10, r9     
-    shr     r10, 1
+    xchg    rbp, rcx    ; result in rbp
+    xchg    rbx, rdx    ; op1 in rbx
+    mov     r10, QWORD PTR [rsp + 104] ; size2 in r10
+    mov     r12, r9
+    shr     r9, 2       ; size1 /= 4
+    and     r12, 3      ; size1 %= 4
 
 loop_outer:
 
-    ; move size1 into r10 and rcx
-    ; r10 = size1 / 2
-    ; rcx = size1 % 2 (initially)
-    ;   
-    ; After the remainder loop
-    ;   
-    ; rcx = r10 
-
     xor     r11, r11    ; j
-    mov     r12, rax    ; indexer for result
-    mov     rdx, QWORD PTR [r8 + rax*8] ; op2[i]
-    mov     rcx, r9     
-    and     rcx, 1      ; rcx %= 2
-    jrcxz   before_unroll
+    mov     rcx, r9     ; size1/4 in rcx
+    mov     r13, rax    ; indexer for result
+    mov     rdx, QWORD PTR [r8 + rax*8]     ; op2[i]
 
-loop_inner_rmdr:
+    xor     rsi, rsi    ; clear flags from previous iterations
+
+    mov     rdi, jump_table
+    jmp     QWORD PTR [rdi + r12*8]
+
+rem1:
 
     mulx    rdi, rsi, QWORD PTR [rbx + r11*8]
+    mov     r14, QWORD PTR [rbp + r13*8]
+    mov     r15, QWORD PTR [rbp + r13*8 + 8]
 
-    mov     r14, QWORD PTR [r15 + r12*8]
     adcx    r14, rsi
-    mov     QWORD PTR [r15 + r12*8], r14
+    adox    r15, rdi
 
-    mov     r14, QWORD PTR [r15 + r12*8 + 8]
-    adox    r14, rdi
-    mov     QWORD PTR [r15 + r12*8 + 8], r14    
-    
+    mov     QWORD PTR [rbp + r13*8], r14
+    mov     QWORD PTR [rbp + r13*8 + 8], r15
+
     lea     r11, [r11 + 1]
-    lea     r12, [r12 + 1]
-    lea     rcx, [rcx - 1]
+    lea     r13, [r13 + 1]
+    jmp     loop_unrolled_4
 
-before_unroll:
+rem2:
 
-    mov     rcx, r10
-
-loop_inner_unroll:
-
-    jrcxz   loop_end
     mulx    rdi, rsi, QWORD PTR [rbx + r11*8]
+    mov     r14, QWORD PTR [rbp + r13*8]
+    mov     r15, QWORD PTR [rbp + r13*8 + 8]
 
-    mov     r14, QWORD PTR [r15 + r12*8]
     adcx    r14, rsi
-    mov     QWORD PTR [r15 + r12*8], r14
+    adox    r15, rdi
 
-    mov     r14, QWORD PTR [r15 + r12*8 + 8]
-    adox    r14, rdi
-    mov     QWORD PTR [r15 + r12*8 + 8], r14
+    mov     QWORD PTR [rbp + r13*8], r14
 
     mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 8]
+    mov     r14, QWORD PTR [rbp + r13*8 + 16]
 
-    mov     r14, QWORD PTR [r15 + r12*8 + 8]
-    adcx    r14, rsi
-    mov     QWORD PTR [r15 + r12*8 + 8], r14
-
-    mov     r14, QWORD PTR [r15 + r12*8 + 16]
+    adcx    r15, rsi
     adox    r14, rdi
-    mov     QWORD PTR [r15 + r12*8 + 16], r14
+
+    mov     QWORD PTR [rbp + r13*8 + 8], r15
+    mov     QWORD PTR [rbp + r13*8 + 16], r14
 
     lea     r11, [r11 + 2]
-    lea     r12, [r12 + 2]
-    lea     rcx, [rcx - 1]
-    jmp     loop_inner_unroll
+    lea     r13, [r13 + 2]
+    jmp     loop_unrolled_4
+
+rem3:
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8]
+    mov     r14, QWORD PTR [rbp + r13*8]
+    mov     r15, QWORD PTR [rbp + r13*8 + 8]
+
+    adcx    r14, rsi
+    adox    r15, rdi
+
+    mov     QWORD PTR [rbp + r13*8], r14
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 8]
+    mov     r14, QWORD PTR [rbp + r13*8 + 16]
+
+    adcx    r15, rsi
+    adox    r14, rdi
+
+    mov     QWORD PTR [rbp + r13*8 + 8], r15
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 16]
+    mov     r15, QWORD PTR [rbp + r13*8 + 24]
+
+    adcx    r14, rsi
+    adox    r15, rdi
+
+    mov     QWORD PTR [rbp + r13*8 + 16], r14
+    mov     QWORD PTR [rbp + r13*8 + 24], r15
+
+    lea     r11, [r11 + 3]
+    lea     r13, [r13 + 3]
+    jmp     loop_unrolled_4
 
 loop_end:
 
-    mov     r14, QWORD PTR [rsp + 96] ; size2 in r14 for cmp later
-    mov     r11, 0
-    adcx    r11, QWORD PTR [r15 + r12*8]
-    mov     QWORD PTR [r15 + r12*8], r11
-      
-    inc     rax
-    cmp     r14, rax
-    jnz     loop_outer
+    mov     r14, 0
+    adcx    r14, QWORD PTR [rbp + r13*8]
+    mov     QWORD PTR [rbp + r13*8], r14
 
+    inc     rax
+    cmp     r10, rax
+    jz      end_of_func
+    jmp     loop_outer
+ 
+ALIGN 16
+loop_unrolled_4:
+
+    jrcxz   loop_end
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8]
+    mov     r14, QWORD PTR [rbp + r13*8]
+    mov     r15, QWORD PTR [rbp + r13*8 + 8]
+
+    adcx    r14, rsi
+    adox    r15, rdi
+
+    mov     QWORD PTR [rbp + r13*8], r14
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 8]
+    mov     r14, QWORD PTR [rbp + r13*8 + 16]
+
+    adcx    r15, rsi
+    adox    r14, rdi
+
+    mov     QWORD PTR [rbp + r13*8 + 8], r15
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 16]
+    mov     r15, QWORD PTR [rbp + r13*8 + 24]
+
+    adcx    r14, rsi
+    adox    r15, rdi
+
+    mov     QWORD PTR [rbp + r13*8 + 16], r14
+
+    mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 24]
+    mov     r14, QWORD PTR [rbp + r13*8 + 32]
+
+    adcx    r15, rsi
+    adox    r14, rdi
+
+    mov     QWORD PTR [rbp + r13*8 + 24], r15
+    mov     QWORD PTR [rbp + r13*8 + 32], r14
+
+    lea     r11, [r11 + 4]
+    lea     r13, [r13 + 4]
+    lea     rcx, [rcx - 1]
+    jmp     loop_unrolled_4
+
+jump_table:
+            dq offset loop_unrolled_4
+            dq offset rem1
+            dq offset rem2
+            dq offset rem3
+    
 end_of_func:
 
+    pop     rbp
     pop     r15
     pop     r14
     pop     r13

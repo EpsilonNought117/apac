@@ -57,7 +57,7 @@ static void _avx_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 	}
 }
 
-static void _sse_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
+static void _sse2_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 {
 	u64 blocks = size & ((u64)(-8));	// first process blocks of 8 limbs
 	u64 counter = 0;
@@ -111,7 +111,7 @@ void apn_cpy(u64* result, const u64* op1, u64 size)
 		}
 		else
 		{
-			_apn_cpy_ptr = _sse_apn_cpy_4unroll;
+			_apn_cpy_ptr = _sse2_apn_cpy_4unroll;
 		}
 	}
 

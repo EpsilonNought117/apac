@@ -19,34 +19,33 @@ option(BUILD_UNIT_TESTS "Build the unit test executable" OFF)
 
 # Base source files
 set(apac_c_sources
-
     # MISCELLANEOUS HEADERS
     src/misc/setMemFuncs.c
     src/misc/getCPUSpec.c
     src/misc/apacInitDefault.c
-
 )
 
 # x64-specific assembly and source files
 set(x64_specific
-
     # PUBLIC API
     src/apn/x64/apn_add_sub/apn_add_sub.c
     src/apn/x64/apn_cpy/apn_cpy.c
     src/apn/x64/apn_negate/apn_negate.c
     src/apn/x64/apn_mul/apn_mul.c
+    src/apn/x64/apn_set/apn_set.c
 
     # HIDDEN
     src/apn/x64/apn_mul/_basecase_mul.c
+    src/apn/x64/apn_mul/_karatsuba_mul.c
 
     # ASSEMBLY
     src/apn/x64/assembly/_adc_add_n.asm
     src/apn/x64/assembly/_adc_add_one.asm
     src/apn/x64/assembly/_adc_till_carry.asm
 
-    src/apn/x64/assembly/_adx_mulx_mul_basecase.asm # for processors with ADX & BMI2 (BDW and beyond)
-    src/apn/x64/assembly/_adc_mulx_mul_basecase.asm # for processors with BMI2 but no ADX (before BDW after HSW)
-    src/apn/x64/assembly/_adc_mul_basecase.asm      # multiplication that runs on all x64 CPUs (before HSW)
+    src/apn/x64/assembly/_adx_mulx_mul_basecase.asm
+    src/apn/x64/assembly/_adc_mulx_mul_basecase.asm
+    src/apn/x64/assembly/_adc_mul_basecase.asm
     
     src/apn/x64/assembly/_sbb_sub_n.asm
     src/apn/x64/assembly/_sbb_sub_one.asm
@@ -59,8 +58,13 @@ set(apac ${apac_c_sources} ${x64_specific})
 # Build shared or static libapac
 if(BUILD_SHARED_LIBS)
     add_library(apac_shared SHARED ${apac})
-    target_compile_definitions(apac_shared PRIVATE BUILD_SHARED_LIBS)
+    set(apac_target apac_shared)
+    target_compile_definitions(${apac_target} PRIVATE BUILD_SHARED_LIBS)
 else()
     add_library(apac_static STATIC ${apac})
+    set(apac_target apac_static)
 endif()
 
+target_compile_definitions(${apac_target} PRIVATE
+    "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
+)

@@ -54,9 +54,9 @@ main_loop:
     sbb     rax, QWORD PTR [r8  + r10*8 + 16]
     mov     QWORD PTR [rcx + r10*8 + 16], rax
 
-    mov     rax, QWORD PTR [rdx + r10*8 + 16]
-    sbb     rax, QWORD PTR [r8  + r10*8 + 16]
-    mov     QWORD PTR [rcx + r10*8 + 16], rax
+    mov     rax, QWORD PTR [rdx + r10*8 + 24]
+    sbb     rax, QWORD PTR [r8  + r10*8 + 24]
+    mov     QWORD PTR [rcx + r10*8 + 24], rax
 
     lea     r10, [r10 + 4]
     dec     r11

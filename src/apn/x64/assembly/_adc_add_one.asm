@@ -19,7 +19,6 @@ _adc_add_one PROC FRAME
 .pushframe
 .endprolog
 
-    
     ; at this point, rsp is aligned at 16-byte boundary
     ; because during function entry, it is at 8-byte boundary
     ; pushing rbp sets it to a 16-byte boundary
