@@ -5,6 +5,7 @@ uint8_t bmi2_chk = 0;
 uint8_t avx2_chk = 0;
 uint8_t avx_chk = 0;
 uint8_t avx512f_chk = 0;
+uint8_t sse4_1_chk = 0;
 
 void getCPUSpec(void)
 {

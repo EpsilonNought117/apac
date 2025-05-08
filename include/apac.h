@@ -42,7 +42,7 @@ typedef enum apac_err
 
 }   apac_err;
 
-#ifndef APAC_DISABLE_ASSERT
+#if !defined(APAC_DISABLE_ASSERT)
 
 #ifndef APAC_REPORT_ERR
 #define APAC_REPORT_ERR(x) \
@@ -90,6 +90,7 @@ extern uint8_t bmi2_chk;
 extern uint8_t avx2_chk;
 extern uint8_t avx_chk;
 extern uint8_t avx512f_chk;
+extern uint8_t sse4_1_chk;
 
 APAC_API void getCPUSpec(void);
 
@@ -98,8 +99,10 @@ APAC_API void getCPUSpec(void);
 /****************************************************************************************************/
 
 typedef uint64_t u64;
+typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t   u8;
+typedef int32_t  i32;
 typedef int64_t  i64;
 
 /****************************************************************************************************/
@@ -117,9 +120,9 @@ typedef int64_t  i64;
 * 
 * 4) THEY DO NOT PERFORM ANY BOUNDS CHECKING IN RELEASE BUILDS.
 * 
-* 5) VERY LITTLE WORK IS DONE APART FROM THE ACTUAL COMPUTATION NEEDED.
+* 5) LITTLE TO NO WORK IS DONE APART FROM THE ACTUAL COMPUTATION NEEDED.
 * 
-* 6) NO SIZE ARGUMENT SHOULD BE ZERO, ALWAYS PASS AT LEAST SIZE 1.
+* 6) NO SIZE ARGUMENT SHOULD BE ZERO, ALWAYS PASS AT LEAST SIZE 1 FOR ALL SIZE ARGUMENTS.
 * 
 */
 
@@ -175,5 +178,10 @@ APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
     1) Result must have size number of limbs
 */
 APAC_API void apn_set(u64* result, u64 size, u64 val);
+
+/*
+    1) 
+*/
+APAC_API i32 apn_cmp(u64* op1, u64* op2, u64 size1, u64 size2);
 
 #endif

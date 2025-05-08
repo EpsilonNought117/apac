@@ -8,6 +8,9 @@ void (*_apn_mul_basecase_ptr)(u64* result, const u64* op1, const u64* op2, u64 s
 
 void _apn_basecase_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 {
+	APAC_ASSERT(size2 != 0);
+	APAC_ASSERT(size1 >= size2);
+
 	if (_apn_mul_basecase_ptr == NULL)
 	{
 		if (adx_chk)

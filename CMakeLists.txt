@@ -14,9 +14,6 @@ enable_language(ASM_MASM)
 # Option to build shared or static
 option(BUILD_SHARED_LIBS "Build libapac as a shared library" OFF)
 
-# Option to build unit tests
-option(BUILD_UNIT_TESTS "Build the unit test executable" OFF)
-
 # Base source files
 set(apac_c_sources
     # MISCELLANEOUS HEADERS
@@ -33,6 +30,7 @@ set(x64_specific
     src/apn/x64/apn_negate/apn_negate.c
     src/apn/x64/apn_mul/apn_mul.c
     src/apn/x64/apn_set/apn_set.c
+    src/apn/x64/apn_cmp/apn_cmp.c
 
     # HIDDEN
     src/apn/x64/apn_mul/_basecase_mul.c

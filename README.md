@@ -27,5 +27,4 @@ and number crunching with infinite precision, only limited by the amount of memo
 | Option            | Default	| Description									|
 |-------------------|-----------|-----------------------------------------------|
 | BUILD_SHARED_LIBS	| `OFF`		| Build a DLL if `ON`							|
-| BUILD_UNIT_TESTS  | `ON`		| Build unit test executable `unit_tests.exe`	|
 

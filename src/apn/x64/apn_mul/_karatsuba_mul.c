@@ -1,48 +1,15 @@
 #include "_hidden_mul.h"
 #include "../apac_thresholds.h"
 
-void _apn_additive_karatsuba_mul(
+void _apn_karatsuba_mul_n(
 	u64* result,
 	const u64* op1,
 	const u64* op2,
 	u64 size,
-	u8 depth,
-	u64* workspace
+	u64* temp
 )
 {
-	u8 allocd_here = 0;
-	
-	// variable to indicate whether to free workspace
-	// if it was allocated within the function here or if some 
-	// higher function gave it needed amount
-
-	if (!depth && !workspace)
-	{
-		u64 temp_val = size / KARATSUBA_MUL_THRESHOLD; 
-
-		// do log2(temp_val) + 1 to determine how many times
-		// the functions recurses on the worst skew of the
-		// recursion tree
-
-		uint32_t log_part = 0;
-
-		_BitScanReverse64(&log_part, temp_val);
-		log_part++;
-		u64 workspace_size = ((u64)log_part * 12 + ((size + 1) >> 1) * 8);
-
-		// explained more in the documentations
-
-		workspace = apac_malloc(sizeof(u64) * workspace_size);
-
-		if (!workspace)
-		{
-			APAC_REPORT_ERR("Memory allocation failed in karatsuba mul!");
-			abort();
-		}
-
-		allocd_here = 1; // set flag to indicate memory allocated
-		apn_set(workspace, workspace_size, 0); // clear out workspace
-	}
+	APAC_ASSERT(temp != NULL);
 
 	if (size < KARATSUBA_MUL_THRESHOLD)
 	{
@@ -52,109 +19,65 @@ void _apn_additive_karatsuba_mul(
 		_apn_basecase_mul(result, op1, op2, size, size);
 		return;
 	}
+
+	u64 lower = (size + 1) >> 1;	// upper half of the operands
+	u64 upper = size >> 1;			// lower half of the operands
+
+	// the lower half is at most 1 limb larger than upper half
+	// (size + 1) / 2 = ceil(size / 2)
+	// size / 2 = floor(size / 2)
+
+	// a0 = op1[0 : (lower - 1)]
+	// a1 = op1[lower : (upper - 1)]
+
+	// temp[0 : (lower - 1)] = (a0 - a1) 
+	// if a carry is generated that means a1 > a0 in which case 
+	// perform negation of result to get the absolute value
+
+	// cy1 = carryA
+
+	u8 cy1 = apn_sub(temp, op1, op1 + lower, lower, upper);
+	if (cy1) apn_negate(temp, temp, lower);
+
+	// b0 = op2[0 : (lower - 1)]
+	// b1 = op2[lower : (upper - 1)]
+	// temp[lower : (2 * lower - 1)] = (b0 - b1)
+
+	// cy2 = carryB
+	// rest is same
+	u8 cy2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
+	if (cy2) apn_negate(temp + lower, temp + lower, lower);
+
+	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
+	_apn_karatsuba_mul_n(result, temp, temp + lower, lower, temp + 2 * lower);
+
+	// we now have c2 in result 
+
+	// copy (2 * lower) count of limbs from result to temp
+	// clear out result for accumulating c0 and c1
+	apn_cpy(temp, result, 2 * lower);
+	apn_set(result, 2 * lower, 0);
+
+	// c0 = a0 * b0
+	_apn_karatsuba_mul_n(result, op1, op2, lower, temp + 2 * lower);
+	// c1 = a1 * b1
+	_apn_karatsuba_mul_n(result + 2 * lower, op1 + lower, op2 + lower, upper, temp + 2 * lower);
+
+	u8 val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
+	temp[4 * lower] += val; // propagate carry
+
+	if (cy1 == cy2) // if both signs are same
+	{
+		// do c2 = c0 + c1 - temp[0 : (2 * lower - 1)]
+		apn_sub(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
+	}
 	else
 	{
-		u64 lower = (size + 1) >> 1;	// upper half of the operands
-		u64 upper = size >> 1;			// lower half of the operands
-
-		// the lower half is at most 1 limb larger than upper half
-		// (size + 1) / 2 = floor(size / 2)
-		// size / 2 = ceil(size / 2)
-		// (a / b) is integer division so it truncates the fraction part
-
-		_apn_additive_karatsuba_mul(
-			&result[0],
-			&op1[0],
-			&op2[0],
-			lower,
-			depth + 1,
-			&workspace[0]
-		);	// result[0 : (2 * lower)] = a0 * b0
-		// a0 is op1[0 : lower]
-		// b0 is op2[0 : lower]
-		// this is c0
-
-		_apn_additive_karatsuba_mul(
-			&result[2 * lower],
-			&op1[lower],
-			&op2[lower],
-			upper,
-			depth + 1,
-			&workspace[0]
-		); // result[(2 * lower) : (2 * size)] = a1 * b1
-		// a1 is op1[(lower + 1) : upper]
-		// b1 is op2[(lower + 1) : upper]
-		// this is c1
-
-		u8 carry1 = apn_add(&workspace[0], &op1[0], &op1[lower], lower, upper);
-		workspace[lower] += carry1;
-
-		// propagate carry if occured
-
-		u8 carry2 = apn_add(&workspace[lower + 1], &op2[0], &op2[lower], lower, upper);
-		workspace[2 * lower + 1] += carry2;
-
-		// same as above here
-
-		_apn_additive_karatsuba_mul(
-			&workspace[2 * (lower + 1)],
-			&workspace[0],
-			&workspace[lower + 1],
-			lower + 1,
-			depth + 1,
-			&workspace[4 * (lower + 1)]
-		); // workspace[2 * (lower + 1) : 4 * (lower + 1)] = (a1 + a0) * (b1 + b0)
-		// (a1 + a0) is workspace[0 : (lower + 1)]
-		// (b1 + b0) is workspace[(lower + 1) : 2 * (lower + 1)]
-
-		// c2 = (a1 + a0) * (b1 + b0)
-
-		apn_sub(
-			&workspace[2 * (lower + 1)],
-			&workspace[2 * (lower + 1)],
-			&result[0],
-			2 * (lower + 1),
-			2 * lower
-		); // c2 -= c0
-
-		apn_sub(
-			&workspace[2 * (lower + 1)],
-			&workspace[2 * (lower + 1)],
-			&result[2 * lower],
-			2 * (lower + 1),
-			2 * upper
-		); // c2 -= c1
-
-		// at this point c2 = c2 - c0 - c1
-
-		apn_add_n(
-			&result[lower],
-			&result[lower],
-			&workspace[2 * (lower + 1)],
-			2 * lower + 1
-		);
-		// add c2 to result[lower : 2 * lower + 1]
-		
-		//   [----- c0 -----]
-		// +          [----- c2 -----]
-		// + 		    	    [----- c1 -----]
-		// -------------------------------------
-		// [-------------- result --------------]
-
-		apn_set(&workspace[0], 4 * (lower + 1), 0);
-		
-		// clear workspace for upcoming recursive calls
+		// do c2 = c0 + c1 + temp[0 : (2 * lower - 1)]
+		apn_add(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
 	}
 
-	if (!depth && allocd_here)
-	{
-		// deallocate aux storage if it was
-		// allocated within the function itself and
-		// not provided by some caller
-
-		apac_free(workspace);
-		workspace = NULL;
-	}
-
+	apn_add(result + lower, result + lower, temp + 2 * lower, 2 * lower + 1, 2 * lower + 1);
+	apn_set(temp, 4 * lower + 1, 0);
 	return;
 }
