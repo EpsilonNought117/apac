@@ -74,7 +74,7 @@ static void _avx2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
 
 static void _sse2_apn_negate_4unroll(u64* result, const u64* op1, u64 size)
 {
-    __m128i mask = _mm_set1_epi64x(ULLONG_MAX);
+    __m128i mask = _mm_set1_epi64x((u64)-1);
 
     u64 blocks = size & ((u64)(-8));
 	u64 counter = 0;

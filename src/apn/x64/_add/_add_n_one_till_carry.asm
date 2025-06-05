@@ -1,3 +1,10 @@
+
+;   O---------------------------------------------------------------------------O
+;   |                                                                           |
+;   |                   UNBALANCED ADDITION HELPER FUNCTION                     |
+;   |                                                                           |
+;   O---------------------------------------------------------------------------O
+
 .code
 
 	option casemap:none
@@ -9,7 +16,11 @@
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
-_adc_till_carry PROC FRAME
+; This function is not a performance bottleneck usually in practice.
+; Therefore only one common x64 implementation suffices for now.
+
+_add_n_one_till_carry PROC FRAME
+
 .pushframe
 .endprolog
 
@@ -41,7 +52,6 @@ end_of_func:
     setc    al
     ret
 
-_adc_till_carry ENDP
+_add_n_one_till_carry ENDP
 
 END
-

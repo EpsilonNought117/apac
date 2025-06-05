@@ -1,3 +1,10 @@
+
+;   O---------------------------------------------------------------------------O
+;   |                                                                           |
+;   |                   UNBALANCED ADDITION HELPER FUNCTION                     |
+;   |                                                                           |
+;   O---------------------------------------------------------------------------O
+
 .code
 
 	option casemap:none
@@ -9,9 +16,15 @@
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
+; apn_cpy needed for copying the rest of the limbs as is once carry becomes zero
+
 extern apn_cpy:PROC
 
-_sbb_sub_one PROC FRAME
+; This function is not a performance bottleneck usually in practice.
+; Therefore only one common x64 implementation suffices for now.
+
+_add_n_one PROC FRAME
+
     push    rbp
 .pushreg    rbp
     mov     rbp, rsp
@@ -28,7 +41,7 @@ _sbb_sub_one PROC FRAME
     mov     r11, r8     ; temp_size
 
     mov     rax, QWORD PTR [rdx + r10*8]
-    sub     rax, r9                         ; sub val
+    add     rax, r9                         ; add val
     mov     QWORD PTR [rcx + r10*8], rax
     inc     r10
     dec     r11
@@ -38,7 +51,7 @@ propagate_carry:
 
     jnc     copy_remaining
     mov     rax, QWORD PTR [rdx + r10*8]
-    sbb     rax, 0
+    adc     rax, 0
     mov     QWORD PTR [rcx + r10*8], rax
 
     inc     r10
@@ -50,7 +63,7 @@ copy_remaining:
 
     ; if this part is entered, that means there is no carry remaining
     ; rsp aligned at 16-byte boundary
-    ; allocate shadow space
+    ; allocate shadow space and call the apn_cpy func
 
     sub     rsp, 32                 
     
@@ -70,6 +83,7 @@ end_of_func:
     mov     rsp, rbp
     pop     rbp
     ret
-_sbb_sub_one ENDP
+
+_add_n_one ENDP
 
 END

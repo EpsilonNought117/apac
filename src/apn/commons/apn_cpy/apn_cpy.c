@@ -90,7 +90,7 @@ static void _sse2_apn_cpy_4unroll(u64* result, const u64* op1, u64 size)
 	}
 }
 
-void (*_apn_cpy_ptr)(u64*, const u64*, u64) = NULL;
+void (*_apn_cpy_ptr)(u64*, const u64*, u64) = NULL
 
 void apn_cpy(u64* result, const u64* op1, u64 size)
 {

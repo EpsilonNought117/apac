@@ -1,3 +1,11 @@
+
+
+;   O---------------------------------------------------------------------------O
+;   |                                                                           |
+;   |                 BASECASE MULTIPLICATION FUNC (ADC/MULX)                   |
+;   |                                                                           |
+;   O---------------------------------------------------------------------------O
+
 .code
 
 	option casemap:none
@@ -12,8 +20,8 @@
 
     ;   ASSUMPTION
     ;   (size1 >= size2)
-
-_adc_mulx_mul_basecase PROC FRAME
+	
+_mul_bc_mulx PROC FRAME
 
 	push	rbx
 .pushreg	rbx
@@ -73,6 +81,6 @@ end_of_func:
 	pop		rbx
 	ret		0
 
-_adc_mulx_mul_basecase ENDP
+_mul_bc_mulx ENDP
 
 END

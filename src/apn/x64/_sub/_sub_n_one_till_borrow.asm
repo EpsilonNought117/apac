@@ -1,3 +1,10 @@
+
+;   O---------------------------------------------------------------------------O
+;   |                                                                           |
+;   |                 UNBALANCED SUBTRACTION HELPER FUNCTION                    |
+;   |                                                                           |
+;   O---------------------------------------------------------------------------O
+
 .code
 
 	option casemap:none
@@ -9,7 +16,7 @@
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
-_sbb_till_borrow PROC FRAME
+_sub_n_one_till_borrow PROC FRAME
 .pushframe
 .endprolog
 
@@ -40,7 +47,6 @@ end_of_func:
 
     setc    al
     ret
-
-_sbb_till_borrow ENDP
+_sub_n_one_till_borrow ENDP
 
 END

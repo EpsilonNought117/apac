@@ -2,19 +2,19 @@
 #define APAC_H
 
 /****************************************************************************************************/
-/*********************************      REQUIRED STANDARD HEADERS     ********************************/
+/********************************      REQUIRED STANDARD HEADERS      *******************************/
 /****************************************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <memory.h>
 #include <stdint.h>
-#include <assert.h>
+
+#if defined(_M_X64) || defined(_M_AMD64)
 #include <intrin.h>
-#include <immintrin.h>
-#include <ammintrin.h>
+#endif
 
 /****************************************************************************************************/
-/*********************************       SHARED AND STATIC DEFS      ********************************/
+/*********************************      SHARED AND STATIC DEFS       ********************************/
 /****************************************************************************************************/
 
 #if defined(BUILD_SHARED_LIBS)
@@ -29,10 +29,8 @@
 #endif
 
 /****************************************************************************************************/
-/*********************************         MISCELLANEOUS          ***********************************/
+/*****************************      ERROR HANDLING FOR DEBUG MODE      ******************************/
 /****************************************************************************************************/
-
-// for error handling and assertion
 
 typedef enum apac_err
 {
@@ -46,7 +44,7 @@ typedef enum apac_err
 
 #ifndef APAC_REPORT_ERR
 #define APAC_REPORT_ERR(x) \
-    fprintf(stderr, "APAC ERROR [%s:%d]: %s\n", __FILE__, __LINE__, x);
+    fprintf(stderr, "APAC ERROR %s:%d]: %s\n", __FILE__, __LINE__, x);
 #endif
 
 #ifndef APAC_ASSERT
@@ -65,45 +63,47 @@ typedef enum apac_err
 
 #endif
 
-// for setMemFuncs()
+/****************************************************************************************************/
+/*********************************         MISCELLANEOUS          ***********************************/
+/****************************************************************************************************/
 
 APAC_API extern void* (*apac_malloc)(size_t);
 APAC_API extern void* (*apac_realloc)(void*, size_t);
 APAC_API extern void (*apac_free)(void*);
 
-APAC_API void setMemFuncs(
+APAC_API void apacSetMemFuncs(
     void* (*ptr1)(size_t),
     void* (*ptr2)(void*, size_t),
     void (*ptr3)(void*)
 );
 
-APAC_API void apacInitDefault(void);
+APAC_API void apacInit(void);
 
-/****************************************************************************************************/
-/*********************************        FETCH CPU FEATURES       **********************************/
-/****************************************************************************************************/
-
-// cpu feature flags
-
-extern uint8_t adx_chk;
-extern uint8_t bmi2_chk;
-extern uint8_t avx2_chk;
-extern uint8_t avx_chk;
-extern uint8_t avx512f_chk;
-extern uint8_t sse4_1_chk;
-
-APAC_API void getCPUSpec(void);
+APAC_API void apacGetCPUSpec(void);
 
 /****************************************************************************************************/
 /*********************************          APN DEFINITIONS        **********************************/
 /****************************************************************************************************/
 
-typedef uint64_t u64;
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint8_t   u8;
-typedef int32_t  i32;
-typedef int64_t  i64;
+typedef uint64_t  u64;
+typedef uint8_t    u8;
+typedef int64_t   i64;
+typedef int8_t     i8;
+
+typedef struct
+{
+    u64 karatsuba_mul_n_threshold;
+    u64 toom33_mul_n_threshold;
+
+    u8(*__apn_add_n_ptr)(u64*, const u64*, const u64*, u64);
+    u8(*__apn_sub_n_ptr)(u64*, const u64*, const u64*, u64);
+    void (*__apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);
+    void (*__apn_neg_ptr)(u64*, const u64*, u64);
+    void (*__apn_cpy_ptr)(u64*, const u64*, u64);
+    void (*_apn_set_ptr)(u64*, u64, u64);
+    i8(*__apn_cmp_ptr)(const u64*, const u64*, u64, u64);
+
+}   __apac_cpu_params;
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
@@ -114,11 +114,11 @@ typedef int64_t  i64;
 * 
 * 1) THESE FUNCTIONS DO NOT PERFORM ANY MEMORY ALLOCATIONS.
 *
-* 2) ASSERTS ARE USED FOR DEBUG BUILDS TO CATCH ANY ERRORS.
+* 2) ASSERTS ARE USED IN DEBUG MODE FOR CATCHING INVALID ARGUMENT ERRORS.
 * 
-* 3) THEY ASSUME THAT THE RESULT HAS REQUIRED NUMBER OF LIMBS.
+* 3) THE RESULT MUST HAVE APPROPRIATE NUMBER OF LIMBS ACCORDING TO OPERATION.
 * 
-* 4) THEY DO NOT PERFORM ANY BOUNDS CHECKING IN RELEASE BUILDS.
+* 4) THEY DO NOT PERFORM ANY BOUNDS CHECKING.
 * 
 * 5) LITTLE TO NO WORK IS DONE APART FROM THE ACTUAL COMPUTATION NEEDED.
 * 
@@ -128,33 +128,39 @@ typedef int64_t  i64;
 
 /*
     1) result must have "size" limbs
+    2) returns the carry out
 */
 APAC_API u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
 /*
     1) size1 must be greater than or equal to size2.
     2) result must have size1 limbs
+    3) returns the carry out
 */
 APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 /*
     1) result must have "size" limbs
+    2) returns the carry out (unlikely in avg case)
 */
 APAC_API u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val);
 
 /*
     1) result must have "size" limbs
+    2) returns the borrow out
 */
 APAC_API u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
 /*
     1) size1 must be greater than or equal to size2.
     2) result must have size1 limbs
+    3) return the borrow out
 */
 APAC_API u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 /*
     1) result must have "size" limbs
+    2) returns the borrow out
 */
 APAC_API u8 apn_sub_one(u64* result, const u64* op1, u64 size, u64 val);
 
@@ -166,7 +172,7 @@ APAC_API void apn_cpy(u64* result, const u64* op1, u64 size);
 /*
     1) result must have "size" number of limbs
 */
-APAC_API void apn_negate(u64* result, const u64* op1, u64 size);
+APAC_API void apn_neg(u64* result, const u64* op1, u64 size);
 
 /*
     1) No overlap permitted between result and either of the operands
@@ -180,8 +186,8 @@ APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
 APAC_API void apn_set(u64* result, u64 size, u64 val);
 
 /*
-    1) 
+    1) returns 1, 0, -1 based on whether op1 > op2, op1 = op2 or op1 < op2 
 */
-APAC_API i32 apn_cmp(u64* op1, u64* op2, u64 size1, u64 size2);
+APAC_API i8 apn_cmp(const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 #endif

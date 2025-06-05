@@ -4,7 +4,7 @@ void* (*apac_malloc)(size_t) = NULL;
 void* (*apac_realloc)(void*, size_t) = NULL;
 void (*apac_free)(void*) = NULL;
 
-void setMemFuncs(
+void apacSetMemFuncs(
     void* (*ptr1)(size_t),
     void* (*ptr2)(void*, size_t),
     void (*ptr3)(void*)
@@ -24,7 +24,7 @@ void setMemFuncs(
     }
     else
     {
-        APAC_REPORT_ERR("Improper arguments passed in setMemFuncs.\nDefaulting to <stdlib.h> malloc and friends.");
+        APAC_REPORT_ERR("One or more invalid arguments passed in setMemFuncs.\nDefaulting to <stdlib.h> malloc and friends.");
         apac_malloc = &malloc;
         apac_realloc = &realloc;
         apac_free = &free;   

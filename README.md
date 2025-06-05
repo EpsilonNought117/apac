@@ -7,7 +7,7 @@ and number crunching with infinite precision, only limited by the amount of memo
 
 ## Features
 
-- Targeted for **x64** CPUs on **Windows OS** (ARM64 support planned in future).
+- Targeted for **x86-64** CPUs on **Windows OS**.
 - Supports both **static** and **shared** library builds.
 - Customizable memory allocation functions.
 - High-performance low-level APIs that focus on speed and space efficiency.

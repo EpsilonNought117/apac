@@ -1,3 +1,10 @@
+
+;   O---------------------------------------------------------------------------O
+;   |                                                                           |
+;   |                 UNBALANCED SUBTRACTION HELPER FUNCTION                    |
+;   |                                                                           |
+;   O---------------------------------------------------------------------------O
+
 .code
 
 	option casemap:none
@@ -11,14 +18,13 @@
 
 extern apn_cpy:PROC
 
-_adc_add_one PROC FRAME
-
+_sub_n_one PROC FRAME
     push    rbp
 .pushreg    rbp
     mov     rbp, rsp
 .pushframe
 .endprolog
-
+    
     ; at this point, rsp is aligned at 16-byte boundary
     ; because during function entry, it is at 8-byte boundary
     ; pushing rbp sets it to a 16-byte boundary
@@ -29,7 +35,7 @@ _adc_add_one PROC FRAME
     mov     r11, r8     ; temp_size
 
     mov     rax, QWORD PTR [rdx + r10*8]
-    add     rax, r9                         ; add val
+    sub     rax, r9                         ; sub val
     mov     QWORD PTR [rcx + r10*8], rax
     inc     r10
     dec     r11
@@ -39,7 +45,7 @@ propagate_carry:
 
     jnc     copy_remaining
     mov     rax, QWORD PTR [rdx + r10*8]
-    adc     rax, 0
+    sbb     rax, 0
     mov     QWORD PTR [rcx + r10*8], rax
 
     inc     r10
@@ -53,7 +59,7 @@ copy_remaining:
     ; rsp aligned at 16-byte boundary
     ; allocate shadow space
 
-    sub     rsp, 32                 
+    sub     rsp, 32
     
     lea     rcx, [rcx + r10*8]
     lea     rdx, [rdx + r10*8]
@@ -71,6 +77,6 @@ end_of_func:
     mov     rsp, rbp
     pop     rbp
     ret
-_adc_add_one ENDP
+_sub_n_one ENDP
 
 END

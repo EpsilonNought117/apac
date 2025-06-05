@@ -1,5 +1,5 @@
-#ifndef _APN_HIDDEN_MUL_H_
-#define _APN_HIDDEN_MUL_H_
+#ifndef APN_HIDDEN_MUL
+#define APN_HIDDEN_MUL
 
 #include "../../../../include/apac.h"
 

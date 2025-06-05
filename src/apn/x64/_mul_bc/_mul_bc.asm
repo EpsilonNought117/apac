@@ -1,3 +1,10 @@
+
+;   O---------------------------------------------------------------------------O
+;   |                                                                           |
+;   |                 BASECASE MULTIPLICATION FUNC (ADC/MUL)                    |
+;   |                                                                           |
+;   O---------------------------------------------------------------------------O
+
 .code
 
 	option casemap:none
@@ -13,7 +20,8 @@
     ;   ASSUMPTION
     ;   (size1 >= size2)
 
-_adc_mul_basecase PROC FRAME
+_mul_bc PROC FRAME
+    
     push    rbx
 .pushreg    rbx
     push    rdi
@@ -37,8 +45,8 @@ outer_loop:
     xor     rdi, rdi        ; temp_reg
     xor     r11, r11        ; j
     xor     rdx, rdx        ; high64
-    mov     r12, r10    ; r12 is indexer for result
-    mov     r13, r9     ; load size1 into r13
+    mov     r12, r10        ; r12 is indexer for result
+    mov     r13, r9         ; load size1 into r13
     mov     rsi, QWORD PTR [r8 + r10*8]  ; op2[i]
     mov     rax, rsi
 
@@ -75,6 +83,6 @@ end_of_func:
     pop     rbx
     ret     0
 
-_adc_mul_basecase ENDP
+_mul_bc ENDP
 
 END
