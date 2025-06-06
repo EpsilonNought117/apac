@@ -100,8 +100,7 @@ typedef struct
     void (*__apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);
     void (*__apn_neg_ptr)(u64*, const u64*, u64);
     void (*__apn_cpy_ptr)(u64*, const u64*, u64);
-    void (*_apn_set_ptr)(u64*, u64, u64);
-    i8(*__apn_cmp_ptr)(const u64*, const u64*, u64, u64);
+    void (*__apn_set_ptr)(u64*, u64, u64);
 
 }   __apac_cpu_params;
 

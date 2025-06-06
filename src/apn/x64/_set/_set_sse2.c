@@ -22,4 +22,6 @@ void _set_sse2_4unroll(u64* result, u64 size, u64 val)
 		result[counter] = val;
 		counter++;
 	}
+
+	return;
 }

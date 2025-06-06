@@ -48,6 +48,7 @@
             src/apn/commons/apn_mul/apn_mul.c
             src/apn/commons/apn_set/apn_set.c
             src/apn/commons/apn_cmp/apn_cmp.c
+            src/apn/commons/apn_cpy/apn_cpy.c
 
         # APN HIDDEN FUNCS
 
@@ -86,7 +87,15 @@
             # SET (TO A VALUE) OPS
 
                 src/apn/x64/_set/_set_sse2.c
-               
+                src/apn/x64/_set/_set_avx.c
+                src/apn/x64/_set/_set_avx512f.c
+
+            # COPYING OPS
+
+                src/apn/x64/_cpy/_cpy_sse2.c
+                src/apn/x64/_cpy/_cpy_avx.c
+                src/apn/x64/_cpy/_cpy_avx512f.c
+
     )
 
 # --- HIDDEN HEADERS ------------------------------------------------------------

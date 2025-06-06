@@ -22,7 +22,6 @@ _neg_8unroll PROC FRAME
 .pushframe
 .endprolog
 
-    xor     rax, rax
     xor     r10, r10
     mov     r11, r8
     and     r11, 7
@@ -30,10 +29,10 @@ _neg_8unroll PROC FRAME
 
 small_loop:
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8], r9
-    mov     rax, 0
 
     inc     r10
     dec     r11
@@ -49,45 +48,45 @@ unroll_loop_outer:
 
 main_loop:
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 8]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 8], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 16]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 16], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 24]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 24], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 32]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 32], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 40]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 40], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 48]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 48], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 56]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 56], r9
-    mov     rax, 0
 
     lea     r10, [r10 + 8]
     dec     r11
@@ -99,13 +98,12 @@ end_of_func:
 
 _neg_8unroll ENDP
 
-; 4x Unroll
+; 4x unroll version
 
 _neg_4unroll PROC FRAME
 .pushframe
 .endprolog
 
-    xor     rax, rax
     xor     r10, r10
     mov     r11, r8
     and     r11, 3
@@ -113,10 +111,10 @@ _neg_4unroll PROC FRAME
 
 small_loop:
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8], r9
-    mov     rax, 0
 
     inc     r10
     dec     r11
@@ -131,26 +129,26 @@ unroll_loop_outer:
     jz      end_of_func
 
 main_loop:
-
+    
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 8]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 8], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 16]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 16], r9
-    mov     rax, 0
 
+    mov     rax, 0
     mov     r9, QWORD PTR [rdx + r10*8 + 24]
     sbb     rax, r9
     mov     QWORD PTR [rcx + r10*8 + 24], r9
-    mov     rax, 0
 
     lea     r10, [r10 + 4]
     dec     r11

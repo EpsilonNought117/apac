@@ -1,4 +1,5 @@
 #include "../../include/apac.h"
+#include "../apn/x64/x64_hidden_funcs.h"
 
 __apac_cpu_params curr_cpu = { 0 };
 
