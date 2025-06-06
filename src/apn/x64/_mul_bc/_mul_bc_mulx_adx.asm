@@ -165,7 +165,7 @@ loop_unrolled_4:
     adcx    rsi, r14
     adox    rdi, QWORD PTR [rbp + r13*8 + 24]
 
-    mov     QWORD PTR [rbp + r13*8 + 16], r14
+    mov     QWORD PTR [rbp + r13*8 + 16], rsi
     mov     r14, rdi
 
     mulx    rdi, rsi, QWORD PTR [rbx + r11*8 + 24]

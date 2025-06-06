@@ -83,6 +83,8 @@
             
                 src/apn/x64/_neg/_neg.asm
 
+        # C SOURCES
+
             # SET (TO A VALUE) OPS
 
                 src/apn/x64/_set/_set_sse2.c
@@ -94,6 +96,10 @@
                 src/apn/x64/_cpy/_cpy_sse2.c
                 src/apn/x64/_cpy/_cpy_avx.c
                 src/apn/x64/_cpy/_cpy_avx512f.c
+
+        # UARCH PARAM FILES
+
+            src/apn/x64/uarch_params/zen4_params.c
     )
 
 # --- HIDDEN HEADERS ------------------------------------------------------------
