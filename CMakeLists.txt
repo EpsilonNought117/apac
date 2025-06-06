@@ -47,7 +47,6 @@
             src/apn/commons/apn_negate/apn_negate.c
             src/apn/commons/apn_mul/apn_mul.c
             src/apn/commons/apn_set/apn_set.c
-            src/apn/commons/apn_cmp/apn_cmp.c
             src/apn/commons/apn_cpy/apn_cpy.c
 
         # APN HIDDEN FUNCS
@@ -95,7 +94,6 @@
                 src/apn/x64/_cpy/_cpy_sse2.c
                 src/apn/x64/_cpy/_cpy_avx.c
                 src/apn/x64/_cpy/_cpy_avx512f.c
-
     )
 
 # --- HIDDEN HEADERS ------------------------------------------------------------

@@ -1,5 +1,5 @@
 #include "_hidden_mul.h"
-#include "../apac_thresholds.h"
+#include "../apn_thresholds.h"
 
 /*
 *	TO DO:
@@ -17,7 +17,7 @@ void _apn_karatsuba_mul_n(
 {
 	APAC_ASSERT(temp != NULL);
 
-	if (size < KARATSUBA_MUL_THRESHOLD)
+	if (size < KARATSUBA_MUL_N_THRESHOLD)
 	{
 		// for sizes below threshold
 		// use the basecase multiplication
@@ -43,7 +43,7 @@ void _apn_karatsuba_mul_n(
 	// cy1 = carryA
 
 	u8 cy1 = apn_sub(temp, op1, op1 + lower, lower, upper);
-	if (cy1) apn_negate(temp, temp, lower);
+	if (cy1) apn_neg(temp, temp, lower);
 
 	// b0 = op2[0 : (lower - 1)]
 	// b1 = op2[lower : (upper - 1)]
@@ -52,7 +52,7 @@ void _apn_karatsuba_mul_n(
 	// cy2 = carryB
 	// rest is same
 	u8 cy2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
-	if (cy2) apn_negate(temp + lower, temp + lower, lower);
+	if (cy2) apn_neg(temp + lower, temp + lower, lower);
 
 	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
 	_apn_karatsuba_mul_n(result, temp, temp + lower, lower, temp + 2 * lower);
