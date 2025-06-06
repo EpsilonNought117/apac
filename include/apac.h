@@ -6,7 +6,7 @@
 /****************************************************************************************************/
 
 #include <stdio.h>
-#include <memory.h>
+#include <stdlib.h>
 #include <stdint.h>
 
 #if defined(_M_X64) || defined(_M_AMD64)
@@ -86,8 +86,10 @@ APAC_API void apacGetCPUSpec(void);
 /****************************************************************************************************/
 
 typedef uint64_t  u64;
+typedef uint32_t  u32;
 typedef uint8_t    u8;
 typedef int64_t   i64;
+typedef int32_t   i32;
 typedef int8_t     i8;
 
 typedef struct

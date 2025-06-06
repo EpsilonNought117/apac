@@ -25,7 +25,7 @@ _neg_8unroll PROC FRAME
     xor     r10, r10
     mov     r11, r8
     and     r11, 7
-    jz      loop_unroll_outer
+    jz      unroll_loop_outer
 
 small_loop:
 

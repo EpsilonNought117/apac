@@ -1,5 +1,6 @@
 #include "../../../../include/apac.h"
 #include "../x64_hidden_funcs.h"
+#include "../x64_uarch_params.h"
 
 extern __apac_cpu_params curr_cpu;
 
@@ -14,4 +15,6 @@ void zen4_set_params(void)
 	curr_cpu.__apn_neg_ptr = _neg_4unroll;
 	curr_cpu.__apn_set_ptr = _set_avx512f_4unroll;
 	curr_cpu.__apn_cpy_ptr = _cpy_avx512f_4unroll;
+
+	return;
 }

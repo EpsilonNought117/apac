@@ -8,7 +8,7 @@
 
 # --- CHECKS --------------------------------------------------------------------
 
-    cmake_minimum_required(VERSION 3.8)
+    cmake_minimum_required(VERSION 3.12)
 
     project(libapac C)
 
@@ -108,6 +108,7 @@
          # x64 SPECIFIC
 
             src/apn/x64/x64_hidden_funcs.h
+            src/apn/x64/x64_uarch_params.h
     )
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------

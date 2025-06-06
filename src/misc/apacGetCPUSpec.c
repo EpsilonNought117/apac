@@ -1,9 +1,8 @@
 #include "../../include/apac.h"
 #include "../apn/x64/x64_hidden_funcs.h"
+#include "../apn/x64/x64_uarch_params.h"
 
 __apac_cpu_params curr_cpu = { 0 };
-
-extern void zen4_set_params(void);
 
 #if defined(_M_X64) || defined(_M_AMD64)
 
@@ -36,7 +35,7 @@ void apacGetCPUSpec(void)
 			break;
 
 		default:
-
+			break;
 		}
 	}
 	else if (
@@ -55,9 +54,9 @@ void apacGetCPUSpec(void)
 		switch (family)
 		{
 		case 0x6:
-		
-		default:
 
+		default:
+			break;
 		}
 	}
 

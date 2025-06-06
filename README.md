@@ -19,7 +19,7 @@ and number crunching with infinite precision, only limited by the amount of memo
 
 1) Windows 10/11
 2) _Visual Studio 2022_ or _Visual Studio Build Tools_ with ``Desktop development with C++`` option selected.
-3) CMake 3.8+
+3) CMake 3.12+
 4) Build generator like `Visual Studio 17 2022` or `Ninja`.
 
 ## CMake Options

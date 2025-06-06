@@ -29,7 +29,7 @@ u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 	APAC_ASSERT(op2 != NULL);
 
 	if (curr_cpu.__apn_add_n_ptr == NULL)
-		apacGetCPUSpec;
+		apacGetCPUSpec();
 
 	u8 carry = curr_cpu.__apn_add_n_ptr(result, op1, op2, size2);
 
