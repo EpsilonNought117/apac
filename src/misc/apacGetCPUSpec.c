@@ -31,10 +31,31 @@ void apacGetCPUSpec(void)
 
 		switch (family)
 		{
-		case 0x19:
+		case 0x19:				// Zen 4 Uarch
 			zen4_set_params();
 			break;
 
+		default:
+
+		}
+	}
+	else if (
+		cpuInfo[1] == 0x756E6547 &&		// 'Genu'
+		cpuInfo[3] == 0x49656E69 &&		// 'ineI'
+		cpuInfo[2] == 0x6C65746E		// 'ntel'
+		)
+	{
+		__cpuid(cpuInfo, 0x1);
+		int signature = cpuInfo[0];
+
+		int baseFamily = (signature >> 8) & 0xF;
+		int extendedFamily = (signature >> 20) & 0xFF;
+		int family = (baseFamily != 0xF) ? baseFamily : baseFamily + extendedFamily;
+	
+		switch (family)
+		{
+		case 0x6:
+		
 		default:
 
 		}
