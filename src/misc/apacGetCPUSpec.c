@@ -5,7 +5,8 @@ __apac_cpu_params curr_cpu = { 0 };
 #if defined(_M_X64) || defined(_M_AMD64)
 
 #include "../apn/x64/x64_hidden_funcs.h"
-#include "../apn/x64/x64_uarch_params.h"
+
+extern void zen4_set_params(void);
 
 // x64/AMD64 Version
 

@@ -267,7 +267,6 @@ loop_end:
     jz      end_of_func
     jmp     loop_outer
 
-ALIGN 16
 loop_unrolled_2:
 
     jrcxz   loop_end

@@ -114,7 +114,6 @@
          # x64 SPECIFIC
 
             src/apn/x64/x64_hidden_funcs.h
-            src/apn/x64/x64_uarch_params.h
     )
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
