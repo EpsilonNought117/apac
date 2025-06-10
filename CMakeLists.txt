@@ -7,23 +7,51 @@
 
 
 # --- CHECKS --------------------------------------------------------------------
-
+    
     cmake_minimum_required(VERSION 3.12)
-
     project(libapac C)
-
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-        message(FATAL_ERROR "MSVC is required to build libapac.")
-    endif()
 
     if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
         message(FATAL_ERROR "Only 64-bit builds are supported.")
     endif()
 
+    # Find NASM assembler (required for all platforms)
+
+    find_program(NASM_EXECUTABLE nasm)
+
+    if(NOT NASM_EXECUTABLE)
+        message(FATAL_ERROR "NASM assembler is required to build libapac!")
+    else()
+        message(STATUS "Found Netwide Assembler: ${NASM_EXECUTABLE}")
+        enable_language(ASM_NASM)
+    endif()
+
+    # Platform-specific compiler requirements
+    if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        
+        if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+            message(FATAL_ERROR "MSVC Toolchain is required to build libapac on Windows!")
+        endif()
+    
+        set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f win64 -d _WIN64")
+
+    elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        
+        if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            message(STATUS "Found supported compiler: ${CMAKE_C_COMPILER_ID} C Compiler")
+        else()
+            message(FATAL_ERROR "GCC/Clang is required to build libapac on Linux!")
+        endif()
+        
+        # Set NASM flags for Linux
+        set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf64 -d __linux__")
+
+    else()
+        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
+    endif()
+
     set(CMAKE_C_STANDARD 11)
-   
-    enable_language(ASM_MASM)
-                                                  
+
 # --- BUILD OPTIONS -------------------------------------------------------------
 
     # Option to build a DLL instead of a static lib
@@ -119,24 +147,18 @@
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 
     # Combine all source files
-
-    set(apac ${apac_c_sources} ${x64_specific})
+    set(apac_sources ${apac_c_sources} ${x64_specific} ${hidden_headers})
 
     if(BUILD_SHARED_LIBS)
-        add_library(apac_shared SHARED ${apac})
-        set(apac_target apac_shared)
-        target_compile_definitions(${apac_target} PRIVATE BUILD_SHARED_LIBS)
+        add_library(apac SHARED ${apac_sources})
+        target_compile_definitions(apac PRIVATE BUILD_SHARED_LIBS)
+        set(apac_target apac)
     else()
-        add_library(apac_static STATIC ${apac})
-        set(apac_target apac_static)
+        add_library(apac STATIC ${apac_sources})
+        set(apac_target apac)
     endif()
 
-    # Add hidden headers explicitly for IDE visibility
-
-    target_sources(${apac_target} PRIVATE ${hidden_headers})
-
     # Configuration-specific definitions
-
     target_compile_definitions(${apac_target} PRIVATE
         "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
     )
