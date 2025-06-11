@@ -1,7 +1,7 @@
 
 ;   O---------------------------------------------------------------------------O
 ;   |                                                                           |
-;   |                 UNBALANCED SUBTRACTION HELPER FUNCTION                    |
+;   |                   UNBALANCED ADDITION HELPER FUNCTION                     |
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
@@ -16,30 +16,33 @@
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
-_sub_n_one_till_borrow PROC FRAME
+; This function is not a performance bottleneck usually in practice.
+; Therefore only one common x64 implementation suffices for now.
+
+_add_n_one_till_carry PROC FRAME
 .pushframe
 .endprolog
 
-    xor     rax, rax
-    xor     r10, r10
     mov     r11, r8
 
-    mov     rax, QWORD PTR [rdx + r10*8]
-    sub     rax, r9
-    mov     QWORD PTR [rcx + r10*8], rax
+    mov     rax, QWORD PTR [rdx]
+    add     rax, r9
+    mov     QWORD PTR [rcx], rax
 
-    inc     r10
+    lea     rdx, [rdx + 8]
+    lea     rcx, [rcx + 8]
     dec     r11
     jz      end_of_func
 
 propagate_carry:
 
     jnc     end_of_func
-    mov     rax, QWORD PTR [rdx + r10*8]
-    sbb     rax, 0
-    mov     QWORD PTR [rcx + r10*8], rax
+    mov     rax, QWORD PTR [rdx]
+    adc     rax, 0
+    mov     QWORD PTR [rcx], rax
 
-    inc     r10
+    lea     rdx, [rdx + 8]
+    lea     rcx, [rcx + 8]
     dec     r11
     jnz     propagate_carry
 
@@ -47,6 +50,7 @@ end_of_func:
 
     setc    al
     ret
-_sub_n_one_till_borrow ENDP
+
+_add_n_one_till_carry ENDP
 
 END

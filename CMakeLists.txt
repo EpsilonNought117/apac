@@ -41,17 +41,17 @@
 
         # APN PUBLIC API
 
-            src/apn/commons/apn_add/apn_add.c
-            src/apn/commons/apn_sub/apn_sub.c
-            src/apn/commons/apn_negate/apn_negate.c
-            src/apn/commons/apn_mul/apn_mul.c
-            src/apn/commons/apn_set/apn_set.c
-            src/apn/commons/apn_cpy/apn_cpy.c
+            src/apn/commons/apn_add.c
+            src/apn/commons/apn_sub.c
+            src/apn/commons/apn_negate.c
+            src/apn/commons/apn_mul.c
+            src/apn/commons/apn_set.c
+            src/apn/commons/apn_cpy.c
 
         # APN HIDDEN FUNCS
 
-            src/apn/commons/apn_mul/_basecase_mul.c
-            src/apn/commons/apn_mul/_karatsuba_mul.c
+            src/apn/commons/_basecase_mul.c
+            src/apn/commons/_karatsuba_mul.c
     )
 
 # --- x64 SPECIFIC C/ASM SOURCES ------------------------------------------------
@@ -62,43 +62,39 @@
 
             # ADDITION AND RELATED OPS
             
-                src/apn/x64/_add/_add_n.asm
-                src/apn/x64/_add/_add_n_one.asm
-                src/apn/x64/_add/_add_n_one_till_carry.asm
+                src/apn/x64/_add_n.asm
+                src/apn/x64/_add_n_one.asm
+                src/apn/x64/_add_n_one_till_carry.asm
 
             # BASECASE MULTIPLICATION
     
-                src/apn/x64/_mul_bc/_mul_bc_mulx_adx.asm
-                src/apn/x64/_mul_bc/_mul_bc_mulx.asm
-                src/apn/x64/_mul_bc/_mul_bc.asm
+                src/apn/x64/_mul_bc_mulx_adx.asm
+                src/apn/x64/_mul_bc_mulx.asm
+                src/apn/x64/_mul_bc.asm
     
             # SUBTRACTION AND RELATED OPS
     
-                src/apn/x64/_sub/_sub_n.asm
-                src/apn/x64/_sub/_sub_n_one.asm
-                src/apn/x64/_sub/_sub_n_one_till_borrow.asm
+                src/apn/x64/_sub_n.asm
+                src/apn/x64/_sub_n_one.asm
+                src/apn/x64/_sub_n_one_till_borrow.asm
 
             # NEGATION (2's Complement)
             
-                src/apn/x64/_neg/_neg.asm
+                src/apn/x64/_neg.asm
 
         # C SOURCES
 
             # SET (TO A VALUE) OPS
 
-                src/apn/x64/_set/_set_sse2.c
-                src/apn/x64/_set/_set_avx.c
-                src/apn/x64/_set/_set_avx512f.c
+                src/apn/x64/_set.c
 
             # COPYING OPS
 
-                src/apn/x64/_cpy/_cpy_sse2.c
-                src/apn/x64/_cpy/_cpy_avx.c
-                src/apn/x64/_cpy/_cpy_avx512f.c
+                src/apn/x64/_cpy.c
 
         # UARCH PARAM FILES
 
-            src/apn/x64/uarch_params/zen4_params.c
+            src/apn/x64/cpu_params.c
     )
 
 # --- HIDDEN HEADERS ------------------------------------------------------------
@@ -107,7 +103,7 @@
 
          # COMMONS
 
-            src/apn/commons/apn_mul/_hidden_mul.h
+            src/apn/commons/_hidden_mul.h
             src/apn/commons/apn_thresholds.h
     
          # x64 SPECIFIC

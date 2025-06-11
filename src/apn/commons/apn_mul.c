@@ -1,5 +1,5 @@
-#include "../../../../include/apac.h"
-#include "../apn_thresholds.h"
+#include "../../../include/apac.h"
+#include "apn_thresholds.h"
 #include "_hidden_mul.h"
 
 #define KARATSUBA_WS_SIZE(size)	((u64)size * 2 + 32) 

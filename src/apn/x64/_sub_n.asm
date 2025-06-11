@@ -1,7 +1,7 @@
 
 ;   O---------------------------------------------------------------------------O
 ;   |                                                                           |
-;   |                   BALANCED ADDITION FUNCS (N LIMBS)                       |
+;   |                 BALANCED SUBTRACTION FUNCS (N LIMBS)                      |
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
@@ -20,7 +20,8 @@
 
 ;   8x Unroll Variant
 
-_add_n_8unroll PROC FRAME
+_sub_n_8unroll PROC FRAME
+
 .pushframe
 .endprolog
 
@@ -31,9 +32,9 @@ _add_n_8unroll PROC FRAME
 
 small_loop:
 
-    mov     rax, QWORD [rdx]
-    adc     rax, QWORD [r8]
-    mov     QWORD [rcx], rax
+    mov     rax, QWORD PTR [rdx]
+    sbb     rax, QWORD PTR [r8]
+    mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
     lea     r8,  [r8  + 8]
@@ -50,37 +51,37 @@ before_big_loop:
 
 big_loop:
 
-    mov     rax, QWORD [rdx]
-    adc     rax, QWORD [r8]
-    mov     QWORD [rcx], rax
+    mov     rax, QWORD PTR [rdx]
+    sbb     rax, QWORD PTR [r8]
+    mov     QWORD PTR [rcx], rax
 
-    mov     rax, QWORD [rdx + 8]
-    adc     rax, QWORD [r8  + 8]
-    mov     QWORD [rcx + 8], rax
+    mov     rax, QWORD PTR [rdx + 8]
+    sbb     rax, QWORD PTR [r8  + 8]
+    mov     QWORD PTR [rcx + 8], rax
 
-    mov     rax, QWORD [rdx + 16]
-    adc     rax, QWORD [r8  + 16]
-    mov     QWORD [rcx + 16], rax
+    mov     rax, QWORD PTR [rdx + 16]
+    sbb     rax, QWORD PTR [r8  + 16]
+    mov     QWORD PTR [rcx + 16], rax
 
-    mov     rax, QWORD [rdx + 24]
-    adc     rax, QWORD [r8  + 24]
-    mov     QWORD [rcx + 24], rax
+    mov     rax, QWORD PTR [rdx + 24]
+    sbb     rax, QWORD PTR [r8  + 24]
+    mov     QWORD PTR [rcx + 24], rax
 
-    mov     rax, QWORD [rdx + 32]
-    adc     rax, QWORD [r8  + 32]
-    mov     QWORD [rcx + 32], rax
+    mov     rax, QWORD PTR [rdx + 32]
+    sbb     rax, QWORD PTR [r8  + 32]
+    mov     QWORD PTR [rcx + 32], rax
 
-    mov     rax, QWORD [rdx + 40]
-    adc     rax, QWORD [r8  + 40]
-    mov     QWORD [rcx + 40], rax
+    mov     rax, QWORD PTR [rdx + 40]
+    sbb     rax, QWORD PTR [r8  + 40]
+    mov     QWORD PTR [rcx + 40], rax
 
-    mov     rax, QWORD [rdx + 48]
-    adc     rax, QWORD [r8  + 48]
-    mov     QWORD [rcx + 48], rax
+    mov     rax, QWORD PTR [rdx + 48]
+    sbb     rax, QWORD PTR [r8  + 48]
+    mov     QWORD PTR [rcx + 48], rax
 
-    mov     rax, QWORD [rdx + 56]
-    adc     rax, QWORD [r8  + 56]
-    mov     QWORD [rcx + 56], rax
+    mov     rax, QWORD PTR [rdx + 56]
+    sbb     rax, QWORD PTR [r8  + 56]
+    mov     QWORD PTR [rcx + 56], rax
 
     lea     rdx, [rdx + 64]
     lea     r8,  [r8  + 64]
@@ -93,11 +94,12 @@ func_done:
     setc    al
     ret     
 
-_add_n_8unroll ENDP
+_sub_n_8unroll ENDP
 
 ;   4x Unroll Variant
 
-_add_n_4unroll PROC FRAME
+_sub_n_4unroll PROC FRAME
+
 .pushframe
 .endprolog
 
@@ -108,9 +110,9 @@ _add_n_4unroll PROC FRAME
 
 small_loop:
 
-    mov     rax, QWORD [rdx]
-    adc     rax, QWORD [r8]
-    mov     QWORD [rcx], rax
+    mov     rax, QWORD PTR [rdx]
+    sbb     rax, QWORD PTR [r8]
+    mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
     lea     r8,  [r8  + 8]
@@ -127,21 +129,21 @@ before_big_loop:
 
 big_loop:
 
-    mov     rax, QWORD [rdx]
-    adc     rax, QWORD [r8]
-    mov     QWORD [rcx], rax
+    mov     rax, QWORD PTR [rdx]
+    sbb     rax, QWORD PTR [r8]
+    mov     QWORD PTR [rcx], rax
 
-    mov     rax, QWORD [rdx + 8]
-    adc     rax, QWORD [r8  + 8]
-    mov     QWORD [rcx + 8], rax
+    mov     rax, QWORD PTR [rdx + 8]
+    sbb     rax, QWORD PTR [r8  + 8]
+    mov     QWORD PTR [rcx + 8], rax
 
-    mov     rax, QWORD [rdx + 16]
-    adc     rax, QWORD [r8  + 16]
-    mov     QWORD [rcx + 16], rax
+    mov     rax, QWORD PTR [rdx + 16]
+    sbb     rax, QWORD PTR [r8  + 16]
+    mov     QWORD PTR [rcx + 16], rax
 
-    mov     rax, QWORD [rdx + 24]
-    adc     rax, QWORD [r8  + 24]
-    mov     QWORD [rcx + 24], rax
+    mov     rax, QWORD PTR [rdx + 24]
+    sbb     rax, QWORD PTR [r8  + 24]
+    mov     QWORD PTR [rcx + 24], rax
 
     lea     rdx, [rdx + 32]
     lea     r8,  [r8  + 32]
@@ -154,11 +156,12 @@ func_done:
     setc    al
     ret 
 
-_add_n_4unroll ENDP
+_sub_n_4unroll ENDP
 
 ;   2x Unroll Variant
 
-_add_n_2unroll PROC FRAME
+_sub_n_2unroll PROC FRAME
+
 .pushframe
 .endprolog
 
@@ -170,9 +173,9 @@ _add_n_2unroll PROC FRAME
 
 one_iter:
 
-    mov     rax, QWORD [rdx]
-    adc     rax, QWORD [r8]
-    mov     QWORD [rcx], rax
+    mov     rax, QWORD PTR [rdx]
+    sbb     rax, QWORD PTR [r8]
+    mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
     lea     r8,  [r8  + 8]
@@ -188,13 +191,13 @@ before_big_loop:
 
 big_loop:
 
-    mov     rax, QWORD [rdx]
-    adc     rax, QWORD [r8]
-    mov     QWORD [rcx], rax
+    mov     rax, QWORD PTR [rdx]
+    sbb     rax, QWORD PTR [r8]
+    mov     QWORD PTR [rcx], rax
 
-    mov     rax, QWORD [rdx + 8]
-    adc     rax, QWORD [r8  + 8]
-    mov     QWORD [rcx + 8], rax
+    mov     rax, QWORD PTR [rdx + 8]
+    sbb     rax, QWORD PTR [r8  + 8]
+    mov     QWORD PTR [rcx + 8], rax
 
     lea     rdx, [rdx + 16]
     lea     r8,  [r8  + 16]
@@ -207,4 +210,6 @@ func_done:
     setc    al
     ret 
 
-_add_n_2unroll ENDP
+_sub_n_2unroll ENDP
+
+END

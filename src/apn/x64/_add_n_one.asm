@@ -36,25 +36,26 @@ _add_n_one PROC FRAME
     ; pushing rbp sets it to a 16-byte boundary
     ; as per x64 calling convention of Microsoft ABI
 
-    xor     rax, rax    ; accumulator
-    xor     r10, r10    ; counter/indexer
     mov     r11, r8     ; temp_size
 
-    mov     rax, QWORD PTR [rdx + r10*8]
+    mov     rax, QWORD PTR [rdx]
     add     rax, r9                         ; add val
-    mov     QWORD PTR [rcx + r10*8], rax
-    inc     r10
+    mov     QWORD PTR [rcx], rax
+    
+    lea     rdx, [rdx + 8]
+    lea     rcx, [rcx + 8]
     dec     r11
     jz      end_of_func
 
 propagate_carry:
 
     jnc     copy_remaining
-    mov     rax, QWORD PTR [rdx + r10*8]
+    mov     rax, QWORD PTR [rdx]
     adc     rax, 0
-    mov     QWORD PTR [rcx + r10*8], rax
+    mov     QWORD PTR [rcx], rax
 
-    inc     r10
+    lea     rdx, [rdx + 8]
+    lea     rcx, [rcx + 8]
     dec     r11
     jnz     propagate_carry
     jmp     end_of_func
@@ -66,15 +67,12 @@ copy_remaining:
     ; allocate shadow space and call the apn_cpy func
 
     sub     rsp, 32                 
-    
-    lea     rcx, [rcx + r10*8]
-    lea     rdx, [rdx + r10*8]
+
     mov     r8, r11
 
     call    apn_cpy
     
     add     rsp, 32
-    clc                 
 
 end_of_func:
 

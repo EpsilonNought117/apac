@@ -22,141 +22,144 @@ _neg_8unroll PROC FRAME
 .pushframe
 .endprolog
 
-    xor     r10, r10
     mov     r11, r8
+    shr     r8,  3
     and     r11, 7
     jz      unroll_loop_outer
 
 small_loop:
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8]
+    mov     r9, QWORD PTR [rdx]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8], r9
+    mov     QWORD PTR [rcx], rax
 
-    inc     r10
+    lea     rdx, [rdx + 8]
+    lea     rcx, [rcx + 8]
     dec     r11
     jnz     small_loop
 
 unroll_loop_outer:
 
     setc    al
-    mov     r11, r8
-    shr     r11, 3
+    test    r8, r8
     bt      ax, 0
     jz      end_of_func
 
 main_loop:
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8]
+    mov     r9, QWORD PTR [rdx]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8], r9
+    mov     QWORD PTR [rcx], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 8]
+    mov     r9, QWORD PTR [rdx + 8]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 8], r9
+    mov     QWORD PTR [rcx + 8], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 16]
+    mov     r9, QWORD PTR [rdx + 16]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 16], r9
+    mov     QWORD PTR [rcx + 16], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 24]
+    mov     r9, QWORD PTR [rdx + 24]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 24], r9
+    mov     QWORD PTR [rcx + 24], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 32]
+    mov     r9, QWORD PTR [rdx + 32]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 32], r9
+    mov     QWORD PTR [rcx + 32], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 40]
+    mov     r9, QWORD PTR [rdx + 40]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 40], r9
+    mov     QWORD PTR [rcx + 40], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 48]
+    mov     r9, QWORD PTR [rdx + 48]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 48], r9
+    mov     QWORD PTR [rcx + 48], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 56]
+    mov     r9, QWORD PTR [rdx + 56]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 56], r9
+    mov     QWORD PTR [rcx + 56], rax
 
-    lea     r10, [r10 + 8]
-    dec     r11
+    lea     rdx, [rdx + 64]
+    lea     rcx, [rcx + 64]
+    dec     r8
     jnz     main_loop
 
 end_of_func:
 
-    ret     0
+    ret
 
 _neg_8unroll ENDP
 
 ; 4x unroll version
 
 _neg_4unroll PROC FRAME
+
 .pushframe
 .endprolog
 
-    xor     r10, r10
     mov     r11, r8
+    shr     r8,  2
     and     r11, 3
     jz      unroll_loop_outer
 
 small_loop:
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8]
+    mov     r9, QWORD PTR [rdx]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8], r9
+    mov     QWORD PTR [rcx], rax
 
-    inc     r10
+    lea     rdx, [rdx + 8]
+    lea     rcx, [rcx + 8]
     dec     r11
     jnz     small_loop
 
 unroll_loop_outer:
 
     setc    al
-    mov     r11, r8
-    shr     r11, 2
+    test    r8, r8
     bt      ax, 0
     jz      end_of_func
 
 main_loop:
     
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8]
+    mov     r9, QWORD PTR [rdx]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8], r9
+    mov     QWORD PTR [rcx], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 8]
+    mov     r9, QWORD PTR [rdx + 8]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 8], r9
+    mov     QWORD PTR [rcx + 8], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 16]
+    mov     r9, QWORD PTR [rdx + 16]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 16], r9
+    mov     QWORD PTR [rcx + 16], rax
 
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + r10*8 + 24]
+    mov     r9, QWORD PTR [rdx + 24]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + r10*8 + 24], r9
+    mov     QWORD PTR [rcx + 24], rax
 
-    lea     r10, [r10 + 4]
-    dec     r11
+    lea     rdx, [rdx + 32]
+    lea     rcx, [rcx + 32]
+    dec     r8
     jnz     main_loop
  
 end_of_func:
 
-    ret     0
+    ret
 
 _neg_4unroll ENDP
 

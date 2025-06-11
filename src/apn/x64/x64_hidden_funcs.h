@@ -31,6 +31,7 @@ extern void _mul_bc_mulx(u64* result, const u64* op1, const u64* op2, u64 size1,
 
 extern void _mul_bc_mulx_adx_2unroll(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 extern void _mul_bc_mulx_adx_4unroll(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
+extern void _mul_bc_mulx_adx_8unroll(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 /* -------------------------------- COPYING FUNCTIONS --------------------------------- */
 

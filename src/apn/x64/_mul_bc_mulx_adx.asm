@@ -20,6 +20,150 @@
     ;   ASSUMPTION
     ;   (size1 >= size2)
 
+; 8x unroll version
+
+_mul_bc_mulx_adx_8unroll PROC FRAME
+
+    push    rbx
+.pushreg    rbx
+    push    rdi
+.pushreg    rdi
+    push    rsi
+.pushreg    rsi
+    push    r12
+.pushreg    r12
+    push    r13
+.pushreg    r13
+    push    r14
+.pushreg    r14
+    push    r15
+.pushreg    r15
+    push    rbp
+.pushreg    rbp
+.pushframe
+.endprolog
+
+    xor     rax, rax    ; i
+    xchg    rbp, rcx    ; result in rbp
+    xchg    rbx, rdx    ; op1 in rbx
+    mov     r10, QWORD PTR [rsp + 104] ; size2 in r10
+    mov     r12, r9
+    shr     r9,  3      ; size1 /= 8
+    and     r12, 7      ; size1 %= 8
+    mov     r13, rbp    ; store a copy of result in r11
+    mov     r11, rbx    ; store a copy of op1 in r13
+
+loop_outer:
+
+    mov     rcx, r12
+    mov     rdx, QWORD PTR [r8  + rax*8] ; load op2[i] into rdx for implicit muls
+    lea     rbp, [r13 + rax*8]           
+    lea     rbx, [r11]
+
+inner_small:
+
+    jrcxz   before_inner_unrolled
+
+    mulx    rdi, rsi, QWORD PTR [rbx]
+
+    adcx    rsi, QWORD PTR [rbp]
+    adox    rdi, QWORD PTR [rbp + 8]
+
+    mov     QWORD PTR [rbp], rsi
+    mov     QWORD PTR [rbp + 8], rdi    
+
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
+    lea     rcx, [rcx - 1]
+    jmp     inner_small
+
+before_inner_unrolled:
+
+    mov     rcx, r9
+    jmp     inner_unrolled
+
+outer_loop_end:
+
+    adcx    r15, QWORD PTR [rbp]
+    mov     QWORD PTR [rbp], r15
+
+    inc     rax
+    cmp     r10, rax
+    jz      end_of_func
+    jmp     loop_outer
+
+ALIGN 16
+inner_unrolled:
+
+    jrcxz   outer_loop_end
+
+    mulx    rdi, rsi, QWORD PTR [rbx]
+    adcx    rsi, QWORD PTR [rbp]
+    adox    rdi, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], rsi
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 8]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 16]
+    mov     QWORD PTR [rbp + 8], rsi
+    mov     r14, rdi
+    
+    mulx    rdi, rsi, QWORD PTR [rbx + 16]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 24]
+    mov     QWORD PTR [rbp + 16], rsi
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 24]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 32]
+    mov     QWORD PTR [rbp + 24], rsi
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 32]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 40]
+    mov     QWORD PTR [rbp + 32], rsi
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 40]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 48]
+    mov     QWORD PTR [rbp + 40], rsi
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 48]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 56]
+    mov     QWORD PTR [rbp + 48], rsi
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 56]
+    adcx    rsi, r14
+    adox    rdi, QWORD PTR [rbp + 64]
+    mov     QWORD PTR [rbp + 56], rsi
+    mov     QWORD PTR [rbp + 64], rdi
+
+    lea     rbx, [rbx + 64]
+    lea     rbp, [rbp + 64]
+    lea     rcx, [rcx - 1]
+    jmp     inner_unrolled
+
+end_of_func:
+
+    pop     rbp
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rsi
+    pop     rdi
+    pop     rbx
+    ret     
+
+_mul_bc_mulx_adx_8unroll ENDP
+
 ; 4x unroll version
 
 _mul_bc_mulx_adx_4unroll PROC FRAME
@@ -48,15 +192,17 @@ _mul_bc_mulx_adx_4unroll PROC FRAME
     xchg    rbx, rdx    ; op1 in rbx
     mov     r10, QWORD PTR [rsp + 104] ; size2 in r10
     mov     r12, r9
-    shr     r9, 2       ; size1 /= 4
+    shr     r9,  2      ; size1 /= 4
     and     r12, 3      ; size1 %= 4
+    mov     r13, rbp    ; store a copy of result in r11
+    mov     r11, rbx    ; store a copy of op1 in r13
+    mov     rcx, r9
 
 loop_outer:
 
-    xor     r11, r11    ; j
-    mov     rcx, r9     ; (size1) / 4 -> rcx
-    mov     r13, rax    ; indexer for result
-    mov     rdx, QWORD PTR [r8 + rax*8]     ; op2[i]
+    mov     rdx, QWORD PTR [r8  + rax*8] ; load op2[i] into rdx for implicit muls
+    lea     rbp, [r13 + rax*8]           
+    lea     rbx, [r11]
 
     xor     r15, r15    ; clear any flags from previous iterations
 
@@ -197,7 +343,7 @@ end_of_func:
     pop     rsi
     pop     rdi
     pop     rbx
-    ret     0
+    ret     
 
 _mul_bc_mulx_adx_4unroll ENDP
 
@@ -302,7 +448,7 @@ end_of_func:
     pop     rsi
     pop     rdi
     pop     rbx
-    ret     0
+    ret     
 
 _mul_bc_mulx_adx_2unroll ENDP
 
