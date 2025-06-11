@@ -15,40 +15,11 @@
         message(FATAL_ERROR "Only 64-bit builds are supported.")
     endif()
 
-    # Find NASM assembler (required for all platforms)
-
-    find_program(NASM_EXECUTABLE nasm)
-
-    if(NOT NASM_EXECUTABLE)
-        message(FATAL_ERROR "NASM assembler is required to build libapac!")
-    else()
-        message(STATUS "Found Netwide Assembler: ${NASM_EXECUTABLE}")
-        enable_language(ASM_NASM)
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+            message(FATAL_ERROR "MSVC Toolchain is required to build libapac!")
     endif()
 
-    # Platform-specific compiler requirements
-    if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        
-        if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-            message(FATAL_ERROR "MSVC Toolchain is required to build libapac on Windows!")
-        endif()
-    
-        set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f win64 -d _WIN64")
-
-    elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        
-        if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-            message(STATUS "Found supported compiler: ${CMAKE_C_COMPILER_ID} C Compiler")
-        else()
-            message(FATAL_ERROR "GCC/Clang is required to build libapac on Linux!")
-        endif()
-        
-        # Set NASM flags for Linux
-        set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -f elf64 -d __linux__")
-
-    else()
-        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-    endif()
+    enable_language(ASM_MASM)
 
     set(CMAKE_C_STANDARD 11)
 
