@@ -66,10 +66,8 @@
                 src/apn/x64/_add_n_one.asm
                 src/apn/x64/_add_n_one_till_carry.asm
 
-            # BASECASE MULTIPLICATION
+            # BASECASE MULTIPLICATION (All routines)
     
-                src/apn/x64/_mul_bc_mulx_adx.asm
-                src/apn/x64/_mul_bc_mulx.asm
                 src/apn/x64/_mul_bc.asm
     
             # SUBTRACTION AND RELATED OPS
