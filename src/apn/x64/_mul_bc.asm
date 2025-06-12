@@ -68,6 +68,7 @@ loop_outer:
     mov     rdx, QWORD PTR [r8  + rax*8] ; load op2[i] into rdx
     lea     rbp, [r13 + rax*8]           
     lea     rbx, [r11]
+    xor     r15, r15
 
 inner_small:
 
@@ -210,12 +211,12 @@ _mul_bc_mulx_adx_4unroll PROC FRAME
 
 loop_outer:
 
-    mov     rdx, QWORD PTR [r8  + rax*8] ; load op2[i] into rdx
+    mov     rdx, QWORD PTR [r8 + rax*8] ; load op2[i] into rdx
     lea     rbp, [r13 + rax*8]           
     lea     rbx, [r11]
     mov     rcx, r9    
     xor     r12, r12
-    jmp     [r15]
+    jmp     QWORD PTR [r15]
 
 rem1:
 
@@ -227,8 +228,8 @@ rem1:
     mov     QWORD PTR [rbp], rsi
     mov     QWORD PTR [rbp + 8], rdi
 
-    lea     r11, [r11 + 8]
-    lea     r13, [r13 + 8]
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
     jmp     loop_unrolled_4
 
 rem2:
@@ -249,8 +250,8 @@ rem2:
     mov     QWORD PTR [rbp + 8], rsi
     mov     QWORD PTR [rbp + 16], rdi
 
-    lea     r11, [r11 + 16]
-    lea     r13, [r13 + 16]
+    lea     rbx, [rbx + 16]
+    lea     rbp, [rbp + 16]
     jmp     loop_unrolled_4
 
 rem3:
@@ -279,8 +280,8 @@ rem3:
     mov     QWORD PTR [rbp + 16], rsi
     mov     QWORD PTR [rbp + 24], rdi
 
-    lea     r11, [r11 + 24]
-    lea     r13, [r13 + 24]
+    lea     rbx, [rbx + 24]
+    lea     rbp, [rbp + 24]
     jmp     loop_unrolled_4
 
 loop_end:
@@ -299,39 +300,31 @@ loop_unrolled_4:
     jrcxz   loop_end
 
     mulx    rdi, rsi, QWORD PTR [rbx]
-
     adcx    rsi, QWORD PTR [rbp]
     adox    rdi, QWORD PTR [rbp + 8]
-
     mov     QWORD PTR [rbp], rsi
     mov     r14, rdi
 
     mulx    rdi, rsi, QWORD PTR [rbx + 8]
-
     adcx    rsi, r14
     adox    rdi, QWORD PTR [rbp + 16]
-
     mov     QWORD PTR [rbp + 8], rsi
     mov     r14, rdi
 
     mulx    rdi, rsi, QWORD PTR [rbx + 16]
-
     adcx    rsi, r14
     adox    rdi, QWORD PTR [rbp + 24]
-
     mov     QWORD PTR [rbp + 16], rsi
     mov     r14, rdi
 
     mulx    rdi, rsi, QWORD PTR [rbx + 24]
-
     adcx    rsi, r14
     adox    rdi, QWORD PTR [rbp + 32]
-
     mov     QWORD PTR [rbp + 24], rsi
     mov     QWORD PTR [rbp + 32], rdi
 
-    lea     r11, [r11 + 32]
-    lea     r13, [r13 + 32]
+    lea     rbx, [rbx + 32]
+    lea     rbp, [rbp + 32]
     lea     rcx, [rcx - 1]
     jmp     loop_unrolled_4
 
