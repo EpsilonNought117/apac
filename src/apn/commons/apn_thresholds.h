@@ -5,7 +5,8 @@
 
 extern __apac_cpu_params curr_cpu;
 
-#define KARATSUBA_MUL_N_THRESHOLD	(curr_cpu.karatsuba_mul_n_threshold)
+#define KARATSUBA_MUL_N_THRESHOLD		(curr_cpu.karatsuba_mul_n_threshold)
+#define KARATSUBA_UNBALANCED_THRESHOLD	(5)		
 #define TOOM33_MUL_N_THRESHOLD		(curr_cpu.toom33_mul_n_threshold)
 
 #endif

@@ -2,7 +2,8 @@
 #include "apn_thresholds.h"
 #include "_hidden_mul.h"
 
-#define KARATSUBA_WS_SIZE(size)	((u64)size * 2 + 32) 
+#define KARATSUBA_N_WS_SIZE(size)	((u64)size * 2 + 32) // scratch workspace size of karatsuba balanced
+#define KARATSUBA_WS_SIZE(size1, size2)
 
 void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size)
 {
@@ -22,7 +23,7 @@ void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size)
 	}
 	else
 	{
-		u64 ws_size = KARATSUBA_WS_SIZE(size);
+		u64 ws_size = KARATSUBA_N_WS_SIZE(size);
 		u64* workspace = apac_malloc(sizeof(u64) * ws_size);
 
 		if (!workspace)

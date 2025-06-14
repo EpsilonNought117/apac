@@ -93,7 +93,7 @@ typedef int8_t     i8;
 /**********************************          CPU FUNCTIONS       ************************************/
 /****************************************************************************************************/
 
-typedef struct
+typedef struct __apac_cpu_params
 {
 	u64 karatsuba_mul_n_threshold;
 	u64 toom33_mul_n_threshold;
@@ -181,8 +181,14 @@ APAC_API void apn_neg(u64* result, const u64* op1, u64 size);
 /*
 	1) No overlap permitted between result and either of the operands
 	2) result must have 2 * size number of limbs
+	3) Operands can overlap. If they are the same, use apn_sqr
 */
 APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
+
+/*
+	
+*/
+APAC_API void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 
 /*
 	1) Result must have size number of limbs

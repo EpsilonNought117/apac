@@ -89,3 +89,26 @@ void _apn_karatsuba_mul_n(
 	apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
 	return;
 }
+
+void _apn_karatsuba_mul(
+	u64* result, 
+	const u64* op1, 
+	const u64* op2, 
+	u64 size1, 
+	u64 size2, 
+	u64* temp
+)
+{
+	APAC_ASSERT(temp != NULL);
+	APAC_ASSERT(size1 >= size2);
+
+	if (size2 < ((size1 + 1) >> 1) || (size1 < KARATSUBA_UNBALANCED_THRESHOLD))
+	{
+		_apn_basecase_mul(result, op1, op2, size1, size2);
+		return;
+	}
+	else
+	{
+		APAC_ASSERT(size2 >= ((size1 + 1) >> 1));
+	}
+}
