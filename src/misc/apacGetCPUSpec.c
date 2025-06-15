@@ -7,6 +7,7 @@ __apac_cpu_params curr_cpu = { 0 };
 #include "../apn/x64/x64_hidden_funcs.h"
 
 extern void zen4_set_params(void);
+extern void alderlake_set_params(void);
 
 // x64/AMD64 Version
 
@@ -52,10 +53,27 @@ void apacGetCPUSpec(void)
 		int baseFamily = (signature >> 8) & 0xF;
 		int extendedFamily = (signature >> 20) & 0xFF;
 		int family = (baseFamily != 0xF) ? baseFamily : baseFamily + extendedFamily;
-	
+
 		switch (family)
 		{
 		case 0x6:
+		{
+			int baseModel = (signature >> 4) & 0xF;
+			int extendedModel = (signature >> 16) & 0xF;
+			int model = (extendedModel << 4) | baseModel;
+
+			switch (model)
+			{
+			case 0x97:      // Alder Lake-S (151 decimal = 0x97 hex)
+			case 0x9A:      // Alder Lake-P (154 decimal = 0x9A hex)
+				alderlake_set_params();
+				break;
+
+			default:
+				break;
+			}
+		}
+		break;
 
 		default:
 			break;
