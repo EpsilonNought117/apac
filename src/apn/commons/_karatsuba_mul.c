@@ -104,7 +104,8 @@ void _apn_karatsuba_mul(
 
 	if (size2 <= ((size1 + 1) >> 1) || (size1 < KARATSUBA_MUL_THRESHOLD))
 	{
-		// Highly unbalanced values handled by basecase multiplication
+		// Highly unbalanced values or values below threshold
+		// handled by basecase multiplication
 
 		_apn_basecase_mul(result, op1, op2, size1, size2);
 		return;
@@ -149,7 +150,7 @@ void _apn_karatsuba_mul(
 		apn_add(temp + 2 * lowerA, temp + 2 * lowerA, temp, 2 * lowerA + 1, 2 * lowerA);
 	}
 
-	apn_add_n(result + lowerA, result + lowerA, temp + 2 * lowerA + 1, 2 * lowerA + 1);
+	apn_add_n(result + lowerA, result + lowerA, temp + 2 * lowerA, 2 * lowerA + 1);
 	apn_set(temp, 4 * lowerA + 1, 0);
 	return;
 }
