@@ -96,8 +96,8 @@ typedef int8_t     i8;
 typedef struct __apac_cpu_params
 {
 	u64 karatsuba_mul_n_threshold;
-	u64 toom33_mul_n_threshold;
-
+	u64 karatsuba_mul_threshold;
+	
 	u8(*__apn_add_n_ptr)(u64*, const u64*, const u64*, u64);
 	u8(*__apn_sub_n_ptr)(u64*, const u64*, const u64*, u64);
 	void (*__apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);

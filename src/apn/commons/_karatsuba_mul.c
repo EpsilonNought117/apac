@@ -85,30 +85,71 @@ void _apn_karatsuba_mul_n(
 	}
 
 	// add c2 to the middle of result
-	apn_add(result + lower, result + lower, temp + 2 * lower, 2 * lower + 1, 2 * lower + 1);
+	apn_add_n(result + lower, result + lower, temp + 2 * lower, 2 * lower + 1);
 	apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
 	return;
 }
 
 void _apn_karatsuba_mul(
-	u64* result, 
-	const u64* op1, 
-	const u64* op2, 
-	u64 size1, 
-	u64 size2, 
+	u64* result,
+	const u64* op1,
+	const u64* op2,
+	u64 size1,
+	u64 size2,
 	u64* temp
 )
 {
 	APAC_ASSERT(temp != NULL);
 	APAC_ASSERT(size1 >= size2);
 
-	if (size2 < ((size1 + 1) >> 1) || (size1 < KARATSUBA_UNBALANCED_THRESHOLD))
+	if (size2 <= ((size1 + 1) >> 1) || (size1 < KARATSUBA_MUL_THRESHOLD))
 	{
+		// Highly unbalanced values handled by basecase multiplication
+
 		_apn_basecase_mul(result, op1, op2, size1, size2);
 		return;
 	}
+
+	// follows nearly the same logic as balanced karatsuba
+
+	APAC_ASSERT(size2 > ((size1 + 1) >> 1));
+
+	u64 lowerA = (size1 + 1) >> 1;
+	// lowerB is the same as lowerA
+	u64 upperA = size1 - lowerA;
+	u64 upperB = size2 - lowerA;
+
+	u8 cy1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
+	if (cy1) apn_neg(temp, temp, lowerA);
+
+	u8 cy2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
+	if (cy2) apn_neg(temp + lowerA, temp + lowerA, lowerA);
+
+	// Always Balanced Multiplication
+	_apn_karatsuba_mul_n(result, temp, temp + lowerA, lowerA, temp + 2 * lowerA);
+
+	apn_cpy(temp, result, lowerA * 2);
+	apn_set(result, lowerA * 2, 0);
+
+	// Always Balanced Multiplication
+	_apn_karatsuba_mul_n(result, op1, op2, lowerA, temp + lowerA * 2);
+
+	// Frequently Unbalanced Multiplication
+	_apn_karatsuba_mul(result + lowerA * 2, op1 + lowerA, op2 + lowerA, upperA, upperB, temp + lowerA * 2);
+
+	u8 val = apn_add(temp + 2 * lowerA, result, result + 2 * lowerA, 2 * lowerA, upperA + upperB);
+	temp[4 * lowerA] += val;
+
+	if (cy1 == cy2)
+	{
+		apn_sub(temp + 2 * lowerA, temp + 2 * lowerA, temp, 2 * lowerA + 1, 2 * lowerA);
+	}
 	else
 	{
-		APAC_ASSERT(size2 >= ((size1 + 1) >> 1));
+		apn_add(temp + 2 * lowerA, temp + 2 * lowerA, temp, 2 * lowerA + 1, 2 * lowerA);
 	}
+
+	apn_add_n(result + lowerA, result + lowerA, temp + 2 * lowerA + 1, 2 * lowerA + 1);
+	apn_set(temp, 4 * lowerA + 1, 0);
+	return;
 }

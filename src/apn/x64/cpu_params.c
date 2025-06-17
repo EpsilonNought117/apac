@@ -6,7 +6,7 @@ extern __apac_cpu_params curr_cpu;
 void zen4_set_params(void)
 {
 	curr_cpu.karatsuba_mul_n_threshold = 43;
-	curr_cpu.toom33_mul_n_threshold = 160;
+	curr_cpu.karatsuba_mul_threshold = 43;
 
 	curr_cpu.__apn_add_n_ptr = _add_n_4unroll;
 	curr_cpu.__apn_sub_n_ptr = _sub_n_4unroll;
@@ -21,7 +21,7 @@ void zen4_set_params(void)
 void alderlake_set_params(void)
 {
 	curr_cpu.karatsuba_mul_n_threshold = 33;
-	curr_cpu.toom33_mul_n_threshold = 160;
+	curr_cpu.karatsuba_mul_threshold = 33;
 
 	curr_cpu.__apn_add_n_ptr = _add_n_8unroll;
 	curr_cpu.__apn_sub_n_ptr = _sub_n_8unroll;

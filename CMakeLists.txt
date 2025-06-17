@@ -39,6 +39,8 @@
             src/misc/apacGetCPUSpec.c
             src/misc/apacInit.c
 
+            cpp.hint # Hint file for macro streaming in Visual Studio
+
         # APN PUBLIC API
 
             src/apn/commons/apn_add.c
