@@ -64,7 +64,6 @@ void apacGetCPUSpec(void)
 
 			switch (model)
 			{
-			case 0x97:      // Alder Lake-S (151 decimal = 0x97 hex)
 			case 0x9A:      // Alder Lake-P (154 decimal = 0x9A hex)
 				alderlake_set_params();
 				break;
