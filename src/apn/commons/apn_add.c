@@ -37,9 +37,9 @@ u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 		return carry;
 	
 	if (result == op1)
-		return _add_n_one_till_carry(&result[size2], &op1[size2], size1 - size2, carry);
+		return add_n_one_till_carry(&result[size2], &op1[size2], size1 - size2, carry);
 
-	return _add_n_one(&result[size2], &op1[size2], size1 - size2, carry);
+	return add_n_one(&result[size2], &op1[size2], size1 - size2, carry);
 }
 
 u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val)
