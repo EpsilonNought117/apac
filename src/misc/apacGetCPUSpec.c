@@ -1,6 +1,6 @@
 #include "../../include/apac.h"
 
-__apac_cpu_params curr_cpu = { 0 };
+apac_cpu_params curr_cpu = { 0 };
 
 #if defined(_M_X64) || defined(_M_AMD64)
 

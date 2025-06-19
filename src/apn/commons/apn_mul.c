@@ -19,7 +19,7 @@ void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size)
 
 	if (size < KARATSUBA_MUL_N_THRESHOLD)
 	{
-		_apn_basecase_mul(result, op1, op2, size, size);
+		apn_basecase_mul(result, op1, op2, size, size);
 	}
 	else
 	{
@@ -34,7 +34,7 @@ void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size)
 
 		apn_set(workspace, ws_size, 0);
 
-		_apn_karatsuba_mul_n(result, op1, op2, size, workspace);
+		apn_karatsuba_mul_n(result, op1, op2, size, workspace);
 		apac_free(workspace);
 	}
 
@@ -56,7 +56,7 @@ void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 
 	if (size2 <= ((size1 + 1) >> 1) || size1 < KARATSUBA_MUL_THRESHOLD)
 	{
-		_apn_basecase_mul(result, op1, op2, size1, size2);
+		apn_basecase_mul(result, op1, op2, size1, size2);
 	}
 	else
 	{
@@ -71,7 +71,7 @@ void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 
 		apn_set(workspace, ws_size, 0);
 		
-		_apn_karatsuba_mul(result, op1, op2, size1, size2, workspace);
+		apn_karatsuba_mul(result, op1, op2, size1, size2, workspace);
 		apac_free(workspace);
 	}
 

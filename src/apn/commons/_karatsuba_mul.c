@@ -7,7 +7,7 @@
 *		2) Compare performance gains/loss
 */
 
-void _apn_karatsuba_mul_n(
+void apn_karatsuba_mul_n(
 	u64* result,
 	const u64* op1,
 	const u64* op2,
@@ -22,7 +22,7 @@ void _apn_karatsuba_mul_n(
 		// for sizes below threshold
 		// use the basecase multiplication
 
-		_apn_basecase_mul(result, op1, op2, size, size);
+		apn_basecase_mul(result, op1, op2, size, size);
 		return;
 	}
 
@@ -55,7 +55,7 @@ void _apn_karatsuba_mul_n(
 	if (cy2) apn_neg(temp + lower, temp + lower, lower);
 
 	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
-	_apn_karatsuba_mul_n(result, temp, temp + lower, lower, temp + 2 * lower);
+	apn_karatsuba_mul_n(result, temp, temp + lower, lower, temp + 2 * lower);
 
 	// we now have c2 in result 
 
@@ -65,9 +65,9 @@ void _apn_karatsuba_mul_n(
 	apn_set(result, 2 * lower, 0);
 
 	// c0 = a0 * b0
-	_apn_karatsuba_mul_n(result, op1, op2, lower, temp + 2 * lower);
+	apn_karatsuba_mul_n(result, op1, op2, lower, temp + 2 * lower);
 	// c1 = a1 * b1
-	_apn_karatsuba_mul_n(result + 2 * lower, op1 + lower, op2 + lower, upper, temp + 2 * lower);
+	apn_karatsuba_mul_n(result + 2 * lower, op1 + lower, op2 + lower, upper, temp + 2 * lower);
 
 	// prepare (c0 + c1) in temp[0 : (2 * lower - 1)]
 	u8 val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
@@ -90,7 +90,7 @@ void _apn_karatsuba_mul_n(
 	return;
 }
 
-void _apn_karatsuba_mul(
+void apn_karatsuba_mul(
 	u64* result,
 	const u64* op1,
 	const u64* op2,
@@ -107,7 +107,7 @@ void _apn_karatsuba_mul(
 		// Highly unbalanced values or values below threshold
 		// handled by basecase multiplication
 
-		_apn_basecase_mul(result, op1, op2, size1, size2);
+		apn_basecase_mul(result, op1, op2, size1, size2);
 		return;
 	}
 
@@ -127,16 +127,16 @@ void _apn_karatsuba_mul(
 	if (cy2) apn_neg(temp + lowerA, temp + lowerA, lowerA);
 
 	// Always Balanced Multiplication
-	_apn_karatsuba_mul_n(result, temp, temp + lowerA, lowerA, temp + 2 * lowerA);
+	apn_karatsuba_mul_n(result, temp, temp + lowerA, lowerA, temp + 2 * lowerA);
 
 	apn_cpy(temp, result, lowerA * 2);
 	apn_set(result, lowerA * 2, 0);
 
 	// Always Balanced Multiplication
-	_apn_karatsuba_mul_n(result, op1, op2, lowerA, temp + lowerA * 2);
+	apn_karatsuba_mul_n(result, op1, op2, lowerA, temp + lowerA * 2);
 
 	// Frequently Unbalanced Multiplication
-	_apn_karatsuba_mul(result + lowerA * 2, op1 + lowerA, op2 + lowerA, upperA, upperB, temp + lowerA * 2);
+	apn_karatsuba_mul(result + lowerA * 2, op1 + lowerA, op2 + lowerA, upperA, upperB, temp + lowerA * 2);
 
 	u8 val = apn_add(temp + 2 * lowerA, result, result + 2 * lowerA, 2 * lowerA, upperA + upperB);
 	temp[4 * lowerA] += val;

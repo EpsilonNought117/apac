@@ -1,6 +1,6 @@
 #include "../../../include/apac.h"
 
-extern __apac_cpu_params curr_cpu;
+extern apac_cpu_params curr_cpu;
 
 void apn_cpy(u64* result, const u64* op1, u64 size)
 {
@@ -9,10 +9,10 @@ void apn_cpy(u64* result, const u64* op1, u64 size)
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != op1);
 
-	if (curr_cpu.__apn_cpy_ptr == NULL)
+	if (curr_cpu.apn_cpy_ptr == NULL)
 		apacGetCPUSpec();
 
-	curr_cpu.__apn_cpy_ptr(result, op1, size);
+	curr_cpu.apn_cpy_ptr(result, op1, size);
 
 	return;
 }

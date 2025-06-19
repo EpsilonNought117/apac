@@ -93,21 +93,21 @@ typedef int8_t     i8;
 /**********************************          CPU FUNCTIONS       ************************************/
 /****************************************************************************************************/
 
-typedef struct __apac_cpu_params
+typedef struct apac_cpu_params
 {
 	u64 karatsuba_mul_n_threshold;
 	u64 karatsuba_mul_threshold;
 	
-	u8(*__apn_add_n_ptr)(u64*, const u64*, const u64*, u64);
-	u8(*__apn_sub_n_ptr)(u64*, const u64*, const u64*, u64);
-	void (*__apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);
-	void (*__apn_neg_ptr)(u64*, const u64*, u64);
-	void (*__apn_cpy_ptr)(u64*, const u64*, u64);
-	void (*__apn_set_ptr)(u64*, u64, u64);
+	u8(*apn_add_n_ptr)(u64*, const u64*, const u64*, u64);
+	u8(*apn_sub_n_ptr)(u64*, const u64*, const u64*, u64);
+	void (*apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);
+	void (*apn_neg_ptr)(u64*, const u64*, u64);
+	void (*apn_cpy_ptr)(u64*, const u64*, u64);
+	void (*apn_set_ptr)(u64*, u64, u64);
 
-}   __apac_cpu_params;
+}   apac_cpu_params;
 
-extern __apac_cpu_params curr_cpu;
+extern apac_cpu_params curr_cpu;
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
@@ -186,7 +186,9 @@ APAC_API void apn_neg(u64* result, const u64* op1, u64 size);
 APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
 
 /*
-	
+	1) No overlap permitted between result and either of the operands
+	2) result must have (size1 + size2) number of limbs
+	3) size1 must be greater than or equal to size2
 */
 APAC_API void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
 

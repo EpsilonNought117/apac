@@ -20,7 +20,7 @@
 
 ;   8x Unroll Variant
 
-_sub_n_8unroll PROC FRAME
+sub_n_8unroll PROC FRAME
 
 .pushframe
 .endprolog
@@ -94,11 +94,11 @@ func_done:
     setc    al
     ret     
 
-_sub_n_8unroll ENDP
+sub_n_8unroll ENDP
 
 ;   4x Unroll Variant
 
-_sub_n_4unroll PROC FRAME
+sub_n_4unroll PROC FRAME
 
 .pushframe
 .endprolog
@@ -156,11 +156,11 @@ func_done:
     setc    al
     ret 
 
-_sub_n_4unroll ENDP
+sub_n_4unroll ENDP
 
 ;   2x Unroll Variant
 
-_sub_n_2unroll PROC FRAME
+sub_n_2unroll PROC FRAME
 
 .pushframe
 .endprolog
@@ -210,6 +210,6 @@ func_done:
     setc    al
     ret 
 
-_sub_n_2unroll ENDP
+sub_n_2unroll ENDP
 
 END

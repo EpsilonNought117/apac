@@ -31,7 +31,7 @@
 
 ;   8x Unroll Variant
 
-_mul_bc_mulx_adx_8unroll PROC FRAME
+mul_bc_mulx_adx_8unroll PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -224,11 +224,11 @@ end_of_func:
     pop     rbx
     ret     
 
-_mul_bc_mulx_adx_8unroll ENDP
+mul_bc_mulx_adx_8unroll ENDP
 
 ;   4x Unroll Variant
 
-_mul_bc_mulx_adx_4unroll PROC FRAME
+mul_bc_mulx_adx_4unroll PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -362,11 +362,11 @@ end_of_func:
     pop     rbx
     ret     
 
-_mul_bc_mulx_adx_4unroll ENDP
+mul_bc_mulx_adx_4unroll ENDP
 
 ; 2x Unroll Variant
 
-_mul_bc_mulx_adx_2unroll PROC FRAME
+mul_bc_mulx_adx_2unroll PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -468,7 +468,7 @@ end_of_func:
     pop     rbx
     ret     
 
-_mul_bc_mulx_adx_2unroll ENDP
+mul_bc_mulx_adx_2unroll ENDP
 
 ;   -------------------------
 ;
@@ -481,7 +481,7 @@ _mul_bc_mulx_adx_2unroll ENDP
 ;   Haswell was the only generation which supported BMI2 but
 ;   not ADX. Can be optimized as per need in future.
 
-_mul_bc_mulx PROC FRAME
+mul_bc_mulx PROC FRAME
 
 	push	rbx
 .pushreg	rbx
@@ -541,7 +541,7 @@ end_of_func:
 	pop		rbx
 	ret		0
 
-_mul_bc_mulx ENDP
+mul_bc_mulx ENDP
 
 ;   -------------------------
 ;
@@ -552,7 +552,7 @@ _mul_bc_mulx ENDP
 ; Lowest common denominator multiplication routine
 ; Not particularly optimized as this was pre-Haswell
 
-_mul_bc PROC FRAME
+mul_bc PROC FRAME
     
     push    rbx
 .pushreg    rbx
@@ -615,6 +615,6 @@ end_of_func:
     pop     rbx
     ret     0
 
-_mul_bc ENDP
+mul_bc ENDP
 
 END

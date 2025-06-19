@@ -1,6 +1,6 @@
 #include "../../../include/apac.h"
 
-void _cpy_avx512f_4unroll(u64* result, const u64* op1, u64 size)
+void cpy_avx512f_4unroll(u64* result, const u64* op1, u64 size)
 {
 	u64 blocks = size & ((u64)(-32)); // first process blocks of 32 limbs
 	u64 counter = 0;
@@ -44,7 +44,7 @@ void _cpy_avx512f_4unroll(u64* result, const u64* op1, u64 size)
 	return;
 }
 
-void _cpy_avx512f_2unroll(u64* result, const u64* op1, u64 size)
+void cpy_avx512f_2unroll(u64* result, const u64* op1, u64 size)
 {
 	u64 blocks = size & ((u64)(-16)); // first process blocks of 16 limbs
 	u64 counter = 0;
@@ -76,7 +76,7 @@ void _cpy_avx512f_2unroll(u64* result, const u64* op1, u64 size)
 	return;
 }
 
-void _cpy_avx_4unroll(u64* result, const u64* op1, u64 size)
+void cpy_avx_4unroll(u64* result, const u64* op1, u64 size)
 {
 	u64 blocks = size & ((u64)(-16));  // first process blocks of 16 limbs
 	u64 counter = 0;
@@ -109,7 +109,7 @@ void _cpy_avx_4unroll(u64* result, const u64* op1, u64 size)
 	}
 }
 
-void _cpy_sse2_4unroll(u64* result, const u64* op1, u64 size)
+void cpy_sse2_4unroll(u64* result, const u64* op1, u64 size)
 {
 	u64 blocks = size & ((u64)(-8));	// first process blocks of 8 limbs
 	u64 counter = 0;

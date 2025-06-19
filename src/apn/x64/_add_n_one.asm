@@ -23,7 +23,7 @@ extern apn_cpy:PROC
 ; This function is not a performance bottleneck usually in practice.
 ; Therefore only one common x64 implementation suffices for now.
 
-_add_n_one PROC FRAME
+add_n_one PROC FRAME
 
     push    rbp
 .pushreg    rbp
@@ -66,22 +66,18 @@ copy_remaining:
     ; rsp aligned at 16-byte boundary
     ; allocate shadow space and call the apn_cpy func
 
-    sub     rsp, 32                 
-
+    sub     rsp, 32  
     mov     r8, r11
-
     call    apn_cpy
-    
     add     rsp, 32
 
 end_of_func:
 
     setc    al
-    
     mov     rsp, rbp
     pop     rbp
     ret
 
-_add_n_one ENDP
+add_n_one ENDP
 
 END

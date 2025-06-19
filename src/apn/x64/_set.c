@@ -1,6 +1,6 @@
 #include "../../../include/apac.h"
 
-void _set_avx512f_4unroll(u64* result, u64 size, u64 val)
+void set_avx512f_4unroll(u64* result, u64 size, u64 val)
 {
 	__m512i my_val = _mm512_set1_epi64((i64)val);
 
@@ -27,7 +27,7 @@ void _set_avx512f_4unroll(u64* result, u64 size, u64 val)
 	return;
 }
 
-void _set_avx512f_2unroll(u64* result, u64 size, u64 val)
+void set_avx512f_2unroll(u64* result, u64 size, u64 val)
 {
 	__m512i my_val = _mm512_set1_epi64((i64)val);
 
@@ -51,7 +51,7 @@ void _set_avx512f_2unroll(u64* result, u64 size, u64 val)
 	return;
 }
 
-void _set_avx_4unroll(u64* result, u64 size, u64 val)
+void set_avx_4unroll(u64* result, u64 size, u64 val)
 {
 	__m256i my_val = _mm256_set1_epi64x((i64)val);
 
@@ -77,7 +77,7 @@ void _set_avx_4unroll(u64* result, u64 size, u64 val)
 	return;
 }
 
-void _set_sse2_4unroll(u64* result, u64 size, u64 val)
+void set_sse2_4unroll(u64* result, u64 size, u64 val)
 {
 	__m128i my_val = _mm_set1_epi64x((i64)val);
 

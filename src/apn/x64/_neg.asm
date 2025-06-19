@@ -17,7 +17,7 @@
 
 ; 8x unroll version
 
-_neg_8unroll PROC FRAME
+neg_8unroll PROC FRAME
 
 .pushframe
 .endprolog
@@ -97,11 +97,11 @@ end_of_func:
 
     ret
 
-_neg_8unroll ENDP
+neg_8unroll ENDP
 
 ; 4x unroll version
 
-_neg_4unroll PROC FRAME
+neg_4unroll PROC FRAME
 
 .pushframe
 .endprolog
@@ -161,6 +161,6 @@ end_of_func:
 
     ret
 
-_neg_4unroll ENDP
+neg_4unroll ENDP
 
 END

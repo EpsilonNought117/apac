@@ -16,7 +16,7 @@
     ;   r8  -> size (u64)
     ;   r9  -> val (u64)
 
-_sub_n_one_till_borrow PROC FRAME
+sub_n_one_till_borrow PROC FRAME
 .pushframe
 .endprolog
 
@@ -48,6 +48,6 @@ end_of_func:
     setc    al
     ret
 
-_sub_n_one_till_borrow ENDP
+sub_n_one_till_borrow ENDP
 
 END

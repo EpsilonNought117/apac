@@ -18,7 +18,7 @@
 
 extern apn_cpy:PROC
 
-_sub_n_one PROC FRAME
+sub_n_one PROC FRAME
     push    rbp
 .pushreg    rbp
     mov     rbp, rsp
@@ -75,6 +75,6 @@ end_of_func:
     mov     rsp, rbp
     pop     rbp
     ret
-_sub_n_one ENDP
+sub_n_one ENDP
 
 END
