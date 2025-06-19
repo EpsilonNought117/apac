@@ -1,68 +1,131 @@
-cmake_minimum_required(VERSION 3.12)
-project(libapac C)
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    message(FATAL_ERROR "MSVC is required to build libapac.")
-endif()
+#   O---------------------------------------------------------------------------O
+#   |                                                                           |
+#   |                          LIBAPAC CMAKE BUILD FILE                         | 
+#   |                                                                           |
+#   O---------------------------------------------------------------------------O
 
-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message(FATAL_ERROR "Only 64-bit builds are supported.")
-endif()
 
-enable_language(ASM_MASM)
-
-# Option to build shared or static
-option(BUILD_SHARED_LIBS "Build libapac as a shared library" OFF)
-
-# Base source files
-set(apac_c_sources
-    # MISCELLANEOUS HEADERS
-    src/misc/setMemFuncs.c
-    src/misc/getCPUSpec.c
-    src/misc/apacInitDefault.c
-)
-
-# x64-specific assembly and source files
-set(x64_specific
-    # PUBLIC API
-    src/apn/x64/apn_add_sub/apn_add_sub.c
-    src/apn/x64/apn_cpy/apn_cpy.c
-    src/apn/x64/apn_negate/apn_negate.c
-    src/apn/x64/apn_mul/apn_mul.c
-    src/apn/x64/apn_set/apn_set.c
-    src/apn/x64/apn_cmp/apn_cmp.c
-
-    # HIDDEN
-    src/apn/x64/apn_mul/_basecase_mul.c
-    src/apn/x64/apn_mul/_karatsuba_mul.c
-
-    # ASSEMBLY
-    src/apn/x64/assembly/_adc_add_n.asm
-    src/apn/x64/assembly/_adc_add_one.asm
-    src/apn/x64/assembly/_adc_till_carry.asm
-
-    src/apn/x64/assembly/_adx_mulx_mul_basecase.asm
-    src/apn/x64/assembly/_adc_mulx_mul_basecase.asm
-    src/apn/x64/assembly/_adc_mul_basecase.asm
+# --- CHECKS --------------------------------------------------------------------
     
-    src/apn/x64/assembly/_sbb_sub_n.asm
-    src/apn/x64/assembly/_sbb_sub_one.asm
-    src/apn/x64/assembly/_sbb_till_borrow.asm
-)
+    cmake_minimum_required(VERSION 3.12)
+    project(libapac C)
 
-# Combine all source files
-set(apac ${apac_c_sources} ${x64_specific})
+    if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+        message(FATAL_ERROR "Only 64-bit builds are supported.")
+    endif()
 
-# Build shared or static libapac
-if(BUILD_SHARED_LIBS)
-    add_library(apac_shared SHARED ${apac})
-    set(apac_target apac_shared)
-    target_compile_definitions(${apac_target} PRIVATE BUILD_SHARED_LIBS)
-else()
-    add_library(apac_static STATIC ${apac})
-    set(apac_target apac_static)
-endif()
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+            message(FATAL_ERROR "MSVC Toolchain is required to build libapac!")
+    endif()
 
-target_compile_definitions(${apac_target} PRIVATE
-    "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
-)
+    enable_language(ASM_MASM)
+
+    set(CMAKE_C_STANDARD 11)
+
+# --- BUILD OPTIONS -------------------------------------------------------------
+
+    # Option to build a DLL instead of a static lib
+
+    option(BUILD_SHARED_LIBS "Build libapac as a shared library" OFF)
+
+# --- COMMON C SOURCES ----------------------------------------------------------
+
+    set(apac_c_sources
+
+        # MISCELLANEOUS
+
+            src/misc/apacSetMemFuncs.c
+            src/misc/apacGetCPUSpec.c
+            src/misc/apacInit.c
+
+            cpp.hint # Hint file for macro streaming in Visual Studio
+
+        # APN PUBLIC API
+
+            src/apn/commons/apn_add.c
+            src/apn/commons/apn_sub.c
+            src/apn/commons/apn_negate.c
+            src/apn/commons/apn_mul.c
+            src/apn/commons/apn_set.c
+            src/apn/commons/apn_cpy.c
+
+        # APN HIDDEN FUNCS
+
+            src/apn/commons/_basecase_mul.c
+            src/apn/commons/_karatsuba_mul.c
+    )
+
+# --- x64 SPECIFIC C/ASM SOURCES ------------------------------------------------
+
+    set(x64_specific
+
+        # ASSEMBLY SOURCES
+
+            # ADDITION AND RELATED OPS
+            
+                src/apn/x64/_add_n.asm
+                src/apn/x64/_add_n_one.asm
+                src/apn/x64/_add_n_one_till_carry.asm
+
+            # BASECASE MULTIPLICATION (All routines)
+    
+                src/apn/x64/_mul_bc.asm
+    
+            # SUBTRACTION AND RELATED OPS
+    
+                src/apn/x64/_sub_n.asm
+                src/apn/x64/_sub_n_one.asm
+                src/apn/x64/_sub_n_one_till_borrow.asm
+
+            # NEGATION (2's Complement)
+            
+                src/apn/x64/_neg.asm
+
+        # C SOURCES
+
+            # SET (TO A VALUE) OPS
+
+                src/apn/x64/_set.c
+
+            # COPYING OPS
+
+                src/apn/x64/_cpy.c
+
+        # UARCH PARAM FILES
+
+            src/apn/x64/cpu_params.c
+    )
+
+# --- HIDDEN HEADERS ------------------------------------------------------------
+
+    set(hidden_headers
+
+         # COMMONS
+
+            src/apn/commons/_hidden_mul.h
+            src/apn/commons/apn_thresholds.h
+    
+         # x64 SPECIFIC
+
+            src/apn/x64/x64_hidden_funcs.h
+    )
+
+# --- BUILDING DLL/STATIC -------------------------------------------------------
+
+    # Combine all source files
+    set(apac_sources ${apac_c_sources} ${x64_specific} ${hidden_headers})
+
+    if(BUILD_SHARED_LIBS)
+        add_library(apac SHARED ${apac_sources})
+        target_compile_definitions(apac PRIVATE BUILD_SHARED_LIBS)
+        set(apac_target apac)
+    else()
+        add_library(apac STATIC ${apac_sources})
+        set(apac_target apac)
+    endif()
+
+    # Configuration-specific definitions
+    target_compile_definitions(${apac_target} PRIVATE
+        "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
+    )
