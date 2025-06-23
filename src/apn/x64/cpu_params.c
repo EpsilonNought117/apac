@@ -5,8 +5,8 @@ extern apac_cpu_params curr_cpu;
 
 void zen4_set_params(void)
 {
-	curr_cpu.karatsuba_mul_n_threshold = 30;
-	curr_cpu.karatsuba_mul_threshold = 30;
+	curr_cpu.karatsuba_mul_n_threshold = 33;
+	curr_cpu.karatsuba_mul_threshold = 33;
 
 	curr_cpu.apn_add_n_ptr = add_n_8unroll;
 	curr_cpu.apn_sub_n_ptr = sub_n_8unroll;
