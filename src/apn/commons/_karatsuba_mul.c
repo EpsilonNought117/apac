@@ -17,7 +17,7 @@ void apn_karatsuba_mul_n(
 {
 	APAC_ASSERT(temp != NULL);
 
-	if (size < KARATSUBA_MUL_N_THRESHOLD)
+	if (size < KARATSUBA_MUL_BALANCED_THRESHOLD)
 	{
 		// for sizes below threshold
 		// use the basecase multiplication
@@ -40,19 +40,19 @@ void apn_karatsuba_mul_n(
 	// if a carry is generated that means a1 > a0 in which case 
 	// perform negation of result to get the absolute value
 
-	// cy1 = carryA
+	// carry1 = carryA
 
-	u8 cy1 = apn_sub(temp, op1, op1 + lower, lower, upper);
-	if (cy1) apn_neg(temp, temp, lower);
+	u8 carry1 = apn_sub(temp, op1, op1 + lower, lower, upper);
+	if (carry1) apn_neg(temp, temp, lower);
 
 	// b0 = op2[0 : (lower - 1)]
 	// b1 = op2[lower : (upper - 1)]
 	// temp[lower : (2 * lower - 1)] = (b0 - b1)
 
-	// cy2 = carryB
+	// carry2 = carryB
 	// rest is same
-	u8 cy2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
-	if (cy2) apn_neg(temp + lower, temp + lower, lower);
+	u8 carry2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
+	if (carry2) apn_neg(temp + lower, temp + lower, lower);
 
 	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
 	apn_karatsuba_mul_n(result, temp, temp + lower, lower, temp + 2 * lower);
@@ -73,7 +73,7 @@ void apn_karatsuba_mul_n(
 	u8 val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
 	temp[4 * lower] += val; // propagate carry
 
-	if (cy1 == cy2) // if both signs are same
+	if (carry1 == carry2) // if both signs are same
 	{
 		// do c2 = c0 + c1 - temp[0 : (2 * lower - 1)]
 		apn_sub(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
@@ -102,7 +102,7 @@ void apn_karatsuba_mul(
 	APAC_ASSERT(temp != NULL);
 	APAC_ASSERT(size1 >= size2);
 
-	if (size2 <= ((size1 + 1) >> 1) || (size1 < KARATSUBA_MUL_THRESHOLD))
+	if (size2 <= ((size1 + 1) >> 1) || (size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD))
 	{
 		// Highly unbalanced values or values below threshold
 		// handled by basecase multiplication
@@ -120,11 +120,11 @@ void apn_karatsuba_mul(
 	u64 upperA = size1 - lowerA;
 	u64 upperB = size2 - lowerA;
 
-	u8 cy1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
-	if (cy1) apn_neg(temp, temp, lowerA);
+	u8 carry1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
+	if (carry1) apn_neg(temp, temp, lowerA);
 
-	u8 cy2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
-	if (cy2) apn_neg(temp + lowerA, temp + lowerA, lowerA);
+	u8 carry2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
+	if (carry2) apn_neg(temp + lowerA, temp + lowerA, lowerA);
 
 	// Always Balanced Multiplication
 	apn_karatsuba_mul_n(result, temp, temp + lowerA, lowerA, temp + 2 * lowerA);
@@ -141,7 +141,7 @@ void apn_karatsuba_mul(
 	u8 val = apn_add(temp + 2 * lowerA, result, result + 2 * lowerA, 2 * lowerA, upperA + upperB);
 	temp[4 * lowerA] += val;
 
-	if (cy1 == cy2)
+	if (carry1 == carry2)
 	{
 		apn_sub(temp + 2 * lowerA, temp + 2 * lowerA, temp, 2 * lowerA + 1, 2 * lowerA);
 	}

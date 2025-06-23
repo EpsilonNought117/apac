@@ -17,7 +17,7 @@ void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size)
 	// zero out result before mul
 	apn_set(result, 2 * size, 0);
 
-	if (size < KARATSUBA_MUL_N_THRESHOLD)
+	if (size < KARATSUBA_MUL_BALANCED_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size, size);
 	}
@@ -54,7 +54,7 @@ void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
 	// zero out result before mul
 	apn_set(result, size1 + size2, 0);
 
-	if (size2 <= ((size1 + 1) >> 1) || size1 < KARATSUBA_MUL_THRESHOLD)
+	if (size2 <= ((size1 + 1) >> 1) || size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size1, size2);
 	}
