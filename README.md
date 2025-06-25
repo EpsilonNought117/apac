@@ -50,3 +50,8 @@ and number crunching with infinite precision, only limited by the amount of memo
 ### From Visual Studio:
 
 1. After opening the generated solution, right-click the `ALL_BUILD` target and select **Build**.
+
+---
+
+The library is currently Work in Progress
+
