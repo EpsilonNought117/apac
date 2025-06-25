@@ -27,7 +27,7 @@
 
     # Option to build a DLL instead of a static lib
 
-    option(BUILD_SHARED_LIBS "Build libapac as a shared library" OFF)
+    option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -116,9 +116,9 @@
     # Combine all source files
     set(apac_sources ${apac_c_sources} ${x64_specific} ${hidden_headers})
 
-    if(BUILD_SHARED_LIBS)
+    if(BUILD_SHARED_LIB)
         add_library(apac SHARED ${apac_sources})
-        target_compile_definitions(apac PRIVATE BUILD_SHARED_LIBS)
+        target_compile_definitions(apac PRIVATE BUILD_SHARED_LIB)
         set(apac_target apac)
     else()
         add_library(apac STATIC ${apac_sources})

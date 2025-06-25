@@ -18,7 +18,7 @@
 	#include <intrin.h>
 #endif
 
-#if defined(BUILD_SHARED_LIBS)
+#if defined(BUILD_SHARED_LIB)
 	// Export symbols when building the DLL
 	#define APAC_API __declspec(dllexport)
 #elif defined(LIBAPAC_DLL)
@@ -175,6 +175,8 @@ APAC_API void apn_cpy(u64* result, const u64* op1, u64 size);
 
 /*
 	1) result must have "size" number of limbs
+	2) Performs 2's complement of op1 and stores in result
+	3) Overlap is allowed between result and op1
 */
 APAC_API void apn_neg(u64* result, const u64* op1, u64 size);
 
@@ -191,6 +193,12 @@ APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
 	3) size1 must be greater than or equal to size2
 */
 APAC_API void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
+
+/*
+	1) No overlap permitted between result and operand
+	2) result must have (2 * size) number of limbs
+*/
+APAC_API void apn_sqr(u64* result, const u64* op1, u64 size);
 
 /*
 	1) Result must have size number of limbs
