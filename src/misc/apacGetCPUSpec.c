@@ -2,9 +2,26 @@
 
 apac_cpu_params curr_cpu = { 0 };
 
-#if defined(_M_X64) || defined(_M_AMD64)
+// for x86-64/AMD64 ISA
+
+#if (defined(_M_X64) || defined(_M_AMD64) || defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(__amd64))
 
 #include "../apn/x64/x64_hidden_funcs.h"
+
+#if defined(_MSC_VER)
+	
+	#define CPUID(cpuInfo, leaf)			__cpuid(cpuInfo, leaf)
+	#define CPUIDEX(cpuInfo, leaf, subleaf)	__cpuidex(cpuInfo, leaf, subleaf)
+
+#elif defined(__GNUC__) || defined(__clang__)
+
+	#include <cpuid.h>
+
+	#define CPUID(cpuInfo, leaf)			__get_cpuid(leaf, &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3])
+	#define CPUIDEX(cpuInfo, leaf, subleaf) __get_cpuid_count(leaf, subleaf, &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3])
+
+#endif
+	
 
 extern void zen4_set_params(void);
 extern void alderlake_set_params(void);
@@ -15,7 +32,7 @@ void apacGetCPUSpec(void)
 {
 	int cpuInfo[4] = { 0 };
 
-	__cpuid(cpuInfo, 0x0);
+	CPUID(cpuInfo, 0x0);
 
 	if (
 		cpuInfo[1] == 0x68747541 &&		// 'Auth'
@@ -24,7 +41,7 @@ void apacGetCPUSpec(void)
 		)
 	{
 		// Get CPU signature and extract family
-		__cpuid(cpuInfo, 0x1);
+		CPUID(cpuInfo, 0x1);
 		int signature = cpuInfo[0];
 
 		int baseFamily = (signature >> 8) & 0xF;
@@ -47,7 +64,7 @@ void apacGetCPUSpec(void)
 		cpuInfo[2] == 0x6C65746E		// 'ntel'
 		)
 	{
-		__cpuid(cpuInfo, 0x1);
+		CPUID(cpuInfo, 0x1);
 		int signature = cpuInfo[0];
 
 		int baseFamily = (signature >> 8) & 0xF;
@@ -81,9 +98,5 @@ void apacGetCPUSpec(void)
 
 	return;
 }
-
-#elif defined(_M_ARM64) 
-
-// ARM64 version
 
 #endif
