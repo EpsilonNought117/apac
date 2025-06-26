@@ -13,41 +13,20 @@
 /****************************************************************************************************/
 /***********************    COMPILER SPECIFIC HEADERS AND IMPORT/EXPORTS     ************************/
 /****************************************************************************************************/
-
-#if (defined(_WIN64) && defined(_MSC_VER))
 	
-	#if defined(_M_X64) || defined(_M_AMD64)
-		#include <intrin.h>
-	#endif
+#if defined(_M_X64) || defined(_M_AMD64)
+	#include <intrin.h>
+#endif
 
-	#if defined(BUILD_SHARED_LIB)
-		// Export symbols when building the DLL
-		#define APAC_API __declspec(dllexport)
-	#elif defined(LIBAPAC_SHARED)
-		// Import symbols when using the DLL
-		#define APAC_API __declspec(dllimport)
-	#else
-		// Static library, no import/export needed
-	#define APAC_API
-	#endif
-
-#elif (defined(__unix__) || defined(__unix)) && (defined(__GNUC__) || defined(__clang__))
-
-	#if defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(__amd64)
-		#include <x86intrin.h>
-	#endif
-
-	#if defined(BUILD_SHARED_LIB)
-		// Export symbols when building the shared library
-		#define APAC_API __attribute__((visibility("default")))
-	#elif defined(LIBAPAC_SHARED)
-		// Import symbols when using the shared library
-		#define APAC_API
-	#else
-		// Static library, no import/export needed
-		#define APAC_API
-	#endif
-
+#if defined(BUILD_SHARED_LIB)
+	// Export symbols when building the DLL
+	#define APAC_API __declspec(dllexport)
+#elif defined(LIBAPAC_SHARED)
+	// Import symbols when using the DLL
+	#define APAC_API __declspec(dllimport)
+#else
+	// Static library, no import/export needed
+#define APAC_API
 #endif
 
 /****************************************************************************************************/
@@ -70,7 +49,7 @@ typedef enum apac_err
 #endif
 
 #ifndef APAC_ASSERT
-#define APAC_ASSERT(x)      \
+#define APAC_ASSERT(x)			\
         if (!(x))               \
         {                       \
             APAC_REPORT_ERR(#x) \
