@@ -26,7 +26,7 @@
 ;
 ;   -------------------------
 
-; The fastest basecase mul procedues with 2x, 4x and 8x unrolled variants
+; The fastest basecase mul procedures with 2x, 4x and 8x unrolled variants
 ; Compatible on processors supporting ADX and BMI2 ISA Extensions
 
 ;   8x Unroll Variant
@@ -59,8 +59,8 @@ mul_bc_mulx_adx_8unroll PROC FRAME
     mov     r13, rbp        ; store a copy of result in r13
     mov     r11, rbx        ; store a copy of op1 in r11
     mov     r12, r9
-    shr     r9,  3
-    and     r12, 7
+    shr     r9,  3          ; size1 /= 8
+    and     r12, 7          ; size1 %= 8
     xor     r15, r15
 
 loop_outer:
@@ -200,65 +200,22 @@ mul_bc_mulx_adx_4unroll PROC FRAME
     mov     r10, QWORD PTR [rsp + 104] ; size2 in r10
     mov     r13, rbp    ; store a copy of result in r13
     mov     r11, rbx    ; store a copy of op1 in r11
-    mov     r15, jump_table
+    mov     r12, r9
+    shr     r9,  2      ; size /= 4
+    and     r12, 3      ; size %= 4
+    xor     r15, r15    
 
 loop_outer:
 
-    mov     r12, r9         ; for the jump table
-    mov     rcx, r9         ; for the main unrolled loop
-    shr     rcx, 2          ; size1 /= 4    
-    and     r12, 3          ; size1 %= 4
+    mov     rcx, r9     ; load size1 /= 4 in rcx
     mov     rdx, QWORD PTR [r8  + rax*8] ; load op2[i] into rdx
     lea     rbp, [r13 + rax*8]           
     lea     rbx, [r11]
-    jmp     QWORD PTR [r15 + r12*8]
+    
+    test    rcx, rcx
+    jz      before_remainder
 
-rem2:
-
-    mulx    rdi, rsi, QWORD PTR [rbx]
-    adcx    rsi, QWORD PTR [rbp]
-    adox    rdi, QWORD PTR [rbp + 8]
-    mov     QWORD PTR [rbp], rsi
-    mov     r14, rdi
-
-    mulx    rdi, rsi, QWORD PTR [rbx + 8]
-    adcx    rsi, r14
-    adox    rdi, QWORD PTR [rbp + 16]
-    mov     QWORD PTR [rbp + 8], rsi
-    mov     QWORD PTR [rbp + 16], rdi
-
-    lea     rbx, [rbx + 16]
-    lea     rbp, [rbp + 16]
-    lea     r12, [r12 - 2]
-    jmp     QWORD PTR [r15 + r12*8]
-
-rem1:
-
-    mulx    rdi, rsi, QWORD PTR [rbx]
-    adcx    rsi, QWORD PTR [rbp]
-    adox    rdi, QWORD PTR [rbp + 8]
-    mov     QWORD PTR [rbp], rsi
-    mov     QWORD PTR [rbp + 8], rdi
-
-    lea     rbx, [rbx + 8]
-    lea     rbp, [rbp + 8]
-    lea     r12, [r12 - 1]
-    jmp     QWORD PTR [r15 + r12*8]
-
-loop_end:
-
-    adcx    r12, QWORD PTR [rbp]
-    mov     QWORD PTR [rbp], r12
-
-    inc     rax
-    cmp     r10, rax
-    jz      end_of_func
-    jmp     loop_outer
-
-ALIGN 16
 inner_unrolled:
-
-    jrcxz   loop_end
 
     mulx    rdi, rsi, QWORD PTR [rbx]
     adcx    rsi, QWORD PTR [rbp]
@@ -287,14 +244,37 @@ inner_unrolled:
     lea     rbx, [rbx + 32]
     lea     rbp, [rbp + 32]
     lea     rcx, [rcx - 1]
+    jrcxz   before_remainder
     jmp     inner_unrolled
-
-jump_table:
-            dq offset inner_unrolled    ; 0
-            dq offset rem1              ; 1
-            dq offset rem2              ; 2
-            dq offset rem2              ; 3
     
+ALIGN 16
+before_remainder:
+
+    mov     rcx, r12
+    jrcxz   outer_loop_end
+
+remainder:
+
+    mulx    rdi, rsi, QWORD PTR [rbx]
+    adcx    rsi, QWORD PTR [rbp]
+    adox    rdi, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], rsi
+    mov     QWORD PTR [rbp + 8], rdi
+
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
+    loop    remainder    
+
+ALIGN 16
+outer_loop_end:
+
+    adc    QWORD PTR [rbp], r15
+
+    inc     rax
+    cmp     r10, rax
+    jnz     loop_outer
+
+ALIGN 16
 end_of_func:
 
     pop     rbp
