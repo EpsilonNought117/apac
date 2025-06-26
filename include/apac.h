@@ -14,19 +14,40 @@
 /***********************    COMPILER SPECIFIC HEADERS AND IMPORT/EXPORTS     ************************/
 /****************************************************************************************************/
 
-#if defined(_M_X64) || defined(_M_AMD64)
-	#include <intrin.h>
-#endif
+#if (defined(_WIN64) && defined(_MSC_VER))
+	
+	#if defined(_M_X64) || defined(_M_AMD64)
+		#include <intrin.h>
+	#endif
 
-#if defined(BUILD_SHARED_LIB)
-	// Export symbols when building the DLL
-	#define APAC_API __declspec(dllexport)
-#elif defined(LIBAPAC_DLL)
-	// Import symbols when using the DLL
-	#define APAC_API __declspec(dllimport)
-#else
-	// Static library, no import/export needed
+	#if defined(BUILD_SHARED_LIB)
+		// Export symbols when building the DLL
+		#define APAC_API __declspec(dllexport)
+	#elif defined(LIBAPAC_SHARED)
+		// Import symbols when using the DLL
+		#define APAC_API __declspec(dllimport)
+	#else
+		// Static library, no import/export needed
 	#define APAC_API
+	#endif
+
+#elif (defined(__unix__) || defined(__unix)) && (defined(__GNUC__) || defined(__clang__))
+
+	#if defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(__amd64)
+		#include <x86intrin.h>
+	#endif
+
+	#if defined(BUILD_SHARED_LIB)
+		// Export symbols when building the shared library
+		#define APAC_API __attribute__((visibility("default")))
+	#elif defined(LIBAPAC_SHARED)
+		// Import symbols when using the shared library
+		#define APAC_API
+	#else
+		// Static library, no import/export needed
+		#define APAC_API
+	#endif
+
 #endif
 
 /****************************************************************************************************/
@@ -97,7 +118,7 @@ typedef struct apac_cpu_params
 {
 	u64 karatsuba_mul_n_threshold;
 	u64 karatsuba_mul_threshold;
-	
+
 	u8(*apn_add_n_ptr)(u64*, const u64*, const u64*, u64);
 	u8(*apn_sub_n_ptr)(u64*, const u64*, const u64*, u64);
 	void (*apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);
