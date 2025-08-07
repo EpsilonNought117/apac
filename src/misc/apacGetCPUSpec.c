@@ -7,7 +7,7 @@ apac_cpu_params curr_cpu = { 0 };
 #include "../apn/x64/x64_hidden_funcs.h"
 
 extern void zen4_set_params(void);
-extern void alderlake_set_params(void);
+extern void generic_x64_set_params(void);
 
 // x64/AMD64 Version
 
@@ -38,6 +38,7 @@ void apacGetCPUSpec(void)
 			break;
 
 		default:
+			generic_x64_set_params();
 			break;
 		}
 	}
@@ -64,19 +65,21 @@ void apacGetCPUSpec(void)
 
 			switch (model)
 			{
-			case 0x9A:      // Alder Lake-P (154 decimal = 0x9A hex)
-				alderlake_set_params();
-				break;
-
 			default:
+				generic_x64_set_params();
 				break;
 			}
 		}
 		break;
 
 		default:
+			generic_x64_set_params();
 			break;
 		}
+	}
+	else
+	{
+		generic_x64_set_params();
 	}
 
 	return;

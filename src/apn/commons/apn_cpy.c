@@ -2,7 +2,7 @@
 
 extern apac_cpu_params curr_cpu;
 
-void apn_cpy(u64* result, const u64* op1, u64 size)
+void apn_cpy(apn_seg* result, const apn_seg* op1, apn_size size)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(result != NULL);

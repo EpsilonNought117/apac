@@ -8,12 +8,16 @@
 # --- CHECKS --------------------------------------------------------------------
     
     cmake_minimum_required(VERSION 3.12)
-    project(libapac C)
+    project(libapac)
     
     # Check for 64-bit architecture
     
     if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
         message(FATAL_ERROR "Only 64-bit builds are supported.")
+    endif()
+
+    if(NOT WIN32)
+        message(FATAL_ERROR "Only Windows is supported!")
     endif()
 
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
@@ -51,8 +55,8 @@
 
         # APN HIDDEN FUNCS
 
-        "src/apn/commons/_basecase_mul.c"
-        "src/apn/commons/_karatsuba_mul.c"
+        "src/apn/commons/basecase_mul.c"
+        "src/apn/commons/karatsuba_mul.c"
 
     )
     
@@ -62,20 +66,22 @@
 
         # C SOURCES
 
-        "src/apn/x64/_set.c"
-        "src/apn/x64/_cpy.c"
+        "src/apn/x64/set.c"
+        "src/apn/x64/cpy.c"
+        "src/apn/x64/cmp.c"
         "src/apn/x64/cpu_params.c"
 
         # ASSEMBLY SOURCES
 
-        "src/apn/x64/_add_n.asm"
-        "src/apn/x64/_add_n_one.asm"
-        "src/apn/x64/_add_n_one_till_carry.asm"    
-        "src/apn/x64/_mul_bc.asm"
-        "src/apn/x64/_sub_n.asm"
-        "src/apn/x64/_sub_n_one.asm"
-        "src/apn/x64/_sub_n_one_till_borrow.asm"
-        "src/apn/x64/_neg.asm"
+        "src/apn/x64/add_n.asm"
+        "src/apn/x64/add_n_one.asm"
+        "src/apn/x64/add_n_one_till_carry.asm"    
+        "src/apn/x64/mul_bc.asm"
+        "src/apn/x64/sub_n.asm"
+        "src/apn/x64/sub_n_one.asm"
+        "src/apn/x64/sub_n_one_till_borrow.asm"
+        "src/apn/x64/neg.asm"
+    
     )
     
 # --- HIDDEN HEADERS ------------------------------------------------------------
@@ -84,7 +90,7 @@
 
          # COMMONS
 
-            "src/apn/commons/_hidden_mul.h"
+            "src/apn/commons/hidden_mul.h"
             "src/apn/commons/apn_thresholds.h"
     
          # x64 SPECIFIC

@@ -5,7 +5,7 @@
 
 extern apac_cpu_params curr_cpu;
 
-#define KARATSUBA_MUL_BALANCED_THRESHOLD		(curr_cpu.karatsuba_mul_n_threshold)
-#define KARATSUBA_MUL_UNBALANCED_THRESHOLD		(curr_cpu.karatsuba_mul_threshold)		
+#define KARATSUBA_MUL_BALANCED_THRESHOLD		(curr_cpu.karatsuba_mul_balanced_threshold)
+#define KARATSUBA_MUL_UNBALANCED_THRESHOLD		(curr_cpu.karatsuba_mul_unbalanced_threshold)		
 
 #endif

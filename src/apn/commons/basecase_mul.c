@@ -1,8 +1,8 @@
-#include "_hidden_mul.h"
+#include "hidden_mul.h"
 
 extern apac_cpu_params curr_cpu;
 
-void apn_basecase_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
+void apn_basecase_mul(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2)
 {
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);

@@ -11,11 +11,16 @@
 #include <limits.h>
 
 /****************************************************************************************************/
-/***********************    COMPILER SPECIFIC HEADERS AND IMPORT/EXPORTS     ************************/
+/******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
 /****************************************************************************************************/
 	
-#if defined(_M_X64) || defined(_M_AMD64)
-	#include <intrin.h>
+#if defined(_MSC_VER)
+
+	#if defined(_M_X64) || defined(_M_AMD64)
+		#include <intrin.h>
+		#include <immintrin.h>
+	#endif
+
 #endif
 
 #if defined(BUILD_SHARED_LIB)
@@ -43,19 +48,19 @@ typedef enum apac_err
 
 #if !defined(APAC_DISABLE_ASSERT)
 
-#ifndef APAC_REPORT_ERR
-#define APAC_REPORT_ERR(x) \
+	#ifndef APAC_REPORT_ERR
+	#define APAC_REPORT_ERR(x) \
         fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, x);
-#endif
+	#endif
 
-#ifndef APAC_ASSERT
-#define APAC_ASSERT(x)			\
-        if (!(x))               \
-        {                       \
-            APAC_REPORT_ERR(#x) \
-            abort();            \
-        }
-#endif
+	#ifndef APAC_ASSERT
+	#define APAC_ASSERT(x)			\
+			if (!(x))               \
+			{                       \
+				APAC_REPORT_ERR(#x) \
+				abort();            \
+			}
+	#endif
 
 #else
 
@@ -82,12 +87,8 @@ APAC_API void apacInit(void);
 
 APAC_API void apacGetCPUSpec(void);
 
-typedef uint64_t  u64;
-typedef uint32_t  u32;
-typedef uint8_t    u8;
-typedef int64_t   i64;
-typedef int32_t   i32;
-typedef int8_t     i8;
+typedef uint64_t	apn_seg;
+typedef uint64_t	apn_size;
 
 /****************************************************************************************************/
 /**********************************          CPU FUNCTIONS       ************************************/
@@ -95,15 +96,18 @@ typedef int8_t     i8;
 
 typedef struct apac_cpu_params
 {
-	u64 karatsuba_mul_n_threshold;
-	u64 karatsuba_mul_threshold;
+	apn_size karatsuba_mul_balanced_threshold;
+	apn_size karatsuba_mul_unbalanced_threshold;
 
-	u8(*apn_add_n_ptr)(u64*, const u64*, const u64*, u64);
-	u8(*apn_sub_n_ptr)(u64*, const u64*, const u64*, u64);
-	void (*apn_mul_bc_ptr)(u64*, const u64*, const u64*, u64, u64);
-	void (*apn_neg_ptr)(u64*, const u64*, u64);
-	void (*apn_cpy_ptr)(u64*, const u64*, u64);
-	void (*apn_set_ptr)(u64*, u64, u64);
+	apn_seg(*apn_add_n_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size);
+	apn_seg(*apn_sub_n_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size);
+	void (*apn_mul_bc_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size, apn_size);
+	void (*apn_mul_one_ptr)(apn_seg*, const apn_seg*, apn_size, apn_seg);
+	void (*apn_sqr_bc_ptr)(apn_seg*, const apn_seg*, apn_size);
+	void (*apn_neg_ptr)(apn_seg*, const apn_seg*, apn_size);
+	void (*apn_cpy_ptr)(apn_seg*, const apn_seg*, apn_size);
+	void (*apn_set_ptr)(apn_seg*, apn_size, apn_seg);
+	int (*apn_cmp_ptr)(const apn_seg*, const apn_seg*, apn_size);
 
 }   apac_cpu_params;
 
@@ -114,9 +118,9 @@ extern apac_cpu_params curr_cpu;
 /****************************************************************************************************/
 
 /**
-*                   IMPORTANT NOTES
+* -------------------- IMPORTANT NOTES --------------------
 *
-* 1) THESE FUNCTIONS DO NOT PERFORM ANY MEMORY ALLOCATIONS.
+* 1) THESE FUNCTIONS DO NOT PERFORM ANY MEMORY ALLOCATIONS IN OPERANDS OR RESULT.
 *
 * 2) ASSERTS ARE USED IN DEBUG MODE FOR CATCHING INVALID ARGUMENT ERRORS.
 *
@@ -131,83 +135,119 @@ extern apac_cpu_params curr_cpu;
 */
 
 /*
-	1) result must have "size" limbs
-	2) returns the carry out
+
+1) result must have "size" limbs
+2) returns the carry out
+
 */
-APAC_API u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size);
+APAC_API apn_seg apn_add_n(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size);
 
 /*
-	1) size1 must be greater than or equal to size2.
-	2) result must have size1 limbs
-	3) returns the carry out
+
+1) size1 must be greater than or equal to size2.
+2) result must have size1 limbs
+3) returns the carry out
+
 */
-APAC_API u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
+APAC_API apn_seg apn_add(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
 
 /*
-	1) result must have "size" limbs
-	2) returns the carry out (unlikely in avg case)
+
+1) result must have "size" limbs
+2) returns the carry out (unlikely in avg case)
+
 */
-APAC_API u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val);
+APAC_API apn_seg apn_add_one(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
 
 /*
-	1) result must have "size" limbs
-	2) returns the borrow out
+
+1) result must have "size" limbs
+2) returns the borrow out
+
 */
-APAC_API u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size);
+APAC_API apn_seg apn_sub_n(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size);
 
 /*
-	1) size1 must be greater than or equal to size2.
-	2) result must have size1 limbs
-	3) return the borrow out
+
+1) size1 must be greater than or equal to size2.
+2) result must have size1 limbs
+3) return the borrow out
+
 */
-APAC_API u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
+APAC_API apn_seg apn_sub(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
 
 /*
-	1) result must have "size" limbs
-	2) returns the borrow out
+
+1) result must have "size" limbs
+2) returns the borrow out
+
 */
-APAC_API u8 apn_sub_one(u64* result, const u64* op1, u64 size, u64 val);
+APAC_API apn_seg apn_sub_one(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
 
 /*
-	1) result must have "size" number of limbs
+
+1) result must have "size" number of limbs
+
 */
-APAC_API void apn_cpy(u64* result, const u64* op1, u64 size);
+APAC_API void apn_cpy(apn_seg* result, const apn_seg* op1, apn_size size);
 
 /*
-	1) result must have "size" number of limbs
-	2) Performs 2's complement of op1 and stores in result
-	3) Overlap is allowed between result and op1
+
+1) result must have "size" number of limbs
+2) Performs 2's complement of op1 and stores in result
+3) Overlap is allowed between result and op1
+
 */
-APAC_API void apn_neg(u64* result, const u64* op1, u64 size);
+APAC_API void apn_neg(apn_seg* result, const apn_seg* op1, apn_size size);
 
 /*
-	1) No overlap permitted between result and either of the operands
-	2) result must have 2 * size number of limbs
-	3) Operands can overlap. If they are the same, use apn_sqr
+
+1) No overlap permitted between result and either of the input operands
+2) result must have at least 2 * size number of limbs
+3) Input operands can overlap. If they are the same, use apn_sqr
+
 */
-APAC_API void apn_mul_n(u64* result, const u64* op1, const u64* op2, u64 size);
+APAC_API void apn_mul_n(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size);
 
 /*
-	1) No overlap permitted between result and either of the operands
-	2) result must have (size1 + size2) number of limbs
-	3) size1 must be greater than or equal to size2
+
+1) No overlap permitted between result and either of the input operands
+2) result must have at least (size1 + size2) number of limbs
+3) size1 must be greater than or equal to size2
+4) Input operands can overlap as they are read only
+
 */
-APAC_API void apn_mul(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2);
+APAC_API void apn_mul(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
 
 /*
-	1) No overlap permitted between result and operand
-	2) result must have (2 * size) number of limbs
+
+1) No overlap permitted between result and input operand (op1)
+2) result must have at least (size + 1) number of limbs
+3) op1 and val (single limb) can overlap
+
 */
-APAC_API void apn_sqr(u64* result, const u64* op1, u64 size);
+APAC_API void apn_mul_one(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
 
 /*
-	1) Result must have size number of limbs
+
+1) No overlap permitted between result and input operand
+2) result must have (2 * size) number of limbs
+
 */
-APAC_API void apn_set(u64* result, u64 size, u64 val);
+APAC_API void apn_sqr(apn_seg* result, const apn_seg* op1, apn_size size);
 
 /*
-	1) returns 1, 0, -1 based on whether op1 > op2, op1 = op2 or op1 < op2
+
+1) Result must have size number of limbs
+
 */
-APAC_API i8 apn_cmp(const u64* op1, const u64* op2, u64 size1, u64 size2);
+APAC_API void apn_set(apn_seg* result, apn_size size, apn_seg val);
+
+/*
+
+1) returns (int) 1, 0, -1 based on whether op1 > op2, op1 = op2 or op1 < op2
+
+*/
+APAC_API int apn_cmp(const apn_seg* op1, const apn_seg* op2, apn_size size);
 
 #endif

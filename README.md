@@ -21,7 +21,7 @@ and number crunching with infinite precision, only limited by the amount of memo
 1) Windows 10/11  
 2) _Visual Studio 17 2022_ or _Visual Studio Build Tools_ with `Desktop development with C++` option selected  
 3) CMake 3.12 or later  
-4) Build generator like `Visual Studio 17 2022 (MSBuild)` or `Ninja`  
+4) Build generator like `Visual Studio 17 2022 (MSBuild)`, `Ninja` etc.,
 
 ---
 
@@ -49,9 +49,9 @@ and number crunching with infinite precision, only limited by the amount of memo
 
 ### From Visual Studio:
 
-1. After opening the generated solution, right-click the `ALL_BUILD` target and select **Build**.
+1. After opening the generated solution, right-click the `BUILD_ALL` target and select **Build**.
 
 ---
 
-The library is currently Work in Progress
+The library is currently Work in Progress.
 

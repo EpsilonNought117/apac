@@ -18,7 +18,8 @@
 
 extern apn_cpy:PROC
 
-sub_n_one PROC FRAME
+sub_n_one_x64 PROC FRAME
+
     push    rbp
 .pushreg    rbp
     mov     rbp, rsp
@@ -68,13 +69,15 @@ copy_remaining:
     
     add     rsp, 32                
 
+ALIGN 16
 end_of_func:
 
     setc    al
-    
+    movzx   rax, al    
     mov     rsp, rbp
     pop     rbp
     ret
-sub_n_one ENDP
+
+sub_n_one_x64 ENDP
 
 END
