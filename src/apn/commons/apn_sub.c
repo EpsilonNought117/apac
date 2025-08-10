@@ -2,8 +2,8 @@
 
 extern apac_cpu_params curr_cpu;
 
+// functions written in asm, but common for all x64 processors
 extern apn_seg sub_n_one_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
-
 extern apn_seg sub_n_one_till_borrow_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
 
 apn_seg apn_sub_n(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size)
