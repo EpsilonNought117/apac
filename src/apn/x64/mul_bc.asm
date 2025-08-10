@@ -149,7 +149,6 @@ remainder:
     lea     rbp, [rbp + 8]
     loop    remainder
 
-ALIGN 16
 outer_loop_end:
 
     adc     QWORD PTR [rbp], r15
