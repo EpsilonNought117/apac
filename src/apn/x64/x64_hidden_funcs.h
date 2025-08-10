@@ -18,15 +18,26 @@ extern apn_seg sub_n_x64(apn_seg* result, const apn_seg* op1, const apn_seg* op2
 extern void mul_bc_zen4(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
 extern void mul_bc_x64(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
 
+/* --------------------------- BASECASE SQUARING FUNCTIONS ---------------------------- */
+
+extern void sqr_bc_zen4(apn_seg* result, const apn_seg* op1, apn_size size);
+extern void sqr_bc_x64(apn_seg* result, const apn_seg* op1, apn_size size);
+
 /* -------------------------------- COPYING FUNCTIONS --------------------------------- */
 
-extern void cpy_zen4(apn_seg* result, const apn_seg* op1, apn_size size);
-extern void cpy_x64(apn_seg* result, const apn_seg* op1, apn_size size);
+extern void cpy_avx512f_4unroll(apn_seg* result, const apn_seg* op1, apn_size size);
+extern void cpy_avx512f_2unroll(apn_seg* result, const apn_seg* op1, apn_size size);
+extern void cpy_avx_4unroll(apn_seg* result, const apn_seg* op1, apn_size size);
+extern void cpy_avx_2unroll(apn_seg* result, const apn_seg* op1, apn_size size);
+extern void cpy_sse2_4unroll(apn_seg* result, const apn_seg* op1, apn_size size);
 
 /* ------------------------------- SET TO VAL FUNCTIONS ------------------------------- */
 
-extern void set_zen4(apn_seg* result, apn_size size, apn_seg val);
-extern void set_x64(apn_seg* result, apn_size size, apn_seg val);
+extern void set_avx512f_4unroll(apn_seg* result, apn_size size, apn_seg val);
+extern void set_avx512f_2unroll(apn_seg* result, apn_size size, apn_seg val);
+extern void set_avx_4unroll(apn_seg* result, apn_size size, apn_seg val);
+extern void set_avx_2unroll(apn_seg* result, apn_size size, apn_seg val);
+extern void set_sse2_4unroll(apn_seg* result, apn_size size, apn_seg val);
 
 /* ------------------------------- NEGATION FUNCTIONS --------------------------------- */
 
