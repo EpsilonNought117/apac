@@ -48,10 +48,6 @@ sqr_bc_x64 PROC FRAME
 .pushreg    r12    
     push    r13
 .pushreg    r13
-    push    r14
-.pushreg    r14
-    push    r15
-.pushreg    r15
 .pushframe
 .endprolog
 
@@ -78,12 +74,12 @@ sqr_bc_x64 PROC FRAME
     ;       
     ;   For an (n * n) sized squaring operation, there will be exactly (n * (n - 1)) / 2
     ;   number of non-diagonal multiplications since those products occur twice in the 
-    ;   multiplication matrix. In pass 1, add all those sums once
+    ;   multiplication matrix. In pass 1, add all those sums once.
     ;
     ; Pass 2: Shift left the accumulated non-diag prods by 1 bit
     ;   
     ;   Shift the accumulated products left by 1 bit, essentially multiplying 
-    ;   the whole lower-triangular part of the matrix by 2.
+    ;   the whole lower-triangular part of the matrix by 2, getting the desired value.
     ;
     ; Pass 3: Accumulate the diagonal products (squares) in the result
     ;
@@ -91,6 +87,9 @@ sqr_bc_x64 PROC FRAME
 
     xchg    rdi, rcx        ; exchange rcx and rdi, freeing up rcx for jrcxz/loop
     xchg    rsi, rdx        ; exchange rdx and rsi, freeing up rdx for mul
+
+    ; op1 in rsi, result in rdi
+
     mov     r9,  r8         ; copy of size in r9
     dec     r9              ; lower triangular matrix elems start with
                             ; (n - 1) -> (n - 2) -> ... -> 2 -> 1 -> 0
@@ -99,31 +98,58 @@ sqr_bc_x64 PROC FRAME
 
     ; PASS-1 (O(n^2) step)
 
+    xor     r12, r12    ; counter (starts at 0)
+    xor     r13, r13    ; to restore rax after it has been clobbered by mul
+    
+outer_loop_pass1:
+
     ; rdx:rax for accumulating the product via mul
     ; r10 <- result (copy for loop)
     ; r11 <- op1    (copy for loop)
     ; r9 <- (size - 1) (copy for loop)
 
-outer_loop_pass1:
-
     mov     rcx,  r9    ; rcx is inner loop counter
     xor     rbx, rbx    ; temp_reg
-    mov     r12, 
+    mov     r13, QWORD PTR [rsi + r12*8]
+    lea     r10, [rdi + r12*8 + 8]      ; result[counter + 1]
+    lea     r11, [rsi + r12*8 + 8]      ; op1[counter + 1]
 
+ALIGN 16
 inner_loop_pass1:
+
+    mov     rax, r13            ; restore clobbered rax
+    adc     rbx, rdx            ; temp_reg += (CF + high64)
+    mul     QWORD PTR [r11]     ; rdx:rax = rax * op1[counter + 1]
+
+    add     rbx, rax                ; temp_reg += low64
+    adc     rdx, 0                  ; high64 += CF
+    add     QWORD PTR [r10], rbx    ; result[counter + 1] += temp_reg
+
+    lea     r10, [r10 + 8]
+    lea     r11, [r11 + 8]
+    loop    inner_loop_pass1
 
 end_of_pass1:
 
+    inc     r12
+    adc     QWORD PTR [r10], rdx
+    dec     r9
+    jnz     outer_loop_pass1
 
     ; PASS-2 (O(n) step)
 
+    xor     r11, r11
+    mov     r10, rdi
+    mov     r9,  r8
+
+loop_pass2:
+
+    
+
     ; PASS-3 (O(n) step)
 
-ALIGN 16
 end_of_func:
 
-    pop     r15
-    pop     r14
     pop     r13
     pop     r12
     pop     rdi
