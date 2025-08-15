@@ -11,10 +11,10 @@
 
     ;   Function Arguments
     ;
-    ;   rcx -> result (u64*)   
-    ;   rdx -> op1 (const u64*)
-    ;   r8  -> size (u64)
-    ;   r9  -> val (u64)
+    ;   rcx -> result (apn_seg*)   
+    ;   rdx -> op1 (const apn_seg*)
+    ;   r8  -> size (apn_size)
+    ;   r9  -> val (apn_seg)
 
 extern apn_cpy:PROC
 

@@ -13,10 +13,10 @@
 
     ;   Function Arguments
     ;
-    ;   rcx -> result (u64*)   
-    ;   rdx -> op1 (const u64*)
-    ;   r8  -> op2 (const u64*)
-    ;   r9  -> size (u64)
+    ;   rcx -> result (apn_seg*)   
+    ;   rdx -> op1 (const apn_seg*)
+    ;   r8  -> op2 (const apn_seg*)
+    ;   r9  -> size (apn_size)
 
 ; Procedure tuned for optimal performance
 ; on AMD Zen4 microarchitecture

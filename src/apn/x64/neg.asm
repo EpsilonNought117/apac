@@ -11,9 +11,9 @@
 
     ;   Function Arguments
     ;
-    ;   rcx -> result (u64*)   
-    ;   rdx -> op1 (const u64*)
-    ;   r8  -> size (u64)
+    ;   rcx -> result (apn_seg*)   
+    ;   rdx -> op1 (const apn_seg*)
+    ;   r8  -> size (apn_size)
 
 ; Negations (2's Complement) procedure tuned for
 ; AMD's Zen4 Microarchitecture with 4x unroll
