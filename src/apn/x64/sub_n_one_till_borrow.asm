@@ -17,7 +17,6 @@
     ;   r9  -> val (u64)
 
 sub_n_one_till_borrow_x64 PROC FRAME
-.pushframe
 .endprolog
 
     mov     r11, r8

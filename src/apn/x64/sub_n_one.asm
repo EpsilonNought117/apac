@@ -19,11 +19,11 @@
 extern apn_cpy:PROC
 
 sub_n_one_x64 PROC FRAME
-
+.pushframe          
     push    rbp
 .pushreg    rbp
     mov     rbp, rsp
-.pushframe
+.setframe   rbp, 0
 .endprolog
     
     ; at this point, rsp is aligned at 16-byte boundary

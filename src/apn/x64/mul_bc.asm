@@ -49,7 +49,6 @@ mul_bc_zen4 PROC FRAME
 .pushreg    r15
     push    rbp
 .pushreg    rbp
-.pushframe
 .endprolog
 
     xor     rax, rax        ; i
@@ -192,7 +191,6 @@ mul_bc_x64 PROC FRAME
 .pushreg    r12
     push    r13
 .pushreg    r13
-.pushframe
 .endprolog
 
     xchg    rbx, rdx    ; high64 in rdx

@@ -24,13 +24,13 @@ extern apn_cpy:PROC
 ; Therefore only one common x64 implementation suffices for now.
 
 add_n_one_x64 PROC FRAME
-
+.pushframe          
     push    rbp
-.pushreg    rbp
+.pushreg    rbp     
     mov     rbp, rsp
-.pushframe
+.setframe   rbp, 0  
 .endprolog
-    
+
     ; at this point, rsp is aligned at 16-byte boundary
     ; because during function entry, it is at 8-byte boundary
     ; pushing rbp sets it to a 16-byte boundary

@@ -19,8 +19,6 @@
 ; AMD's Zen4 Microarchitecture with 4x unroll
 
 neg_zen4 PROC FRAME
-
-.pushframe
 .endprolog
 
     mov     r11, r8
@@ -86,7 +84,6 @@ neg_zen4 ENDP
 ; lowest common denominator generic implementation
 
 neg_x64 PROC FRAME
-.pushframe
 .endprolog
 
     test    r8,  r8

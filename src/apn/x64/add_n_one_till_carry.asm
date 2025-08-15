@@ -20,7 +20,6 @@
 ; Therefore only one common x64 implementation suffices for now.
 
 add_n_one_till_carry_x64 PROC FRAME
-.pushframe
 .endprolog
 
     mov     r11, r8

@@ -22,7 +22,6 @@
 ; on AMD Zen4 microarchitecture
 
 sub_n_zen4 PROC FRAME
-.pushframe
 .endprolog
 
     xor     rax, rax
@@ -92,7 +91,6 @@ sub_n_zen4 ENDP
 ; procedure for balanced subtraction
 
 sub_n_x64 PROC FRAME
-.pushframe
 .endprolog
 
     test    r9,  r9
