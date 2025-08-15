@@ -24,6 +24,158 @@
 
 sqr_bc_zen4 PROC FRAME
 
+    push    rbx
+.pushreg    rbx
+    push    rsi
+.pushreg    rsi
+    push    rdi
+.pushreg    rdi
+    push    r12
+.pushreg    r12
+    push    r13
+.pushreg    r13
+    push    r14
+.pushreg    r14
+    push    r15
+.pushreg    r15
+.endprolog
+
+    xchg    rax, rcx    ; exchange rcx and rax, freeing up rcx for jrcxz/loop
+    xchg    rbx, rdx    ; exchange rdx and rbx, freeing up rdx for mulx
+
+    mov     r9,  r8
+    dec     r9          
+    
+    test    r9,  r9
+    jz      before_pass2
+
+    ; The whole function works exactly as sqr_bc_x64 with a few changes
+    ; Passes 1 and 2 can be merged into one thanks to adcx & adox from ADX
+    ; Can propagate two "carries" per limb at once utilizing both OF & CF
+    ; BMI2's mulx adds more convenience of not affecting any flags
+
+    xor     r13, r13    ; counter (starts at 0)
+    xor     r15, r15    ; register for holding 0
+
+    ; Pass-1 (O(n^2) step)
+
+outer_loop_pass1:
+
+    mov     rdx, QWORD PTR [rbx + r13*8]    ; op1[i]
+    lea     r10, [rax + r13*8 + 8]          
+    lea     r11, [rbx + r13*8 + 8]
+    mov     rcx, r9
+    mov     r12, r9
+    shr     rcx, 2      ; rcx /= 4
+    and     r12, 3      ; r12 %= 4
+    test    rcx, rcx
+    jz      inner_loop_befr_rem_pass1
+
+ALIGN 16
+inner_loop_4unroll_pass1:
+
+    mulx    rdi, rsi, QWORD PTR [r11]
+    adcx    rsi, rsi
+    adox    rsi, QWORD PTR [r10]
+    mov     QWORD PTR [r10], rsi
+    adcx    rdi, rdi
+    adox    rdi, QWORD PTR [r10 + 8]
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [r11 + 8]
+    adcx    rsi, rsi
+    adox    rsi, r14
+    mov     QWORD PTR [r10 + 8], rsi
+    adcx    rdi, rdi
+    adox    rdi, QWORD PTR [r10 + 16]
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [r11 + 16]
+    adcx    rsi, rsi
+    adox    rsi, r14
+    mov     QWORD PTR [r10 + 16], rsi
+    adcx    rdi, rdi
+    adox    rdi, QWORD PTR [r10 + 24]
+    mov     r14, rdi
+
+    mulx    rdi, rsi, QWORD PTR [r11 + 24]
+    adcx    rsi, rsi
+    adox    rsi, r14
+    mov     QWORD PTR [r10 + 24], rsi
+    adcx    rdi, rdi
+    adox    rdi, QWORD PTR [r10 + 32]
+    mov     QWORD PTR [r10 + 32], rdi
+
+    lea     r11, [r11 + 32]
+    lea     r10, [r11 + 32]
+    lea     rcx, [rcx - 1]
+    jrcxz   inner_loop_befr_rem_pass1
+    jmp     inner_loop_4unroll_pass1
+
+ALIGN 16
+inner_loop_befr_rem_pass1:
+
+    mov     rcx, r12
+    jrcxz   outer_loop_end_pass1
+
+ALIGN 16
+inner_loop_rem_pass1:
+
+    mulx    rdi, rsi, QWORD PTR [r11]
+    adcx    rsi, rsi
+    adox    rsi, QWORD PTR [r10]
+    mov     QWORD PTR [r10], rsi
+    adcx    rdi, rdi
+    adox    rdi, QWORD PTR [r10 + 8]
+    mov     QWORD PTR [r10 + 8], rdi
+
+    lea     r11, [r11 + 8]
+    lea     r10, [r11 + 8]
+    loop    inner_loop_rem_pass1
+
+ALIGN 16
+outer_loop_end_pass1:
+
+    mov     r14, QWORD PTR [r10]
+    adcx    r14, r15
+    adox    r14, r15
+    mov     QWORD PTR [r10], r14
+    inc     r13
+    dec     r9
+    jnz     outer_loop_pass1
+    
+    ; Pass-2 (O(n) step)
+
+before_pass2:
+
+    mov     r10, rax
+    mov     r11, rbx
+    mov     rcx, r8
+    sub     rcx, 1
+
+    xor     r12, r12    ; to clear CF/OF
+
+loop_pass2:
+
+    mov     rdx, QWORD PTR [r11]
+    mulx    rdi, rsi, rdx
+
+    adc     QWORD PTR [r10], rsi
+    adc     QWORD PTR [r10 + 8], rdi
+
+    lea     r11, [r11 + 8]
+    lea     r10, [r10  + 16]
+    loop    loop_pass2
+
+end_of_func:
+
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rdi
+    pop     rsi
+    pop     rbx
     ret
 
 sqr_bc_zen4 ENDP
@@ -45,10 +197,9 @@ sqr_bc_x64 PROC FRAME
     push    rdi
 .pushreg    rdi
     push    r12
-.pushreg    r12    
+.pushreg    r12
     push    r13
 .pushreg    r13
-.pushframe
 .endprolog
 
     ;   5-limb bignum squaring matrix example with the 
@@ -57,15 +208,15 @@ sqr_bc_x64 PROC FRAME
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
     ;   |     |    a0     |    a1     |    a2     |    a3     |    a4     |
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   | a0  |   a0*a0   |    DUP    |    DUP    |    DUP    |    DUP    |
+    ;   |  a0 |   a0*a0   |    DUP    |    DUP    |    DUP    |    DUP    |
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   | a1  |  2*a1*a0  |   a1*a1   |    DUP    |    DUP    |    DUP    |
+    ;   |  a1 |  2*a1*a0  |   a1*a1   |    DUP    |    DUP    |    DUP    |
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   | a2  |  2*a2*a0  |  2*a2*a1  |   a2*a2   |    DUP    |    DUP    |
+    ;   |  a2 |  2*a2*a0  |  2*a2*a1  |   a2*a2   |    DUP    |    DUP    |
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   | a3  |  2*a3*a0  |  2*a3*a1  |  2*a3*a2  |   a3*a3   |    DUP    |
+    ;   |  a3 |  2*a3*a0  |  2*a3*a1  |  2*a3*a2  |   a3*a3   |    DUP    |
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   | a4  |  2*a4*a0  |  2*a4*a1  |  2*a4*a2  |  2*a4*a3  |   a4*a4   |
+    ;   |  a4 |  2*a4*a0  |  2*a4*a1  |  2*a4*a2  |  2*a4*a3  |   a4*a4   |
     ;   +-----+-----------+-----------+-----------+-----------+-----------+
 
     ; the whole function works in 3 Passes
@@ -93,8 +244,8 @@ sqr_bc_x64 PROC FRAME
     mov     r9,  r8         ; copy of size in r9
     dec     r9              ; lower triangular matrix elems start with
                             ; (n - 1) -> (n - 2) -> ... -> 2 -> 1 -> 0
-    test    r9,  r9         ; test if the basecase sqr size is 1, then no double prods
-    jz      before_pass3    ; do the only diagonal sqr prod
+    test    r9,  r9         ; test if the basecase sqr size is 1, then no double sum prods
+    jz      before_pass3    ; do the single diagonal sqr prod
 
     ; PASS-1 (O(n^2) step)
 
@@ -129,7 +280,7 @@ inner_loop_pass1:
     lea     r11, [r11 + 8]
     loop    inner_loop_pass1
 
-end_of_pass1:
+outer_loop_end_pass1:
 
     inc     r12
     adc     QWORD PTR [r10], rdx
@@ -138,16 +289,51 @@ end_of_pass1:
 
     ; PASS-2 (O(n) step)
 
-    xor     r11, r11
-    mov     r10, rdi
-    mov     r9,  r8
+    lea     r10, [rdi + 8]
+    mov     rcx, r8
+    sub     rcx, 1
+    
+    ; 2 * (n - 1) limbs in result need to be shifted left by 1
+    ; the first and last limb don't contain any values
+    ; limbs (inclusive) of result[1:2n-2]
+    ; Process two limbs at once for each decrement in rcx
 
+    xor     r11, r11    ; zeroes out the carry flag
+                        ; before the rcl
 loop_pass2:
 
+    rcl     QWORD PTR [r10], 1
+    rcl     QWORD PTR [r10 + 8], 1
     
+    lea     r10, [r10 + 16]
+    loop    loop_pass2
 
     ; PASS-3 (O(n) step)
 
+before_pass3:
+
+    mov     r10, rdi
+    mov     r11, rsi
+    mov     rcx, r8
+
+    xor     r12, r12            ; to clear CF/OF
+
+loop_pass3:
+
+    adc     r12, 0                  ; accumulate CF from last iter as mul clobbers both 
+                                    ; OF & CF, does nothing in first iter
+    mov     rax, QWORD PTR [r11]
+    mul     rax                     ; rdx:rax = rax * rax (rax contains op1[i])
+    add     r12, rax                ; mul can set both OF/CF, to take care of that
+                                    ; add rax to an empty r12                 
+    add     QWORD PTR [r10], r12
+    adc     QWORD PTR [r10 + 8], rdx    
+    mov     r12, 0
+
+    lea     r11, [r11 + 8]
+    lea     r10, [r10 + 16]
+    loop    loop_pass3
+    
 end_of_func:
 
     pop     r13
