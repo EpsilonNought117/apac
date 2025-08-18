@@ -151,8 +151,6 @@ before_pass2:
     mov     r10, rax
     mov     r11, rbx
     mov     rcx, r8
-    sub     rcx, 1
-
     xor     r12, r12    ; to clear CF/OF
 
 loop_pass2:
@@ -261,6 +259,7 @@ outer_loop_pass1:
 
     mov     rcx,  r9    ; rcx is inner loop counter
     xor     rbx, rbx    ; temp_reg
+    xor     rdx, rdx    ; high64 = 0
     mov     r13, QWORD PTR [rsi + r12*8]
     lea     r10, [rdi + r12*8 + 8]      ; result[counter + 1]
     lea     r11, [rsi + r12*8 + 8]      ; op1[counter + 1]
@@ -268,7 +267,7 @@ outer_loop_pass1:
 ALIGN 16
 inner_loop_pass1:
 
-    mov     rax, r13            ; restore clobbered rax
+    mov     rax, r13            ; restore clobbered rax or load for the first time
     adc     rbx, rdx            ; temp_reg += (CF + high64)
     mul     QWORD PTR [r11]     ; rdx:rax = rax * op1[counter + 1]
 
@@ -276,6 +275,7 @@ inner_loop_pass1:
     adc     rdx, 0                  ; high64 += CF
     add     QWORD PTR [r10], rbx    ; result[counter + 1] += temp_reg
 
+    mov     rbx, 0
     lea     r10, [r10 + 8]
     lea     r11, [r11 + 8]
     loop    inner_loop_pass1
@@ -288,6 +288,8 @@ outer_loop_end_pass1:
     jnz     outer_loop_pass1
 
     ; PASS-2 (O(n) step)
+
+before_pass2:
 
     lea     r10, [rdi + 8]
     mov     rcx, r8
