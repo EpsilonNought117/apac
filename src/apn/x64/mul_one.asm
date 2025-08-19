@@ -1,7 +1,7 @@
 
 ;   O---------------------------------------------------------------------------O
 ;   |                                                                           |
-;   |		      APN-ARR BY ONE LIMB MULTIPLICATION-&-ADD FUNCTIONS			|
+;   |		         APN-ARR BY ONE LIMB MULTIPLICATION FUNCTIONS   			|
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
@@ -22,7 +22,7 @@
 ;
 ;   -------------------------
 
-addmul_one_zen4 PROC FRAME
+mul_one_zen4 PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -127,17 +127,9 @@ remainder_loop:
 
 end_of_loop:
 
-    mov     r12, 0
-    adcx    r12, QWORD PTR [r10]
-    mov     QWORD PTR [r10], r12
-    mov     rsi, 0
-    mov     r12, 0
-    adcx    r12, rsi
-    adox    r12, rsi
+    adc     QWORD PTR [r10], 0
 
 end_of_func:
-
-    mov     rax, r12
 
     pop     r12
     pop     rsi
@@ -145,7 +137,7 @@ end_of_func:
     pop     rbx
     ret
     
-addmul_one_zen4 ENDP
+mul_one_zen4 ENDP
 
 ;   -------------------------
 ;
@@ -153,7 +145,7 @@ addmul_one_zen4 ENDP
 ;
 ;   -------------------------
 
-addmul_one_x64 PROC FRAME
+mul_one_x64 PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -202,12 +194,9 @@ end_of_loop:
 
 end_of_func:
 
-    setc    al
-    movzx   rax, al
-
     pop     rsi
     pop     rdi
     pop     rbx
     ret   
 
-addmul_one_x64 ENDP
+mul_one_x64 ENDP
