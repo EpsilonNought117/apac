@@ -40,9 +40,6 @@ addmul_one_zen4 PROC FRAME
     mov     rcx, r8     ; copy of size in r10
     shr     rcx, 3      ; size /= 8    
     and     r8,  7      ; size %= 8
-  
-    test    rcx, rcx
-    jz      before_remainder
     
     mov     rdx, r9     ; load val into rdx for mulx
     ; rax <- result
@@ -168,17 +165,16 @@ addmul_one_x64 PROC FRAME
 
     xchg    rdi, rcx    ; free up rcx for jrcxz/loop
     xchg    rsi, rdx    ; free up rdx for mul
-    mov     r12, r9     ; val in r12 for restoring rax after mul clobbers it
 
     ; rdi <- result
     ; rsi <- op1
     ; r8  <- size
     
     ; rbx is temp_reg
-    
+
+    xor     rdx, rdx
     xor     rbx, rbx
     mov     rcx, r8
-    mov     rax, r9
     mov     r10, rdi
     mov     r11, rsi
     test    rcx, rcx
