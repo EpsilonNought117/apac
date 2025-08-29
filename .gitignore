@@ -1,3 +1,5 @@
+# minimal .gitignore file
+
 .vs/
 out/
 build/

@@ -1,3 +1,4 @@
+
 #define APAC_API __declspec(dllexport)
 #define APAC_API __declspec(dllimport)
 #define APAC_API
