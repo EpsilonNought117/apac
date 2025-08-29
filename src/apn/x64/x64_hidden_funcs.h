@@ -3,6 +3,13 @@
 
 #include "../../../include/apac.h"
 
+/* --------------------------- MISCELLANEOUS FUNCTIONS -------------------------------- */
+
+extern apn_seg add_n_one_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
+extern apn_seg sub_n_one_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
+extern apn_seg add_n_one_till_carry_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
+extern apn_seg sub_n_one_till_borrow_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
+
 /* ----------------------------- ADDITION FUNCTIONS ----------------------------------- */
 
 extern apn_seg add_n_zen4(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size);
@@ -17,6 +24,11 @@ extern apn_seg sub_n_x64(apn_seg* result, const apn_seg* op1, const apn_seg* op2
 
 extern void mul_bc_zen4(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
 extern void mul_bc_x64(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2);
+
+/* ------------------- APN-ARR TO ONE-LIMB MULTIPLICATION FUNCTIONS ------------------- */
+
+extern apn_seg addmul_one_zen4(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
+extern apn_seg addmul_one_x64(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
 
 /* --------------------------- BASECASE SQUARING FUNCTIONS ---------------------------- */
 
@@ -38,6 +50,8 @@ extern void set_avx512f_2unroll(apn_seg* result, apn_size size, apn_seg val);
 extern void set_avx_4unroll(apn_seg* result, apn_size size, apn_seg val);
 extern void set_avx_2unroll(apn_seg* result, apn_size size, apn_seg val);
 extern void set_sse2_4unroll(apn_seg* result, apn_size size, apn_seg val);
+
+/* ----------------------------- COMPARISION FUNCTIONS -------------------------------- */
 
 /* ------------------------------- NEGATION FUNCTIONS --------------------------------- */
 

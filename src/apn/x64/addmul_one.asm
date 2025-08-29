@@ -22,7 +22,7 @@
 ;
 ;   -------------------------
 
-mul_one_zen4 PROC FRAME
+addmul_one_zen4 PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -34,18 +34,23 @@ mul_one_zen4 PROC FRAME
 .pushreg    r12
 .endprolog
 
-    xchg    rcx, rax    ; free up rcx for loop/jrcxz
-    xchg    rdx, rbx    ; free up rdx for mulx
-    xor     r12, r12
+    xor     rax, rax
+    xor     rbx, rbx
+
+    ; will need these zero'd out regs later
+
+    xchg    rcx, r10    ; free up rcx for loop/jrcxz
+    xchg    rdx, r11    ; free up rdx for mulx
+
+    ; r10 <- result
+    ; r11 <- op1
+
+    xor     r12, r12    ; temporary store register
     mov     rcx, r8     ; copy of size in r10
     shr     rcx, 3      ; size /= 8    
     and     r8,  7      ; size %= 8
-    
     mov     rdx, r9     ; load val into rdx for mulx
-    ; rax <- result
-    ; rbx <- op1
-    mov     r10, rax
-    mov     r11, rbx
+
     test    rcx, rcx
     jz      before_remainder
 
@@ -103,6 +108,8 @@ unrolled_loop:
     lea     r10, [r10 + 64]
     lea     r11, [r11 + 64]
     lea     rcx, [rcx - 1]
+
+ALIGN 16
     jrcxz   before_remainder
     jmp     unrolled_loop
 
@@ -112,7 +119,6 @@ before_remainder:
     mov     rcx, r8
     jrcxz   end_of_func
 
-ALIGN 16
 remainder_loop:
 
     mulx    rdi, rsi, QWORD PTR [r11]
@@ -127,7 +133,9 @@ remainder_loop:
 
 end_of_loop:
 
-    adc     QWORD PTR [r10], 0
+    adcx    rbx, QWORD PTR [r10]
+    mov     QWORD PTR [r10], rbx
+    adox    rax, rax    
 
 end_of_func:
 
@@ -137,7 +145,7 @@ end_of_func:
     pop     rbx
     ret
     
-mul_one_zen4 ENDP
+addmul_one_zen4 ENDP
 
 ;   -------------------------
 ;
@@ -145,7 +153,7 @@ mul_one_zen4 ENDP
 ;
 ;   -------------------------
 
-mul_one_x64 PROC FRAME
+addmul_one_x64 PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -191,6 +199,8 @@ main_loop:
 end_of_loop:
 
     adc     QWORD PTR [r10], rdx
+    setc    al
+    movzx   rax, al
 
 end_of_func:
 
@@ -199,4 +209,4 @@ end_of_func:
     pop     rbx
     ret   
 
-mul_one_x64 ENDP
+addmul_one_x64 ENDP

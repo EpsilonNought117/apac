@@ -13,22 +13,22 @@
 /****************************************************************************************************/
 /******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
 /****************************************************************************************************/
-	
+
 #if defined(_MSC_VER)
 
-	#if defined(_M_X64) || defined(_M_AMD64)
-		#include <intrin.h>
-		#include <immintrin.h>
-	#endif
+#if defined(_M_X64) || defined(_M_AMD64)
+#include <intrin.h>
+#include <immintrin.h>
+#endif
 
 #endif
 
 #if defined(BUILD_SHARED_LIB)
 	// Export symbols when building the DLL
-	#define APAC_API __declspec(dllexport)
+#define APAC_API __declspec(dllexport)
 #elif defined(LIBAPAC_SHARED)
 	// Import symbols when using the DLL
-	#define APAC_API __declspec(dllimport)
+#define APAC_API __declspec(dllimport)
 #else
 	// Static library, no import/export needed
 #define APAC_API
@@ -48,19 +48,19 @@ typedef enum apac_err
 
 #if !defined(APAC_DISABLE_ASSERT)
 
-	#ifndef APAC_REPORT_ERR
-	#define APAC_REPORT_ERR(x) \
+#ifndef APAC_REPORT_ERR
+#define APAC_REPORT_ERR(x) \
         fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, x);
-	#endif
+#endif
 
-	#ifndef APAC_ASSERT
-	#define APAC_ASSERT(x)			\
+#ifndef APAC_ASSERT
+#define APAC_ASSERT(x)			\
 			if (!(x))               \
 			{                       \
 				APAC_REPORT_ERR(#x) \
 				abort();            \
 			}
-	#endif
+#endif
 
 #else
 
@@ -87,8 +87,8 @@ APAC_API void apacInit(void);
 
 APAC_API void apacGetCPUSpec(void);
 
-typedef uint64_t	apn_seg;
-typedef uint64_t	apn_size;
+typedef uint64_t apn_seg;
+typedef uint64_t apn_size;
 
 /****************************************************************************************************/
 /**********************************          CPU FUNCTIONS       ************************************/
@@ -98,11 +98,12 @@ typedef struct apac_cpu_params
 {
 	apn_size karatsuba_mul_balanced_threshold;
 	apn_size karatsuba_mul_unbalanced_threshold;
+	apn_size karatsuba_sqr_threshold;
 
 	apn_seg(*apn_add_n_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size);
 	apn_seg(*apn_sub_n_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size);
 	void (*apn_mul_bc_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size, apn_size);
-	void (*apn_mul_one_ptr)(apn_seg*, const apn_seg*, apn_size, apn_seg);
+	apn_seg(*apn_addmul_one_ptr)(apn_seg*, const apn_seg*, apn_size, apn_seg);
 	void (*apn_sqr_bc_ptr)(apn_seg*, const apn_seg*, apn_size);
 	void (*apn_neg_ptr)(apn_seg*, const apn_seg*, apn_size);
 	void (*apn_cpy_ptr)(apn_seg*, const apn_seg*, apn_size);
@@ -226,7 +227,7 @@ APAC_API void apn_mul(apn_seg* result, const apn_seg* op1, const apn_seg* op2, a
 3) op1 and val (single limb) can overlap
 
 */
-APAC_API void apn_mul_one(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
+APAC_API apn_seg apn_addmul_one(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val);
 
 /*
 
