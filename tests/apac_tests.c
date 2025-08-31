@@ -20,12 +20,6 @@ static void apn_mul_check(void)
 
 int main(int argc, char* argv[])
 {
-	int test_count = argc;
-
-	while (test_count--)
-	{
-
-	}
 
 	return 0;
 }

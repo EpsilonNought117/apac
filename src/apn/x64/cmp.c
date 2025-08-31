@@ -6,7 +6,13 @@
 	discrepancy lies in and then return the appropriate result from the function.
 */
 
-int cmp_zen4(const apn_seg* op1, const apn_seg* op2, apn_size size)
+/*
+    _MM_TERNLOG_A = 0xF0 
+    _MM_TERNLOG_B = 0xCC 
+    _MM_TERNLOG_C = 0xAA
+*/
+
+int cmp_avx512f_4unroll(const apn_seg* op1, const apn_seg* op2, apn_size size)
 {
     __mmask32 k = 0;
 	apn_size blocks = size & ((apn_size)-32);
@@ -16,8 +22,8 @@ int cmp_zen4(const apn_seg* op1, const apn_seg* op2, apn_size size)
 
     while (counter < blocks)
     {
-        __m512i a0 = _mm512_loadu_si512(&op1[counter + 0]);
-        __m512i b0 = _mm512_loadu_si512(&op2[counter + 0]);
+        __m512i a0 = _mm512_loadu_si512(&op1[counter]);
+        __m512i b0 = _mm512_loadu_si512(&op2[counter]);
 
         __m512i a1 = _mm512_loadu_si512(&op1[counter + 8]);
         __m512i b1 = _mm512_loadu_si512(&op2[counter + 8]);
@@ -35,7 +41,7 @@ int cmp_zen4(const apn_seg* op1, const apn_seg* op2, apn_size size)
         __m512i r3 = _mm512_ternarylogic_epi64(r2, a3, b3, 0xF6); // r2 | (a3 ^ b3)
 
         // acc |= r3
-        acc = _mm512_ternarylogic_epi32(acc, r3, r3, 0xF6);
+        acc = _mm512_or_epi64(acc, r3);
 
         counter += 32;
     }
@@ -45,7 +51,7 @@ int cmp_zen4(const apn_seg* op1, const apn_seg* op2, apn_size size)
     return 0;
 }
 
-int cmp_x64(const apn_seg* op1, const apn_seg* op2, apn_size size)
+int cmp_sse2_4unroll(const apn_seg* op1, const apn_seg* op2, apn_size size)
 {
 
 }

@@ -52,11 +52,14 @@
         "src/apn/commons/apn_mul.c"
         "src/apn/commons/apn_set.c"
         "src/apn/commons/apn_cpy.c"
+        "src/apn/commons/apn_sqr.c"
 
         # APN HIDDEN FUNCS
 
         "src/apn/commons/basecase_mul.c"
         "src/apn/commons/karatsuba_mul.c"
+        "src/apn/commons/basecase_sqr.c"
+        "src/apn/commons/karatsuba_sqr.c"
 
     )
     
@@ -77,11 +80,13 @@
         "src/apn/x64/add_n_one.asm"
         "src/apn/x64/add_n_one_till_carry.asm"    
         "src/apn/x64/mul_bc.asm"
+        "src/apn/x64/addmul_one.asm"
+        "src/apn/x64/sqr_bc.asm"
         "src/apn/x64/sub_n.asm"
         "src/apn/x64/sub_n_one.asm"
         "src/apn/x64/sub_n_one_till_borrow.asm"
         "src/apn/x64/neg.asm"
-    
+
     )
     
 # --- HIDDEN HEADERS ------------------------------------------------------------
@@ -91,6 +96,7 @@
          # COMMONS
 
             "src/apn/commons/hidden_mul.h"
+            "src/apn/commons/hidden_sqr.h"
             "src/apn/commons/apn_thresholds.h"
     
          # x64 SPECIFIC
