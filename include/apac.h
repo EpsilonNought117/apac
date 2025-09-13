@@ -14,59 +14,60 @@
 /******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
 /****************************************************************************************************/
 
-#if defined(_MSC_VER)
-
-#if defined(_M_X64) || defined(_M_AMD64)
-#include <intrin.h>
-#include <immintrin.h>
-#endif
-
-#endif
-
-#if defined(BUILD_SHARED_LIB)
-	// Export symbols when building the DLL
-#define APAC_API __declspec(dllexport)
-#elif defined(LIBAPAC_SHARED)
-	// Import symbols when using the DLL
-#define APAC_API __declspec(dllimport)
+#if defined(__GNUC__)  || defined(__clang__)
+	#if defined(__x86_64) || defined(__x86_64__) || defined(__amd64) || defined(__amd64__)
+		#include <immintrin.h>
+		#include <cpuid.h>
+	#endif
 #else
-	// Static library, no import/export needed
-#define APAC_API
+	#error "Unknown compiler found."
 #endif
+
+
+// --- DLL/SO Export/Import ----------------------------------------------------
+
+#if defined(_WIN32) || defined(_WIN64)
+	#if defined(BUILD_SHARED_LIB)
+		// Export symbols when building the DLL
+		#define APAC_API __declspec(dllexport)
+	#elif defined(LIBAPAC_SHARED)
+		// Import symbols when using the DLL
+		#define APAC_API __declspec(dllimport)
+	#else
+		// Static library, no import/export needed
+		#define APAC_API
+	#endif
+#else
+	#if defined(BUILD_SHARED_LIB) || defined(LIBAPAC_SHARED)
+		// On Unix-like systems, use visibility attributes for shared libraries
+		#define APAC_API __attribute__((visibility("default")))
+	#else
+		#define APAC_API
+	#endif
+#endif
+
 
 /****************************************************************************************************/
 /*****************************      ERROR HANDLING FOR DEBUG MODE      ******************************/
 /****************************************************************************************************/
 
-typedef enum apac_err
-{
-	APAC_OK,
-	APAC_OOM,
-	APAC_MATH_ERR
+#if !defined(APAC_DISABLE_ASSERT)	
+	#ifndef APAC_REPORT_ERR
+	#define APAC_REPORT_ERR(x) \
+    	printf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, x);
+	#endif
 
-}   apac_err;
-
-#if !defined(APAC_DISABLE_ASSERT)
-
-#ifndef APAC_REPORT_ERR
-#define APAC_REPORT_ERR(x) \
-        fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, x);
-#endif
-
-#ifndef APAC_ASSERT
-#define APAC_ASSERT(x)			\
+	#ifndef APAC_ASSERT
+	#define APAC_ASSERT(x)			\
 			if (!(x))               \
 			{                       \
 				APAC_REPORT_ERR(#x) \
 				abort();            \
 			}
-#endif
-
+	#endif
 #else
-
-#define APAC_REPORT_ERR(x) ((void)0)
-#define APAC_ASSERT(x)     ((void)0)
-
+	#define APAC_REPORT_ERR(x) ((void)0)
+	#define APAC_ASSERT(x)     ((void)0)
 #endif
 
 /****************************************************************************************************/

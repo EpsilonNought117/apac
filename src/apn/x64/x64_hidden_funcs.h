@@ -1,3 +1,5 @@
+#if defined(__x86_64) || defined(__x86_64__) || defined(__amd64) || defined(__amd64__)
+
 #ifndef X64_HIDDEN_FUNCS
 #define X64_HIDDEN_FUNCS
 
@@ -57,5 +59,7 @@ extern void set_sse2_4unroll(apn_seg* result, apn_size size, apn_seg val);
 
 extern void neg_zen4(apn_seg* result, const apn_seg* op1, apn_size size);
 extern void neg_x64(apn_seg* result, const apn_seg* op1, apn_size size);
+
+#endif
 
 #endif
