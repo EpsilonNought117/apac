@@ -2,19 +2,34 @@
 
 apac_cpu_params curr_cpu = { 0 };
 
-#if defined(_M_X64)   || defined(_M_AMD64)   ||		\
-	defined(__x86_64) || defined(__x86_64__) || defined(__amd64) || defined(__amd64__)
+#if defined(_M_X64)   || defined(_M_AMD64)   ||	\
+	defined(__x86_64) || defined(__x86_64__) ||	\
+	defined(__amd64)  || defined(__amd64__)
 
 extern void zen4_set_params(void);
 extern void generic_x64_set_params(void);
 
 // x64/AMD64 Version
 
+#if defined(_MSC_VER)
+	#define CPUID(cpuInfo, Leaf)			__cpuid(cpuInfo, Leaf)
+	#define CPUIDEX(cpuInfo, Leaf, SubLeaf) __cpuidex(cpuInfo, Leaf, SubLeaf)
+
+#elif (defined(__GNUC__) || defined(__clang__))
+	#define CPUID(cpuInfo, Leaf) \
+			__cpuid((Leaf), &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3])
+
+	#define CPUIDEX(cpuInfo, Leaf, SubLeaf) \
+			__cpuid_count((Leaf), (SubLeaf), &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3])
+#else
+	#error "Unsupported Compiler."
+#endif
+
 void apacGetCPUSpec(void)
 {
 	int cpuInfo[4] = { 0 };
 
-	__cpuid(cpuInfo, 0x0);
+	CPUID(cpuInfo, 0x0);
 
 	if (
 		cpuInfo[1] == 0x68747541 &&		// 'Auth'
@@ -23,7 +38,7 @@ void apacGetCPUSpec(void)
 		)
 	{
 		// Get CPU signature and extract family
-		__cpuid(cpuInfo, 0x1);
+		CPUID(cpuInfo, 0x1);
 		int signature = cpuInfo[0];
 
 		int baseFamily = (signature >> 8) & 0xF;
@@ -47,7 +62,7 @@ void apacGetCPUSpec(void)
 		cpuInfo[2] == 0x6C65746E		// 'ntel'
 		)
 	{
-		__cpuid(cpuInfo, 0x1);
+		CPUID(cpuInfo, 0x1);
 		int signature = cpuInfo[0];
 
 		int baseFamily = (signature >> 8) & 0xF;
