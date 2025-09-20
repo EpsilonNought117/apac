@@ -86,10 +86,6 @@ neg_zen4 ENDP
 neg_x64 PROC FRAME
 .endprolog
 
-    test    r8,  r8
-    jz     end_of_func
-
-ALIGN 16
 small_loop:
 
     mov     rax, 0

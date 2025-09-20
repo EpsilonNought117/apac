@@ -1,6 +1,6 @@
 #include "../../include/apac.h"
 
-void apacInit(void)
+void apacDefaultInit(void)
 {
 	apacSetMemFuncs(NULL, NULL, NULL);
 	apacGetCPUSpec();
