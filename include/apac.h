@@ -19,7 +19,6 @@
     #if defined(_MSC_VER)
         
         #if defined(_M_X64) || defined(_M_AMD64)
-            #define APAC_MS_ABI
             #include <immintrin.h>
             #include <intrin.h>
         #endif   
@@ -68,7 +67,7 @@
 #endif
 
 /****************************************************************************************************/
-/*****************************      ERROR HANDLING FOR DEBUG MODE      ******************************/
+/*********************************      ERROR HANDLING MACROS      **********************************/
 /****************************************************************************************************/
 
 #if !defined(APAC_DISABLE_ASSERT)	
@@ -78,16 +77,31 @@
 	#endif
 
 	#ifndef APAC_ASSERT
-	#define APAC_ASSERT(x)			\
-			if (!(x))               \
-			{                       \
-				APAC_REPORT_ERR(#x) \
-				abort();            \
-			}
+	#define APAC_ASSERT(x)              \
+        do                              \
+        {                               \
+            if (!(x))                   \
+            {                           \
+                APAC_REPORT_ERR(#x)     \
+                abort(-1);              \
+            }                           \
+        } while (0)
 	#endif
 #else
-	#define APAC_REPORT_ERR(x) ((void)0)
-	#define APAC_ASSERT(x)     ((void)0)
+	#define APAC_REPORT_ERR(x)  
+	#define APAC_ASSERT(x)      
+#endif
+
+#ifndef APAC_ALWAYS_ASSERT
+#define APAC_ALWAYS_ASSERT(x)                                                           \
+    do                                                                                  \
+    {                                                                                   \
+        if (!(x))                                                                       \
+        {                                                                               \
+            fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, #x);           \
+            abort(-1);                                                                  \
+        }                                                                               \
+    } while (0)
 #endif
 
 /****************************************************************************************************/
@@ -103,8 +117,6 @@ APAC_API void apacSetMemFuncs(
 	void* (*ptr2)(void*, size_t),
 	void (*ptr3)(void*)
 );
-
-APAC_API void apacDefaultInit(void);
 
 APAC_API void apacGetCPUSpec(void);
 
@@ -129,7 +141,6 @@ typedef struct apac_cpu_params
     void (*apn_neg_ptr)(apn_seg*, const apn_seg*, apn_size);
 	void (*apn_cpy_ptr)(apn_seg*, const apn_seg*, apn_size);
     void (*apn_set_ptr)(apn_seg*, apn_size, apn_seg);
-	int (*apn_cmp_ptr)(const apn_seg*, const apn_seg*, apn_size);
 
 }   apac_cpu_params;
 
@@ -145,19 +156,17 @@ extern apac_cpu_params curr_cpu;
 * 1) THESE FUNCTIONS DO NOT PERFORM ANY MEMORY ALLOCATIONS IN OPERANDS OR RESULT.
 *
 * 2) ASSERTS ARE USED IN DEBUG MODE FOR CATCHING INVALID ARGUMENT ERRORS.
-*
-* 3) THE RESULT MUST HAVE APPROPRIATE NUMBER OF LIMBS ACCORDING TO OPERATION.
-*
-* 4) THEY DO NOT PERFORM ANY BOUNDS CHECKING.
-*
-* 6) NO SIZE ARGUMENT SHOULD BE ZERO, ALWAYS PASS AT LEAST SIZE 1 FOR ALL SIZE ARGUMENTS.
+* 
+* 3) THEY DO NOT PERFORM ANY BOUNDS CHECKING.
+* 
+* 4) THE POINTER INPUTS SHOULD NOT BE NULL.
+* 
+* 5) THE SIZE INPUTS SHOULD NOT BE ZERO.
+* 
+* 6) IN CASES OF TWO INPUT SIZES, SIZE-1 IS ALWAYS GREATER THAN SIZE-2
 *
 */
 
-/*
- * 1) result must have "size" limbs
- * 2) returns the carry out
- */
 APAC_API apn_seg apn_add_n(
     apn_seg* result,
     const apn_seg* op1,
@@ -165,11 +174,6 @@ APAC_API apn_seg apn_add_n(
     apn_size size
 );
 
-/*
- * 1) size1 must be greater than or equal to size2
- * 2) result must have size1 limbs
- * 3) returns the carry out
- */
 APAC_API apn_seg apn_add(
     apn_seg* result,
     const apn_seg* op1,
@@ -178,10 +182,6 @@ APAC_API apn_seg apn_add(
     apn_size size2
 );
 
-/*
- * 1) result must have "size" limbs
- * 2) returns the carry out (unlikely in avg case)
- */
 APAC_API apn_seg apn_add_one(
     apn_seg* result,
     const apn_seg* op1,
@@ -189,10 +189,6 @@ APAC_API apn_seg apn_add_one(
     apn_seg val
 );
 
-/*
- * 1) result must have "size" limbs
- * 2) returns the borrow out
- */
 APAC_API apn_seg apn_sub_n(
     apn_seg* result,
     const apn_seg* op1,
@@ -200,11 +196,6 @@ APAC_API apn_seg apn_sub_n(
     apn_size size
 );
 
-/*
- * 1) size1 must be greater than or equal to size2
- * 2) result must have size1 limbs
- * 3) returns the borrow out
- */
 APAC_API apn_seg apn_sub(
     apn_seg* result,
     const apn_seg* op1,
@@ -213,10 +204,6 @@ APAC_API apn_seg apn_sub(
     apn_size size2
 );
 
-/*
- * 1) result must have "size" limbs
- * 2) returns the borrow out
- */
 APAC_API apn_seg apn_sub_one(
     apn_seg* result,
     const apn_seg* op1,
@@ -224,31 +211,18 @@ APAC_API apn_seg apn_sub_one(
     apn_seg val
 );
 
-/*
- * 1) result must have "size" number of limbs
- */
 APAC_API void apn_cpy(
     apn_seg* result,
     const apn_seg* op1,
     apn_size size
 );
 
-/*
- * 1) result must have "size" number of limbs
- * 2) Performs 2's complement of op1 and stores in result
- * 3) Overlap is allowed between result and op1
- */
 APAC_API void apn_neg(
     apn_seg* result,
     const apn_seg* op1,
     apn_size size
 );
 
-/*
- * 1) No overlap permitted between result and either of the input operands
- * 2) result must have at least 2 * size number of limbs
- * 3) Input operands can overlap. If they are the same, use apn_sqr
- */
 APAC_API void apn_mul_n(
     apn_seg* result,
     const apn_seg* op1,
@@ -256,12 +230,6 @@ APAC_API void apn_mul_n(
     apn_size size
 );
 
-/*
- * 1) No overlap permitted between result and either of the input operands
- * 2) result must have at least (size1 + size2) number of limbs
- * 3) size1 must be greater than or equal to size2
- * 4) Input operands can overlap as they are read only
- */
 APAC_API void apn_mul(
     apn_seg* result,
     const apn_seg* op1,
@@ -270,11 +238,6 @@ APAC_API void apn_mul(
     apn_size size2
 );
 
-/*
- * 1) No overlap permitted between result and input operand (op1)
- * 2) result must have at least (size + 1) number of limbs
- * 3) op1 and val (single limb) can overlap
- */
 APAC_API apn_seg apn_addmul_one(
     apn_seg* result,
     const apn_seg* op1,
@@ -282,29 +245,18 @@ APAC_API apn_seg apn_addmul_one(
     apn_seg val
 );
 
-/*
- * 1) No overlap permitted between result and input operand
- * 2) result must have (2 * size) number of limbs
- */
 APAC_API void apn_sqr(
     apn_seg* result,
     const apn_seg* op1,
     apn_size size
 );
 
-/*
- * 1) Result must have size number of limbs
- */
 APAC_API void apn_set(
     apn_seg* result,
     apn_size size,
     apn_seg val
 );
 
-/*
- * 1) returns (int) 1, 0, -1 based on whether op1 > op2, op1 = op2 or op1 < op2
- * 2) size must not be zero
- */
 APAC_API int apn_cmp(
     const apn_seg* op1,
     const apn_seg* op2,

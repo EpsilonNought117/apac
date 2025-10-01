@@ -210,3 +210,5 @@ end_of_func:
     ret   
 
 addmul_one_x64 ENDP
+
+END

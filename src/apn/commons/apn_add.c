@@ -3,7 +3,12 @@
 
 extern apac_cpu_params curr_cpu;
 
-apn_seg apn_add_n(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size)
+apn_seg apn_add_n(
+	apn_seg* result, 
+	const apn_seg* op1, 
+	const apn_seg* op2, 
+	apn_size size
+)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(result != NULL);
@@ -13,10 +18,17 @@ apn_seg apn_add_n(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_s
 	if (curr_cpu.apn_add_n_ptr == NULL)
 		apacGetCPUSpec();
 	
-	return curr_cpu.apn_add_n_ptr(result, op1, op2, size);
+	apn_seg carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size);
+	return carry;
 }
 
-apn_seg apn_add(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2)
+apn_seg apn_add(
+	apn_seg* result,
+	const apn_seg* op1,
+	const apn_seg* op2,
+	apn_size size1,
+	apn_size size2
+)
 {
 	APAC_ASSERT(size1 != 0);
 	APAC_ASSERT(size2 != 0);
@@ -32,21 +44,25 @@ apn_seg apn_add(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_siz
 
 	if (size1 == size2)
 		return carry;
-	
-	if (result == op1)
-		return add_n_one_till_carry_x64(&result[size2], &op1[size2], size1 - size2, carry);
 
-	return add_n_one_x64(&result[size2], &op1[size2], size1 - size2, carry);
+	carry = curr_cpu.apn_add_one_ptr(&result[size2], &op1[size2], size1 - size2, carry);
+	return carry;
 }
 
-apn_seg apn_add_one(apn_seg* result, const apn_seg* op1, apn_size size, apn_seg val)
+apn_seg apn_add_one(
+	apn_seg* result, 
+	const apn_seg* op1, 
+	apn_size size, 
+	apn_seg val
+)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
+	
+	if (curr_cpu.apn_add_one_ptr == NULL)
+		apacGetCPUSpec();
 
-	if (result == op1)
-		return add_n_one_till_carry_x64(result, op1, size, val);
-
-	return add_n_one_x64(result, op1, size, val);
+	apn_seg carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);
+	return carry;
 }

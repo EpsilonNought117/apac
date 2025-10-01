@@ -2,7 +2,13 @@
 
 extern apac_cpu_params curr_cpu;
 
-void apn_basecase_mul(apn_seg* result, const apn_seg* op1, const apn_seg* op2, apn_size size1, apn_size size2)
+void apn_basecase_mul(
+	apn_seg* result, 
+	const apn_seg* op1, 
+	const apn_seg* op2,
+	apn_size size1, 
+	apn_size size2
+)
 {
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);

@@ -2,7 +2,11 @@
 
 extern apac_cpu_params curr_cpu;
 
-void apn_neg(apn_seg* result, const apn_seg* op1, apn_size size)
+void apn_neg(
+    apn_seg* result, 
+    const apn_seg* op1, 
+    apn_size size
+)
 {
     APAC_ASSERT(size != 0);
     APAC_ASSERT(result != NULL);

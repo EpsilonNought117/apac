@@ -99,7 +99,6 @@ set(apac_c_sources
 
     "src/misc/apacSetMemFuncs.c"
     "src/misc/apacGetCPUSpec.c"
-    "src/misc/apacInit.c"
 
     # APN PUBLIC API
 
@@ -110,6 +109,8 @@ set(apac_c_sources
     "src/apn/commons/apn_set.c"
     "src/apn/commons/apn_cpy.c"
     "src/apn/commons/apn_sqr.c"
+    "src/apn/commons/apn_cmp.c"
+    "src/apn/commons/apn_addmul_one.c"
 
     # APN HIDDEN FUNCS
 
@@ -127,7 +128,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     set(x64_c_sources
         "src/apn/x64/set.c"
         "src/apn/x64/cpy.c"
-        "src/apn/x64/cmp.c"
         "src/apn/x64/cpu_params.c"
     )
 
