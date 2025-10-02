@@ -118,6 +118,6 @@ end_of_func:
     movzx   rax, al
     ret
 
-add_n_one_x64 ENDP
+sub_n_one_x64 ENDP
 
 END

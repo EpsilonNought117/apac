@@ -7,6 +7,7 @@
 
 static void apn_mul_n_check(void);
 static void apn_mul_check(void);
+static void apn_sqr_check(void);
 
 static void apn_mul_n_check(void)
 {

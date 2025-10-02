@@ -83,7 +83,7 @@
             if (!(x))                   \
             {                           \
                 APAC_REPORT_ERR(#x)     \
-                abort(-1);              \
+                abort();                \
             }                           \
         } while (0)
 	#endif
@@ -99,7 +99,7 @@
         if (!(x))                                                                       \
         {                                                                               \
             fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, #x);           \
-            abort(-1);                                                                  \
+            abort();                                                                    \
         }                                                                               \
     } while (0)
 #endif
