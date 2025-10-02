@@ -74,16 +74,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     message(STATUS "Target: x86-64/AMD64")
 
-    # Only add -masm=intel if we're using assembler other than MASM64
-    if ((APPLE OR UNIX) AND (CMAKE_ASM_COMPILER_ID STREQUAL "GNU" OR CMAKE_ASM_COMPILER_ID STREQUAL "Clang"))
-        add_compile_options(-masm=intel)
-    endif()
-
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
     message(STATUS "Target: AArch64/ARM64")
 
 else ()
     message(FATAL_ERROR "Unsupported ISA: ${CMAKE_SYSTEM_PROCESSOR}")
+
 endif()
 
 # --- BUILD OPTIONS -------------------------------------------------------------
@@ -147,16 +143,14 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/sysv_abi/add_n.asm"
-            "src/apn/x64/sysv_abi/add_n_one.asm"
-            "src/apn/x64/sysv_abi/add_n_one_till_carry.asm"
-            "src/apn/x64/sysv_abi/mul_bc.asm"
-            "src/apn/x64/sysv_abi/addmul_one.asm"
-            "src/apn/x64/sysv_abi/sqr_bc.asm"
-            "src/apn/x64/sysv_abi/sub_n.asm"
-            "src/apn/x64/sysv_abi/sub_n_one.asm"
-            "src/apn/x64/sysv_abi/sub_n_one_till_borrow.asm"
-            "src/apn/x64/sysv_abi/neg.asm"
+            "src/apn/x64/sysv_abi/add_n.s"
+            "src/apn/x64/sysv_abi/add_n_one.s"
+            "src/apn/x64/sysv_abi/mul_bc.s"
+            "src/apn/x64/sysv_abi/addmul_one.s"
+            "src/apn/x64/sysv_abi/sqr_bc.s"
+            "src/apn/x64/sysv_abi/sub_n.s"
+            "src/apn/x64/sysv_abi/sub_n_one.s"
+            "src/apn/x64/sysv_abi/neg.s"
         )
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
