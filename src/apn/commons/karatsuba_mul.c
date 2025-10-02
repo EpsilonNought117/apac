@@ -43,7 +43,7 @@ void apn_karatsuba_mul_balanced(
 	// carry1 = carryA
 
 	apn_seg carry1 = apn_sub(temp, op1, op1 + lower, lower, upper);
-	if (carry1) apn_neg(temp, temp, lower);
+	if (carry1) { apn_neg(temp, temp, lower); }
 
 	// b0 = op2[0 : (lower - 1)]
 	// b1 = op2[lower : (upper - 1)]
@@ -52,7 +52,7 @@ void apn_karatsuba_mul_balanced(
 	// carry2 = carryB
 	// rest is same
 	apn_seg carry2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
-	if (carry2) apn_neg(temp + lower, temp + lower, lower);
+	if (carry2) { apn_neg(temp + lower, temp + lower, lower); }
 
 	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
 	apn_karatsuba_mul_balanced(result, temp, temp + lower, lower, temp + 2 * lower);
@@ -69,18 +69,18 @@ void apn_karatsuba_mul_balanced(
 	// c1 = a1 * b1
 	apn_karatsuba_mul_balanced(result + 2 * lower, op1 + lower, op2 + lower, upper, temp + 2 * lower);
 
-	// prepare (c0 + c1) in temp[0 : (2 * lower - 1)]
+	// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)]
 	apn_seg val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
 	temp[4 * lower] += val; // propagate carry
 
 	if (carry1 == carry2) // if both signs are same
 	{
-		// do c2 = c0 + c1 - temp[0 : (2 * lower - 1)]
+		// do c2 = c0 + c1 - (|c0 - c1|)^2
 		apn_sub(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
 	}
 	else
 	{
-		// do c2 = c0 + c1 + temp[0 : (2 * lower - 1)]
+		// do c2 = c0 + c1 + (|c0 - c1|)^2
 		apn_add(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
 	}
 
@@ -121,10 +121,10 @@ void apn_karatsuba_mul_unbalanced(
 	apn_size upperB = size2 - lowerA;
 
 	apn_seg carry1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
-	if (carry1) apn_neg(temp, temp, lowerA);
+	if (carry1) { apn_neg(temp, temp, lowerA); }
 
 	apn_seg carry2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
-	if (carry2) apn_neg(temp + lowerA, temp + lowerA, lowerA);
+	if (carry2) { apn_neg(temp + lowerA, temp + lowerA, lowerA); }
 
 	// Always Balanced Multiplication
 	apn_karatsuba_mul_balanced(result, temp, temp + lowerA, lowerA, temp + 2 * lowerA);

@@ -8,6 +8,7 @@
  * 2) Unbalanced & balanced multiplications can be done
  * 3) O(n^2) schoolbook multiplication
  * 4) size1 must be greater than or equal to size2
+ * 5) In-place, O(1) space requirement
  */
 void apn_basecase_mul(
     apn_seg* result,
