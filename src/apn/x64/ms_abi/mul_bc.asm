@@ -29,7 +29,7 @@
 ; The fastest procedures utilizing ADX and BMI2 instruction set extensions
 
 ; Basecase multiplication procedure optimized for 
-; AMD Zen4 Microarchitecture & unrolled 8x
+; AMD Zen4 Microarchitecture & unrolled 4x
 
 mul_bc_zen4 PROC FRAME
 
@@ -41,127 +41,92 @@ mul_bc_zen4 PROC FRAME
 .pushreg    rsi
     push    r12
 .pushreg    r12
-    push    r13
-.pushreg    r13
-    push    r14
-.pushreg    r14
-    push    r15
-.pushreg    r15
     push    rbp
 .pushreg    rbp
 .endprolog
 
-    xor     rax, rax        ; i
     xchg    rbp, rcx        ; result in rbp
     xchg    rbx, rdx        ; op1 in rbx
-    mov     r10, QWORD PTR [rsp + 104] ; size2 in r10
-    mov     r13, rbp        ; store a copy of result in r13
-    mov     r11, rbx        ; store a copy of op1 in r11
+    mov     r10, QWORD PTR [rsp + 80] ; size2 in r10
+    mov     rax, r9
+    shl     rax, 3
     mov     r12, r9
-    shr     r9,  3          ; size1 /= 8
-    and     r12, 7          ; size1 %= 8
-    xor     r15, r15
+    shr     r9,  2          ; size1 /= 4
+    and     r12, 3          ; size1 %= 4
 
 loop_outer:
 
     mov     rcx, r9
-    mov     rdx, QWORD PTR [r8 + rax*8] ; load op2[i] into rdx
-    lea     rbp, [r13 + rax*8]           
-    lea     rbx, [r11]
-
+    mov     rdx, QWORD PTR [r8] ; load op2[i] into rdx
     test    rcx, rcx
     jz      before_remainder
+    mov     r11, QWORD PTR [rbp]
 
 ALIGN 16
 inner_unrolled:
 
     mulx    rdi, rsi, QWORD PTR [rbx]
-    adcx    rsi, QWORD PTR [rbp]
+    adcx    rsi, r11
     adox    rdi, QWORD PTR [rbp + 8]
     mov     QWORD PTR [rbp], rsi
-    mov     r14, rdi
+    mov     r11, rdi
 
     mulx    rdi, rsi, QWORD PTR [rbx + 8]
-    adcx    rsi, r14
+    adcx    rsi, r11
     adox    rdi, QWORD PTR [rbp + 16]
     mov     QWORD PTR [rbp + 8], rsi
-    mov     r14, rdi
+    mov     r11, rdi
     
     mulx    rdi, rsi, QWORD PTR [rbx + 16]
-    adcx    rsi, r14
+    adcx    rsi, r11
     adox    rdi, QWORD PTR [rbp + 24]
     mov     QWORD PTR [rbp + 16], rsi
-    mov     r14, rdi
+    mov     r11, rdi
 
     mulx    rdi, rsi, QWORD PTR [rbx + 24]
-    adcx    rsi, r14
+    adcx    rsi, r11
     adox    rdi, QWORD PTR [rbp + 32]
     mov     QWORD PTR [rbp + 24], rsi
-    mov     r14, rdi
+    mov     r11, rdi
 
-    mulx    rdi, rsi, QWORD PTR [rbx + 32]
-    adcx    rsi, r14
-    adox    rdi, QWORD PTR [rbp + 40]
-    mov     QWORD PTR [rbp + 32], rsi
-    mov     r14, rdi
+    lea     rbx, [rbx + 32]
+    lea     rbp, [rbp + 32]
+    loop    inner_unrolled
+    mov     QWORD PTR [rbp], r11
 
-    mulx    rdi, rsi, QWORD PTR [rbx + 40]
-    adcx    rsi, r14
-    adox    rdi, QWORD PTR [rbp + 48]
-    mov     QWORD PTR [rbp + 40], rsi
-    mov     r14, rdi
-
-    mulx    rdi, rsi, QWORD PTR [rbx + 48]
-    adcx    rsi, r14
-    adox    rdi, QWORD PTR [rbp + 56]
-    mov     QWORD PTR [rbp + 48], rsi
-    mov     r14, rdi
-
-    mulx    rdi, rsi, QWORD PTR [rbx + 56]
-    adcx    rsi, r14
-    adox    rdi, QWORD PTR [rbp + 64]
-    mov     QWORD PTR [rbp + 56], rsi
-    mov     QWORD PTR [rbp + 64], rdi
-
-    lea     rbx, [rbx + 64]
-    lea     rbp, [rbp + 64]
-    lea     rcx, [rcx - 1]
-    jrcxz   before_remainder
-    jmp     inner_unrolled
-
-ALIGN 16
 before_remainder:
 
     mov     rcx, r12
     jrcxz   outer_loop_end
+    mov     r11, QWORD PTR [rbp]
 
-ALIGN 16
 remainder:
 
     mulx    rdi, rsi, QWORD PTR [rbx]
-    adcx    rsi, QWORD PTR [rbp]
+    adcx    rsi, r11
     adox    rdi, QWORD PTR [rbp + 8]
     mov     QWORD PTR [rbp], rsi
-    mov     QWORD PTR [rbp + 8], rdi
+    mov     r11, rdi
 
     lea     rbx, [rbx + 8]
     lea     rbp, [rbp + 8]
     loop    remainder
+    mov     QWORD PTR [rbp], r11
 
 outer_loop_end:
-
-    adc     QWORD PTR [rbp], r15
-
-    inc     rax
-    cmp     r10, rax
+    
+    adc     QWORD PTR [rbp], 0
+    
+    add     r8, 8
+    sub     rbx, rax
+    sub     rbp, rax
+    add     rbp, 8
+    dec     r10
     jnz     loop_outer
 
 end_of_func:
 
     pop     rbp
-    pop     r15
-    pop     r14
-    pop     r13
     pop     r12
     pop     rsi
     pop     rdi
