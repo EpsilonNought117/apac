@@ -17,17 +17,13 @@
 #if defined(_WIN32)
 
     #if defined(_MSC_VER)
-        
+
+        #include <Windows.h> // for win32 threads
+
         #if defined(_M_X64) || defined(_M_AMD64)
             #include <immintrin.h>
             #include <intrin.h>
         #endif   
-        
-        #if (_MSC_VER >= 1935)
-            #include <threads.h>
-        #else
-            #error "Minimum MSVC v19.35 needed to compile multi-threaded routines on Windows!"
-        #endif
 
     #else
         #error "Unknown compiler on Windows!"
@@ -46,13 +42,13 @@
 
 #elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
+    #include  <pthread.h>
+
     #if defined(__x86_64) || defined(__amd64) || defined(__x86_64__) || defined(__amd64__)
         #include <x86intrin.h>
         #include <cpuid.h>
         #include <immintrin.h>
     #endif
-
-    #include <threads.h>
 
     #if defined(BUILD_SHARED_LIB)
         // Export symbols when building the shared object/dylib
