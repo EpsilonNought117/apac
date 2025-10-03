@@ -31,8 +31,6 @@ if (WIN32)
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
         message(STATUS "Enabling MASM assembler")
         enable_language(ASM_MASM)
-    elseif()
-
     endif()
 
 elseif (APPLE)
@@ -69,18 +67,6 @@ endif()
 # Enforce C standard
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-
-# ISA checks
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-    message(STATUS "Target: x86-64/AMD64")
-
-elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
-    message(STATUS "Target: AArch64/ARM64")
-
-else ()
-    message(FATAL_ERROR "Unsupported ISA: ${CMAKE_SYSTEM_PROCESSOR}")
-
-endif()
 
 # --- BUILD OPTIONS -------------------------------------------------------------
 
