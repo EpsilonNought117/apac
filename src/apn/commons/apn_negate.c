@@ -12,8 +12,7 @@ void apn_neg(
     APAC_ASSERT(result != NULL);
     APAC_ASSERT(op1 != NULL);
 
-    if (curr_cpu.apn_neg_ptr == NULL)
-        apacGetCPUSpec();
+    APAC_ALWAYS_ASSERT(curr_cpu.apn_neg_ptr != NULL);
 
     curr_cpu.apn_neg_ptr(result, op1, size);
 

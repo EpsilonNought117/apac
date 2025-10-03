@@ -11,8 +11,7 @@ void apn_set(
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(size != 0);
 
-	if (curr_cpu.apn_set_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_set_ptr != NULL);
 
 	curr_cpu.apn_set_ptr(result, size, val);
 

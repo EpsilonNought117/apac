@@ -14,8 +14,7 @@ apn_seg apn_sub_n(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 
-	if (curr_cpu.apn_sub_n_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 
 	apn_seg borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
 	return borrow;
@@ -36,8 +35,7 @@ apn_seg apn_sub(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 
-	if (curr_cpu.apn_sub_n_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 
 	apn_seg borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size2);
 
@@ -59,8 +57,7 @@ apn_seg apn_sub_one(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
 	
-	if (curr_cpu.apn_sub_one_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
 	apn_seg borrow = curr_cpu.apn_sub_one_ptr(result, op1, size, val);
 	return borrow;

@@ -12,8 +12,7 @@ apn_seg apn_addmul_one(
 	APAC_ASSERT(result != op1);
 	APAC_ASSERT(size != 0);
 
-	if (!curr_cpu.apn_addmul_one_ptr)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_addmul_one_ptr != NULL);
 
 	apn_seg out = curr_cpu.apn_addmul_one_ptr(result, op1, size, val);
 	return out;

@@ -15,8 +15,7 @@ apn_seg apn_add_n(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 
-	if (curr_cpu.apn_add_n_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
 	
 	apn_seg carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size);
 	return carry;
@@ -37,8 +36,7 @@ apn_seg apn_add(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 
-	if (curr_cpu.apn_add_n_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
 
 	apn_seg carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
 
@@ -59,9 +57,8 @@ apn_seg apn_add_one(
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
-	
-	if (curr_cpu.apn_add_one_ptr == NULL)
-		apacGetCPUSpec();
+
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
 
 	apn_seg carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);
 	return carry;

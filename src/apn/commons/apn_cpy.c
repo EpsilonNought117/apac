@@ -13,8 +13,7 @@ void apn_cpy(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != op1);
 
-	if (curr_cpu.apn_cpy_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_cpy_ptr != NULL);
 
 	curr_cpu.apn_cpy_ptr(result, op1, size);
 

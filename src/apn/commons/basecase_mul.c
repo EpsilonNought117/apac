@@ -18,8 +18,7 @@ void apn_basecase_mul(
 	APAC_ASSERT(size2 != 0);
 	APAC_ASSERT(size1 >= size2);
 
-	if (curr_cpu.apn_mul_bc_ptr == NULL)
-		apacGetCPUSpec();
+	APAC_ALWAYS_ASSERT(curr_cpu.apn_mul_bc_ptr != NULL);
 
 	curr_cpu.apn_mul_bc_ptr(result, op1, op2, size1, size2);
 	return;
