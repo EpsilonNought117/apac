@@ -21,7 +21,6 @@ int apn_cmp(
 		size--;
 	}
 
-equal:
 	return 0;
 
 not_equal:
