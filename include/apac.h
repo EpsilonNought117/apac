@@ -67,38 +67,38 @@
 /****************************************************************************************************/
 
 #if !defined(APAC_DISABLE_ASSERT)	
-	#ifndef APAC_REPORT_ERR
-	#define APAC_REPORT_ERR(x) \
-    	fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, x);
-	#endif
-
-	#ifndef APAC_ASSERT
-	#define APAC_ASSERT(x)              \
-        do                              \
-        {                               \
-            if (!(x))                   \
-            {                           \
-                APAC_REPORT_ERR(#x)     \
-                abort();                \
-            }                           \
+    #ifndef APAC_ASSERT
+	#define APAC_ASSERT(x)                                                                      \
+        do                                                                                      \
+        {                                                                                       \
+            if (!(x))                                                                           \
+            {                                                                                   \
+                fprintf(stderr, "ASSERTION FAILED!");                                           \
+                fprintf(stderr, "ASSERTION: %s\nFILE: %s\nLINE: %d\n", #x, __FILE__, __LINE__); \
+                fprintf(stderr, "ABORTING ...");                                                \
+                abort();                                                                        \
+            }                                                                                   \
         } while (0)
 	#endif
 #else
-	#define APAC_REPORT_ERR(x)  
-	#define APAC_ASSERT(x)      
+    #define APAC_ASSERT(x)      
 #endif
 
 #ifndef APAC_ALWAYS_ASSERT
-#define APAC_ALWAYS_ASSERT(x)                                                           \
-    do                                                                                  \
-    {                                                                                   \
-        if (!(x))                                                                       \
-        {                                                                               \
-            fprintf(stderr, "APAC ERROR %s:%d %s\n", __FILE__, __LINE__, #x);           \
-            abort();                                                                    \
-        }                                                                               \
+#define APAC_ALWAYS_ASSERT(x)                                                               \
+    do                                                                                      \
+    {                                                                                       \
+        if (!(x))                                                                           \
+        {                                                                                   \
+            fprintf(stderr, "ASSERTION FAILED!");                                           \
+            fprintf(stderr, "ASSERTION: %s\nFILE: %s\nLINE: %d\n", #x, __FILE__, __LINE__); \
+            fprintf(stderr, "ABORTING ...");                                                \
+            abort();                                                                        \
+        }                                                                                   \
     } while (0)
 #endif
+
+#define APAC_REPORT_ERR(x)  fprintf(stderr, "APAC ERROR: %s\n", #x); 
 
 /****************************************************************************************************/
 /*********************************         MISCELLANEOUS          ***********************************/
@@ -139,8 +139,6 @@ typedef struct apac_cpu_params
     void (*apn_set_ptr)(apn_seg*, apn_size, apn_seg);
 
 }   apac_cpu_params;
-
-extern apac_cpu_params curr_cpu;
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/

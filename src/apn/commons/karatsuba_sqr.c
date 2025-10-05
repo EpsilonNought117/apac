@@ -14,7 +14,7 @@ void apn_karatsuba_sqr(
 		Avoids few O(n) ops compared to Basecase Mul
 	*/
 
-	APAC_ALWAYS_ASSERT(temp != NULL);
+	APAC_ASSERT(temp != NULL);
 
 	if (size < KARATSUBA_SQR_THRESHOLD)
 	{

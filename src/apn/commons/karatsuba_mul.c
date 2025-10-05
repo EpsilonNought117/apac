@@ -15,7 +15,7 @@ void apn_karatsuba_mul_balanced(
 	apn_seg* temp
 )
 {
-	APAC_ALWAYS_ASSERT(temp != NULL);
+	APAC_ASSERT(temp != NULL);
 
 	if (size < KARATSUBA_MUL_BALANCED_THRESHOLD)
 	{
@@ -99,10 +99,10 @@ void apn_karatsuba_mul_unbalanced(
 	apn_seg* temp
 )
 {
-	APAC_ALWAYS_ASSERT(temp != NULL);
-	APAC_ALWAYS_ASSERT(size1 >= size2);
+	APAC_ASSERT(temp != NULL);
+	APAC_ASSERT(size1 >= size2);
 
-	if (size2 <= ((size1 + 1) >> 1) || (size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD))
+	if ((size2 <= ((size1 + 1) >> 1)) || (size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD))
 	{
 		// Highly unbalanced values or values below threshold
 		// handled by basecase multiplication
@@ -112,8 +112,6 @@ void apn_karatsuba_mul_unbalanced(
 	}
 
 	// follows nearly the same logic as balanced karatsuba
-
-	APAC_ALWAYS_ASSERT(size2 > ((size1 + 1) >> 1));
 
 	apn_size lowerA = (size1 + 1) >> 1;
 	// lowerB is the same as lowerA

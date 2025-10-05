@@ -30,7 +30,7 @@ void apn_mul_n(
 	}
 	else
 	{
-		APAC_ALWAYS_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		apn_size ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
 		apn_seg* workspace = apac_malloc(sizeof(apn_seg) * ws_size);
@@ -71,7 +71,7 @@ void apn_mul(
 	}
 	else
 	{
-		APAC_ALWAYS_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		apn_size ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
 		apn_seg* workspace = apac_malloc(sizeof(apn_seg) * ws_size);

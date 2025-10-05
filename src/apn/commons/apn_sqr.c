@@ -24,7 +24,7 @@ void apn_sqr(
 	}
 	else
 	{
-		APAC_ALWAYS_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		apn_size ws_size = KARATSUBA_SQR_WS_SIZE(size);
 		apn_seg* workspace = apac_malloc(sizeof(apn_seg) * ws_size);
