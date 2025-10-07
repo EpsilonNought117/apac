@@ -94,6 +94,7 @@ inner_unrolled:
     loop    inner_unrolled
     mov     QWORD PTR [rbp], r11
 
+ALIGN 16
 before_remainder:
 
     mov     rcx, r12

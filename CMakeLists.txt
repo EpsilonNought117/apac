@@ -126,14 +126,14 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/sysv_abi/add_n.s"
-            "src/apn/x64/sysv_abi/add_n_one.s"
-            "src/apn/x64/sysv_abi/mul_bc.s"
-            "src/apn/x64/sysv_abi/addmul_one.s"
-            "src/apn/x64/sysv_abi/sqr_bc.s"
-            "src/apn/x64/sysv_abi/sub_n.s"
-            "src/apn/x64/sysv_abi/sub_n_one.s"
-            "src/apn/x64/sysv_abi/neg.s"
+            "src/apn/x64/sysv_abi/add_n.asm"
+            "src/apn/x64/sysv_abi/add_n_one.asm"
+            "src/apn/x64/sysv_abi/mul_bc.asm"
+            "src/apn/x64/sysv_abi/addmul_one.asm"
+            "src/apn/x64/sysv_abi/sqr_bc.asm"
+            "src/apn/x64/sysv_abi/sub_n.asm"
+            "src/apn/x64/sysv_abi/sub_n_one.asm"
+            "src/apn/x64/sysv_abi/neg.asm"
         )
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
@@ -158,6 +158,18 @@ set(hidden_headers
 
     # AArch64 SPECIFIC
 )
+
+# --- STRIP PATHS FROM __FILE__ -------------------------------------------------\
+
+foreach(src_file ${apac_sources})
+    get_filename_component(file_name ${src_file} NAME)
+    set_source_files_properties(
+        ${src_file}
+        PROPERTIES
+        COMPILE_DEFINITIONS "__FILE__=\"${file_name}\""
+    )
+endforeach()
+
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 

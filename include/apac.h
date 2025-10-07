@@ -66,6 +66,14 @@
 /*********************************      ERROR HANDLING MACROS      **********************************/
 /****************************************************************************************************/
 
+typedef enum
+{
+    APAC_OK,
+    APAC_OOM,
+    APAC_DIV_BY_ZERO
+
+}   apac_err;
+
 #if !defined(APAC_DISABLE_ASSERT)	
     #ifndef APAC_ASSERT
 	#define APAC_ASSERT(x)                                                                      \
