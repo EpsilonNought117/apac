@@ -11,10 +11,10 @@
 
 	;   Function Arguments
     ;
-    ;   rcx -> result (apn_seg*)   
-    ;   rdx -> op1 (const apn_seg*)
-    ;   r8  -> size (apn_size)
-    ;   r9  -> val (apn_seg)
+    ;   rcx -> result (apn_seg_t*)   
+    ;   rdx -> op1 (const apn_seg_t*)
+    ;   r8  -> size (apn_size_t)
+    ;   r9  -> val (apn_seg_t)
 
 ;   -------------------------
 ;

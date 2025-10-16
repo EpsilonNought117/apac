@@ -11,11 +11,11 @@
 
 	;   Function Arguments
     ;
-    ;   rcx -> result (apn_seg*)   
-    ;   rdx -> op1 (const apn_seg*)
-    ;   r8  -> op2 (const apn_seg*)
-    ;   r9  -> size1 (apn_size)
-    ;   [rsp + 40] -> size2 (apn_size) (where rsp is initially at function entering)
+    ;   rcx -> result (apn_seg_t*)   
+    ;   rdx -> op1 (const apn_seg_t*)
+    ;   r8  -> op2 (const apn_seg_t*)
+    ;   r9  -> size1 (apn_size_t)
+    ;   [rsp + 40] -> size2 (apn_size_t) (where rsp is initially at function entering)
 
     ;   ASSUMPTION
     ;   (size1 >= size2)

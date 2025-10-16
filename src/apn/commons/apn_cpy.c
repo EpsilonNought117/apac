@@ -3,9 +3,9 @@
 extern apac_cpu_params curr_cpu;
 
 void apn_cpy(
-	apn_seg* result, 
-	const apn_seg* op1, 
-	apn_size size
+	apn_seg_t* result, 
+	const apn_seg_t* op1, 
+	apn_size_t size
 )
 {
 	APAC_ASSERT(size != 0);

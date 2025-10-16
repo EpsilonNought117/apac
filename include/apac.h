@@ -124,27 +124,27 @@ APAC_API void apacSetMemFuncs(
 
 APAC_API void apacGetCPUSpec(void);
 
-typedef uint64_t apn_seg;
-typedef uint64_t apn_size;
+typedef uint64_t apn_seg_t;
+typedef uint64_t apn_size_t;
 
 typedef struct apac_cpu_params
 {
-	apn_size karatsuba_mul_balanced_threshold;
-	apn_size karatsuba_mul_unbalanced_threshold;
-	apn_size karatsuba_sqr_threshold;
+	apn_size_t karatsuba_mul_balanced_threshold;
+	apn_size_t karatsuba_mul_unbalanced_threshold;
+	apn_size_t karatsuba_sqr_threshold;
 
-	apn_seg(*apn_add_n_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size);
-	apn_seg(*apn_sub_n_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size);
-    apn_seg(*apn_add_one_ptr)(apn_seg*, const apn_seg*, apn_size, apn_seg);
-    apn_seg(*apn_sub_one_ptr)(apn_seg*, const apn_seg*, apn_size, apn_seg);
+	apn_seg_t(*apn_add_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
+	apn_seg_t(*apn_sub_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
+    apn_seg_t(*apn_add_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    apn_seg_t(*apn_sub_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
 
-    apn_seg(*apn_addmul_one_ptr)(apn_seg*, const apn_seg*, apn_size, apn_seg);
-	void (*apn_mul_bc_ptr)(apn_seg*, const apn_seg*, const apn_seg*, apn_size, apn_size);
-	void (*apn_sqr_bc_ptr)(apn_seg*, const apn_seg*, apn_size);
+    apn_seg_t(*apn_addmul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+	void (*apn_mul_bc_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t, apn_size_t);
+	void (*apn_sqr_bc_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
 	
-    void (*apn_neg_ptr)(apn_seg*, const apn_seg*, apn_size);
-	void (*apn_cpy_ptr)(apn_seg*, const apn_seg*, apn_size);
-    void (*apn_set_ptr)(apn_seg*, apn_size, apn_seg);
+    void (*apn_neg_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+	void (*apn_cpy_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+    void (*apn_set_ptr)(apn_seg_t*, apn_size_t, apn_seg_t);
 
 }   apac_cpu_params;
 
@@ -169,100 +169,100 @@ typedef struct apac_cpu_params
 *
 */
 
-APAC_API apn_seg apn_add_n(
-    apn_seg* result,
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size
+APAC_API apn_seg_t apn_add_n(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size
 );
 
-APAC_API apn_seg apn_add(
-    apn_seg* result,
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size1,
-    apn_size size2
+APAC_API apn_seg_t apn_add(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
-APAC_API apn_seg apn_add_one(
-    apn_seg* result,
-    const apn_seg* op1,
-    apn_size size,
-    apn_seg val
+APAC_API apn_seg_t apn_add_one(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    apn_size_t size,
+    apn_seg_t val
 );
 
-APAC_API apn_seg apn_sub_n(
-    apn_seg* result,
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size
+APAC_API apn_seg_t apn_sub_n(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size
 );
 
-APAC_API apn_seg apn_sub(
-    apn_seg* result,
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size1,
-    apn_size size2
+APAC_API apn_seg_t apn_sub(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
-APAC_API apn_seg apn_sub_one(
-    apn_seg* result,
-    const apn_seg* op1,
-    apn_size size,
-    apn_seg val
+APAC_API apn_seg_t apn_sub_one(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    apn_size_t size,
+    apn_seg_t val
 );
 
 APAC_API void apn_cpy(
-    apn_seg* result,
-    const apn_seg* op1,
-    apn_size size
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    apn_size_t size
 );
 
 APAC_API void apn_neg(
-    apn_seg* result,
-    const apn_seg* op1,
-    apn_size size
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    apn_size_t size
 );
 
 APAC_API void apn_mul_n(
-    apn_seg* result,
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size
 );
 
 APAC_API void apn_mul(
-    apn_seg* result,
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size1,
-    apn_size size2
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
-APAC_API apn_seg apn_addmul_one(
-    apn_seg* result,
-    const apn_seg* op1,
-    apn_size size,
-    apn_seg val
+APAC_API apn_seg_t apn_addmul_one(
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    apn_size_t size,
+    apn_seg_t val
 );
 
 APAC_API void apn_sqr(
-    apn_seg* result,
-    const apn_seg* op1,
-    apn_size size
+    apn_seg_t* result,
+    const apn_seg_t* op1,
+    apn_size_t size
 );
 
 APAC_API void apn_set(
-    apn_seg* result,
-    apn_size size,
-    apn_seg val
+    apn_seg_t* result,
+    apn_size_t size,
+    apn_seg_t val
 );
 
 APAC_API int apn_cmp(
-    const apn_seg* op1,
-    const apn_seg* op2,
-    apn_size size
+    const apn_seg_t* op1,
+    const apn_seg_t* op2,
+    apn_size_t size
 );
 
 #endif

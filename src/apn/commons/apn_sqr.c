@@ -6,9 +6,9 @@
 		(size * 2 + 64)
 
 void apn_sqr(
-	apn_seg* result,
-	const apn_seg* op1,
-	apn_size size
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	apn_size_t size
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -26,8 +26,8 @@ void apn_sqr(
 	{
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
-		apn_size ws_size = KARATSUBA_SQR_WS_SIZE(size);
-		apn_seg* workspace = apac_malloc(sizeof(apn_seg) * ws_size);
+		apn_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
+		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
 		APAC_ALWAYS_ASSERT(workspace != NULL);
 

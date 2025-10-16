@@ -4,9 +4,9 @@
 // Avoid using this in performance critical stuff
 
 int apn_cmp(
-	const apn_seg* op1,
-	const apn_seg* op2,
-	apn_size size
+	const apn_seg_t* op1,
+	const apn_seg_t* op2,
+	apn_size_t size
 )
 {
 	APAC_ASSERT(op1 != NULL);

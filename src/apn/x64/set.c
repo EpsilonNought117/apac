@@ -1,11 +1,11 @@
 #include "../../../include/apac.h"
 
-void set_avx512f_4unroll(apn_seg* result, apn_size size, apn_seg val)
+void set_avx512f_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m512i my_val = _mm512_set1_epi64(val);
 
-	apn_size blocks = size & ((apn_size)-32);
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)-32);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -16,8 +16,8 @@ void set_avx512f_4unroll(apn_seg* result, apn_size size, apn_seg val)
 		counter += 32;
 	}
 
-	apn_size remaining = size - counter;
-	apn_size limb_mask = _bzhi_u64(~0ULL, remaining);
+	apn_size_t remaining = size - counter;
+	apn_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
 
 	_mm512_mask_storeu_epi64(&result[counter], (unsigned char)(limb_mask), my_val);
 	_mm512_mask_storeu_epi64(&result[counter + 8], (unsigned char)(limb_mask >> 8), my_val);
@@ -27,12 +27,12 @@ void set_avx512f_4unroll(apn_seg* result, apn_size size, apn_seg val)
 	return;
 }
 
-void set_avx512f_2unroll(apn_seg* result, apn_size size, apn_seg val)
+void set_avx512f_2unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m512i my_val = _mm512_set1_epi64(val);
 
-	apn_size blocks = size & ((apn_size)-16);
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)-16);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -42,8 +42,8 @@ void set_avx512f_2unroll(apn_seg* result, apn_size size, apn_seg val)
 		counter += 16;
 	}
 
-	apn_size remaining = size - counter;
-	apn_size limb_mask = _bzhi_u64(~0ULL, remaining);
+	apn_size_t remaining = size - counter;
+	apn_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
 
 	_mm512_mask_storeu_epi64(&result[counter], (unsigned char)(limb_mask), my_val);
 	_mm512_mask_storeu_epi64(&result[counter + 8], (unsigned char)(limb_mask >> 8), my_val);
@@ -51,12 +51,12 @@ void set_avx512f_2unroll(apn_seg* result, apn_size size, apn_seg val)
 	return;
 }
 
-void set_avx_4unroll(apn_seg* result, apn_size size, apn_seg val)
+void set_avx_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m256i my_val = _mm256_set1_epi64x(val);
 
-	apn_size blocks = size & ((apn_size)-16);
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)-16);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -77,12 +77,12 @@ void set_avx_4unroll(apn_seg* result, apn_size size, apn_seg val)
 	return;
 }
 
-void set_avx_2unroll(apn_seg* result, apn_size size, apn_seg val)
+void set_avx_2unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m256i my_val = _mm256_set1_epi64x(val);
 
-	apn_size blocks = size & ((apn_size)-8);
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)-8);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -101,12 +101,12 @@ void set_avx_2unroll(apn_seg* result, apn_size size, apn_seg val)
 	return;
 }
 
-void set_sse2_4unroll(apn_seg* result, apn_size size, apn_seg val)
+void set_sse2_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m128i my_val = _mm_set1_epi64x(val);
 
-	apn_size blocks = size & ((apn_size) - 8);
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t) - 8);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{

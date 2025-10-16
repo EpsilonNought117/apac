@@ -8,10 +8,10 @@
 		(size1 * 2 + 64) // scratch workspace size of unbalanced karatsuba
 
 void apn_mul_n(
-	apn_seg* result, 
-	const apn_seg* op1, 
-	const apn_seg* op2, 
-	apn_size size
+	apn_seg_t* result, 
+	const apn_seg_t* op1, 
+	const apn_seg_t* op2, 
+	apn_size_t size
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -32,8 +32,8 @@ void apn_mul_n(
 	{
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
-		apn_size ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
-		apn_seg* workspace = apac_malloc(sizeof(apn_seg) * ws_size);
+		apn_size_t ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
+		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
 		APAC_ALWAYS_ASSERT(workspace != NULL);
 		
@@ -47,11 +47,11 @@ void apn_mul_n(
 }
 
 void apn_mul(
-	apn_seg* result, 
-	const apn_seg* op1, 
-	const apn_seg* op2, 
-	apn_size size1, 
-	apn_size size2
+	apn_seg_t* result, 
+	const apn_seg_t* op1, 
+	const apn_seg_t* op2, 
+	apn_size_t size1, 
+	apn_size_t size2
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -73,8 +73,8 @@ void apn_mul(
 	{
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
-		apn_size ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
-		apn_seg* workspace = apac_malloc(sizeof(apn_seg) * ws_size);
+		apn_size_t ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
+		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
 		APAC_ALWAYS_ASSERT(workspace != NULL);
 

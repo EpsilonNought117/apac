@@ -1,9 +1,9 @@
 #include "../../../include/apac.h"
 
-void cpy_avx512f_4unroll(apn_seg* result, const apn_seg* op1, apn_size size)
+void cpy_avx512f_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
-	apn_size blocks = size & ((apn_size)(-32)); // first process blocks of 32 limbs
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)(-32)); // first process blocks of 32 limbs
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -17,8 +17,8 @@ void cpy_avx512f_4unroll(apn_seg* result, const apn_seg* op1, apn_size size)
 		counter += 32;
 	}
 
-	apn_size remaining = size - counter;
-	apn_size limb_mask = _bzhi_u64(~0ULL, remaining);
+	apn_size_t remaining = size - counter;
+	apn_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
 
 	_mm512_mask_storeu_epi64(
 		&result[counter],
@@ -44,10 +44,10 @@ void cpy_avx512f_4unroll(apn_seg* result, const apn_seg* op1, apn_size size)
 	return;
 }
 
-void cpy_avx512f_2unroll(apn_seg* result, const apn_seg* op1, apn_size size)
+void cpy_avx512f_2unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
-	apn_size blocks = size & ((apn_size)(-16)); // first process blocks of 16 limbs
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)(-16)); // first process blocks of 16 limbs
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -59,8 +59,8 @@ void cpy_avx512f_2unroll(apn_seg* result, const apn_seg* op1, apn_size size)
 		counter += 16;
 	}
 
-	apn_size remaining = size - counter;
-	apn_size limb_mask = _bzhi_u64(~0ULL, remaining);
+	apn_size_t remaining = size - counter;
+	apn_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
 
 	_mm512_mask_storeu_epi64(
 		&result[counter],
@@ -76,10 +76,10 @@ void cpy_avx512f_2unroll(apn_seg* result, const apn_seg* op1, apn_size size)
 	return;
 }
 
-void cpy_avx_4unroll(apn_seg* result, const apn_seg* op1, apn_size size)
+void cpy_avx_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
-	apn_size blocks = size & ((apn_size)(-16));  // first process blocks of 16 limbs
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)(-16));  // first process blocks of 16 limbs
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -109,10 +109,10 @@ void cpy_avx_4unroll(apn_seg* result, const apn_seg* op1, apn_size size)
 	}
 }
 
-void cpy_avx_2unroll(apn_seg* result, const apn_seg* op1, apn_size size)
+void cpy_avx_2unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
-	apn_size blocks = size & ((apn_size)(-8));  // first process blocks of 8 limbs
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)(-8));  // first process blocks of 8 limbs
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -134,10 +134,10 @@ void cpy_avx_2unroll(apn_seg* result, const apn_seg* op1, apn_size size)
 	}
 }
 
-void cpy_sse2_4unroll(apn_seg* result, const apn_seg* op1, apn_size size)
+void cpy_sse2_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
-	apn_size blocks = size & ((apn_size)(-8));	// first process blocks of 8 limbs
-	apn_size counter = 0;
+	apn_size_t blocks = size & ((apn_size_t)(-8));	// first process blocks of 8 limbs
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
