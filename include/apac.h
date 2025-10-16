@@ -74,24 +74,6 @@ typedef enum
 
 }   apac_err;
 
-#if !defined(APAC_DISABLE_ASSERT)	
-    #ifndef APAC_ASSERT
-	#define APAC_ASSERT(x)                                                                      \
-        do                                                                                      \
-        {                                                                                       \
-            if (!(x))                                                                           \
-            {                                                                                   \
-                fprintf(stderr, "ASSERTION FAILED!");                                           \
-                fprintf(stderr, "ASSERTION: %s\nFILE: %s\nLINE: %d\n", #x, __FILE__, __LINE__); \
-                fprintf(stderr, "ABORTING ...");                                                \
-                abort();                                                                        \
-            }                                                                                   \
-        } while (0)
-	#endif
-#else
-    #define APAC_ASSERT(x)      
-#endif
-
 #ifndef APAC_ALWAYS_ASSERT
 #define APAC_ALWAYS_ASSERT(x)                                                               \
     do                                                                                      \
@@ -104,6 +86,13 @@ typedef enum
             abort();                                                                        \
         }                                                                                   \
     } while (0)
+#endif
+
+#if !defined(APAC_DISABLE_ASSERT)	
+    #ifndef APAC_ASSERT
+    #define APAC_ASSERT(x) APAC_ALWAYS_ASSERT(x)
+#else
+    #define APAC_ASSERT(x)      
 #endif
 
 #define APAC_REPORT_ERR(x)  fprintf(stderr, "APAC ERROR: %s\n", #x); 
