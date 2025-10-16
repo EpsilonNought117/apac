@@ -5,7 +5,7 @@ extern apac_cpu_params curr_cpu;
 
 void zen4_set_params(void)
 {
-	curr_cpu.karatsuba_mul_balanced_threshold = 33;
+	curr_cpu.karatsuba_mul_balanced_threshold = 28;
 	curr_cpu.karatsuba_mul_unbalanced_threshold = 33;
 	curr_cpu.karatsuba_sqr_threshold = 40;
 
@@ -20,8 +20,8 @@ void zen4_set_params(void)
 	curr_cpu.apn_sqr_bc_ptr = sqr_bc_zen4;
 
 	curr_cpu.apn_neg_ptr = neg_zen4;
-	curr_cpu.apn_set_ptr = set_avx512f_4unroll;
-	curr_cpu.apn_cpy_ptr = cpy_avx512f_4unroll;
+	curr_cpu.apn_set_ptr = set_avx512f_2unroll;
+	curr_cpu.apn_cpy_ptr = cpy_avx512f_2unroll;
 
 	return;
 }
