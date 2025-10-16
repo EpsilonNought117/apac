@@ -35,8 +35,7 @@ sub_n_zen4 PROC FRAME
 small_loop:
 
     mov     rax, QWORD PTR [rdx]
-    mov     r10, QWORD PTR [r8]
-    sbb     rax, r10
+    sbb     rax, QWORD PTR [r8]
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
@@ -56,23 +55,19 @@ ALIGN 16
 big_loop:
 
     mov     rax, QWORD PTR [rdx]
-    mov     r10, QWORD PTR [r8]
-    sbb     rax, r10
+    sbb     rax, QWORD PTR [r8]
     mov     QWORD PTR [rcx], rax
 
     mov     rax, QWORD PTR [rdx + 8]
-    mov     r10, QWORD PTR [r8 + 8]
-    sbb     rax, r10
+    sbb     rax, QWORD PTR [r8 + 8]
     mov     QWORD PTR [rcx + 8], rax
 
     mov     rax, QWORD PTR [rdx + 16]
-    mov     r10, QWORD PTR [r8 + 16]
-    sbb     rax, r10
+    sbb     rax, QWORD PTR [r8 + 16]
     mov     QWORD PTR [rcx + 16], rax
 
     mov     rax, QWORD PTR [rdx + 24]
-    mov     r10, QWORD PTR [r8 + 24]
-    sbb     rax, r10
+    sbb     rax, QWORD PTR [r8 + 24]
     mov     QWORD PTR [rcx + 24], rax
 
     lea     rdx, [rdx + 32]
@@ -99,8 +94,7 @@ sub_n_x64 PROC FRAME
 main_loop:
 
     mov     rax, QWORD PTR [rdx]
-    mov     r10, QWORD PTR [r8]
-    sbb     rax, r10
+    sbb     rax, QWORD PTR [r8]
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
