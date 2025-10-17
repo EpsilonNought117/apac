@@ -23,128 +23,110 @@
 ;   -------------------------
 
 addmul_one_zen4 PROC FRAME
-
+    
     push    rbx
 .pushreg    rbx
-    push    rdi
-.pushreg    rdi
-    push    rsi
-.pushreg    rsi
-    push    r12
-.pushreg    r12
+    push    rbp
+.pushreg    rbp
 .endprolog
 
-    xor     rax, rax
-    xor     rbx, rbx
+    xchg    rbp, rcx
+    xchg    rbx, rdx
+    mov     rcx, r8
+    and     r8,  7
+    shr     rcx, 3
 
-    ; will need these zero'd out regs later
-
-    xchg    rcx, r10    ; free up rcx for loop/jrcxz
-    xchg    rdx, r11    ; free up rdx for mulx
-
-    ; r10 <- result
-    ; r11 <- op1
-
-    xor     r12, r12    ; temporary store register
-    mov     rcx, r8     ; copy of size in r10
-    shr     rcx, 3      ; size /= 8    
-    and     r8,  7      ; size %= 8
-    mov     rdx, r9     ; load val into rdx for mulx
-
+    mov     rax, QWORD PTR [rbp]
+    mov     rdx, r9
     test    rcx, rcx
     jz      before_remainder
+    
+unroll8_loop:
 
-ALIGN 16
-unrolled_loop:
+    mulx    r11, r10, QWORD PTR [rbx]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11]
-    adcx    rsi, QWORD PTR [r10]
-    adox    rdi, QWORD PTR [r10 + 8]
-    mov     QWORD PTR [r10], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 16]
+    mov     QWORD PTR [rbp + 8], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 8]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 16]
-    mov     QWORD PTR [r10 + 8], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 16]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 24]
+    mov     QWORD PTR [rbp + 16], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 16]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 24]
-    mov     QWORD PTR [r10 + 16], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 24]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 32]
+    mov     QWORD PTR [rbp + 24], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 24]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 32]
-    mov     QWORD PTR [r10 + 24], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 32]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 40]
+    mov     QWORD PTR [rbp + 32], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 32]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 40]
-    mov     QWORD PTR [r10 + 32], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 40]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 48]
+    mov     QWORD PTR [rbp + 40], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 40]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 48]
-    mov     QWORD PTR [r10 + 40], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 48]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 56]
+    mov     QWORD PTR [rbp + 48], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 48]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 56]
-    mov     QWORD PTR [r10 + 48], rsi
-    mov     r12, rdi
+    mulx    r11, r10, QWORD PTR [rbx + 56]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 64]
+    mov     QWORD PTR [rbp + 56], r10
+    mov     rax, r11
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 56]
-    adcx    rsi, r12
-    adox    rdi, QWORD PTR [r10 + 64]
-    mov     QWORD PTR [r10 + 56], rsi
-    mov     QWORD PTR [r10 + 64], rdi
-
-    lea     r10, [r10 + 64]
-    lea     r11, [r11 + 64]
+    lea     rbx, [rbx + 64]
+    lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
-
-ALIGN 16
     jrcxz   before_remainder
-    jmp     unrolled_loop
+    jmp     unroll8_loop
 
-ALIGN 16
 before_remainder:
 
     mov     rcx, r8
-    jrcxz   end_of_func
+    jrcxz   end_of_loop
 
 remainder_loop:
 
-    mulx    rdi, rsi, QWORD PTR [r11]
-    adcx    rsi, QWORD PTR [r10]
-    adox    rdi, QWORD PTR [r10 + 8]
-    mov     QWORD PTR [r10], rsi
-    mov     QWORD PTR [r10 + 8], rdi
-    
-    lea     r10, [r10 + 8]
-    lea     r11, [r11 + 8]
+    mulx    r11, r10, QWORD PTR [rbx]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], r10
+    mov     rax, r11
+
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
     loop    remainder_loop
 
 end_of_loop:
 
-    adcx    rbx, QWORD PTR [r10]
-    mov     QWORD PTR [r10], rbx
-    adox    rax, rax    
+    adcx    rax, 0
+    mov     QWORD PTR [rbp], rax
+    seto    al
+    movzx   rax, al
 
 end_of_func:
 
-    pop     r12
-    pop     rsi
-    pop     rdi
+    pop     rbp
     pop     rbx
     ret
-    
+
 addmul_one_zen4 ENDP
 
 ;   -------------------------
