@@ -100,6 +100,7 @@ unroll8_loop:
 before_remainder:
 
     mov     rcx, r8
+    mov     r8,  0
     jrcxz   end_of_loop
 
 remainder_loop:
@@ -116,7 +117,7 @@ remainder_loop:
 
 end_of_loop:
 
-    adcx    rax, 0
+    adcx    rax, r8
     mov     QWORD PTR [rbp], rax
     seto    al
     movzx   rax, al
