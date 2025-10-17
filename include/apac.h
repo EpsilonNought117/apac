@@ -88,9 +88,10 @@ typedef enum
     } while (0)
 #endif
 
-#if !defined(APAC_DISABLE_ASSERT)	
+#if !defined(APAC_DISABLE_ASSERT)
     #ifndef APAC_ASSERT
     #define APAC_ASSERT(x) APAC_ALWAYS_ASSERT(x)
+    #endif
 #else
     #define APAC_ASSERT(x)      
 #endif
