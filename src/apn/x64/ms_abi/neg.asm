@@ -5,7 +5,7 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-.code
+NEG_N SEGMENT ALIGN(64) 'CODE'
 
 	option casemap:none
 
@@ -47,25 +47,16 @@ unroll_loop_outer:
 
 main_loop:
     
+i = 0
+    
+WHILE i LT 4
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx]
+    mov     r9, QWORD PTR [rdx + i*8]
     sbb     rax, r9
-    mov     QWORD PTR [rcx], rax
-
-    mov     rax, 0
-    mov     r9, QWORD PTR [rdx + 8]
-    sbb     rax, r9
-    mov     QWORD PTR [rcx + 8], rax
-
-    mov     rax, 0
-    mov     r9, QWORD PTR [rdx + 16]
-    sbb     rax, r9
-    mov     QWORD PTR [rcx + 16], rax
-
-    mov     rax, 0
-    mov     r9, QWORD PTR [rdx + 24]
-    sbb     rax, r9
-    mov     QWORD PTR [rcx + 24], rax
+    mov     QWORD PTR [rcx + i*8], rax
+        
+    i = i + 1
+ENDM
 
     lea     rdx, [rdx + 32]
     lea     rcx, [rcx + 32]

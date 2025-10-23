@@ -5,7 +5,7 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-.code
+SUB_N_ONE SEGMENT ALIGN(64) 'CODE'
 
 	option casemap:none
 
@@ -55,23 +55,17 @@ before_unroll:
     bt      ax,  0      ; same here       
     jz      end_of_func
 
+ALIGN 64
 loop_unrolled:
 
-    mov     rax, QWORD PTR [rdx]
+i = 0
+WHILE i LT 4
+    mov     rax, QWORD PTR [rdx + i*8]
     sbb     rax, 0
-    mov     QWORD PTR [rcx], rax
-
-    mov     rax, QWORD PTR [rdx + 8]
-    sbb     rax, 0
-    mov     QWORD PTR [rcx + 8], rax
-
-    mov     rax, QWORD PTR [rdx + 16]
-    sbb     rax, 0
-    mov     QWORD PTR [rcx + 16], rax
-
-    mov     rax, QWORD PTR [rdx + 24]
-    sbb     rax, 0
-    mov     QWORD PTR [rcx + 24], rax
+    mov     QWORD PTR [rcx + i*8], rax
+        
+    i = i + 1
+ENDM
 
     lea     rdx, [rdx + 32]
     lea     rcx, [rcx + 32]

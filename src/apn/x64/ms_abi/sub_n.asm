@@ -5,7 +5,7 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-.code
+SUB_N SEGMENT ALIGN(64) 'CODE'
 
     option casemap:none
 
@@ -51,24 +51,17 @@ before_unrolled:
     bt      ax,  0      ; set carry (borrow) bit via a bit-test of the LSB of ax
     jz      end_of_func     
 
-ALIGN 16
+ALIGN 64
 big_loop:
 
-    mov     rax, QWORD PTR [rdx]
-    sbb     rax, QWORD PTR [r8]
-    mov     QWORD PTR [rcx], rax
-
-    mov     rax, QWORD PTR [rdx + 8]
-    sbb     rax, QWORD PTR [r8 + 8]
-    mov     QWORD PTR [rcx + 8], rax
-
-    mov     rax, QWORD PTR [rdx + 16]
-    sbb     rax, QWORD PTR [r8 + 16]
-    mov     QWORD PTR [rcx + 16], rax
-
-    mov     rax, QWORD PTR [rdx + 24]
-    sbb     rax, QWORD PTR [r8 + 24]
-    mov     QWORD PTR [rcx + 24], rax
+i = 0
+WHILE i LT 4
+    mov     rax, QWORD PTR [rdx + i*8]
+    sbb     rax, QWORD PTR [r8 + i*8]
+    mov     QWORD PTR [rcx + i*8], rax
+        
+    i = i + 1
+ENDM
 
     lea     rdx, [rdx + 32]
     lea     r8, [r8 + 32]

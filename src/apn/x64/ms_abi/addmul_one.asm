@@ -5,9 +5,9 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-.code
-
-	option casemap:none
+ADDMUL_ONE SEGMENT ALIGN(64) 'CODE'
+	
+    option casemap:none
 
 	;   Function Arguments
     ;
@@ -41,68 +41,36 @@ addmul_one_zen4 PROC FRAME
     test    rcx, rcx
     jz      before_remainder
     
+ALIGN 64
 unroll8_loop:
 
-    mulx    r11, r10, QWORD PTR [rbx]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 8]
-    mov     QWORD PTR [rbp], r10
-    mov     rax, r11
+i = 0
+WHILE i LT 8
 
-    mulx    r11, r10, QWORD PTR [rbx + 8]
+    mulx    r11, r10, QWORD PTR [rbx + i*8]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 16]
-    mov     QWORD PTR [rbp + 8], r10
+    adox    r11, QWORD PTR [rbp + i*8 + 8]
+    mov     QWORD PTR [rbp + i*8], r10
     mov     rax, r11
-
-    mulx    r11, r10, QWORD PTR [rbx + 16]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 24]
-    mov     QWORD PTR [rbp + 16], r10
-    mov     rax, r11
-
-    mulx    r11, r10, QWORD PTR [rbx + 24]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 32]
-    mov     QWORD PTR [rbp + 24], r10
-    mov     rax, r11
-
-    mulx    r11, r10, QWORD PTR [rbx + 32]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 40]
-    mov     QWORD PTR [rbp + 32], r10
-    mov     rax, r11
-
-    mulx    r11, r10, QWORD PTR [rbx + 40]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 48]
-    mov     QWORD PTR [rbp + 40], r10
-    mov     rax, r11
-
-    mulx    r11, r10, QWORD PTR [rbx + 48]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 56]
-    mov     QWORD PTR [rbp + 48], r10
-    mov     rax, r11
-
-    mulx    r11, r10, QWORD PTR [rbx + 56]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 64]
-    mov     QWORD PTR [rbp + 56], r10
-    mov     rax, r11
+        
+    i = i + 1
+ENDM
 
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
     jrcxz   before_remainder
+ALIGN 64
     jmp     unroll8_loop
 
+ALIGN 32
 before_remainder:
 
     mov     rcx, r8
     mov     r8,  0
     jrcxz   end_of_loop
 
+ALIGN 64
 remainder_loop:
 
     mulx    r11, r10, QWORD PTR [rbx]
