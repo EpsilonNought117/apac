@@ -83,7 +83,6 @@ outer_loop_start:
     test    rcx, rcx
     jz      before_remainder
 
-ALIGN 64
 inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
@@ -103,7 +102,6 @@ ENDM
 ALIGN 64
     jmp     inner_loop_unrolled
 
-ALIGN 32
 before_remainder:
 
     jmp     QWORD PTR [r12]
