@@ -102,12 +102,14 @@ ENDM
 ALIGN 64
     jmp     inner_loop_unrolled
 
+ALIGN 64
 before_remainder:
 
     jmp     QWORD PTR [r12]
 
 FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
+ALIGN 64
 rem&outer&:
 
     i = 0
