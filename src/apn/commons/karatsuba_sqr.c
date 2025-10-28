@@ -23,9 +23,9 @@ void apn_karatsuba_sqr(
 	}
 	
 	apn_size_t lower = (size + 1) >> 1;
-	apn_size_t upper = size >> 2;
+	apn_size_t upper = size >> 1;
 
-	apn_seg_t carry = apn_sub(temp, op1 + lower, op1, lower, upper);
+	apn_seg_t carry = apn_sub(temp, op1, op1 + lower, lower, upper);
 	if (carry) { apn_neg(temp, temp, lower); }
 
 	// first recursive call
