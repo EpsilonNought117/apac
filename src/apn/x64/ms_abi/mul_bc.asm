@@ -11,11 +11,11 @@ MUL_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 	;   Function Arguments
     ;
-    ;   rcx -> result (apn_seg_t*)   
-    ;   rdx -> op1 (const apn_seg_t*)
-    ;   r8  -> op2 (const apn_seg_t*)
-    ;   r9  -> size1 (apn_size_t)
-    ;   [rsp + 40] -> size2 (apn_size_t) (where rsp is initially at function entering)
+    ;   rcx -> result           (apn_seg_t*)   
+    ;   rdx -> op1              (const apn_seg_t*)
+    ;   r8  -> op2              (const apn_seg_t*)
+    ;   r9  -> size1            (apn_size_t)
+    ;   [rsp + 40] -> size2     (apn_size_t) (where rsp is initially at function entering)
 
     ;   ASSUMPTION
     ;   (size1 >= size2)
@@ -83,6 +83,7 @@ outer_loop_start:
     test    rcx, rcx
     jz      before_remainder
 
+ALIGN 64
 inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
@@ -98,18 +99,18 @@ ENDM
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
+ALIGN 16
     jrcxz   before_remainder
-ALIGN 64
     jmp     inner_loop_unrolled
 
-ALIGN 64
+ALIGN 32
 before_remainder:
 
     jmp     QWORD PTR [r12]
 
 FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
-ALIGN 64
+ALIGN 32
 rem&outer&:
 
     i = 0

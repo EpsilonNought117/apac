@@ -5,15 +5,15 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-.code
+SQR_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 	option casemap:none
 
 	;   Function Arguments
     ;
-    ;   rcx -> result (apn_seg_t*)   
-    ;   rdx -> op1 (const apn_seg_t*)
-    ;   r8  -> size (apn_size_t)
+    ;   rcx -> result       (apn_seg_t*)   
+    ;   rdx -> op1          (const apn_seg_t*)
+    ;   r8  -> size         (apn_size_t)
 
 ;   -------------------------
 ;
@@ -24,158 +24,212 @@
 
 sqr_bc_zen4 PROC FRAME
 
+    push    rbp
+.pushreg    rbp
     push    rbx
 .pushreg    rbx
-    push    rsi
-.pushreg    rsi
     push    rdi
 .pushreg    rdi
-    push    r12
-.pushreg    r12
-    push    r13
-.pushreg    r13
-    push    r14
-.pushreg    r14
-    push    r15
-.pushreg    r15
+    push    rsi
+.pushreg    rsi
 .endprolog
 
-    xchg    rax, rcx    ; exchange rcx and rax, freeing up rcx for jrcxz/loop
-    xchg    rbx, rdx    ; exchange rdx and rbx, freeing up rdx for mulx
+    xchg    rbp, rcx        ; free up rcx for jrcxz/loop
+    xchg    rbx, rdx        ; free up rdx for mul
+    mov     r11, r8         ; copy of size in r11 to later restore from
+    dec     r11             ; curr_size = size - 1
+    jz      pass3
 
-    mov     r9,  r8
-    dec     r9          
-    
-    test    r9,  r9
-    jz      before_pass2
-
-    ; The whole function works exactly as sqr_bc_x64 with a few changes
-    ; Passes 1 and 2 can be merged into one thanks to adcx & adox from ADX
-    ; Can propagate two "carries" per limb at once utilizing both OF & CF
-    ; BMI2's mulx adds more convenience of not affecting any flags
-
-    xor     r13, r13    ; counter (starts at 0)
-    xor     r15, r15    ; register for holding 0
-
-    ; Pass-1 (O(n^2) step)
+    mov     r10, r11
+    shl     r10, 3          ; curr_size * sizeof(apn_seg_t)
+    add     rbp, 8
 
 outer_loop_pass1:
 
-    mov     rdx, QWORD PTR [rbx + r13*8]    ; op1[i]
-    lea     r10, [rax + r13*8 + 8]          
-    lea     r11, [rbx + r13*8 + 8]
-    mov     rcx, r9
-    mov     r12, r9
-    shr     rcx, 2      ; rcx /= 4
-    and     r12, 3      ; r12 %= 4
+    mov     rdx, QWORD PTR [rbx]  
+    mov     rax, QWORD PTR [rbp]   
+    mov     rcx, r11
+    mov     r9,  r11                ; for later moving into rcx
+    shr     rcx, 2                  ; curr_size /= 4 (for 4x unrolled loop)
+    and     r9,  3                  ; curr_size %= 4
     test    rcx, rcx
-    jz      inner_loop_befr_rem_pass1
+    jz      bef_inner_rmdr_pass1
+    
+inner_loop_unroll_pass1:
 
-ALIGN 16
-inner_loop_4unroll_pass1:
+    mulx    rdi, rsi, QWORD PTR [rbx + 8]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], rsi
+    mov     rax, rdi
 
-    mulx    rdi, rsi, QWORD PTR [r11]
-    adcx    rsi, rsi
-    adox    rsi, QWORD PTR [r10]
-    mov     QWORD PTR [r10], rsi
-    adcx    rdi, rdi
-    adox    rdi, QWORD PTR [r10 + 8]
-    mov     r14, rdi
+    mulx    rdi, rsi, QWORD PTR [rbx + 16]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + 16]
+    mov     QWORD PTR [rbp + 8], rsi
+    mov     rax, rdi
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 8]
-    adcx    rsi, rsi
-    adox    rsi, r14
-    mov     QWORD PTR [r10 + 8], rsi
-    adcx    rdi, rdi
-    adox    rdi, QWORD PTR [r10 + 16]
-    mov     r14, rdi
+    mulx    rdi, rsi, QWORD PTR [rbx + 24]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + 24]
+    mov     QWORD PTR [rbp + 16], rsi
+    mov     rax, rdi
+    
+    mulx    rdi, rsi, QWORD PTR [rbx + 32]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + 32]
+    mov     QWORD PTR [rbp + 24], rsi
+    mov     rax, rdi
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 16]
-    adcx    rsi, rsi
-    adox    rsi, r14
-    mov     QWORD PTR [r10 + 16], rsi
-    adcx    rdi, rdi
-    adox    rdi, QWORD PTR [r10 + 24]
-    mov     r14, rdi
+    lea     rbx, [rbx + 32]
+    lea     rbp, [rbp + 32]
+    loop    inner_loop_unroll_pass1
 
-    mulx    rdi, rsi, QWORD PTR [r11 + 24]
-    adcx    rsi, rsi
-    adox    rsi, r14
-    mov     QWORD PTR [r10 + 24], rsi
-    adcx    rdi, rdi
-    adox    rdi, QWORD PTR [r10 + 32]
-    mov     QWORD PTR [r10 + 32], rdi
-
-    lea     r11, [r11 + 32]
-    lea     r10, [r11 + 32]
-    lea     rcx, [rcx - 1]
-    jrcxz   inner_loop_befr_rem_pass1
-    jmp     inner_loop_4unroll_pass1
-
-ALIGN 16
-inner_loop_befr_rem_pass1:
-
-    mov     rcx, r12
+bef_inner_rmdr_pass1:
+    
+    mov     rcx, r9
     jrcxz   outer_loop_end_pass1
 
-ALIGN 16
-inner_loop_rem_pass1:
+inner_rmdr_pass1:
 
-    mulx    rdi, rsi, QWORD PTR [r11]
-    adcx    rsi, rsi
-    adox    rsi, QWORD PTR [r10]
-    mov     QWORD PTR [r10], rsi
-    adcx    rdi, rdi
-    adox    rdi, QWORD PTR [r10 + 8]
-    mov     QWORD PTR [r10 + 8], rdi
+    mulx    rdi, rsi, QWORD PTR [rbx + 8]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], rsi
+    mov     rax, rdi
 
-    lea     r11, [r11 + 8]
-    lea     r10, [r11 + 8]
-    loop    inner_loop_rem_pass1
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
+    loop    inner_rmdr_pass1
 
-ALIGN 16
 outer_loop_end_pass1:
 
-    mov     r14, QWORD PTR [r10]
-    adcx    r14, r15
-    adox    r14, r15
-    mov     QWORD PTR [r10], r14
-    inc     r13
-    dec     r9
+    adc     rax, 0
+    mov     QWORD PTR [rbp], rax
+    sub     rbx, r10
+    sub     rbp, r10
+    add     rbx, 8
+    add     rbp, 16
+    sub     r10, 8
+    dec     r11
     jnz     outer_loop_pass1
-    
-    ; Pass-2 (O(n) step)
 
-before_pass2:
+pass2_start:
 
-    mov     r10, rax
-    mov     r11, rbx
+    dec     r8
+    mov     r11, r8
+    mov     r10, r8
     mov     rcx, r8
-    xor     r12, r12    ; to clear CF/OF
+    mov     r9,  r8
+    inc     r8
+    shl     r11, 3
+    shl     r10, 4
+    sub     rbx, r11
+    sub     rbp, r10
+    shr     rcx, 2
+    and     r9,  3  
+    test    rcx, rcx
+    jz      before_rmdr_pass2
 
-loop_pass2:
+loop_unroll_pass2:
 
-    mov     rdx, QWORD PTR [r11]
+    rcl     QWORD PTR [rbp], 1
+    rcl     QWORD PTR [rbp + 8], 1
+    rcl     QWORD PTR [rbp + 16], 1
+    rcl     QWORD PTR [rbp + 24], 1
+    rcl     QWORD PTR [rbp + 32], 1
+    rcl     QWORD PTR [rbp + 40], 1
+    rcl     QWORD PTR [rbp + 48], 1
+    rcl     QWORD PTR [rbp + 56], 1
+
+    lea     rbp, [rbp + 64]
+    dec     rcx
+    jnz     loop_unroll_pass2
+
+before_rmdr_pass2:
+
+    mov     rcx, r9
+    jrcxz   pass2_end
+
+loop_rmdr_pass2:
+
+    rcl     QWORD PTR [rbp], 1
+    rcl     QWORD PTR [rbp + 8], 1
+    
+    lea     rbp, [rbp + 16]
+    dec     rcx
+    jnz     loop_rmdr_pass2
+    
+pass2_end:
+
+    rcl     QWORD PTR [rbp], 1
+    sub     rbp, r10
+    sub     rbp, 8
+
+    ; now rbp is pointing to first seg of result_arr
+    ; same with rbx pointing to first seg of op1
+
+pass3:
+
+    mov     rcx, r8
+    mov     r9,  r8
+    shr     rcx, 2
+    and     r9,  3
+    test    rcx, rcx
+    jz      before_rmdr_pass3
+
+loop_pass3:
+
+    mov     rdx, QWORD PTR [rbx]
     mulx    rdi, rsi, rdx
+    adc     QWORD PTR [rbp], rsi
+    adc     QWORD PTR [rbp + 8], rdi
 
-    adc     QWORD PTR [r10], rsi
-    adc     QWORD PTR [r10 + 8], rdi
+    mov     rdx, QWORD PTR [rbx + 8]
+    mulx    rdi, rsi, rdx
+    adc     QWORD PTR [rbp + 16], rsi
+    adc     QWORD PTR [rbp + 24], rdi
 
-    lea     r11, [r11 + 8]
-    lea     r10, [r10  + 16]
-    loop    loop_pass2
+    mov     rdx, QWORD PTR [rbx + 16]
+    mulx    rdi, rsi, rdx
+    adc     QWORD PTR [rbp + 32], rsi
+    adc     QWORD PTR [rbp + 40], rdi
+
+    mov     rdx, QWORD PTR [rbx + 24]
+    mulx    rdi, rsi, rdx
+    adc     QWORD PTR [rbp + 48], rsi
+    adc     QWORD PTR [rbp + 56], rdi
+
+    lea     rbp, [rbp + 64]
+    lea     rbx, [rbx + 32]
+    dec     rcx
+    jnz     loop_pass3
+
+before_rmdr_pass3:
+
+    mov     rcx, r9
+    jrcxz   end_of_func
+
+rmdr_loop_pass3:
+
+    mov     rdx, QWORD PTR [rbx]
+    mulx    rdi, rsi, rdx
+    adc     QWORD PTR [rbp], rsi
+    adc     QWORD PTR [rbp + 8], rdi
+
+    lea     rbp, [rbp + 16]
+    lea     rbx, [rbx + 8]
+    dec     rcx
+    jnz     rmdr_loop_pass3
 
 end_of_func:
 
-    pop     r15
-    pop     r14
-    pop     r13
-    pop     r12
-    pop     rdi
     pop     rsi
+    pop     rdi
     pop     rbx
+    pop     rbp
     ret
-
+    
 sqr_bc_zen4 ENDP
 
 ;   -------------------------
@@ -260,9 +314,9 @@ outer_loop_pass1:
     mov     rcx,  r9    ; rcx is inner loop counter
     xor     rbx, rbx    ; temp_reg
     xor     rdx, rdx    ; high64 = 0
-    mov     r13, QWORD PTR [rsi + r12*8]
-    lea     r10, [rdi + r12*8 + 8]      ; result[counter + 1]
-    lea     r11, [rsi + r12*8 + 8]      ; op1[counter + 1]
+    mov     r13, QWORD PTR [rsi + r12 * 1]
+    lea     r10, [rdi + r12 * 2 + 8]      
+    lea     r11, [rsi + r12 * 1 + 8]      
 
 ALIGN 16
 inner_loop_pass1:
@@ -282,8 +336,8 @@ inner_loop_pass1:
 
 outer_loop_end_pass1:
 
-    inc     r12
     adc     QWORD PTR [r10], rdx
+    add     r12, 8
     dec     r9
     jnz     outer_loop_pass1
 
