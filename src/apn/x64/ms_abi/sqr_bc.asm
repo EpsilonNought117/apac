@@ -55,31 +55,20 @@ outer_loop_pass1:
     test    rcx, rcx
     jz      bef_inner_rmdr_pass1
     
+ALIGN 64
 inner_loop_unroll_pass1:
 
-    mulx    rdi, rsi, QWORD PTR [rbx + 8]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + 8]
-    mov     QWORD PTR [rbp], rsi
-    mov     rax, rdi
+    i = 0
+    WHILE i LT 4
 
-    mulx    rdi, rsi, QWORD PTR [rbx + 16]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + 16]
-    mov     QWORD PTR [rbp + 8], rsi
-    mov     rax, rdi
-
-    mulx    rdi, rsi, QWORD PTR [rbx + 24]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + 24]
-    mov     QWORD PTR [rbp + 16], rsi
-    mov     rax, rdi
-    
-    mulx    rdi, rsi, QWORD PTR [rbx + 32]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + 32]
-    mov     QWORD PTR [rbp + 24], rsi
-    mov     rax, rdi
+        mulx    rdi, rsi, QWORD PTR [rbx + i*8 + 8]
+        adcx    rsi, rax
+        adox    rdi, QWORD PTR [rbp + i*8 + 8]
+        mov     QWORD PTR [rbp + i*8], rsi
+        mov     rax, rdi
+        
+        i = i + 1
+    ENDM
 
     lea     rbx, [rbx + 32]
     lea     rbp, [rbp + 32]
@@ -90,6 +79,7 @@ bef_inner_rmdr_pass1:
     mov     rcx, r9
     jrcxz   outer_loop_end_pass1
 
+ALIGN 64
 inner_rmdr_pass1:
 
     mulx    rdi, rsi, QWORD PTR [rbx + 8]
@@ -131,16 +121,17 @@ pass2_start:
     test    rcx, rcx
     jz      before_rmdr_pass2
 
+ALIGN 64
 loop_unroll_pass2:
 
-    rcl     QWORD PTR [rbp], 1
-    rcl     QWORD PTR [rbp + 8], 1
-    rcl     QWORD PTR [rbp + 16], 1
-    rcl     QWORD PTR [rbp + 24], 1
-    rcl     QWORD PTR [rbp + 32], 1
-    rcl     QWORD PTR [rbp + 40], 1
-    rcl     QWORD PTR [rbp + 48], 1
-    rcl     QWORD PTR [rbp + 56], 1
+    i = 0
+    WHILE i LT 8
+        
+        rcl     QWORD PTR [rbp + i*8], 1
+        rcl     QWORD PTR [rbp + i*8 + 8], 1
+        
+        i = i + 2
+    ENDM
 
     lea     rbp, [rbp + 64]
     dec     rcx
@@ -178,27 +169,19 @@ pass3:
     test    rcx, rcx
     jz      before_rmdr_pass3
 
+ALIGN 64
 loop_pass3:
 
-    mov     rdx, QWORD PTR [rbx]
-    mulx    rdi, rsi, rdx
-    adc     QWORD PTR [rbp], rsi
-    adc     QWORD PTR [rbp + 8], rdi
+    i = 0    
+    WHILE i LT 4
 
-    mov     rdx, QWORD PTR [rbx + 8]
-    mulx    rdi, rsi, rdx
-    adc     QWORD PTR [rbp + 16], rsi
-    adc     QWORD PTR [rbp + 24], rdi
-
-    mov     rdx, QWORD PTR [rbx + 16]
-    mulx    rdi, rsi, rdx
-    adc     QWORD PTR [rbp + 32], rsi
-    adc     QWORD PTR [rbp + 40], rdi
-
-    mov     rdx, QWORD PTR [rbx + 24]
-    mulx    rdi, rsi, rdx
-    adc     QWORD PTR [rbp + 48], rsi
-    adc     QWORD PTR [rbp + 56], rdi
+        mov     rdx, QWORD PTR [rbx + i*8]
+        mulx    rdi, rsi, rdx
+        adc     QWORD PTR [rbp + i*16], rsi
+        adc     QWORD PTR [rbp + i*16 + 8], rdi
+        
+        i = i + 1
+    ENDM
 
     lea     rbp, [rbp + 64]
     lea     rbx, [rbx + 32]
