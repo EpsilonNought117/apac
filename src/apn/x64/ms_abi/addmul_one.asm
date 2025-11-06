@@ -41,7 +41,7 @@ addmul_one_zen4 PROC FRAME
     test    rcx, rcx
     jz      before_remainder
     
-ALIGN 64
+ALIGN 16
 unroll8_loop:
 
 i = 0
@@ -60,17 +60,16 @@ ENDM
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
     jrcxz   before_remainder
-ALIGN 64
     jmp     unroll8_loop
 
-ALIGN 32
+ALIGN 16
 before_remainder:
 
     mov     rcx, r8
     mov     r8,  0
     jrcxz   end_of_loop
 
-ALIGN 64
+ALIGN 16
 remainder_loop:
 
     mulx    r11, r10, QWORD PTR [rbx]

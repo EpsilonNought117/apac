@@ -51,7 +51,7 @@ before_unrolled:
     bt      ax,  0      ; bit-test doesn't modify zero flag
     jz      end_of_func     
 
-ALIGN 64
+ALIGN 16
 big_loop:
 
 i = 0

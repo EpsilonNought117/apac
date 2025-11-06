@@ -28,8 +28,7 @@ MUL_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 ; The fastest procedures utilizing ADX and BMI2 x64 ISA extensions
 
-; Basecase multiplication procedure optimized for 
-; AMD Zen4 Microarchitecture & unrolled 4x
+; 8x unroll adx/bmi2 variant with jump table
 
 mul_bc_zen4 PROC FRAME
 
@@ -83,7 +82,7 @@ outer_loop_start:
     test    rcx, rcx
     jz      before_remainder
 
-ALIGN 64
+ALIGN 16
 inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
@@ -99,18 +98,17 @@ ENDM
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
-ALIGN 16
     jrcxz   before_remainder
     jmp     inner_loop_unrolled
 
-ALIGN 32
+ALIGN 16
 before_remainder:
 
     jmp     QWORD PTR [r12]
 
 FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
-ALIGN 32
+ALIGN 16
 rem&outer&:
 
     i = 0
@@ -154,74 +152,88 @@ mul_bc_zen4 ENDP
 
 ;   -------------------------
 ;
+;           MULX/ADC        
+;
+;   -------------------------
+
+; This ideally is only needed for Haswell micro-architecture
+
+mul_bc_haswell PROC FRAME
+.endprolog
+    
+    ret
+mul_bc_haswell ENDP
+
+;   -------------------------
+;
 ;            MUL/ADC        
 ;
 ;   -------------------------
 
 ; Lowest common denominator x64 multiplication routine
-; Not particularly optimized 
+; Not particularly optimized
 
 mul_bc_x64 PROC FRAME
-    
+
     push    rbx
 .pushreg    rbx
     push    rdi
 .pushreg    rdi
     push    rsi
 .pushreg    rsi
-    push    r12
-.pushreg    r12
-    push    r13
-.pushreg    r13
 .endprolog
 
-    xchg    rbx, rdx    ; high64 in rdx
-    xor     r10, r10    ; i
+start_of_func:
 
-    ; now rbx contains op1 (const u64*)
+    xchg    rbx, rdx                    ; op1 now in rbx
+    mov     r10, QWORD PTR [rsp + 64]   ; size2 in r10 at 5th arg position
 
 outer_loop:
 
-    xor     rdi, rdi        ; temp_reg
-    xor     r11, r11        ; j
-    xor     rdx, rdx        ; high64
-    mov     r12, r10        ; r12 is indexer for result
-    mov     r13, r9         ; load size1 into r13
-    mov     rsi, QWORD PTR [r8 + r10*8]  ; op2[i]
+    xor     rdi, rdi    ; temp_reg
+    xor     rdx, rdx    ; high64
+    mov     r11, r9     ; size1 copy in r11
+    mov     rsi, QWORD PTR [r8] ; op2[i]
     mov     rax, rsi
 
+ALIGN 16
 inner_loop:
 
-    adc     rdi, rdx                 ; temp_reg += (CF + high64)
-    mul     QWORD PTR [rbx + r11*8]  ; rdx:rax = rax * op1[j]
+    adc     rdi, rdx
+    mul     QWORD PTR [rbx] ; rdx : rax = rax * 
 
-    add     rdi, rax                 ; temp_reg += low64
-    adc     rdx, 0                   ; high64 += CF
-    add     QWORD PTR [rcx + r12*8], rdi    ; result[i + j] += temp_reg
+    ; now product in rdx:rax
+    ; rax = low64
+    ; rdx = high64
 
-    mov     rax, rsi        ; load op2[i] once again into rax for next iter
-    mov     rdi, 0          ; zero out temp_reg
-    inc     r11
-    inc     r12
-    dec     r13
+    add     rdi, rax                ; temp_reg += low64
+    adc     rdx, 0                  ; high64 += CF
+    add     QWORD PTR [rcx], rdi    ; result[i + j] += temp_reg
+
+    mov     rax, rsi                ; restore rax for next mul
+    lea     rbx, [rbx + 8]          ; update ptrs
+    lea     rcx, [rcx + 8]          
+    dec     r11
     jnz     inner_loop
 
-loop_end:
+outer_loop_end:
 
-    adc     QWORD PTR [rcx + r12*8], rdx
-    inc     r10
-    mov     rsi, QWORD PTR [rsp + 80]   ; load size2 into rsi
-    cmp     rsi, r10        ; check if (rsi - r10) != 0 (means rsi > r10 for unsigned)
+    adc     QWORD PTR [rcx], rdx
+    mov     r11, r9
+    shl     r11, 3
+    sub     rbx, r11
+    sub     rcx, r11
+    add     r8,  8
+    add     rcx, 8
+    dec     r10
     jnz     outer_loop
 
 end_of_func:
 
-    pop     r13
-    pop     r12
     pop     rsi
     pop     rdi
     pop     rbx
-    ret     0
+    ret
 
 mul_bc_x64 ENDP
 

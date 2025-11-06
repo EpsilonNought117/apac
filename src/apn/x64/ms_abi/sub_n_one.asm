@@ -55,7 +55,7 @@ before_unroll:
     bt      ax,  0      ; same here       
     jz      end_of_func
 
-ALIGN 64
+ALIGN 16
 loop_unrolled:
 
 i = 0

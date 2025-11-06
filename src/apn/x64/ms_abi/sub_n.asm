@@ -51,7 +51,7 @@ before_unrolled:
     bt      ax,  0      ; set carry (borrow) bit via a bit-test of the LSB of ax
     jz      end_of_func     
 
-ALIGN 64
+ALIGN 16
 big_loop:
 
 i = 0
