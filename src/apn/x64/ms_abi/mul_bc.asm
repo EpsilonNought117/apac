@@ -82,7 +82,6 @@ outer_loop_start:
     test    rcx, rcx
     jz      before_remainder
 
-ALIGN 16
 inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>

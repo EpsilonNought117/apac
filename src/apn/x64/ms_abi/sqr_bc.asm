@@ -74,6 +74,7 @@ outer_loop_pass1:
     test    rcx, rcx
     jz      bef_inner_rmdr_pass1
 
+ALIGN 64
 inner_loop_unroll_pass1:
 
     i = 0
@@ -219,6 +220,7 @@ loop_pass3:
     dec     rcx
     jnz     loop_pass3
 
+ALIGN 16
 before_rmdr_pass3:
 
     mov     rcx, r9
