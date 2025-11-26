@@ -5,7 +5,7 @@
 #define KARATSUBA_SQR_WS_SIZE(size)		\
 		(size * 2 + 64)
 
-void apn_sqr(
+apac_err apn_sqr(
 	apn_seg_t* result,
 	const apn_seg_t* op1,
 	apn_size_t size
@@ -29,7 +29,11 @@ void apn_sqr(
 		apn_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
-		APAC_ALWAYS_ASSERT(workspace != NULL);
+		if (!workspace)
+		{
+			APAC_LOG_ERR("Memory allocation failed in apn_sqr!");
+			return APAC_OOM;
+		}
 
 		apn_set(workspace, ws_size, 0);
 
@@ -37,5 +41,5 @@ void apn_sqr(
 		apac_free(workspace);
 	}
 
-	return;
+	return APAC_OK;
 }

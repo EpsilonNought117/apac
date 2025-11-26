@@ -2,12 +2,12 @@
 #include "apn_thresholds.h"
 #include "hidden_mul.h"
 
-#define KARATSUBA_MUL_BALANCED_WS_SIZE(size)	\
-		(size * 2 + 64) // scratch workspace size of karatsuba balanced
+#define KARATSUBA_MUL_BALANCED_WS_SIZE(size)			\
+		(size * 2 + 64)		// scratch workspace size of balanced karatsuba
 #define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2)	\
-		(size1 * 2 + 64) // scratch workspace size of unbalanced karatsuba
+		(size1 * 2 + 64)	// scratch workspace size of unbalanced karatsuba
 
-void apn_mul_n(
+apac_err apn_mul_n(
 	apn_seg_t* result, 
 	const apn_seg_t* op1, 
 	const apn_seg_t* op2, 
@@ -35,7 +35,11 @@ void apn_mul_n(
 		apn_size_t ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
-		APAC_ALWAYS_ASSERT(workspace != NULL);
+		if (!workspace)
+		{
+			APAC_LOG_ERR("Memory allocation failed in apn_mul_n!");
+			return APAC_OOM;
+		}
 		
 		apn_set(workspace, ws_size, 0);
 
@@ -43,10 +47,10 @@ void apn_mul_n(
 		apac_free(workspace);
 	}
 
-	return;
+	return APAC_OK;
 }
 
-void apn_mul(
+apac_err apn_mul(
 	apn_seg_t* result, 
 	const apn_seg_t* op1, 
 	const apn_seg_t* op2, 
@@ -76,7 +80,11 @@ void apn_mul(
 		apn_size_t ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
-		APAC_ALWAYS_ASSERT(workspace != NULL);
+		if (!workspace)
+		{
+			APAC_LOG_ERR("Memory allocation failed in apn_mul!");
+			return APAC_OOM;
+		}
 
 		apn_set(workspace, ws_size, 0);
 		
@@ -84,5 +92,5 @@ void apn_mul(
 		apac_free(workspace);
 	}
 
-	return;
+	return APAC_OK;
 }
