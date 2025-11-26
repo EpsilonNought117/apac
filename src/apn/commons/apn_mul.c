@@ -18,8 +18,8 @@ apac_err apn_mul_n(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size != 0);
-	APAC_ASSERT((result >= (op1 + size * 8)) || (op1 >= (result + size * 16)));
-	APAC_ASSERT((result >= (op2 + size * 8)) || (op2 >= (result + size * 16)));
+	APAC_ASSERT((result >= (op1 + size)) || (op1 >= (result + size * 2)));
+	APAC_ASSERT((result >= (op2 + size)) || (op2 >= (result + size * 2)));
 
 	// zero out result before mul
 	apn_set(result, 2 * size, 0);
@@ -63,8 +63,8 @@ apac_err apn_mul(
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size2 != 0);
 	APAC_ASSERT(size1 >= size2);
-	APAC_ASSERT((result >= (op1 + size1 * 8)) || (op1 >= (result + (size1 + size2) * 8)));
-	APAC_ASSERT((result >= (op2 + size2 * 8)) || (op2 >= (result + (size1 + size2) * 8)));
+	APAC_ASSERT((result >= (op1 + size1)) || (op1 >= (result + size1 + size2)));
+	APAC_ASSERT((result >= (op2 + size2)) || (op2 >= (result + size1 + size2)));
 
 	// zero out result before mul
 	apn_set(result, size1 + size2, 0);

@@ -20,7 +20,7 @@ apn_seg_t apn_rshift(
     // a lower or same segment in op1 than op1 ptr itself
     // or result ptr must point to a totally different 
     // location beyond op1 bignum
-    APAC_ASSERT((result <= op1) || (result >= (op1 + size * 8)));
+    APAC_ASSERT((result <= op1) || (result >= (op1 + size)));
 
     apn_size_t bit_cnt_full = bit_cnt >> 6; // bit_cnt /= 64
     apn_seg_t bit_cnt_frac = bit_cnt & 63;  // bit_cnt %= 64
@@ -51,7 +51,7 @@ apn_seg_t apn_lshift(
     // a higher or same segment in op1 than op1 ptr itself
     // or result ptr must point to a totally different
     // location below op1 bignum
-    APAC_ASSERT((result >= op1) || (result <= (op1 - size * 8)));
+    APAC_ASSERT((result >= op1) || (result <= (op1 - size)));
 
     apn_size_t bit_cnt_full = bit_cnt >> 6; // bit_cnt /= 64
     apn_seg_t bit_cnt_frac = bit_cnt & 63;  // bit_cnt %= 64
