@@ -47,10 +47,10 @@ unroll8_loop:
 i = 0
 WHILE i LT 8
 
-    mulx    r11, r10, QWORD PTR [rbx + i*8]
+    mulx    r11, r10, QWORD PTR [rbx + i * 8]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + i*8 + 8]
-    mov     QWORD PTR [rbp + i*8], r10
+    adox    r11, QWORD PTR [rbp + i * 8 + 8]
+    mov     QWORD PTR [rbp + i * 8], r10
     mov     rax, r11
         
     i = i + 1
@@ -149,10 +149,11 @@ main_loop:
 end_of_loop:
 
     adc     QWORD PTR [r10], rdx
-    setc    al
-    movzx   rax, al
 
 end_of_func:
+    
+    setc    al
+    movzx   rax, al
 
     pop     rsi
     pop     rdi

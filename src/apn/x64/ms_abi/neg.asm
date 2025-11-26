@@ -51,9 +51,9 @@ i = 0
     
 WHILE i LT 4
     mov     rax, 0
-    mov     r9, QWORD PTR [rdx + i*8]
+    mov     r9, QWORD PTR [rdx + i * 8]
     sbb     rax, r9
-    mov     QWORD PTR [rcx + i*8], rax
+    mov     QWORD PTR [rcx + i * 8], rax
         
     i = i + 1
 ENDM

@@ -39,7 +39,7 @@ small_loop:
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
-    lea     r8, [r8 + 8]
+    lea     r8,  [r8  + 8]
     lea     rcx, [rcx + 8]
     dec     r11
     jnz     small_loop
@@ -56,15 +56,15 @@ big_loop:
 
 i = 0
 WHILE i LT 4
-    mov     rax, QWORD PTR [rdx + i*8]
-    sbb     rax, QWORD PTR [r8 + i*8]
-    mov     QWORD PTR [rcx + i*8], rax
+    mov     rax, QWORD PTR [rdx + i * 8]
+    sbb     rax, QWORD PTR [r8  + i * 8]
+    mov     QWORD PTR [rcx + i * 8], rax
         
     i = i + 1
 ENDM
 
     lea     rdx, [rdx + 32]
-    lea     r8, [r8 + 32]
+    lea     r8,  [r8  + 32]
     lea     rcx, [rcx + 32]
     dec     r9
     jnz     big_loop
@@ -91,7 +91,7 @@ main_loop:
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
-    lea     r8, [r8 + 8]
+    lea     r8,  [r8  + 8]
     lea     rcx, [rcx + 8]
     dec     r9
     jnz     main_loop

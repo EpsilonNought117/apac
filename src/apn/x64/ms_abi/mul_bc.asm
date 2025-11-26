@@ -82,6 +82,7 @@ outer_loop_start:
     test    rcx, rcx
     jz      before_remainder
 
+ALIGN 64
 inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
@@ -100,7 +101,7 @@ ENDM
     jrcxz   before_remainder
     jmp     inner_loop_unrolled
 
-ALIGN 16
+ALIGN 32
 before_remainder:
 
     jmp     QWORD PTR [r12]
@@ -110,16 +111,17 @@ FOR outer, <7, 6, 5, 4, 3, 2, 1>
 ALIGN 16
 rem&outer&:
 
-    i = 0
-    WHILE i LT outer
-        mulx    rdi, rsi, QWORD PTR [rbx + i*8]
-        adcx    rsi, r11
-        adox    rdi, QWORD PTR [rbp + i*8 + 8]
-        mov     QWORD PTR [rbp + i*8], rsi
-        mov     r11, rdi
+i = 0
+WHILE i LT outer
+    mulx    rdi, rsi, QWORD PTR [rbx + i*8]
+    adcx    rsi, r11
+    adox    rdi, QWORD PTR [rbp + i*8 + 8]
+    mov     QWORD PTR [rbp + i*8], rsi
+    mov     r11, rdi
             
-    i = i + 1
-    ENDM
+i = i + 1
+ENDM
+
     jmp outer_loop_end
         
 ENDM

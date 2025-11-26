@@ -70,24 +70,24 @@ outer_loop_pass1:
     shr     rcx, 3                  ; curr_size /= 8 (for 8x unrolled loop)
     and     r9,  7                  ; curr_size %= 8
     lea     r13, jump_table_pass1
-    lea     r13, [r13 + r9*8]
+    lea     r13, [r13 + r9 * 8]
     test    rcx, rcx
     jz      bef_inner_rmdr_pass1
 
 ALIGN 64
 inner_loop_unroll_pass1:
 
-    i = 0
-    WHILE i LT 8
+i = 0
+WHILE i LT 8
 
-        mulx    rdi, rsi, QWORD PTR [rbx + i*8 + 8]
-        adcx    rsi, rax
-        adox    rdi, QWORD PTR [rbp + i*8 + 8]
-        mov     QWORD PTR [rbp + i*8], rsi
-        mov     rax, rdi
+    mulx    rdi, rsi, QWORD PTR [rbx + i * 8 + 8]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+    mov     QWORD PTR [rbp + i * 8], rsi
+    mov     rax, rdi
         
-        i = i + 1
-    ENDM
+    i = i + 1
+ENDM
 
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
@@ -105,16 +105,17 @@ FOR i, <7, 6, 5, 4, 3, 2, 1>
 ALIGN 16
 inner_pass1_rem&i&:
 
-    j = 0
-    WHILE j LT i
-        mulx    rdi, rsi, QWORD PTR [rbx + j*8 + 8]
-        adcx    rsi, rax
-        adox    rdi, QWORD PTR [rbp + j*8 + 8]
-        mov     QWORD PTR [rbp + j*8], rsi
-        mov     rax, rdi
+j = 0
+WHILE j LT i
+
+    mulx    rdi, rsi, QWORD PTR [rbx + j * 8 + 8]
+    adcx    rsi, rax
+    adox    rdi, QWORD PTR [rbp + j * 8 + 8]
+    mov     QWORD PTR [rbp + j * 8], rsi
+    mov     rax, rdi
             
-    j = j + 1
-    ENDM
+j = j + 1
+ENDM
 
     jmp     outer_loop_end_pass1
         
@@ -122,8 +123,8 @@ ENDM
 
 outer_loop_end_pass1:
 
-    lea     rbx, [rbx + r9*8]
-    lea     rbp, [rbp + r9*8]
+    lea     rbx, [rbx + r9 * 8]
+    lea     rbp, [rbp + r9 * 8]
 
     adc     rax, 0
     mov     QWORD PTR [rbp], rax
@@ -155,14 +156,14 @@ pass2_start:
 ALIGN 16
 loop_unroll_pass2:
 
-    i = 0
-    WHILE i LT 8
+i = 0
+WHILE i LT 8
         
-        rcl     QWORD PTR [rbp + i*8], 1
-        rcl     QWORD PTR [rbp + i*8 + 8], 1
+    rcl     QWORD PTR [rbp + i * 8], 1
+    rcl     QWORD PTR [rbp + i * 8 + 8], 1
         
-        i = i + 2
-    ENDM
+    i = i + 2
+ENDM
 
     lea     rbp, [rbp + 64]
     dec     rcx
@@ -204,16 +205,16 @@ pass3:
 ALIGN 16
 loop_pass3:
 
-    i = 0    
-    WHILE i LT 4
+i = 0    
+WHILE i LT 4
 
-        mov     rdx, QWORD PTR [rbx + i*8]
-        mulx    rdi, rsi, rdx
-        adc     QWORD PTR [rbp + i*16], rsi
-        adc     QWORD PTR [rbp + i*16 + 8], rdi
+    mov     rdx, QWORD PTR [rbx + i * 8]
+    mulx    rdi, rsi, rdx
+    adc     QWORD PTR [rbp + i * 16], rsi
+    adc     QWORD PTR [rbp + i * 16 + 8], rdi
         
-        i = i + 1
-    ENDM
+    i = i + 1
+ENDM
 
     lea     rbp, [rbp + 64]
     lea     rbx, [rbx + 32]
