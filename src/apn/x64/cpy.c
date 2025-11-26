@@ -1,5 +1,8 @@
 #include "../../../include/apac.h"
 
+#if defined(__GNUC__)
+__attribute__((target("avx512f,bmi2")))
+#endif
 void cpy_avx512f_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
 	apn_size_t blocks = size & ((apn_size_t)(-32)); // first process blocks of 32 limbs
@@ -44,6 +47,9 @@ void cpy_avx512f_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t siz
 	return;
 }
 
+#if defined(__GNUC__)
+__attribute__((target("avx512f,bmi2")))
+#endif
 void cpy_avx512f_2unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
 	apn_size_t blocks = size & ((apn_size_t)(-16)); // first process blocks of 16 limbs
@@ -76,6 +82,9 @@ void cpy_avx512f_2unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t siz
 	return;
 }
 
+#if defined(__GNUC__)
+__attribute__((target("avx")))
+#endif
 void cpy_avx_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
 	apn_size_t blocks = size & ((apn_size_t)(-16));  // first process blocks of 16 limbs
@@ -109,6 +118,9 @@ void cpy_avx_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 	}
 }
 
+#if defined(__GNUC__)
+__attribute__((target("avx")))
+#endif
 void cpy_avx_2unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
 	apn_size_t blocks = size & ((apn_size_t)(-8));  // first process blocks of 8 limbs
@@ -134,6 +146,9 @@ void cpy_avx_2unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 	}
 }
 
+#if defined(__GNUC__)
+__attribute__((target("sse2")))
+#endif
 void cpy_sse2_4unroll(apn_seg_t* result, const apn_seg_t* op1, apn_size_t size)
 {
 	apn_size_t blocks = size & ((apn_size_t)(-8));	// first process blocks of 8 limbs

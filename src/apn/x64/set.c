@@ -1,5 +1,8 @@
 #include "../../../include/apac.h"
 
+#if defined(__GNUC__)
+__attribute__((target("avx512f,bmi2")))
+#endif
 void set_avx512f_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m512i my_val = _mm512_set1_epi64(val);
@@ -27,6 +30,9 @@ void set_avx512f_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 	return;
 }
 
+#if defined(__GNUC__)
+__attribute__((target("avx512f,bmi2")))
+#endif
 void set_avx512f_2unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m512i my_val = _mm512_set1_epi64(val);
@@ -51,6 +57,9 @@ void set_avx512f_2unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 	return;
 }
 
+#if defined(__GNUC__)
+__attribute__((target("avx")))
+#endif
 void set_avx_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m256i my_val = _mm256_set1_epi64x(val);
@@ -77,6 +86,9 @@ void set_avx_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 	return;
 }
 
+#if defined(__GNUC__)
+__attribute__((target("avx")))
+#endif
 void set_avx_2unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m256i my_val = _mm256_set1_epi64x(val);
@@ -101,6 +113,9 @@ void set_avx_2unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 	return;
 }
 
+#if defined(__GNUC__)
+__attribute__((target("sse2")))
+#endif
 void set_sse2_4unroll(apn_seg_t* result, apn_size_t size, apn_seg_t val)
 {
 	__m128i my_val = _mm_set1_epi64x(val);
