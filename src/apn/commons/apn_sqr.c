@@ -13,9 +13,9 @@ apac_err apn_sqr(
 {
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
-	APAC_ASSERT(result != op1);
 	APAC_ASSERT(size != 0);
-
+	APAC_ASSERT((result >= (op1 + size * 8)) || (op1 >= (result + size * 16)));
+	
 	apn_set(result, 2 * size, 0);
 
 	if (size < KARATSUBA_SQR_THRESHOLD)

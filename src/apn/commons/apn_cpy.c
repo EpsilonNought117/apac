@@ -11,10 +11,9 @@ void apn_cpy(
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
-	APAC_ASSERT(result != op1);
+	APAC_ASSERT((result <= op1) || (result >= (op1 + size * 8)));
 	APAC_ASSERT(curr_cpu.apn_cpy_ptr != NULL);
 
 	curr_cpu.apn_cpy_ptr(result, op1, size);
-
 	return;
 }

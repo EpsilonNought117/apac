@@ -27,7 +27,6 @@ apn_seg_t apn_sub(
 	apn_size_t size2
 )
 {
-	APAC_ASSERT(size1 != 0);
 	APAC_ASSERT(size2 != 0);
 	APAC_ASSERT(size1 >= size2);
 	APAC_ASSERT(result != NULL);
