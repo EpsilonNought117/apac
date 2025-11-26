@@ -11,7 +11,7 @@ void apn_karatsuba_sqr(
 	/*
 		Read apn_karatsuba_mul_balanced code to understand this
 		Essentially the same except op1 = op2
-		Avoids few O(n) ops compared to Basecase Mul
+		Avoids few O(n) ops compared to Karatsuba Balanced Multiplication
 	*/
 
 	APAC_ASSERT(temp != NULL);

@@ -5,6 +5,7 @@
 *	TO DO:
 *		1) Write a verion with apn_cmp instead of apn_negate
 *		2) Compare performance gains/loss
+* 
 */
 
 void apn_karatsuba_mul_balanced(
