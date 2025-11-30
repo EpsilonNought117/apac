@@ -32,6 +32,7 @@ submul_one_zen4 PROC FRAME
 
 start_of_func:
 
+    xor     r9,  r9
     xchg    r10, rcx    ; r10 <- result_ptr
     xchg    r11, rdx    ; r11 <- op1_ptr
     mov     rcx, r8     ; rcx <- size
@@ -82,12 +83,10 @@ remainder_loop:
 
 end_of_loop:
 
-    sbb     QWORD PTR [r10], r9
+    adc     r9,  0
+    mov     rax, r9
 
 end_of_func:
-
-    setc    al
-    movzx   rax, al
     
     pop     rsi
     pop     rdi
@@ -148,14 +147,10 @@ main_loop:
     lea     r11, [r11 + 8]
     loop    main_loop
 
-end_of_loop:
-
-    sbb     QWORD PTR [r10], rdx
-
 end_of_func:
 
-    setc    al
-    movzx   rax, al
+    adc     rbx, 0
+    mov     rax, rbx
 
     pop     rsi
     pop     rdi

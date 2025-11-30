@@ -30,6 +30,12 @@ addmul_one_zen4 PROC FRAME
 .pushreg    rbp
 .endprolog
 
+    xor     rax, rax
+    dec     r8          ; final limb's will be handled separately
+                        ; user should ensure by debug mode builds
+                        ; that r8 is never zero
+start_of_func:
+
     xchg    rbp, rcx
     xchg    rbx, rdx
     mov     rcx, r8
@@ -41,7 +47,7 @@ addmul_one_zen4 PROC FRAME
     test    rcx, rcx
     jz      before_remainder
     
-ALIGN 16
+ALIGN 64
 unroll8_loop:
 
 i = 0
@@ -69,7 +75,7 @@ before_remainder:
     mov     r8,  0
     jrcxz   end_of_loop
 
-ALIGN 16
+ALIGN 32
 remainder_loop:
 
     mulx    r11, r10, QWORD PTR [rbx]
@@ -84,10 +90,12 @@ remainder_loop:
 
 end_of_loop:
 
-    adcx    rax, r8
-    mov     QWORD PTR [rbp], rax
-    seto    al
-    movzx   rax, al
+    mulx    r11, r10, QWORD PTR [rbx]
+    adcx    r10, rax
+    adox    r11, rcx                    ; rcx is zero by now
+    mov     QWORD PTR [rbp], r10
+    adc     r11, rcx
+    mov     rax, r11
 
 end_of_func:
 
@@ -146,14 +154,10 @@ main_loop:
     lea     r11, [r11 + 8]
     loop    main_loop
 
-end_of_loop:
-
-    adc     QWORD PTR [r10], rdx
-
 end_of_func:
-    
-    setc    al
-    movzx   rax, al
+
+    adc     rdx, 0
+    mov     rax, rdx
 
     pop     rsi
     pop     rdi
