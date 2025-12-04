@@ -83,10 +83,12 @@ remainder_loop:
 
 end_of_loop:
 
-    adc     r9,  0
-    mov     rax, r9
+    sbb     QWORD PTR [rbp], r9
 
 end_of_func:
+
+    setc    al
+    movzx   rax, al
     
     pop     rsi
     pop     rdi
@@ -147,10 +149,14 @@ main_loop:
     lea     r11, [r11 + 8]
     loop    main_loop
 
+end_of_loop:
+
+    sbb     QWORD PTR [rbp], rbx
+
 end_of_func:
 
-    adc     rbx, 0
-    mov     rax, rbx
+    setc    al
+    movzx   rax, al
 
     pop     rsi
     pop     rdi
