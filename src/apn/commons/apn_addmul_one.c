@@ -15,6 +15,6 @@ apn_seg_t apn_addmul_one(
 	APAC_ASSERT((result <= op1) || (result >= (op1 + size)));
 	APAC_ASSERT(curr_cpu.apn_addmul_one_ptr != NULL);
 
-	apn_seg_t out = curr_cpu.apn_addmul_one_ptr(result, op1, size, val);
-	return out;
+	apn_seg_t out_val = curr_cpu.apn_addmul_one_ptr(result, op1, size, val);
+	return out_val;
 }
