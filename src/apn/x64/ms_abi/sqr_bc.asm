@@ -21,6 +21,7 @@ SQR_BASECASE SEGMENT ALIGN(64) 'CODE'
 ;
 ;   -------------------------
 
+;   Optimized routine for AMD Zen 4
 
 sqr_bc_zen4 PROC FRAME
 
@@ -138,56 +139,57 @@ outer_loop_end_pass1:
 
 pass2_start:
 
-    dec     r8
     mov     r11, r8
-    mov     r10, r8
-    mov     rcx, r8
-    mov     r9,  r8
-    inc     r8
+    dec     r11
     shl     r11, 3
-    shl     r10, 4
     sub     rbx, r11
-    sub     rbp, r10
+
+    ; now op1 ptr is back to it's original address
+    ; from the start of the function
+
+    shr     r11, 2
+    mov     r9,  r11
+    mov     rcx, r11
+    and     r9,  3
     shr     rcx, 2
-    and     r9,  3  
     test    rcx, rcx
     jz      before_rmdr_pass2
 
-ALIGN 16
+ALIGN 64
 loop_unroll_pass2:
 
 i = 0
-WHILE i LT 8
+WHILE i LT 4
+    
+    mov     r10, QWORD PTR [rbp - i * 8 - 8]
+    shld    QWORD PTR [rbp - i * 8], r10, 1
         
-    rcl     QWORD PTR [rbp + i * 8], 1
-    rcl     QWORD PTR [rbp + i * 8 + 8], 1
-        
-    i = i + 2
+    i = i + 1
 ENDM
 
-    lea     rbp, [rbp + 64]
+    lea     rbp, [rbp - 32]
     dec     rcx
     jnz     loop_unroll_pass2
 
+ALIGN 16
 before_rmdr_pass2:
 
     mov     rcx, r9
     jrcxz   pass2_end
 
-ALIGN 16
+ALIGN 32
 loop_rmdr_pass2:
 
-    rcl     QWORD PTR [rbp], 1
-    rcl     QWORD PTR [rbp + 8], 1
+    mov     r10, QWORD PTR [rbp - 8]
+    shld    QWORD PTR [rbp], r10, 1
     
-    lea     rbp, [rbp + 16]
+    lea     rbp, [rbp - 8]
     dec     rcx
     jnz     loop_rmdr_pass2
     
 pass2_end:
 
-    rcl     QWORD PTR [rbp], 1
-    sub     rbp, r10
+    shl     QWORD PTR [rbp], 1
     sub     rbp, 8
 
     ; now rbp is pointing to first seg of result_arr
