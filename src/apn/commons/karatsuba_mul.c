@@ -17,6 +17,7 @@ void apn_karatsuba_mul_balanced(
 )
 {
 	APAC_ASSERT(temp != NULL);
+	APAC_ASSERT((temp + 2 * size + 63) != NULL);
 
 	if (size < KARATSUBA_MUL_BALANCED_THRESHOLD)
 	{
@@ -28,7 +29,7 @@ void apn_karatsuba_mul_balanced(
 	}
 
 	apn_size_t lower = (size + 1) >> 1;	// upper half of the operands
-	apn_size_t upper = size >> 1;			// lower half of the operands
+	apn_size_t upper = size >> 1;		// lower half of the operands
 
 	// the lower half is at most 1 limb larger than upper half
 	// (size + 1) / 2 = ceil(size / 2)
@@ -101,6 +102,7 @@ void apn_karatsuba_mul_unbalanced(
 )
 {
 	APAC_ASSERT(temp != NULL);
+	APAC_ASSERT((temp + 2 * size1 + 63) != NULL);
 	APAC_ASSERT(size1 >= size2);
 
 	if ((size2 <= ((size1 + 1) >> 1)) || (size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD))
