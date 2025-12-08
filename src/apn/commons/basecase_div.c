@@ -9,7 +9,7 @@
 
 #endif
 
-void apn_basecase_div_rem(
+void apn_basecase_div(
     apn_seg_t* quotient,
     apn_seg_t* dividend,
     const apn_seg_t* divisor,
@@ -20,9 +20,18 @@ void apn_basecase_div_rem(
     APAC_ASSERT(size_dvsr >= 2);
     APAC_ASSERT(size_divd > size_dvsr); // this guarantess the dividend has at least 3 segments
     APAC_ASSERT((divisor[size_dvsr - 1] & (1ULL << 63)) != NULL);
-
+    
     apn_size_t m = size_divd - size_dvsr;
     apn_size_t n = size_dvsr;
+
+    int cmp_res = apn_cmp(dividend + m, divisor, n);
+    
+    if (cmp_res != -1)
+    {
+        apn_sub_n(dividend + m, dividend + m, divisor, n);
+        quotient[m] = 1ULL;
+    }
+
     apn_seg_t dvsr1 = divisor[n - 1];
     apn_seg_t dvsr0 = divisor[n - 2];
     apn_seg_t dvsr_recip = recip_word_3by2_x64(dvsr1, dvsr0);
