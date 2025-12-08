@@ -1,6 +1,13 @@
 #include "hidden_div.h"
 #include "hidden_helpers.h"
-#include "../x64/x64_hidden_funcs.h"
+
+#if defined(_M_X64)     || defined(_M_AMD64)    || \
+    defined(__x86_64)   || defined(__amd64)     || \
+    defined(__x86_64__) || defined(__amd64__)
+
+    #include "../x64/x64_hidden_funcs.h"
+
+#endif
 
 void apn_basecase_div_rem(
     apn_seg_t* quotient,
