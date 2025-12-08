@@ -10,7 +10,7 @@
 
 #endif
 
-apac_err apn_div_rem_one(
+apac_err apn_div_one(
     apn_seg_t* quotient,    // must be (size_divd) length
     apn_seg_t* remainder,
     const apn_seg_t* dividend,
