@@ -5,11 +5,12 @@
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-apn_seg_t udiv21_quot_x64(
+apn_seg_t udiv21_x64(
 	apn_seg_t divd1,
 	apn_seg_t divd0,
 	apn_seg_t dvsr,
-	apn_seg_t recip
+	apn_seg_t recip,
+	apn_seg_t* rmdr
 )
 {
 	APAC_ASSERT(divd1 < dvsr);
@@ -51,6 +52,7 @@ apn_seg_t udiv21_quot_x64(
 	}
 
 	uint64_t q1 = q[1];
+	*rmdr = (apn_seg_t)r;
 
 #elif defined(__GNUC__) || defined(__clang__)
 
@@ -80,6 +82,8 @@ apn_seg_t udiv21_quot_x64(
 		r -= dvsr;
 	}
 
+	*rmdr = (apn_seg_t)r;
+
 #else
 	#error "Unknown Compiler!"
 #endif
@@ -100,6 +104,9 @@ apn_seg_t udiv32_quot_x64(
 	apn_seg_t recip
 )
 {
+	APAC_ASSERT((dvsr1 > divd2) || (dvsr1 == divd2 && dvsr0 > divd1));
+	APAC_ASSERT(dvsr1 & (1ULL << 63));
+
 	// <u2, u1, u0> = <divd2, divd1, divd0>
 	// <d1, d0> = <dvsr1, dvsr0>
 	// v = recip

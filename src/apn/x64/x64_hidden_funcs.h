@@ -252,11 +252,12 @@ extern apn_seg_t recip_word_3by2_x64(
 	apn_seg_t dvsr0
 );
 
-extern apn_seg_t udiv21_quot_x64(
+extern apn_seg_t udiv21_x64(
 	apn_seg_t divd1,
 	apn_seg_t divd0,
 	apn_seg_t dvsr,
-	apn_seg_t recip
+	apn_seg_t recip,
+	apn_seg_t* rmdr
 );
 
 extern apn_seg_t udiv32_quot_x64(
