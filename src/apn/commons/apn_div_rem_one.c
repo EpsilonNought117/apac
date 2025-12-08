@@ -72,6 +72,8 @@ apac_err apn_div_rem_one(
         shift_to_normalize = 1;
     }
 
+    // actual computation begins here xD
+
     apn_seg_t v = recip_word_2by1_x64(divisor64);
     apn_seg_t rmdr = temp_divd[size_divd];
 
