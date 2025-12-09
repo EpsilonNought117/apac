@@ -112,7 +112,7 @@ apn_seg_t recip_word_2by1_x64(apn_seg_t dvsr)
     temp = v2 << 31;
     apn_seg_t v3 = high64 + temp; // this might overflow, but we only need lower 64-bits
     
-    low64 = _umul128(v3 + 1ULL, dvsr, high64);
+    low64 = _umul128(v3 + 1ULL, dvsr, &high64);
     high64 += dvsr;
     apn_seg_t v4 = v3 - high64;
 
