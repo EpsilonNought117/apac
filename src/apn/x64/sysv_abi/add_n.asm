@@ -1,10 +1,8 @@
-
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
 #   |                   BALANCED ADDITION FUNCS (N LIMBS)                       |
 #   |                                                                           |
 #   O---------------------------------------------------------------------------O
-
 
     #   Function Arguments
     #
@@ -21,15 +19,15 @@
 .type  add_n_zen4, @function
 
 add_n_zen4:
-.cfi_startproc
+    .cfi_startproc
 
     xor     rax, rax
     mov     r11, rcx        # r11 = size
     shr     rcx, 2          # rcx = size / 4
     and     r11, 3          # r11 = size % 4
-    jz      L_after_small
+    jz      2f
 
-L_small_loop:
+1:  # small remainder loop
     mov     rax, [rsi]
     adc     rax, [rdx]
     mov     [rdi], rax
@@ -39,22 +37,20 @@ L_small_loop:
     lea     rdi, [rdi + 8]
 
     dec     r11
-    jnz     L_small_loop
+    jnz     1b
 
-L_after_small:
-    
+2:  # after small loop
     setc    al
     test    rcx, rcx
     bt      ax, 0
-    jz      L_ret_zen4
+    jz      4f
 
-L_unrolled:
-    
-.macro UNROLL4 base
-    mov     rax, [rsi + \base]
-    adc     rax, [rdx + \base]
-    mov     [rdi + \base], rax
-.endm
+3:  # unrolled loop
+    .macro UNROLL4 base
+        mov     rax, [rsi + \base]
+        adc     rax, [rdx + \base]
+        mov     [rdi + \base], rax
+    .endm
 
     UNROLL4 0
     UNROLL4 8
@@ -66,25 +62,22 @@ L_unrolled:
     lea     rdi, [rdi + 32]
 
     dec     rcx
-    jnz     L_unrolled
+    jnz     3b
 
-
-L_ret_zen4:
-
+4:  # return
     setc    al
     movzx   rax, al
     ret
 
-.cfi_endproc
+    .cfi_endproc
 .size add_n_zen4, .-add_n_zen4
-
 
 add_n_x64:
     .cfi_startproc
 
     xor     rax, rax
 
-L_loop_x64:
+1:  # simple loop
     mov     rax, [rsi]
     adc     rax, [rdx]
     mov     [rdi], rax
@@ -94,11 +87,11 @@ L_loop_x64:
     lea     rdi, [rdi + 8]
 
     dec     rcx
-    jnz     L_loop_x64
+    jnz     1b
 
     .p2align 4
 
-L_done_x64:
+2:
     setc    al
     movzx   rax, al
     ret

@@ -19,15 +19,15 @@
 .type  sub_n_zen4, @function
 
 sub_n_zen4:
-    .cfi_startproc
+.cfi_startproc
 
     xor     rax, rax
     mov     r11, rcx            # r11 = size
     shr     rcx, 2              # rcx = size / 4
     and     r11, 3              # r11 = size % 4
-    jz      L_sub_after_small
+    jz      2f
 
-L_sub_small_loop:
+1:  # small remainder loop
     mov     rax, [rsi]
     sbb     rax, [rdx]
     mov     [rdi], rax
@@ -37,21 +37,21 @@ L_sub_small_loop:
     lea     rdi, [rdi + 8]
 
     dec     r11
-    jnz     L_sub_small_loop
+    jnz     1b
 
-L_sub_after_small:
+2:  # after small loop
     setc    al
     test    rcx, rcx
     bt      ax, 0
-    jz      L_sub_return
+    jz      4f
 
-.macro SUB4 base
-    mov     rax, [rsi + \base]
-    sbb     rax, [rdx + \base]
-    mov     [rdi + \base], rax
-.endm
+3:  # unrolled loop
+    .macro SUB4 base
+        mov     rax, [rsi + \base]
+        sbb     rax, [rdx + \base]
+        mov     [rdi + \base], rax
+    .endm
 
-L_sub_unrolled:
     SUB4 0
     SUB4 8
     SUB4 16
@@ -62,22 +62,22 @@ L_sub_unrolled:
     lea     rdi, [rdi + 32]
 
     dec     rcx
-    jnz     L_sub_unrolled
+    jnz     3b
 
-L_sub_return:
+4:  # return
     setc    al
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size sub_n_zen4, .-sub_n_zen4
 
 sub_n_x64:
-    .cfi_startproc
+.cfi_startproc
 
     xor     rax, rax
 
-L_sub_loop_x64:
+1:  # simple loop
     mov     rax, [rsi]
     sbb     rax, [rdx]
     mov     [rdi], rax
@@ -87,14 +87,14 @@ L_sub_loop_x64:
     lea     rdi, [rdi + 8]
 
     dec     rcx
-    jnz     L_sub_loop_x64
+    jnz     1b
 
     .p2align 4
 
-L_sub_done_x64:
+2:  # return
     setc    al
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size sub_n_x64, .-sub_n_x64
