@@ -5,7 +5,7 @@
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-apn_seg_t udiv21_x64(
+inline apn_seg_t udiv21_x64(
 	apn_seg_t divd1,
 	apn_seg_t divd0,
 	apn_seg_t dvsr,
@@ -73,7 +73,7 @@ apn_seg_t udiv21_x64(
 	if (r > q0)
 	{
 		q1--;
-		r = (uint64_t)((__uuint128_t)r + dvsr);
+		r = (uint64_t)((__uint128_t)r + dvsr);
 	}
 
 	if (r >= dvsr)
@@ -95,7 +95,7 @@ apn_seg_t udiv21_x64(
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-apn_seg_t udiv32_quot_x64(
+inline apn_seg_t udiv32_quot_x64(
 	apn_seg_t divd2,
 	apn_seg_t divd1,
 	apn_seg_t divd0,
