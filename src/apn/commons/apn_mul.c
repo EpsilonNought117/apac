@@ -2,10 +2,11 @@
 #include "apn_thresholds.h"
 #include "hidden_mul.h"
 
-#define KARATSUBA_MUL_BALANCED_WS_SIZE(size)			\
-		(size * 2 + 64)		// scratch workspace size of balanced karatsuba
-#define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2)	\
-		(size1 * 2 + 64)	// scratch workspace size of unbalanced karatsuba
+// scratch workspace size of balanced karatsuba
+#define KARATSUBA_MUL_BALANCED_WS_SIZE(size) ((size + 32) * 2)
+
+// scratch workspace size of unbalanced karatsuba
+#define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2) ((size1 + 32) * 2)
 
 apac_err apn_mul_n(
 	apn_seg_t* result, 
@@ -44,7 +45,7 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_mul_balanced(result, op1, op2, size, workspace);
-		apac_free(workspace);
+		apac_free(workspace);	// free temporary workspace
 	}
 
 	return APAC_OK;
@@ -69,7 +70,17 @@ apac_err apn_mul(
 	// zero out result before mul
 	apn_set(result, size1 + size2, 0);
 
-	if (size2 <= ((size1 + 1) >> 1) || size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD)
+	if (size2 == 1)
+	{
+		apn_seg_t carry = apn_addmul_one(result, op1, size1, op2[0]);
+		APAC_ASSERT(carry == 0);
+	}
+	else if (size1 == size2)
+	{
+		apac_err ret_val = apn_mul_n(result, op1, op2, size1);
+		return ret_val;
+	}
+	else if (size2 <= ((size1 + 1) >> 1) || size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size1, size2);
 	}
@@ -89,7 +100,7 @@ apac_err apn_mul(
 		apn_set(workspace, ws_size, 0);
 		
 		apn_karatsuba_mul_unbalanced(result, op1, op2, size1, size2, workspace);
-		apac_free(workspace);
+		apac_free(workspace);	// free temporary workspace
 	}
 
 	return APAC_OK;
