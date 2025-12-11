@@ -10,9 +10,8 @@
 
 #endif
 
-apac_err apn_div_one(
+apn_seg_t apn_div_one(
     apn_seg_t* quotient,    // must be (size_divd) length
-    apn_seg_t* remainder,
     const apn_seg_t* dividend,
     apn_seg_t divisor64,
     apn_size_t size_divd
@@ -20,68 +19,59 @@ apac_err apn_div_one(
 {
     APAC_ASSERT(quotient != NULL);
     APAC_ASSERT(dividend != NULL);
-    APAC_ASSERT(remainder != NULL);
     APAC_ASSERT(size_divd != 0);
     APAC_ASSERT((quotient >= (dividend + size_divd)) || ((quotient + size_divd) <= dividend));
     APAC_ASSERT(divisor64 != 0);
+
+    apn_seg_t rmdr = 0ULL;
 
     if (size_divd == 1)
     {
         if (divisor64 > dividend[0])
         {
             quotient[0] = 0ULL;
-            *remainder = dividend[0];
+            rmdr = dividend[0];
         }
         else if (divisor64 == dividend[0])
         {
             quotient[0] = 1ULL;
-            *remainder = 0ULL;
         }
         else
         {
             quotient[0] = dividend[0] / divisor64;
-            *remainder = dividend[0] % divisor64;
+            rmdr = dividend[0] % divisor64;
         }
 
-        return APAC_OK;
+        return rmdr;
     }
-
-    // unconditionally allocate extra segment
-    apn_seg_t* temp_divd = apac_malloc((size_divd + 1) * sizeof(apn_seg_t));
-
-    if (!temp_divd)
-    {
-        APAC_LOG_ERR("Memory allocation failure for temporary dividend in apn_div_rem_one!");
-        return APAC_OOM;
-    }
-    
-    apn_cpy(temp_divd, dividend, size_divd);
-    temp_divd[size_divd] = 0ULL;
 
     int shift_to_normalize = 0;         // flag if left-shift to normalize happened
-    int dvsr_msb_idx = 0;
+    int shift_val = 0;
 
     if (!(divisor64 & (1ULL << 63)))
     {
-        dvsr_msb_idx = CLZ64(divisor64);
-        APAC_ASSERT(dvsr_msb_idx != -1);
+        shift_val = CLZ64(divisor64);
+        APAC_ASSERT(shift_val != -1);
 
-        divisor64 <<= (apn_seg_t)63 - dvsr_msb_idx;
+        divisor64 <<= (apn_size_t)shift_val;
 
-        temp_divd[size_divd] = apn_lshift(temp_divd, temp_divd, size_divd, (apn_seg_t)63 - dvsr_msb_idx);
+        rmdr = dividend[size_divd - 1] >> ((apn_size_t)64 - shift_val);
         shift_to_normalize = 1;
     }
 
     // actual computation begins here xD
 
-    apn_seg_t v = recip_word_2by1_x64(divisor64);
-    apn_seg_t rmdr = temp_divd[size_divd];
+    apn_seg_t dvsr_recip = recip_word_2by1_x64(divisor64);
+    apn_seg_t temp_val = 0;
 
-    for (apn_size_t j = size_divd - 1; j < size_divd; j++)
+    for (apn_size_t j = size_divd - 1; j >= 1; j++)
     {
-        quotient[j] = udiv21_x64(rmdr, temp_divd[j], divisor64, v, &rmdr);
+        temp_val = (dividend[j] << (apn_size_t)shift_val) | (dividend[j - 1] >> ((apn_size_t)64 - shift_val));
+        quotient[j] = udiv21_x64(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
     }
 
-    *remainder = rmdr;
-    return APAC_OK;
+    temp_val = (dividend[0] << (apn_size_t)shift_val);
+    quotient[0] = udiv21_x64(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+
+    return (rmdr >> (apn_size_t)shift_val);
 }
