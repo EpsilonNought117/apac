@@ -30,16 +30,32 @@ addmul_one_zen4 PROC FRAME
 .pushreg    rbp
 .endprolog
 
+jmp     start_of_func
+
+ALIGN 16
+jump_table:
+
+    QWORD offset end_of_loop
+    QWORD offset rem1
+    QWORD offset rem2
+    QWORD offset rem3
+    QWORD offset rem4
+    QWORD offset rem5
+    QWORD offset rem6
+    QWORD offset rem7
+
 start_of_func:
 
     xchg    rbp, rcx
     xchg    rbx, rdx
+    mov     rdx, r9
     mov     rcx, r8
     and     r8,  7
     shr     rcx, 3
 
+    lea     r9,  jump_table
+    lea     r9,  [r9 + r8 * 8]
     mov     rax, QWORD PTR [rbp]
-    mov     rdx, r9
     test    rcx, rcx
     jz      before_remainder
     
@@ -67,22 +83,24 @@ ENDM
 ALIGN 16
 before_remainder:
 
-    mov     rcx, r8
-    jrcxz   end_of_loop
+    lea     rbx, [rbx + r8 * 8]
+    lea     rbp, [rbp + r8 * 8]
+    jmp     QWORD PTR [r9]
+
+FOR i, <7, 6, 5, 4, 3, 2, 1>
 
 ALIGN 32
-remainder_loop:
+rem&i&:
 
-    mulx    r11, r10, QWORD PTR [rbx]
+    mulx    r11, r10, QWORD PTR [rbx - i * 8]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + 8]
-    mov     QWORD PTR [rbp], r10
+    adox    r11, QWORD PTR [rbp - i * 8 + 8]
+    mov     QWORD PTR [rbp - i * 8], r10
     mov     rax, r11
+        
+ENDM
 
-    lea     rbx, [rbx + 8]
-    lea     rbp, [rbp + 8]
-    loop    remainder_loop
-
+ALIGN 32
 end_of_loop:
     
     adcx    rax, rcx
