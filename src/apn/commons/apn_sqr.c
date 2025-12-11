@@ -2,8 +2,7 @@
 #include "apn_thresholds.h"
 #include "hidden_sqr.h"
 
-#define KARATSUBA_SQR_WS_SIZE(size)		\
-		(size * 2 + 64)
+#define KARATSUBA_SQR_WS_SIZE(size)	(2 * (size + 32))
 
 apac_err apn_sqr(
 	apn_seg_t* result,
