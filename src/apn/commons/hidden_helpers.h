@@ -19,7 +19,7 @@
 					({ low64 = _umul128((op1), (op2), &(high64)); })
 
 			#define CLZ64(value)	\
-					({ uint32_t _idx; _BitScanReverse64(&_idx, (value)) ? (int)_idx : -1; })
+					({ uint32_t _idx; (63 - _BitScanReverse64(&_idx, (value))) ? (int)_idx : -1; })
 
 		#elif defined(_M_ARM64) || defined(_M_ARM64EC)
 		
@@ -45,7 +45,7 @@
 				({ result = __builtin_addcll((op1), (op2), (carry), &(carry)); })
 
 		#define CLZ64(value)	\
-				((value) ? (63 - __builtin_clzll(value)) : -1)
+				((value) ? (__builtin_clzll(value)) : -1)
 
 		#define UMUL128(op1, op2, low64, high64)					\
 				({													\
@@ -56,8 +56,8 @@
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
-
 		
+			
 		#elif defined(__aarch64__) || defined(__arm64__)
 
 		#else
