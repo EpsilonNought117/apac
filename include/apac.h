@@ -179,7 +179,7 @@ typedef struct apac_cpu_params
 	apn_size_t karatsuba_mul_balanced_threshold;
 	apn_size_t karatsuba_mul_unbalanced_threshold;
 	apn_size_t karatsuba_sqr_threshold;
-    apn_size_t rec_dnc_div_rem_threshold;   // recursive divide-&-conquer division threshold
+    apn_size_t dnc_div_threshold;   // recursive divide-&-conquer division threshold
 
 	apn_seg_t(*apn_add_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
 	apn_seg_t(*apn_sub_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
@@ -735,7 +735,7 @@ APAC_API void apn_set(
  *     Number of segments to compare.
  *
  * @return int
- *     0 if equal, >0 if `op1 > op2`, <0 if `op1 < op2`.
+ *     0 if equal, 1 if `op1 > op2`, -1 if `op1 < op2`.
  */
 APAC_API int apn_cmp(
     const apn_seg_t* op1,
@@ -772,7 +772,7 @@ APAC_API int apn_cmp(
  * @return apac_err
  *     Error code indicating success or failure.
  */
-APAC_API apac_err apn_div_rem(
+APAC_API apac_err apn_div(
     apn_seg_t* quotient,
     apn_seg_t* remainder,
     const apn_seg_t* dividend,
@@ -791,9 +791,6 @@ APAC_API apac_err apn_div_rem(
  * @param[out] quotient
  *     Array receiving the quotient.
  *
- * @param[out] remainder
- *     Single-segment remainder.
- *
  * @param[in] dividend
  *     Dividend array (length = size_divd).
  *
@@ -803,12 +800,11 @@ APAC_API apac_err apn_div_rem(
  * @param[in] size_divd
  *     Number of segments in dividend.
  *
- * @return apac_err
- *     Error code indicating success or failure.
+ * @return apn_seg_t
+ *     Single-segment remainder.
  */
-APAC_API apac_err apn_div_rem_one(
+APAC_API apn_seg_t apn_div_one(
     apn_seg_t* quotient,
-    apn_seg_t* remainder,
     const apn_seg_t* dividend,
     apn_seg_t divisor64,
     apn_size_t size_divd
