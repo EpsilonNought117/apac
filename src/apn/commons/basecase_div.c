@@ -9,7 +9,7 @@
 
 #endif
 
-void apn_basecase_div(
+apn_seg_t apn_basecase_div(
     apn_seg_t* quotient,
     apn_seg_t* dividend,
     const apn_seg_t* divisor,
@@ -23,13 +23,14 @@ void apn_basecase_div(
     
     apn_size_t m = size_divd - size_dvsr;
     apn_size_t n = size_dvsr;
+    apn_seg_t q_msd = 0ULL;
 
     int cmp_res = apn_cmp(dividend + m, divisor, n);
     
-    if (cmp_res != -1)
+    if (cmp_res != -1)  // dividend >= (divisor * B ^ m) where B is (2 ^ 64)
     {
         apn_sub_n(dividend + m, dividend + m, divisor, n);
-        quotient[m] = 1ULL;
+        q_msd = 1ULL;
     }
 
     apn_seg_t dvsr1 = divisor[n - 1];
@@ -46,17 +47,17 @@ void apn_basecase_div(
                                 dvsr0,
                                 dvsr_recip
                             );
-        apn_seg_t out_val = apn_submul_one(dividend + j, divisor, n, sel_quot);
+        apn_seg_t borrow_out = apn_submul_one(dividend + j, divisor, n, sel_quot);
 
-        if (out_val)
+        if (borrow_out)
         {
             sel_quot--;
-            apn_seg_t carry_out = apn_add_n(dividend + j, dividend + j, divisor, n);
+            apn_seg_t carry_out = apn_add(dividend + j, dividend + j, divisor, size_divd - j, n);
             dividend[n + j] += carry_out;
         }
     
         quotient[j] = sel_quot;
     }
 
-    return;
+    return q_msd;
 }
