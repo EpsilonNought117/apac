@@ -83,6 +83,13 @@ apn_seg_t apn_dnc_div_balanced(
 
     borrow_out = apn_sub_n(dividend, dividend, temp, n + 1);
     APAC_ASSERT(borrow_out == 0);
+    
+    // this could happen in some pathological cases
+    if (q0_msd)
+    {
+        apn_seg_t carry_out = apn_add_one(q1, q1, m - k, q0_msd);
+        APAC_ASSERT(carry_out == 0);
+    }
 
     apn_set(temp, n + 1, 0ULL);
 
