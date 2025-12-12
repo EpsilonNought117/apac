@@ -12,13 +12,34 @@
 * 6) No size arguments can be zero
 * 7) size_divd should always be greater than or equal to size_dvsr
 * 8) Most significant segment of divisor should be non-zero
+* 9) Returns MSD of quotient
 */
-void apn_basecase_div_rem(
+apn_seg_t apn_basecase_div(
     apn_seg_t* quotient,
     apn_seg_t* dividend,
     const apn_seg_t* divisor,
     apn_size_t size_divd,
     apn_size_t size_dvsr
+);
+
+// dnc = divide-n-conquer
+apn_seg_t apn_dnc_div_balanced(
+    apn_seg_t* quotient,
+    apn_seg_t* dividend,
+    const apn_seg_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_dvsr,
+    apn_seg_t* temp
+);
+
+// divide-n-conquer unbalanced
+apn_seg_t apn_dnc_div_unbalanced(
+    apn_seg_t* quotient,
+    apn_seg_t* dividend,
+    const apn_seg_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_dvsr,
+    apn_seg_t* temp
 );
 
 #endif

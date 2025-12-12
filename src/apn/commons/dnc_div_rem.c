@@ -2,7 +2,7 @@
 #include "apn_thresholds.h"
 
 apn_seg_t apn_dnc_div_balanced(
-    apn_seg_t* quotient,
+    apn_seg_t* quotient,    // assume (size_divd - size_dvsr) digits in quotient
     apn_seg_t* dividend,
     const apn_seg_t* divisor,
     apn_size_t size_divd,
@@ -92,6 +92,52 @@ apn_seg_t apn_dnc_div_balanced(
     }
 
     apn_set(temp, n + 1, 0ULL);
+
+    return q1_msd;
+}
+
+apn_seg_t apn_dnc_div_unbalanced(
+    apn_seg_t* quotient,    // assume (size_divd - size_dvsr) digits in quotient
+    apn_seg_t* dividend,
+    const apn_seg_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_dvsr,
+    apn_seg_t* temp
+)
+{
+    APAC_ASSERT(temp != NULL);
+    APAC_ASSERT((temp + size_divd) != NULL);    // temp is of size (size_divd + 1)
+    APAC_ASSERT(size_dvsr < size_divd);
+    APAC_ASSERT(size_dvsr < (size_divd - size_dvsr)); // m > n
+
+    apn_size_t m = size_divd - size_dvsr;
+    apn_size_t orig_m = m;
+    apn_size_t n = size_dvsr;
+    apn_seg_t q_msd = 0;
+
+    apn_seg_t* q_curr = quotient + m - n;
+    apn_seg_t q1_msd = apn_dnc_div_balanced(q_curr, dividend + m - n, divisor, 2 * n, n, temp);
+
+    m -= n;
+
+    while (m > n)
+    {
+        q_curr = quotient + m - n;
+        q_msd = apn_dnc_div_balanced(q_curr, dividend + m - n, divisor, 2 * n, n, temp);
+        
+        if (q_msd)
+        {
+            q_msd = apn_add_one(q_curr + n, q_curr + n, orig_m + 1 - m, q_msd);
+            APAC_ASSERT(q_msd == 0);
+        }
+
+        m -= n;
+    }
+
+    q_msd = apn_dnc_div_balanced(quotient, dividend, divisor, m + n, n, temp);
+
+    q_msd = apn_add_one(quotient, quotient, orig_m + 1 - m, q_msd);
+    APAC_ASSERT(q_msd == 0);
 
     return q1_msd;
 }
