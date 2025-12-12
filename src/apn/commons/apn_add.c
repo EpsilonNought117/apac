@@ -1,5 +1,4 @@
 #include "../../../include/apac.h"
-#include "../x64/x64_hidden_funcs.h"
 
 extern apac_cpu_params curr_cpu;
 
