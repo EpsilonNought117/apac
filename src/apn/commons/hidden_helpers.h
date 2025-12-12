@@ -9,17 +9,29 @@
 
 		#if defined(_M_X64) || defined(_M_AMD64)
 
-			#define SBB64(borrow, op1, op2, result)		\
-					({ borrow = _subborrow_u64((borrow), (op1), (op2), &(result)); })
+			#define SBB64(borrow, op1, op2, result)									\
+					{																\
+						borrow = _subborrow_u64((borrow), (op1), (op2), &(result));	\
+					}
 
-			#define ADC64(carry, op1, op2, result)		\
-					({ carry = _addcarry_u64((carry), (op1), (op2), &(result)); })
+			#define ADC64(carry, op1, op2, result)									\
+					{																\
+						carry = _addcarry_u64((carry), (op1), (op2), &(result));	\
+					}
 
-			#define UMUL128(op1, op2, low64, high64)	\
-					({ low64 = _umul128((op1), (op2), &(high64)); })
+			#define UMUL128(op1, op2, low64, high64)						\
+					{														\
+						low64 = _umul128((op1), (op2), &(high64));			\
+					}
 
-			#define CLZ64(value)	\
-					({ uint32_t _idx; (63 - _BitScanReverse64(&_idx, (value))) ? (int)_idx : -1; })
+			#define CLZ64(idx, value)													\
+					{																	\
+						unsigned long _i;												\
+						if (_BitScanReverse64(&_i, (unsigned long long)(value)))        \
+							(idx) = 63 - (int)_i;										\
+						else                                                            \
+							(idx) = -1;                                                 \
+					}
 
 		#elif defined(_M_ARM64) || defined(_M_ARM64EC)
 		
@@ -38,21 +50,27 @@
 
 	#if defined(__GNUC__) || defined(__clang__)
 
-		#define SBB64(borrow, op1, op2, result)								\
-				({ result = __builtin_subcll((op1), (op2), (borrow), &(borrow)); })
+		#define SBB64(borrow, op1, op2, result)										\
+				{																	\
+					result = __builtin_subcll((op1), (op2), (borrow), &(borrow));	\
+				}
 
-		#define ADC64(carry, op1, op2, result)								\
-				({ result = __builtin_addcll((op1), (op2), (carry), &(carry)); })
+		#define ADC64(carry, op1, op2, result)										\
+				{																	\
+					result = __builtin_addcll((op1), (op2), (carry), &(carry));		\
+				}
 
-		#define CLZ64(value)	\
-				((value) ? (__builtin_clzll(value)) : -1)
+		#define CLZ64(idx, value)											\
+				{															\
+					(idx) = ((value) ? (63 - __builtin_clzll(value)) : -1);	\
+				}
 
 		#define UMUL128(op1, op2, low64, high64)					\
-				({													\
+				{													\
 					__uint128_t val = (__uint128_t)(op1) * (op2);	\
 					low64 = (apn_seg_t)(val);						\
 					high64 = (apn_seg_t)(val >> 64);				\
-				})
+				}
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
