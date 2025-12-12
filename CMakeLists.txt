@@ -10,7 +10,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(libapac)
 
-# Require 64-bit Computer
+# Requires a 64-bit Computer
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "Only 64-bit builds are supported.")
 endif()
@@ -20,26 +20,37 @@ if (WIN32)
     message(STATUS "Building on 64-bit Windows")
 
     if (MSVC)
-        message(STATUS "Compiler: MSVC/Clang-cl (version ${MSVC_VERSION})")
+        if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            message(STATUS "Compiler: Clang-cl (version ${CMAKE_C_COMPILER_VERSION})")
+
+        else ()
+            message(STATUS "Compiler: MSVC (version ${MSVC_VERSION})")
+
+        endif()
+
     else ()
         message(FATAL_ERROR "Unsupported compiler on Windows: ${CMAKE_C_COMPILER_ID}")
+
     endif()
 
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-        message(STATUS "Enabling MASM assembler")
+        message(STATUS "Enabling MASM64 assembler")
         enable_language(ASM_MASM)
+
     endif()
 
 elseif (APPLE)
     message(STATUS "Building on macOS")
 
     if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        message(STATUS "Compiler: Clang (Apple/LLVM)")
+        message(STATUS "Compiler: Clang")
+
     else ()
         message(FATAL_ERROR "Unsupported compiler on macOS: ${CMAKE_C_COMPILER_ID}")
+
     endif()
 
-    message(STATUS "Enabling GAS/LLVM-MC assembler")
+    message(STATUS "Enabling assembler")
     enable_language(ASM)
 
 elseif (UNIX)
@@ -47,13 +58,16 @@ elseif (UNIX)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         message(STATUS "Compiler: GCC")
+
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
         message(STATUS "Compiler: Clang")
+
     else ()
         message(FATAL_ERROR "Unsupported compiler on Unix/Linux: ${CMAKE_C_COMPILER_ID}")
+
     endif()
 
-    message(STATUS "Enabling GAS/LLVM-MC assembler")
+    message(STATUS "Enabling assembler")
     enable_language(ASM)
 
 else ()
@@ -78,6 +92,7 @@ set(apac_c_sources
 
     "src/misc/apacSetMemFuncs.c"
     "src/misc/apacGetCPUSpec.c"
+    "src/misc/apacInit.c"
 
     # APN PUBLIC API
 
@@ -90,14 +105,22 @@ set(apac_c_sources
     "src/apn/commons/apn_sqr.c"
     "src/apn/commons/apn_cmp.c"
     "src/apn/commons/apn_addmul_one.c"
+    "src/apn/commons/apn_submul_one.c"
+    "src/apn/commons/apn_shift.c"
+    "src/apn/commons/apn_is_equal.c"
+    "src/apn/commons/apn_is_zero.c"
+    "src/apn/commons/apn_clamp.c"
+    "src/apn/commons/apn_div.c"
+    "src/apn/commons/apn_div_one.c"
 
     # APN HIDDEN FUNCS
 
+    "src/apn/commons/basecase_div.c"
+    "src/apn/commons/dnc_div_rem.c"
     "src/apn/commons/basecase_mul.c"
     "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/basecase_sqr.c"
     "src/apn/commons/karatsuba_sqr.c"
-
 )
     
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
@@ -107,6 +130,10 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     set(x64_c_sources
         "src/apn/x64/set.c"
         "src/apn/x64/cpy.c"
+        "src/apn/x64/is_equal.c"
+        "src/apn/x64/is_zero.c"
+        "src/apn/x64/recip_word_calc.c"
+        "src/apn/x64/udiv.c"
         "src/apn/x64/cpu_params.c"
     )
 
@@ -118,22 +145,28 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/ms_abi/add_n_one.asm"
             "src/apn/x64/ms_abi/mul_bc.asm"
             "src/apn/x64/ms_abi/addmul_one.asm"
+            "src/apn/x64/ms_abi/submul_one.asm"
             "src/apn/x64/ms_abi/sqr_bc.asm"
             "src/apn/x64/ms_abi/sub_n.asm"
             "src/apn/x64/ms_abi/sub_n_one.asm"
             "src/apn/x64/ms_abi/neg.asm"
+            "src/apn/x64/ms_abi/lshift_lt64.asm"
+            "src/apn/x64/ms_abi/rshift_lt64.asm"
         )
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/sysv_abi/add_n.asm"
-            "src/apn/x64/sysv_abi/add_n_one.asm"
-            "src/apn/x64/sysv_abi/mul_bc.asm"
-            "src/apn/x64/sysv_abi/addmul_one.asm"
-            "src/apn/x64/sysv_abi/sqr_bc.asm"
-            "src/apn/x64/sysv_abi/sub_n.asm"
-            "src/apn/x64/sysv_abi/sub_n_one.asm"
-            "src/apn/x64/sysv_abi/neg.asm"
+            "src/apn/x64/ms_abi/add_n.asm"
+            "src/apn/x64/ms_abi/add_n_one.asm"
+            "src/apn/x64/ms_abi/mul_bc.asm"
+            "src/apn/x64/ms_abi/addmul_one.asm"
+            "src/apn/x64/ms_abi/submul_one.asm"
+            "src/apn/x64/ms_abi/sqr_bc.asm"
+            "src/apn/x64/ms_abi/sub_n.asm"
+            "src/apn/x64/ms_abi/sub_n_one.asm"
+            "src/apn/x64/ms_abi/neg.asm"
+            "src/apn/x64/ms_abi/lshift_lt64.asm"
+            "src/apn/x64/ms_abi/rshift_lt64.asm"
         )
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
@@ -142,6 +175,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     set(x64_specific ${x64_c_sources} ${x64_asm_sources})
 
 # --- AArch64 SPECIFIC SOURCES --------------------------------------------------
+
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 
 endif()
@@ -151,6 +185,8 @@ set(hidden_headers
     # COMMONS
     "src/apn/commons/hidden_mul.h"
     "src/apn/commons/hidden_sqr.h"
+    "src/apn/commons/hidden_div.h"
+    "src/apn/commons/hidden_helpers.h"
     "src/apn/commons/apn_thresholds.h"
 
     # x64 SPECIFIC
@@ -169,7 +205,6 @@ foreach(src_file ${apac_sources})
         COMPILE_DEFINITIONS "__FILE__=\"${file_name}\""
     )
 endforeach()
-
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 
@@ -192,7 +227,6 @@ endif()
 set(apac_target apac)
     
 # Configuration-specific definitions
-
 target_compile_definitions(${apac_target} PRIVATE
     "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
 )
