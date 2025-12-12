@@ -196,6 +196,9 @@ typedef struct apac_cpu_params
 	void (*apn_cpy_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
     void (*apn_set_ptr)(apn_seg_t*, apn_size_t, apn_seg_t);
 
+    int (*apn_is_equal_ptr)(const apn_seg_t*, const apn_seg_t*, apn_size_t);
+    int (*apn_is_zero_ptr)(const apn_seg_t*, apn_size_t);
+
 }   apac_cpu_params;
 
 /****************************************************************************************************/
@@ -230,6 +233,8 @@ typedef struct apac_cpu_params
 * 3) apn_seg_t (functions that have some computed return value such as carry/borrow out)
 * 
 * 4) int (functions that don't perform memory allocation or computation, but do comparisions)
+* 
+* 5) apn_size_t (only apn_clamp returns this)
 */
 
 /**
@@ -881,7 +886,7 @@ APAC_API apn_seg_t apn_lshift(
  *     Number of segments to compare.
  *
  * @return int
- *     Returns 1 if `op1 == op2`, 0 otherwise.
+ *     0 if `op1 == op2`, 1 otherwise.
  */
 APAC_API int apn_is_equal(
     const apn_seg_t* op1,
@@ -901,9 +906,14 @@ APAC_API int apn_is_equal(
  *     Number of segments in `op1`.
  *
  * @return int
- *     Returns 1 if `op1` is zero, 0 otherwise.
+ *     0 if `op1` is zero, 1 otherwise.
  */
 APAC_API int apn_is_zero(
+    const apn_seg_t* op1,
+    apn_size_t size
+);
+
+APAC_API apn_size_t apn_clamp(
     const apn_seg_t* op1,
     apn_size_t size
 );
