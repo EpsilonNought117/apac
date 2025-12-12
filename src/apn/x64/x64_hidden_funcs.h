@@ -155,19 +155,7 @@ extern void cpy_avx512f_4unroll(
 	apn_size_t size
 );
 
-extern void cpy_avx512f_2unroll(
-	apn_seg_t* result,
-	const apn_seg_t* op1,
-	apn_size_t size
-);
-
 extern void cpy_avx_4unroll(
-	apn_seg_t* result,
-	const apn_seg_t* op1,
-	apn_size_t size
-);
-
-extern void cpy_avx_2unroll(
 	apn_seg_t* result,
 	const apn_seg_t* op1,
 	apn_size_t size
@@ -187,19 +175,7 @@ extern void set_avx512f_4unroll(
 	apn_seg_t val
 );
 
-extern void set_avx512f_2unroll(
-	apn_seg_t* result,
-	apn_size_t size,
-	apn_seg_t val
-);
-
 extern void set_avx_4unroll(
-	apn_seg_t* result,
-	apn_size_t size,
-	apn_seg_t val
-);
-
-extern void set_avx_2unroll(
 	apn_seg_t* result,
 	apn_size_t size,
 	apn_seg_t val
@@ -252,7 +228,7 @@ extern apn_seg_t recip_word_3by2_x64(
 	apn_seg_t dvsr0
 );
 
-extern apn_seg_t udiv21_x64(
+extern inline apn_seg_t udiv21_x64(
 	apn_seg_t divd1,
 	apn_seg_t divd0,
 	apn_seg_t dvsr,
@@ -260,13 +236,50 @@ extern apn_seg_t udiv21_x64(
 	apn_seg_t* rmdr
 );
 
-extern apn_seg_t udiv32_quot_x64(
+extern inline apn_seg_t udiv32_quot_x64(
 	apn_seg_t divd2,
 	apn_seg_t divd1,
 	apn_seg_t divd0,
 	apn_seg_t dvsr1,
 	apn_seg_t dvsr0,
 	apn_seg_t recip
+);
+
+/* ------------------------- COMPARE-FOR-EQUALITY FUNCTIONS ----------------------------- */
+
+extern int is_equal_avx512f_4unroll(
+	const apn_seg_t* op1,
+	const apn_seg_t* op2,
+	apn_size_t size
+);
+
+extern int is_equal_avx2_4unroll(
+	const apn_seg_t* op1,
+	const apn_seg_t* op2,
+	apn_size_t size
+);
+
+extern int is_equal_sse2_4unroll(
+	const apn_seg_t* op1,
+	const apn_seg_t* op2,
+	apn_size_t size
+);
+
+/* ---------------------------- CHECK-IF-ZERO FUNCTION -------------------------------- */
+
+extern int is_zero_avx512f_4unroll(
+	const apn_seg_t* op1,
+	apn_size_t size
+);
+
+extern int is_zero_avx2_4unroll(
+	const apn_seg_t* op1,
+	apn_size_t size
+);
+
+extern int is_zero_sse2_4unroll(
+	const apn_seg_t* op1,
+	apn_size_t size
 );
 
 #endif
