@@ -2,14 +2,14 @@
 
 apac_cpu_params curr_cpu = { 0 };
 
+// x64/AMD64 Version
+
 #if defined(_M_X64)   || defined(_M_AMD64)   ||	\
 	defined(__x86_64) || defined(__x86_64__) ||	\
 	defined(__amd64)  || defined(__amd64__)
 
 extern void zen4_set_params(void);
 extern void generic_x64_set_params(void);
-
-// x64/AMD64 Version
 
 #if defined(_MSC_VER)
 
