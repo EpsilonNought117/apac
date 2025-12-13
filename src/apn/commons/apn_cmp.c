@@ -1,7 +1,6 @@
 #include "../../../include/apac.h"
 
-// Nothing fancy needed here
-// Avoid using this in performance critical stuff
+extern apac_cpu_params curr_cpu;
 
 int apn_cmp(
 	const apn_seg_t* op1,
@@ -12,17 +11,8 @@ int apn_cmp(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size != 0);
+	APAC_ASSERT(curr_cpu.apn_cmp_ptr != NULL);
 
-	while (size != 0)
-	{
-		if (op1[size - 1] != op2[size - 1])
-			goto not_equal;
-
-		size--;
-	}
-
-	return 0;
-
-not_equal:
-	return (op1[size - 1] > op2[size - 1] ? 1 : -1);
+	int ret_val = curr_cpu.apn_cmp_ptr(op1, op2, size);
+	return ret_val;
 }

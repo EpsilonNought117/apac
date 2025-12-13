@@ -196,7 +196,7 @@ typedef struct apac_cpu_params
 	void (*apn_cpy_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
     void (*apn_set_ptr)(apn_seg_t*, apn_size_t, apn_seg_t);
 
-    int (*apn_is_equal_ptr)(const apn_seg_t*, const apn_seg_t*, apn_size_t);
+    int (*apn_cmp_ptr)(const apn_seg_t*, const apn_seg_t*, apn_size_t);
     int (*apn_is_zero_ptr)(const apn_seg_t*, apn_size_t);
 
 }   apac_cpu_params;
@@ -870,30 +870,6 @@ APAC_API apn_seg_t apn_lshift(
     apn_size_t size,
     apn_seg_t bit_cnt
 );
-
-/**
- * @brief Check if two arbitrary-precision numbers are equal.
- *
- * Compares `op1` and `op2` (length = `size` segments each).
- *
- * @param[in] op1
- *     First number.
- *
- * @param[in] op2
- *     Second number.
- *
- * @param[in] size
- *     Number of segments to compare.
- *
- * @return int
- *     0 if `op1 == op2`, 1 otherwise.
- */
-APAC_API int apn_is_equal(
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size
-);
-
 /**
  * @brief Check if an arbitrary-precision number is zero.
  *
