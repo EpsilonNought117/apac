@@ -25,7 +25,7 @@ void zen4_set_params(void)
 	curr_cpu.apn_set_ptr = set_avx512f_4unroll;
 	curr_cpu.apn_cpy_ptr = cpy_avx512f_4unroll;
 
-	curr_cpu.apn_is_equal_ptr = is_equal_avx512f_4unroll;
+	curr_cpu.apn_cmp_ptr = cmp_avx512f_4unroll;
 	curr_cpu.apn_is_zero_ptr = is_zero_avx512f_4unroll;
 
 	return;
@@ -54,7 +54,7 @@ void generic_x64_set_params(void)
 	curr_cpu.apn_set_ptr = set_sse2_4unroll;
 	curr_cpu.apn_cpy_ptr = cpy_sse2_4unroll;
 
-	curr_cpu.apn_is_equal_ptr = is_equal_sse2_4unroll;
+	curr_cpu.apn_cmp_ptr = cmp_sse2_4unroll;
 	curr_cpu.apn_is_zero_ptr = is_zero_sse2_4unroll;
 
 	return;
