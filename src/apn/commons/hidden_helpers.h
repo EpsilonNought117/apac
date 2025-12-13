@@ -33,6 +33,15 @@
 							(idx) = -1;                                                 \
 					}
 
+			#define CTZ64(idx, value)													\
+					{																	\
+						unsigned long _i;												\
+						if (_BitScanForward64(&_i, (unsigned long long)(value)))		\
+							(idx) = _i;													\
+						else															\
+							(idx) = -1													\
+					}
+
 		#elif defined(_M_ARM64) || defined(_M_ARM64EC)
 		
 		#else
@@ -62,7 +71,12 @@
 
 		#define CLZ64(idx, value)											\
 				{															\
-					(idx) = ((value) ? (63 - __builtin_clzll(value)) : -1);	\
+					(idx) = ((value) ? (__builtin_clzll(value)) : -1);		\
+				}
+
+		#define CTZ64(idx, value)											\
+				{															\
+					(idx) = ((value) ? (__builtin_ctzll(value)) : -1);		\
 				}
 
 		#define UMUL128(op1, op2, low64, high64)					\
