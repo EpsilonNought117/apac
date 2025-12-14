@@ -14,10 +14,9 @@ void apn_cpy(
 	APAC_ASSERT(curr_cpu.apn_cpy_ptr != NULL, "apacGetCPUSpec() or apacInit() not called");
 
 	// Prevent partial overlap between result and op1.
-	// Allowed only if result is entirely before or after op1's range.
-	APAC_ASSERT((result <= op1) || (result >= op1 + size),
-		"(result) lies in the middle of (op1). Allowed only if (result) <= (op1) "
-		"or (result) >= (op1 + size)");
+	APAC_ASSERT(!(result > op1 && result < op1 + size),
+		"(result) lies in the middle of (op1). Allowed only if (result) lies beyond last address of (op1) "
+		"or (result) lies before the first address of (op1)");
 
 	curr_cpu.apn_cpy_ptr(result, op1, size);
 }
