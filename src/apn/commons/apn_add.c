@@ -15,11 +15,11 @@ apn_seg_t apn_add_n(
 	APAC_ASSERT(op2 != NULL);
 
 	APAC_ASSERT(!(result > op1 && result < op1 + size),
-		"(result) overlaps the middle of (op1). Allowed only if (result) <= (op1) "
+		"(result) lies in the middle of (op1). Allowed only if (result) <= (op1) "
 		"or (result) >= (op1 + size)");
 
 	APAC_ASSERT(!(result > op2 && result < op2 + size),
-		"(result) overlaps the middle of (op2). Allowed only if (result) <= (op2) "
+		"(result) lies in the middle of (op2). Allowed only if (result) <= (op2) "
 		"or (result) >= (op2 + size)");
 
 	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL,
@@ -46,11 +46,11 @@ apn_seg_t apn_add(
 
 	// Prevent partial overlaps with op1 and op2
 	APAC_ASSERT(!(result > op1 && result < op1 + size1),
-		"(result) overlaps the middle of (op1). Allowed only if (result) <= (op1) "
+		"(result) lies in the middle of (op1). Allowed only if (result) <= (op1) "
 		"or (result) >= (op1 + size1)");
 
 	APAC_ASSERT(!(result > op2 && result < op2 + size2),
-		"(result) overlaps the middle of (op2). Allowed only if (result) <= (op2) "
+		"(result) lies in the middle of (op2). Allowed only if (result) <= (op2) "
 		"or (result) >= (op2 + size2)");
 
 	apn_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
@@ -76,7 +76,7 @@ apn_seg_t apn_add_one(
 
 	// Prevent partial overlap between result and op1
 	APAC_ASSERT(!(result > op1 && result < op1 + size),
-		"(result) overlaps the middle of (op1). Allowed only if (result) <= (op1) "
+		"(result) lies in the middle of (op1). Allowed only if (result) <= (op1) "
 		"or (result) >= (op1 + size)");
 
 	apn_seg_t carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);

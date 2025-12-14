@@ -18,7 +18,7 @@ apn_seg_t apn_addmul_one(
 	// Prevent partial overlap between result and op1.
 	// Allowed only if result is entirely before or after op1's range.
 	APAC_ASSERT((result <= op1 - 1) || (result >= op1 + size),
-		"(result) overlaps the middle of (op1). Allowed only if (result) <= (op1 - 1) "
+		"(result) lies in the middle of (op1). Allowed only if (result) <= (op1 - 1) "
 		"or (result) >= (op1 + size)");
 
 	apn_seg_t out_val = curr_cpu.apn_addmul_one_ptr(result, op1, size, val);
