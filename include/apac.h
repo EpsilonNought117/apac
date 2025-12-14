@@ -112,16 +112,23 @@ typedef enum apac_err
  *     Condition to check.
  */
 #ifndef APAC_ALWAYS_ASSERT
-#define APAC_ALWAYS_ASSERT(x)                                                                       \
-    do                                                                                              \
-    {                                                                                               \
-        if (!(x))                                                                                   \
-        {                                                                                           \
-            fprintf(stderr, "APAC-ASSERTION FAILED!");                                              \
-            fprintf(stderr, "APAC-ASSERTION: %s\nFILE: %s\nLINE: %d\n", #x, __FILE__, __LINE__);    \
-            fprintf(stderr, "ABORTING ...");                                                        \
-            abort();                                                                                \
-        }                                                                                           \
+#define APAC_ALWAYS_ASSERT(expr, ...)                                       \
+    do                                                                      \
+    {                                                                       \
+        if (!(expr))                                                        \
+        {                                                                   \
+            fprintf(stderr, "\nAPAC ASSERTION FAILED!\n");                  \
+            fprintf(stderr, "ASSERTION: %s\n", #expr);                      \
+            fprintf(stderr, "FILE: %s\nLINE: %d\n", __FILE__, __LINE__);    \
+            if (*("" __VA_ARGS__))                                          \
+            {                                                               \
+                fprintf(stderr, "DETAILS: ");                               \
+                fprintf(stderr, "" __VA_ARGS__);                            \
+                fprintf(stderr, "\n");                                      \
+            }                                                               \
+            fprintf(stderr, "ABORTING ...\n\n");                            \
+            abort();                                                        \
+        }                                                                   \
     } while (0)
 #endif
 
@@ -135,10 +142,10 @@ typedef enum apac_err
  * @param x
  *     Condition to check.
  */
-#if !defined(APAC_DISABLE_ASSERT)
-    #define APAC_ASSERT(x) APAC_ALWAYS_ASSERT(x)
+#ifndef APAC_DISABLE_ASSERT
+    #define APAC_ASSERT(expr, ...) APAC_ALWAYS_ASSERT(expr, ...)
 #else
-    #define APAC_ASSERT(x)      
+    #define APAC_ASSERT(expr, ...)      
 #endif
 
 /**
@@ -151,7 +158,7 @@ typedef enum apac_err
  * @param x
  *     Error message or expression to log.
  */
-#define APAC_LOG_ERR(x) fprintf(stderr, "APAC ERROR: %s\n", #x); 
+#define APAC_LOG_ERR(msg) fprintf(stderr, "APAC ERROR: %s\n", msg); 
 
 /****************************************************************************************************/
 /*********************************         MISCELLANEOUS          ***********************************/
