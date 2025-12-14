@@ -143,7 +143,9 @@ typedef enum apac_err
  *     Condition to check.
  */
 #ifndef APAC_DISABLE_ASSERT
-    #define APAC_ASSERT(expr, ...) APAC_ALWAYS_ASSERT(expr, ...)
+    #ifndef APAC_ASSERT
+    #define APAC_ASSERT(expr, ...) APAC_ALWAYS_ASSERT((expr), __VA_ARGS__)
+    #endif       
 #else
     #define APAC_ASSERT(expr, ...)      
 #endif
