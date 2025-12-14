@@ -13,17 +13,9 @@ apn_seg_t apn_add_n(
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
-
-	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL,
-		"apacGetCPUSpec() or apacInit() not called");
-
-	APAC_ASSERT(!(result > op1 && result < op1 + size),
-		"(result) lies in the middle of (op1). Allowed only if (result) lies beyond last address of (op1) "
-		"or (result) lies before the first address of (op1)");
-
-	APAC_ASSERT(!(result > op2 && result < op2 + size),
-		"(result) lies in the middle of (op2). Allowed only if (result) lies beyond last address of (op2) "
-		"or (result) lies before the first address of (op2)");
+	APAC_ASSERT(result <= op1 || result >= op1 + size);
+	APAC_ASSERT(result <= op2 || result >= op2 + size);
+	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
 
 	apn_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size);
 	return carry;
@@ -42,17 +34,10 @@ apn_seg_t apn_add(
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
-
-	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL,
-		"apacGetCPUSpec() or apacInit() not called");
-
-	APAC_ASSERT(!(result > op1 && result < op1 + size1),
-		"(result) lies in the middle of (op1). Allowed only if (result) lies beyond last address of (op1) "
-		"or (result) lies before the first address of (op1)");
-
-	APAC_ASSERT(!(result > op2 && result < op2 + size2),
-		"(result) lies in the middle of (op2). Allowed only if (result) lies beyond last address of (op2) "
-		"or (result) lies before the first address of (op2)");
+	APAC_ASSERT(result <= op1 || result >= op1 + size1);
+	APAC_ASSERT(result <= op2 || result >= op2 + size2);
+	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
+	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
 
 	apn_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
 
@@ -73,14 +58,9 @@ apn_seg_t apn_add_one(
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
-
-	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL,
-		"apacGetCPUSpec() or apacInit() not called");
-
-	APAC_ASSERT(!(result > op1 && result < op1 + size),
-		"(result) lies in the middle of (op1). Allowed only if (result) lies beyond last address of (op1) "
-		"or (result) lies before the first address of (op1)");
-
+	APAC_ASSERT(result <= op1 || result >= op1 + size);
+	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
+	
 	apn_seg_t carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);
 	return carry;
 }
