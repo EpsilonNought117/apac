@@ -6,6 +6,10 @@
 	If equality fails at any point, test only those limbs.
 */
 
+/*
+	Check if need for AVX512 variant arises and if so, add it.
+*/
+
 #if defined(__GNUC__)
 __attribute__((target("avx2")))
 #endif
