@@ -278,11 +278,11 @@ typedef enum apac_err
 
 #else
 
-    #define APAC_ASSERT(expr)
-    #define APAC_DETAILED_ASSERT(expr, fmt, ...)
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)
+    #define APAC_ASSERT(expr)                                   do { } while (0)
+    #define APAC_DETAILED_ASSERT(expr, fmt, ...)                do { } while (0)
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { } while (0)
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { } while (0)
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { } while (0)
 
 #endif
 
