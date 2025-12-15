@@ -23,17 +23,22 @@ apac_err apn_div(
     APAC_ASSERT(dividend != NULL);
     APAC_ASSERT(divisor != NULL);
     APAC_ASSERT(size_dvsr != 0);
-    APAC_ASSERT(size_divd >= size_dvsr);
+    APAC_DETAILED_ASSERT(size_divd >= size_dvsr,
+        "Expected size_divd >= size_dvsr, got size_divd (%zu) < size_dvsr (%zu)",
+        (size_t)size_divd, (size_t)size_dvsr
+    );
 
     apn_size_t size_quot = size_divd - size_dvsr + 1;
     apn_size_t size_rmdr = size_dvsr;
 
-    APAC_ASSERT((quotient >= (remainder + size_rmdr)) || ((quotient + size_quot) <= remainder));
-    APAC_ASSERT((quotient >= (dividend + size_divd)) || ((quotient + size_quot) <= dividend));
-    APAC_ASSERT((quotient >= (divisor + size_dvsr)) || ((quotient + size_quot) <= divisor));
-    APAC_ASSERT((dividend >= (divisor + size_dvsr)) || ((dividend + size_divd) <= divisor));
-    APAC_ASSERT((divisor >= (remainder + size_rmdr)) || ((divisor + size_dvsr) <= divisor));
-    APAC_ASSERT(divisor[size_dvsr - 1] != 0);   // malformed divisor
+    APAC_NO_OVERLAP(quotient, size_quot, remainder, size_rmdr);
+    APAC_NO_OVERLAP(quotient, size_quot, dividend, size_divd);
+    APAC_NO_OVERLAP(quotient, size_quot, divisor, size_dvsr);
+    APAC_NO_OVERLAP(dividend, size_divd, divisor, size_dvsr);
+    APAC_NO_OVERLAP(divisor, size_dvsr, remainder, size_rmdr);
+    APAC_DETAILED_ASSERT(divisor[size_dvsr - 1] != 0, 
+        "Divisor is malformed, MSD cannot be zero!"
+    );
 
     if ((size_divd == size_dvsr))
     {
@@ -67,7 +72,9 @@ full_division:
     int shift_to_normalize = 0;         // flag if left-shift to normalize happened
     int dvsr_shift_val = 0;
 
-    APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+    APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
+        "Memory allocator not initialized: apacInit()/apacSetMemFuncs() not invoked!"
+    );
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm
@@ -147,7 +154,7 @@ full_division:
     if (shift_to_normalize)
     {
         apn_seg_t shift_out = apn_rshift(remainder, remainder, size_rmdr, (apn_seg_t)dvsr_shift_val);
-        APAC_ALWAYS_ASSERT(shift_out == 0);
+        APAC_ASSERT(shift_out == 0);
     }
 
     return APAC_OK;

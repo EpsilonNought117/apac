@@ -9,7 +9,9 @@ int apn_is_zero(
 {
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(size != 0);
-	APAC_ASSERT(curr_cpu.apn_is_zero_ptr != NULL);
+	APAC_DETAILED_ASSERT(curr_cpu.apn_is_zero_ptr != NULL,
+		"apacInit() or apacGetCPUSpec() not invoked!"
+	);
 
 	int val = curr_cpu.apn_is_zero_ptr(op1, size);
 	return val;

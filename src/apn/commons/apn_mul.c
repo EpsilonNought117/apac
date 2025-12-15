@@ -19,8 +19,8 @@ apac_err apn_mul_n(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size != 0);
-	APAC_ASSERT((result >= (op1 + size)) || (op1 >= (result + size * 2)));
-	APAC_ASSERT((result >= (op2 + size)) || (op2 >= (result + size * 2)));
+	APAC_NO_OVERLAP(result, size * 2, op1, size);
+	APAC_NO_OVERLAP(result, size * 2, op2, size);
 
 	// zero out result before mul
 	apn_set(result, 2 * size, 0);
@@ -31,7 +31,9 @@ apac_err apn_mul_n(
 	}
 	else
 	{
-		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
+			"Memory allocator not initialized: apacInit()/apacSetMemFuncs() not invoked!"
+		);
 
 		apn_size_t ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
@@ -63,9 +65,13 @@ apac_err apn_mul(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size2 != 0);
-	APAC_ASSERT(size1 >= size2);
-	APAC_ASSERT((result >= (op1 + size1)) || (op1 >= (result + size1 + size2)));
-	APAC_ASSERT((result >= (op2 + size2)) || (op2 >= (result + size1 + size2)));
+	APAC_DETAILED_ASSERT(size1 >= size2,
+		"Expected size1 >= size2, got size1 (%zu) < size2 (%zu)",
+		(size_t)size1, (size_t)size2
+	);
+	APAC_NO_OVERLAP(result, size1 + size2, op1, size1);
+	APAC_NO_OVERLAP(result, size1 + size2, op2, size2);
+
 
 	// zero out result before mul
 	apn_set(result, size1 + size2, 0);
@@ -86,7 +92,9 @@ apac_err apn_mul(
 	}
 	else
 	{
-		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
+			"Memory allocator not initialized: apacInit()/apacSetMemFuncs() not invoked!"
+		);
 
 		apn_size_t ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);

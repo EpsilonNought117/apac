@@ -11,7 +11,6 @@ apn_seg_t apn_dnc_div_balanced(
 )
 {
     APAC_ASSERT(temp != NULL);
-    APAC_ASSERT((temp + size_divd) != NULL);    // temp is of size (size_divd + 1)
     APAC_ASSERT(size_dvsr < size_divd);
     APAC_ASSERT(size_dvsr >= (size_divd - size_dvsr));
 
@@ -106,7 +105,6 @@ apn_seg_t apn_dnc_div_unbalanced(
 )
 {
     APAC_ASSERT(temp != NULL);
-    APAC_ASSERT((temp + size_divd) != NULL);    // temp is of size (size_divd + 1)
     APAC_ASSERT(size_dvsr < size_divd);
     APAC_ASSERT(size_dvsr < (size_divd - size_dvsr)); // m > n
 

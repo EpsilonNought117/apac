@@ -13,7 +13,11 @@ apn_seg_t apn_sub_n(
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
-	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op2, size);
+	APAC_DETAILED_ASSERT(curr_cpu.apn_sub_n_ptr != NULL,
+		"apacInit() or apacGetCPUSpec() not invoked!"
+	);
 
 	apn_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
 	return borrow;
@@ -28,11 +32,21 @@ apn_seg_t apn_sub(
 )
 {
 	APAC_ASSERT(size2 != 0);
-	APAC_ASSERT(size1 >= size2);
+	APAC_DETAILED_ASSERT(size1 >= size2,
+		"Expected size1 >= size2, got size1 (%zu) < size2 (%zu)",
+		size1, size2
+	);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
-	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op1, size1);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op2, size2);
+	APAC_DETAILED_ASSERT(curr_cpu.apn_sub_n_ptr != NULL,
+		"apacInit() or apacGetCPUSpec() not invoked!"
+	);
+	APAC_DETAILED_ASSERT(curr_cpu.apn_sub_one_ptr != NULL,
+		"apacInit() or apacGetCPUSpec() not invoked!"
+	);
 
 	apn_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size2);
 
@@ -53,7 +67,10 @@ apn_seg_t apn_sub_one(
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
-	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_DETAILED_ASSERT(curr_cpu.apn_sub_one_ptr != NULL,
+		"apacInit() or apacGetCPUSpec() not invoked!"
+	);
 
 	apn_seg_t borrow = curr_cpu.apn_sub_one_ptr(result, op1, size, val);
 	return borrow;

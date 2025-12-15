@@ -15,7 +15,6 @@ void apn_karatsuba_sqr(
 	*/
 
 	APAC_ASSERT(temp != NULL);
-	APAC_ASSERT((temp + 2 * size + 63) != NULL);
 
 	if (size < KARATSUBA_SQR_THRESHOLD)
 	{

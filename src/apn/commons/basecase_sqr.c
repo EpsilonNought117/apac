@@ -9,7 +9,9 @@ void apn_basecase_sqr(
 	apn_size_t size
 )
 {
-	APAC_ASSERT(curr_cpu.apn_sqr_bc_ptr != NULL);
+	APAC_DETAILED_ASSERT(curr_cpu.apn_sqr_bc_ptr != NULL,
+		"apacInit() or apacGetCPUSpec() not invoked!"
+	);
 
 	curr_cpu.apn_sqr_bc_ptr(result, op1, size);
 	return;

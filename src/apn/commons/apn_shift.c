@@ -13,15 +13,15 @@ apn_seg_t apn_rshift(
     APAC_ASSERT(op1 != NULL);
     APAC_ASSERT(bit_cnt != 0);
     APAC_ASSERT(size != 0);
-    APAC_ASSERT(size * 64 >= bit_cnt);
-    APAC_ASSERT(curr_cpu.apn_rshift_lt64_ptr != NULL);
-
-    // if op1 and result overlap, result ptr must point to 
-    // a lower or same segment in op1 than op1 ptr itself
-    // or result ptr must point to a totally different 
-    // location beyond op1 bignum
-    APAC_ASSERT((result <= op1) || (result >= (op1 + size)));
-
+    APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+    APAC_DETAILED_ASSERT(size * 64 >= bit_cnt,
+        "Expected size * 64 >= bit_cnt, got size (%zu) * 64 < bit_cnt (%zu)",
+        (size_t)size * 64, (size_t)bit_cnt
+    );
+    APAC_DETAILED_ASSERT(curr_cpu.apn_rshift_lt64_ptr != NULL,
+        "apacInit() or apacGetCPUSpec() not invoked!"
+    );
+   
     apn_size_t bit_cnt_full = bit_cnt >> 6; // bit_cnt /= 64
     apn_seg_t bit_cnt_frac = bit_cnt & 63;  // bit_cnt %= 64
     apn_seg_t out_val = 0;
@@ -44,14 +44,14 @@ apn_seg_t apn_lshift(
     APAC_ASSERT(op1 != NULL);
     APAC_ASSERT(bit_cnt != 0);
     APAC_ASSERT(size != 0);
-    APAC_ASSERT(size * 64 >= bit_cnt);
-    APAC_ASSERT(curr_cpu.apn_lshift_lt64_ptr != NULL);
-
-    // if op1 and result overlap, result ptr must point to 
-    // a higher or same segment in op1 than op1 ptr itself
-    // or result ptr must point to a totally different
-    // location below op1 bignum
-    APAC_ASSERT((result >= op1) || (result <= (op1 - size)));
+    APAC_PARTIAL_OVERLAP_ABOVE(result, size, op1, size);
+    APAC_DETAILED_ASSERT(size * 64 >= bit_cnt,
+        "Expected size * 64 >= bit_cnt, got size (%zu) * 64 < bit_cnt (%zu)",
+        (size_t)size * 64, (size_t)bit_cnt
+    );
+    APAC_DETAILED_ASSERT(curr_cpu.apn_lshift_lt64_ptr != NULL,
+        "apacInit() or apacGetCPUSpec() not invoked!"
+    );
 
     apn_size_t bit_cnt_full = bit_cnt >> 6; // bit_cnt /= 64
     apn_seg_t bit_cnt_frac = bit_cnt & 63;  // bit_cnt %= 64
