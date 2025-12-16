@@ -18,7 +18,7 @@
 
     #if defined(_MSC_VER)
 
-        #include <processthreadsapi.h> // Win32 Threads
+        #include <Windows.h> // for win32 threads
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
@@ -941,7 +941,7 @@ APAC_API apac_err apn_div(
     apn_seg_t* quotient,
     apn_seg_t* remainder,
     const apn_seg_t* dividend,
-    const apn_seg_t* divisor,
+    apn_seg_t* divisor,
     apn_size_t size_divd,
     apn_size_t size_dvsr
 );
