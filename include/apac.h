@@ -126,7 +126,7 @@ typedef enum apac_err
             {                                               \
                 fprintf(                                    \
                     stderr,                                 \
-                    "\nAPAC ASSERTION FAILED!\n"            \
+                    "\n\nAPAC ASSERTION FAILED!\n"          \
                     "ASSERTION: %s\n"                       \
                     "FILE: %s\nLINE: %d\n",                 \
                     #expr, __FILE__, __LINE__               \
