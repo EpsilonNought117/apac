@@ -13,7 +13,7 @@ apac_err apn_div(
     apn_seg_t* quotient,        // must be (size_divd - size_dvsr + 1) length
     apn_seg_t* remainder,       // must be size_dvsr length
     const apn_seg_t* dividend,
-    const apn_seg_t* divisor,
+    apn_seg_t* divisor,
     apn_size_t size_divd,
     apn_size_t size_dvsr
 )
@@ -63,7 +63,7 @@ apac_err apn_div(
     }
     else if (size_dvsr == 1)
     {
-        remainder[0] = apn_div_one(quotient, remainder, dividend, divisor[0], size_divd);
+        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd);
         return APAC_OK;
     }
 
@@ -153,8 +153,9 @@ full_division:
 
     if (shift_to_normalize)
     {
+        apn_seg_t shift_down = apn_rshift(divisor, divisor, size_dvsr, dvsr_shift_val);
         apn_seg_t shift_out = apn_rshift(remainder, remainder, size_rmdr, (apn_seg_t)dvsr_shift_val);
-        APAC_ASSERT(shift_out == 0);
+        APAC_ASSERT(shift_out == 0 && shift_down == 0);
     }
 
     return APAC_OK;

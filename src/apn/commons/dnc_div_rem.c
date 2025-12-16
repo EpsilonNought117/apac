@@ -32,7 +32,7 @@ apn_seg_t apn_dnc_div_balanced(
     APAC_ASSERT(m >= 2ULL);
 
     apn_size_t k = m >> 1;  // floor(size_divd - size_dvsr)
-    apn_seg_t* b0 = divisor, * b1 = divisor + k;
+    const apn_seg_t* b0 = divisor, * b1 = divisor + k;
     apn_seg_t* q0 = quotient, * q1 = quotient + k;
     
     // q1_msd will be at most 1-bit
