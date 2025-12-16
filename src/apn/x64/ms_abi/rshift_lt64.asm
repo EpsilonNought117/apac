@@ -111,7 +111,7 @@ before_loop:
     dec     r8
     jz      after_loop
 
-loop:
+main_loop:
 
     mov     r10, QWORD PTR [rdx + 8]
     mov     r11, QWORD PTR [rdx]
@@ -121,7 +121,7 @@ loop:
     add     rdx, 8
     add     rbx, 8
     dec     r8
-    jnz     loop
+    jnz     main_loop
 
 after_loop:
 
