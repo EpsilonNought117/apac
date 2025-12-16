@@ -247,12 +247,6 @@ extern inline apn_seg_t udiv32_quot_x64(
 
 /* ------------------------------- COMPARISION FUNCTION ------------------------------- */
 
-extern int cmp_avx512f_4unroll(
-	const apn_seg_t* op1,
-	const apn_seg_t* op2,
-	apn_size_t size
-);
-
 extern int cmp_avx2_4unroll(
 	const apn_seg_t* op1,
 	const apn_seg_t* op2,
