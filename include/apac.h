@@ -135,7 +135,7 @@ typedef enum apac_err
                 {                                           \
                     fprintf(                                \
                         stderr,                             \
-                        "MESSAGE: "                         \
+                        "DETAILS: "                         \
                         fmt "\n",                           \
                         ##__VA_ARGS__                       \
                     );                                      \
