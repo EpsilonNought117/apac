@@ -1,14 +1,6 @@
 #include "hidden_div.h"
 #include "hidden_helpers.h"
 
-#if defined(_M_X64)     || defined(_M_AMD64)    || \
-    defined(__x86_64)   || defined(__amd64)     || \
-    defined(__x86_64__) || defined(__amd64__)
-
-    #include "../x64/x64_hidden_funcs.h"
-
-#endif
-
 apn_seg_t apn_basecase_div(
     apn_seg_t* quotient,
     apn_seg_t* dividend,
@@ -35,11 +27,11 @@ apn_seg_t apn_basecase_div(
 
     apn_seg_t dvsr1 = divisor[n - 1];
     apn_seg_t dvsr0 = divisor[n - 2];
-    apn_seg_t dvsr_recip = recip_word_3by2_x64(dvsr1, dvsr0);
+    apn_seg_t dvsr_recip = recip_word_3by2(dvsr1, dvsr0);
 
     for (apn_size_t j = m - 1; j < m; j--)
     {
-        apn_seg_t sel_quot = udiv32_quot_x64(
+        apn_seg_t sel_quot = udiv32_quot(
                                 dividend[n + j],
                                 dividend[n + j - 1],
                                 dividend[n + j - 2],
