@@ -70,7 +70,7 @@ apac_err apn_div(
 full_division:
 
     int shift_to_normalize = 0;         // flag if left-shift to normalize happened
-    int dvsr_shift_val = 0;
+    uint32_t dvsr_shift_val = 0;
 
     APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
         "Memory allocator not initialized: apacInit()/apacSetMemFuncs() not invoked!"
@@ -91,8 +91,8 @@ full_division:
     
     if (!(divisor[size_dvsr - 1] & (1ULL << 63)))
     {
-        CLZ64(dvsr_shift_val, divisor[size_dvsr - 1]);
-        APAC_ASSERT(dvsr_shift_val != -1);
+        dvsr_shift_val = clz64(divisor[size_dvsr - 1]);
+        APAC_ASSERT(dvsr_shift_val != 64);
 
         apn_seg_t out_val = apn_lshift(divisor, divisor, size_dvsr, (apn_seg_t)dvsr_shift_val);
         APAC_ASSERT(out_val == 0);

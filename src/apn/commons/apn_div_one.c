@@ -2,14 +2,6 @@
 #include "hidden_div.h"
 #include "hidden_helpers.h"
 
-#if defined(_M_X64)     || defined(_M_AMD64)    || \
-    defined(__x86_64)   || defined(__amd64)     || \
-    defined(__x86_64__) || defined(__amd64__)
-
-    #include "../x64/x64_hidden_funcs.h"
-
-#endif
-
 apn_seg_t apn_div_one(
     apn_seg_t* quotient,    // must be (size_divd) length
     const apn_seg_t* dividend,
@@ -49,12 +41,12 @@ apn_seg_t apn_div_one(
     }
 
     int shift_to_normalize = 0;         // flag if left-shift to normalize happened
-    int shift_val = 0;
+    uint32_t shift_val = 0;
 
     if (!(divisor64 & (1ULL << 63)))
     {
-        CLZ64(shift_val, divisor64);
-        APAC_ASSERT(shift_val != -1);
+        shift_val = clz64(divisor64);
+        APAC_ASSERT(shift_val != 64);
 
         divisor64 <<= (apn_size_t)shift_val;
 
@@ -64,17 +56,22 @@ apn_seg_t apn_div_one(
 
     // actual computation begins here xD
 
-    apn_seg_t dvsr_recip = recip_word_2by1_x64(divisor64);
+    apn_seg_t dvsr_recip = recip_word_2by1(divisor64);
     apn_seg_t temp_val = 0;
 
-    for (apn_size_t j = size_divd - 1; j >= 1; j++)
+    for (apn_size_t j = size_divd - 1; j >= 1; j--)
     {
         temp_val = (dividend[j] << (apn_size_t)shift_val) | (dividend[j - 1] >> ((apn_size_t)64 - shift_val));
-        quotient[j] = udiv21_x64(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+        quotient[j] = udiv21(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
     }
 
     temp_val = (dividend[0] << (apn_size_t)shift_val);
-    quotient[0] = udiv21_x64(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+    quotient[0] = udiv21(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
 
-    return (rmdr >> (apn_size_t)shift_val);
+    if (shift_to_normalize)
+    {
+        rmdr >>= (apn_size_t)shift_val;
+    }
+
+    return rmdr;
 }

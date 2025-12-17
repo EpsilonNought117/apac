@@ -86,13 +86,12 @@ apn_seg_t apn_dnc_div_balanced(
     // this could happen in some pathological cases
     if (q0_msd)
     {
-        apn_seg_t carry_out = apn_add_one(q1, q1, m - k, q0_msd);
-        APAC_ASSERT(carry_out == 0);
+        q0_msd = apn_add_one(q1, q1, m - k, q0_msd);
     }
 
     apn_set(temp, n + 1, 0ULL);
 
-    return q1_msd;
+    return (q1_msd | q0_msd);
 }
 
 apn_seg_t apn_dnc_div_unbalanced(
@@ -126,7 +125,7 @@ apn_seg_t apn_dnc_div_unbalanced(
         if (q_msd)
         {
             q_msd = apn_add_one(q_curr + n, q_curr + n, orig_m + 1 - m, q_msd);
-            APAC_ASSERT(q_msd == 0);
+            q1_msd |= q_msd;
         }
 
         m -= n;
@@ -135,7 +134,7 @@ apn_seg_t apn_dnc_div_unbalanced(
     q_msd = apn_dnc_div_balanced(quotient, dividend, divisor, m + n, n, temp);
 
     q_msd = apn_add_one(quotient, quotient, orig_m + 1 - m, q_msd);
-    APAC_ASSERT(q_msd == 0);
+    q1_msd |= q_msd;
 
     return q1_msd;
 }

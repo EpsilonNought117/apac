@@ -3,6 +3,34 @@
 
 #include "../../../include/apac.h"
 
+/* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
+
+apn_seg_t recip_word_2by1(
+    apn_seg_t dvsr
+);
+
+apn_seg_t recip_word_3by2(
+    apn_seg_t dvsr1,
+    apn_seg_t dvsr0
+);
+
+inline apn_seg_t udiv21(
+    apn_seg_t divd1,
+    apn_seg_t divd0,
+    apn_seg_t dvsr,
+    apn_seg_t recip,
+    apn_seg_t* rmdr
+);
+
+inline apn_seg_t udiv32_quot(
+    apn_seg_t divd2,
+    apn_seg_t divd1,
+    apn_seg_t divd0,
+    apn_seg_t dvsr1,
+    apn_seg_t dvsr0,
+    apn_seg_t recip
+);
+
 /*
 * 1) O(n * m) division
 * 2) Dividend should have size_divd number of segments
