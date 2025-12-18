@@ -66,13 +66,13 @@ start_of_func:
     xchg    rbx, rdx
     mov     r10, QWORD PTR [rsp + 88]
     mov     r11, r9
-    mov     rax, r9
-    shl     rax, 3
     shr     r9,  3
+    mov     rax, r9
+    shl     rax, 6
     and     r11, 7
     mov     r13, r11
     lea     r12, jump_table
-    lea     r12, [r12 + r11 * 8]
+    lea     r12, [r12 + r11*8]
 
 outer_loop_start:
 
@@ -87,10 +87,10 @@ inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
+    mulx    rdi, rsi, QWORD PTR [rbx + i*8]
     adcx    rsi, r11
-    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
-    mov     QWORD PTR [rbp + i * 8], rsi
+    adox    rdi, QWORD PTR [rbp + i*8 + 8]
+    mov     QWORD PTR [rbp + i*8], rsi
     mov     r11, rdi
 
 ENDM
@@ -104,28 +104,32 @@ ENDM
 ALIGN 32
 before_remainder:
 
-    lea     rbx, [rbx + r13 * 8]
-    lea     rbp, [rbp + r13 * 8]
     jmp     QWORD PTR [r12]
 
-FOR i, <7, 6, 5, 4, 3, 2, 1>
+FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
-ALIGN 32
-rem&i&:
+ALIGN 16
+rem&outer&:
 
-    mulx    rdi, rsi, QWORD PTR [rbx - i * 8]
+i = 0
+WHILE i LT outer
+    mulx    rdi, rsi, QWORD PTR [rbx + i*8]
     adcx    rsi, r11
-    adox    rdi, QWORD PTR [rbp - i * 8 + 8]
-    mov     QWORD PTR [rbp - i * 8], rsi
+    adox    rdi, QWORD PTR [rbp + i*8 + 8]
+    mov     QWORD PTR [rbp + i*8], rsi
     mov     r11, rdi
+            
+i = i + 1
+ENDM
+
+    jmp outer_loop_end
         
 ENDM
   
-ALIGN 32
 outer_loop_end:
 
     adc     r11, 0
-    mov     QWORD PTR [rbp], r11
+    mov     QWORD PTR [rbp + r13*8], r11
     
     add     r8,  8
     sub     rbx, rax
