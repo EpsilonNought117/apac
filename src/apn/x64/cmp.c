@@ -1,5 +1,6 @@
 #include "../../../include/apac.h"
-#include "../commons/hidden_helpers.h" // for clz64
+#include "../commons/hidden_helpers.h" // for CLZ64
+
 /*
 	Key Idea is to check for equality. 
 	If equality fails at any point, test only those limbs.
@@ -85,7 +86,8 @@ int cmp_avx2_4unroll(
 			x0 <<= 48;
 			x0 = ~x0;
 
-			uint32_t num_lz = clz64(x0);
+			uint32_t num_lz = 0;
+			CLZ64(x0, num_lz);
 			APAC_ASSERT((num_lz < 16) && (num_lz >= 0));
 
 			return (op1[size - num_lz - 1] > op2[size - num_lz - 1] ? 1 : -1);
@@ -174,7 +176,8 @@ int cmp_sse2_4unroll(
 			b0 <<= 56;
 			b0 = ~b0;
 
-			uint32_t num_lz = clz64(b0);
+			uint32_t num_lz = 0;
+			CLZ64(b0, num_lz);
 			APAC_ASSERT((num_lz < 8) && (num_lz >= 0));
 
 			return (op1[size - num_lz - 1] > op2[size - num_lz - 1] ? 1 : -1);

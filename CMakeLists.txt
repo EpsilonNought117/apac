@@ -121,7 +121,6 @@ set(apac_c_sources
     "src/apn/commons/basecase_sqr.c"
     "src/apn/commons/karatsuba_sqr.c"
     "src/apn/commons/div_helpers.c"
-    "src/apn/commons/hidden_helpers.c"
 )
     
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------

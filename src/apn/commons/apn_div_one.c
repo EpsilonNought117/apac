@@ -45,7 +45,7 @@ apn_seg_t apn_div_one(
 
     if (!(divisor64 & (1ULL << 63)))
     {
-        shift_val = clz64(divisor64);
+        CLZ64(divisor64, shift_val);
         APAC_ASSERT(shift_val != 64);
 
         divisor64 <<= (apn_size_t)shift_val;

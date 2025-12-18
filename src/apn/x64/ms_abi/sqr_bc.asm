@@ -93,14 +93,13 @@ ENDM
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
+ALIGN 32
     jrcxz   bef_inner_rmdr_pass1
     jmp     inner_loop_unroll_pass1
 
-ALIGN 16
+ALIGN 32
 bef_inner_rmdr_pass1:
-    
-    lea     rbx, [rbx + r9 * 8]
-    lea     rbp, [rbp + r9 * 8]
+
     jmp     QWORD PTR [r13]
 
 FOR i, <7, 6, 5, 4, 3, 2, 1>
@@ -108,18 +107,27 @@ FOR i, <7, 6, 5, 4, 3, 2, 1>
 ALIGN 32
 inner_pass1_rem&i&:
 
-    mulx    rdi, rsi, QWORD PTR [rbx - i * 8 + 8]
+j = 0
+WHILE j LT i
+
+    mulx    rdi, rsi, QWORD PTR [rbx + j * 8 + 8]
     adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp - i * 8 + 8]
-    mov     QWORD PTR [rbp - i * 8], rsi
+    adox    rdi, QWORD PTR [rbp + j * 8 + 8]
+    mov     QWORD PTR [rbp + j * 8], rsi
     mov     rax, rdi
-        
+
+j = j + 1    
+ENDM
+
+    lea     rbp, [rbp + i * 8]
+    lea     rbx, [rbx + i * 8]
+    jmp     outer_loop_end_pass1
+
 ENDM
 
 outer_loop_end_pass1:
 
-    adc     rax, 0
-    mov     QWORD PTR [rbp], rax
+    adc     QWORD PTR [rbp], rax
     sub     rbx, r10
     sub     rbp, r10
     add     rbx, 8

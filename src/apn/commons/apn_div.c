@@ -91,7 +91,7 @@ full_division:
     
     if (!(divisor[size_dvsr - 1] & (1ULL << 63)))
     {
-        dvsr_shift_val = clz64(divisor[size_dvsr - 1]);
+        CLZ64(divisor[size_dvsr - 1], dvsr_shift_val);;
         APAC_ASSERT(dvsr_shift_val != 64);
 
         apn_seg_t out_val = apn_lshift(divisor, divisor, size_dvsr, (apn_seg_t)dvsr_shift_val);
