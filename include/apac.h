@@ -941,7 +941,7 @@ APAC_API apac_err apn_div(
     apn_seg_t* quotient,
     apn_seg_t* remainder,
     const apn_seg_t* dividend,
-    apn_seg_t* divisor,
+    const apn_seg_t* divisor,
     apn_size_t size_divd,
     apn_size_t size_dvsr
 );
@@ -1030,6 +1030,7 @@ APAC_API apn_seg_t apn_lshift(
     apn_size_t size,
     apn_seg_t bit_cnt
 );
+
 /**
  * @brief Check if an arbitrary-precision number is zero.
  *

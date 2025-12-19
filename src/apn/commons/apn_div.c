@@ -13,7 +13,7 @@ apac_err apn_div(
     apn_seg_t* quotient,        // must be (size_divd - size_dvsr + 1) length
     apn_seg_t* remainder,       // must be size_dvsr length
     const apn_seg_t* dividend,
-    apn_seg_t* divisor,
+    const apn_seg_t* divisor,
     apn_size_t size_divd,
     apn_size_t size_dvsr
 )
@@ -40,7 +40,7 @@ apac_err apn_div(
         "Divisor is malformed, MSD cannot be zero!"
     );
 
-    if ((size_divd == size_dvsr))
+    if (size_divd == size_dvsr)
     {
         int cmp_res = apn_cmp(dividend, divisor, size_divd);
         
@@ -69,93 +69,91 @@ apac_err apn_div(
 
 full_division:
 
-    int shift_to_normalize = 0;         // flag if left-shift to normalize happened
     uint32_t dvsr_shift_val = 0;
 
     APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
-        "Memory allocator not initialized: apacInit()/apacSetMemFuncs() not invoked!"
+        "Memory allocator not initialized: apacInit() or apacSetMemFuncs() not invoked!"
     );
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm
-    apn_seg_t* temp_divd = apac_malloc((size_divd + 1) * sizeof(apn_seg_t));
+    apn_seg_t* temp_space = apac_malloc((size_dvsr + size_divd + 1) * sizeof(apn_seg_t));
 
-    if (!temp_divd)
+    if (!temp_space)
     {
-        APAC_LOG_ERR("Memory allocation failure for temporary dividend in apn_div_rem!");
+        APAC_LOG_ERR("Memory allocation failure for temporary dividend and divisor in apn_div_rem!");
         return APAC_OOM;
     }
 
+    apn_seg_t* temp_dvsr = temp_space;
+    apn_seg_t* temp_divd = temp_space + size_dvsr;
+
+    apn_cpy(temp_dvsr, divisor, size_dvsr);
     apn_cpy(temp_divd, dividend, size_divd);
     temp_divd[size_divd] = 0ULL;
     
-    if (!(divisor[size_dvsr - 1] & (1ULL << 63)))
+    if (!(temp_dvsr[size_dvsr - 1] & (1ULL << 63)))
     {
-        CLZ64(divisor[size_dvsr - 1], dvsr_shift_val);;
+        CLZ64(temp_dvsr[size_dvsr - 1], dvsr_shift_val);;
         APAC_ASSERT(dvsr_shift_val != 64);
 
-        apn_seg_t out_val = apn_lshift(divisor, divisor, size_dvsr, (apn_seg_t)dvsr_shift_val);
+        apn_seg_t out_val = apn_lshift(temp_dvsr, temp_dvsr, size_dvsr, (apn_seg_t)dvsr_shift_val);
         APAC_ASSERT(out_val == 0);
 
         // if this step results in no shift-out val, then top segment of dividend stays zero
         temp_divd[size_divd] = apn_lshift(temp_divd, temp_divd, size_divd, (apn_seg_t)dvsr_shift_val);
-        shift_to_normalize = 1; // set flag because normalization
     }
 
     apn_seg_t outval = 0;
     
     if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {
-        outval = apn_basecase_div(quotient, temp_divd, divisor, size_divd + 1, size_dvsr);
+        outval = apn_basecase_div(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr);
     }
     else if ((size_divd - size_dvsr) <= size_divd)
     {
-        apn_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_divd);
+        apn_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
         apn_seg_t* temp_ws = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
         if (!temp_ws)
         {
-            apac_free(temp_divd);
+            apac_free(temp_space);
             APAC_LOG_ERR("Memory allocation failure for scratch workspace in apn_div_rem!");
             return APAC_OOM;
         }
 
         apn_set(temp_ws, ws_size, 0);
 
-        outval = apn_dnc_div_balanced(quotient, temp_divd, divisor, size_divd + 1, size_dvsr, temp_ws);
+        outval = apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
     else
     {
-        apn_size_t ws_size = DNC_DIV_UNBALANCED_WS_SIZE(size_divd);
+        apn_size_t ws_size = DNC_DIV_UNBALANCED_WS_SIZE(size_dvsr);
         apn_seg_t* temp_ws = apac_malloc(sizeof(apn_seg_t) * ws_size);
 
         if (!temp_ws)
         {
-            apac_free(temp_divd);
+            apac_free(temp_space);
             APAC_LOG_ERR("Memory allocation failure for scratch workspace in apn_div_rem!");
             return APAC_OOM;
         }
 
         apn_set(temp_ws, ws_size, 0);
 
-        outval = apn_dnc_div_unbalanced(quotient, temp_divd, divisor, size_divd + 1, size_dvsr, temp_ws);
+        outval = apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
 
-    if (!shift_to_normalize)
-    {
-        quotient[size_quot - 1] = outval;
-    }
+    quotient[size_quot - 1] = outval;
 
     apn_cpy(remainder, temp_divd, size_rmdr);
-    apac_free(temp_divd);
+    apac_free(temp_space);
 
-    if (shift_to_normalize)
+    if (dvsr_shift_val)
     {
-        apn_seg_t shift_down = apn_rshift(divisor, divisor, size_dvsr, dvsr_shift_val);
-        apn_seg_t shift_out = apn_rshift(remainder, remainder, size_rmdr, (apn_seg_t)dvsr_shift_val);
-        APAC_ASSERT(shift_out == 0 && shift_down == 0);
+        apn_seg_t shift_down = apn_rshift(remainder, remainder, size_rmdr, (apn_seg_t)dvsr_shift_val);
+        APAC_ASSERT(shift_down == 0);
     }
 
     return APAC_OK;
