@@ -23,23 +23,23 @@ LEFT_SHIFT_LT64 SEGMENT ALIGN(64) 'CODE'
 ; optimized routine for zen4 microarchitecture
 
 lshift_lt64_zen4 PROC FRAME
-
-    push    rbx
-.pushreg    rbx
+    
+    push    rdi
+.pushreg    rdi
+    push    rsi
+.pushreg    rsi
 .endprolog
 
-    xchg    rcx, rbx
-    xor     rax, rax
-    mov     rcx, r9
-    xor     r9,  r9
-
+    mov     rsi, 64
+    mov     rdi, r9     ; lshift val in rdi
+    sub     rsi, rdi    ; rshift val in rsi (64 - bit_cnt)
+    
 before_loop:
 
     lea     rdx, [rdx + r8 * 8 - 8]
-    lea     rbx, [rbx + r8 * 8 - 8]
+    lea     rcx, [rcx + r8 * 8 - 8]
 
-    mov     r11, QWORD PTR [rdx]
-    shld    rax, r11, cl
+    shrx    rax, QWORD PTR [rdx], rsi
     dec     r8
     jz      after_loop
 
@@ -55,16 +55,16 @@ inner_loop_4x_unroll:
 i = 0
 WHILE i LT 4
 
-    mov     r10, QWORD PTR [rdx - i * 8 - 8]
-    mov     r11, QWORD PTR [rdx - i * 8]
-    shld    r11, r10, cl
-    mov     QWORD PTR [rbx - i * 8], r11
+    shlx    r10, QWORD PTR [rdx - i * 8], rdi
+    shrx    r11, QWORD PTR [rdx - i * 8 - 8], rsi
+    or      r11, r10
+    mov     QWORD PTR [rcx - i * 8], r11
 
 i = i + 1
 ENDM
 
     sub     rdx, 32
-    sub     rbx, 32
+    sub     rcx, 32
     dec     r8
     jnz     inner_loop_4x_unroll
 
@@ -75,25 +75,25 @@ before_rmdr_loop:
 
 inner_loop_remainder:
 
-    mov     r10, QWORD PTR [rdx - 8]
-    mov     r11, QWORD PTR [rdx]
-    shld    r11, r10, cl
-    mov     QWORD PTR [rbx], r11
+    shlx    r10, QWORD PTR [rdx], rdi
+    shrx    r11, QWORD PTR [rdx - 8], rsi
+    or      r11, r10
+    mov     QWORD PTR [rcx], r11
 
     sub     rdx, 8
-    sub     rbx, 8
+    sub     rcx, 8
     dec     r9
     jnz     inner_loop_remainder
 
 after_loop:
 
-    mov     r11, QWORD PTR [rdx]
-    shl     r11, cl
-    mov     QWORD PTR [rbx], r11
+    shlx    r11, QWORD PTR [rdx], rdi
+    mov     QWORD PTR [rcx], r11
 
 end_of_func:
 
-    pop     rbx
+    pop     rsi
+    pop     rdi
     ret
 
 lshift_lt64_zen4 ENDP
