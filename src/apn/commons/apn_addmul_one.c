@@ -12,7 +12,7 @@ apn_seg_t apn_addmul_one(
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
-	APAC_PARTIAL_OVERLAP_BELOW(result, 1, op1, size);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size + 1, op1, size);
 	APAC_DETAILED_ASSERT(curr_cpu.apn_addmul_one_ptr != NULL,
 		"apacInit() or apacGetCPUSpec() not invoked!"
 	);
