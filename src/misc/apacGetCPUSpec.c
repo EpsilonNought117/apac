@@ -63,7 +63,7 @@ void apacGetCPUSpec(void)
 			break;
 
 		case 0x19:   // Zen 3 / Zen 4
-			if (model >= 0x60)
+			if (model >= 0x61)
 			{
 				// Unambiguous Zen 4 / Zen 4c
 				zen4_set_params();
