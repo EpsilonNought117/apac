@@ -118,7 +118,7 @@ static void check_apn_set(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         uint64_t val = random_sfc64();
         uint8_t  val1 = (uint8_t)(val & 0xFF);
@@ -132,10 +132,10 @@ static void check_apn_set(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_set() memcmp test failed!\n"
-            "\t Operand length tested        : %llu\n"
+            "\t Operand length tested        : %" PRI_APN_SIZE "\n"
             "\t Expected comparison result  : 0\n"
             "\t Actual comparison result    : %i\n",
-            i,
+            (apn_size_t)i,
             cmp_res
         );
 
@@ -162,7 +162,7 @@ static void check_apn_cpy(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
         
         set_to_random(op1, i);
         apn_cpy(op2, op1, i);
@@ -172,10 +172,10 @@ static void check_apn_cpy(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_cpy() equality test failed!\n"
-            "\t Operand length tested           : %llu\n"
+            "\t Operand length tested           : %" PRI_APN_SIZE "\n"
             "\t Expected comparison result      : 0\n"
             "\t Actual comparison result        : %i\n",
-            i,
+            (apn_size_t)i,
             cmp_res
         );
 
@@ -204,7 +204,7 @@ static void check_apn_cmp(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         uint64_t val = random_sfc64();
 
@@ -216,21 +216,21 @@ static void check_apn_cmp(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_cmp() equality test failed!\n"
-            "\t Operand length tested        : %llu\n"
+            "\t Operand length tested        : %" PRI_APN_SIZE "\n"
             "\t Expected comparison result  : 0\n"
             "\t Actual comparison result    : %i\n",
-            i,
+            (apn_size_t)i,
             cmp_res
         );
 
         printf("PASSED\n");
     }
 
-    printf("\nTEST-2: Single segment +/-1 change test\n\n");
+    printf("\nTEST-2: Single segment difference test\n\n");
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         set_to_random(op1, i);
         apn_cpy(op2, op1, i);
@@ -269,18 +269,18 @@ static void check_apn_cmp(void)
 
         APAC_ALWAYS_ASSERT(
             compare_result == expected_cmp,
-            "apn_cmp() controlled single-segment test failed!\n"
-            "\t Operand length tested        : %llu\n"
-            "\t Change position              : %llu\n"
-            "\t Base value                   : 0x%016llx\n"
-            "\t Modified value               : 0x%016llx\n"
+            "apn_cmp() single-segment difference test failed!\n"
+            "\t Operand length tested        : %" PRI_APN_SIZE "\n"
+            "\t Change position              : %" PRI_APN_SIZE "\n"
+            "\t Base value                   : %" PRI_APN_SEG "\n"
+            "\t Modified value               : %" PRI_APN_SEG "\n"
             "\t Modified operand             : %s\n"
             "\t Expected comparison result   : %i\n"
             "\t Actual comparison result     : %i\n",
-            i,
-            pos,
-            (unsigned long long)base,
-            (unsigned long long)diff,
+            (apn_size_t)i,
+            (apn_size_t)pos,
+            (apn_seg_t)base,
+            (apn_seg_t)diff,
             diff_in_op1 ? "op1" : "op2",
             expected_cmp,
             compare_result
@@ -310,17 +310,17 @@ static void check_apn_is_zero(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         int res = apn_is_zero(op, i);
 
         APAC_ALWAYS_ASSERT(
             res == 0,
             "apn_is_zero() all-zero test failed!\n"
-            "\t Operand length tested        : %llu\n"
+            "\t Operand length tested        : %" PRI_APN_SIZE "\n"
             "\t Expected result              : 0\n"
             "\t Actual result                : %i\n",
-            i,
+            (apn_size_t)i,
             res
         );
 
@@ -331,7 +331,7 @@ static void check_apn_is_zero(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         apn_size_t pos = random_sfc64() % i;
 
@@ -345,14 +345,14 @@ static void check_apn_is_zero(void)
         APAC_ALWAYS_ASSERT(
             res == 1,
             "apn_is_zero() non-zero test failed!\n"
-            "\t Operand length tested        : %llu\n"
-            "\t Non-zero position            : %llu\n"
-            "\t Non-zero value               : 0x%016llx\n"
+            "\t Operand length tested        : %" PRI_APN_SIZE "\n"
+            "\t Non-zero position            : %" PRI_APN_SIZE "\n"
+            "\t Non-zero value               : %" PRI_APN_SEG "\n"
             "\t Expected result              : 1\n"
             "\t Actual result                : %i\n",
-            i,
-            pos,
-            (unsigned long long)val,
+            (apn_size_t)i,
+            (apn_size_t)pos,
+            (apn_seg_t)val,
             res
         );
 
@@ -384,26 +384,26 @@ static void check_apn_add_one(void)
 
 	for (apn_size_t i = 1; i <= test_size; i++)
 	{
-		printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
 		apn_seg_t carry_out = apn_add_one(op2, op1, i, 1ULL);
 
-		APAC_ALWAYS_ASSERT(
-			carry_out == 1,
-			"apn_add_one() carry propagation test failed!\n"
-			"\t Operand length tested      : %llu\n"
-			"\t Expected carry value       : 1\n"
-			"\t Actual carry value         : %llu\n",
-			i,
-			carry_out
-		);
+        APAC_ALWAYS_ASSERT(
+            carry_out == 1,
+            "apn_add_one() carry propagation test failed!\n"
+            "\t Operand length tested      : %" PRI_APN_SIZE "\n"
+            "\t Expected carry value       : 1\n"
+            "\t Actual carry value         : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry_out
+        );
 
 		int is_zero = apn_is_zero(op2, i);
 
 		APAC_ALWAYS_ASSERT(
 			is_zero == 0,
 			"apn_add_one() carry propagation test failed!\n"
-			"\t Operand length tested      : %llu\n"
+			"\t Operand length tested      : %" PRI_APN_SIZE "\n"
 			"\t Expected result (is_zero)  : 0\n"
 			"\t Actual result (is_zero)    : %d\n",
 			i,
@@ -420,7 +420,7 @@ static void check_apn_add_one(void)
 
 	for (apn_size_t i = 1; i <= test_size; i++)
 	{
-		printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         uint64_t val = random_sfc64();
 
@@ -429,22 +429,22 @@ static void check_apn_add_one(void)
 
 		apn_seg_t carry_out = apn_add_one(op2, op1, i, 0);
 
-		APAC_ALWAYS_ASSERT(
-			carry_out == 0,
-			"apn_add_one() identity test failed!\n"
-			"\t Operand length tested      : %llu\n"
-			"\t Expected carry value       : 0\n"
-			"\t Actual carry value         : %llu\n",
-			i,
-			carry_out
-		);
+        APAC_ALWAYS_ASSERT(
+            carry_out == 0,
+            "apn_add_one() identity test failed!\n"
+            "\t Operand length tested      : %" PRI_APN_SIZE "\n"
+            "\t Expected carry value       : 0\n"
+            "\t Actual carry value         : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry_out
+        );
 
 		int is_equal = apn_cmp(op1, op2, i);
 
 		APAC_ALWAYS_ASSERT(
 			is_equal == 0,
 			"apn_add_one() identity test failed!\n"
-			"\t Operand length tested      : %llu\n"
+			"\t Operand length tested      : %" PRI_APN_SIZE "\n"
 			"\t Expected result (cmp)      : 0 (identity property)\n"
 			"\t Actual result (cmp)        : %d\n",
 			i,
@@ -462,7 +462,7 @@ static void check_apn_add_one(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         set_to_random(op1, i);
 
@@ -475,14 +475,14 @@ static void check_apn_add_one(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == (carry_out ? -1 : 1),
             "apn_add_one() monotonicity test failed!\n"
-            "\t Operand length tested      : %llu\n"
-            "\t Addend value               : 0x%016llx\n"
-            "\t Carry out                  : %u\n"
+            "\t Operand length tested      : %" PRI_APN_SIZE "\n"
+            "\t Addend value               : 0x%016" PRI_APN_SEG "\n"
+            "\t Carry out                  : %" PRI_APN_SEG "\n"
             "\t Expected cmp result        : %d\n"
             "\t Actual cmp result          : %d\n",
-            i,
-            (unsigned long long)val,
-            (unsigned)carry_out,
+            (apn_size_t)i,
+            (apn_seg_t)val,
+            (apn_seg_t)carry_out,
             carry_out ? -1 : 1,
             cmp_res
         );
@@ -502,11 +502,15 @@ static void check_apn_add_n(void)
     TEST_START("apn_add_n");
 
     apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
+    apn_seg_t* op4 = NULL, * op5 = NULL, * op6 = NULL;
     apn_size_t test_size = 256ULL;
 
     MALLOC_AND_CHECK(op1, test_size);
     MALLOC_AND_CHECK(op2, test_size);
     MALLOC_AND_CHECK(op3, test_size);
+    MALLOC_AND_CHECK(op4, test_size);
+    MALLOC_AND_CHECK(op5, test_size);
+    MALLOC_AND_CHECK(op6, test_size);
 
     apn_set(op2, test_size, 0);
 
@@ -514,34 +518,29 @@ static void check_apn_add_n(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
-        /* Random operand */
         set_to_random(op1, i);
 
-        /* dst = op1 + 0 */
         apn_seg_t carry = apn_add_n(op3, op1, op2, i);
-
         int cmp_res = apn_cmp(op3, op1, i);
 
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_add_n() identity test failed!\n"
-            "\t Operand length tested : %llu\n"
-            "\t Expected               : op1 + 0 == op1\n"
-            "\t Actual cmp result      : %d\n",
-            i,
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Actual cmp result     : %d\n",
+            (apn_size_t)i,
             cmp_res
         );
 
         APAC_ALWAYS_ASSERT(
             carry == 0,
-            "apn_add_n() identity carry test failed!\n"
-            "\t Operand length tested : %llu\n"
-            "\t Expected carry        : 0\n"
-            "\t Actual carry          : %llu\n",
-            i,
-            (unsigned long long)carry
+            "apn_add_n() identity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Actual carry          : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry
         );
 
         printf("PASSED\n");
@@ -555,28 +554,24 @@ static void check_apn_add_n(void)
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
-        printf("\t\tTesting size: %llu ... ", i);
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
         apn_seg_t carry = apn_add_n(op3, op1, op1, i);
         int cmp_res = apn_cmp(op3, op2, i);
 
         APAC_ALWAYS_ASSERT(
             carry == 1,
-            "apn_add_n() max+max carry test failed!\n"
-            "\t Operand length tested : %llu\n"
-            "\t Expected carry        : 1\n"
-            "\t Actual carry          : %llu\n",
-            i,
-            (unsigned long long)carry
+            "apn_add_n() carry-out test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n",
+            (apn_size_t)i
         );
 
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
-            "apn_add_n() max+max value test failed!\n"
-            "\t Operand length tested : %llu\n"
-            "\t Expected result       : FFFF...FFFE\n"
+            "apn_add_n() carry-out test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
             "\t Actual cmp result     : %d\n",
-            i,
+            (apn_size_t)i,
             cmp_res
         );
 
@@ -585,28 +580,95 @@ static void check_apn_add_n(void)
 
     printf("\n\tTEST-3: Monotonicity Test\n\n");
 
-    apn_set(op1, test_size, 0ULL);
-    apn_set(op2, test_size, 0ULL);
-    apn_set(op3, test_size, 0ULL);
+    for (apn_size_t i = 1; i <= test_size; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+
+        apn_seg_t carry = apn_add_n(op3, op1, op2, i);
+
+        int cmp3_1 = apn_cmp(op3, op1, i);
+        int cmp3_2 = apn_cmp(op3, op2, i);
+
+        int monotonic_ok =
+            (carry == 0) ? (cmp3_1 >= 0 && cmp3_2 >= 0)
+            : (cmp3_1 < 0 && cmp3_2 < 0);
+
+        APAC_ALWAYS_ASSERT(
+            monotonic_ok == 1,
+            "apn_add_n() monotonicity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Carry out             : %" PRI_APN_SEG "\n"
+            "\t cmp(op3, op1)         : %d\n"
+            "\t cmp(op3, op2)         : %d\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry,
+            cmp3_1,
+            cmp3_2
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-4: Commutativity Test\n\n");
 
     for (apn_size_t i = 1; i <= test_size; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
 
-        apn_seg_t carry = apn_add_n(op3, op2, op1, i);
+        apn_add_n(op3, op1, op2, i); /* a + b */
+        apn_add_n(op4, op2, op1, i); /* b + a */
 
-        int cmp3_1 = apn_cmp(op3, op1, i);
-        int cmp3_2 = apn_cmp(op3, op2, i);
+        int cmp = apn_cmp(op3, op4, i);
 
-        int monotonic_ok = (carry == 0) ? (cmp3_1 >= 0 && cmp3_2 >= 0) 
-                                        : (cmp3_1 < 0 && cmp3_2 < 0);
+        APAC_ALWAYS_ASSERT(
+            cmp == 0,
+            "apn_add_n() commutativity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(a+b, b+a)         : %d\n",
+            (apn_size_t)i,
+            cmp
+        );
 
-        // TO FINISH
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-5: Associativity Test\n\n");
+
+    for (apn_size_t i = 1; i <= test_size; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+        set_to_random(op3, i);
+
+        /* (a + b) + c */
+        apn_add_n(op4, op1, op2, i);
+        apn_add_n(op5, op4, op3, i);
+
+        /* a + (b + c) */
+        apn_add_n(op6, op2, op3, i);
+        apn_add_n(op4, op1, op6, i);
+
+        int cmp = apn_cmp(op5, op4, i);
+
+        APAC_ALWAYS_ASSERT(
+            cmp == 0,
+            "apn_add_n() associativity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp((a+b)+c, a+(b+c)) : %d\n",
+            (apn_size_t)i,
+            cmp
+        );
+
+        printf("PASSED\n");
     }
 
     TEST_END("apn_add_n");
 
+    apac_free(op6);
+    apac_free(op5);
+    apac_free(op4);
     apac_free(op3);
     apac_free(op2);
     apac_free(op1);

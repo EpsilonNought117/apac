@@ -23,14 +23,14 @@
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
-            #define SIZE_OF_VOID_PTR 8
+            #define SIZE_OF_VOID_PTR 8U
 
             #include <immintrin.h>
             #include <intrin.h>
 
         #elif defined(_M_ARM64) || defined(_M_ARM64EC)
 		
-            #define SIZE_OF_VOID_PTR 8
+            #define SIZE_OF_VOID_PTR 8U
 
 			// TODO
 
@@ -64,7 +64,7 @@
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
         
-            #define SIZE_OF_VOID_PTR 8
+            #define SIZE_OF_VOID_PTR 8U
 
             #include <x86intrin.h>
             #include <cpuid.h>
@@ -72,7 +72,7 @@
         
         #elif defined(__aarch64__) || defined(__arm64__)
 
-            #define SIZE_OF_VOID_PTR 8
+            #define SIZE_OF_VOID_PTR 8U
 
 		#else
 			#error "Unsupported Architecture on Linux/Unix/MacOS and GCC/Clang!"
@@ -96,14 +96,15 @@
 
 #endif
 
+typedef size_t  apn_size_t;
+
 #define PRI_APN_PTR     "p"
 #define PRI_APN_SIZE    "zu"
 
-#if (SIZE_OF_VOID_PTR == 8)
+#if (SIZE_OF_VOID_PTR == 8U)
 
     typedef uint64_t apn_seg_t;
-    typedef size_t  apn_size_t;
-
+    
     #define PRI_APN_SEG     PRIu64
 
 #endif
