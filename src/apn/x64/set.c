@@ -11,7 +11,7 @@ void set_avx512f_4unroll(
 {
 	__m512i my_val = _mm512_set1_epi64(val);
 
-	apn_size_t blocks = size & ((apn_size_t)-32);
+	apn_size_t blocks = size - (size % 32);
 	apn_size_t counter = 0;
 
 	while (counter < blocks)
@@ -45,7 +45,7 @@ void set_avx_4unroll(
 {
 	__m256i my_val = _mm256_set1_epi64x(val);
 
-	apn_size_t blocks = size & ((apn_size_t)-16);
+	apn_size_t blocks = size - (size % 16);
 	apn_size_t counter = 0;
 
 	while (counter < blocks)
@@ -78,7 +78,7 @@ void set_sse2_4unroll(
 {
 	__m128i my_val = _mm_set1_epi64x(val);
 
-	apn_size_t blocks = size & ((apn_size_t) - 8);
+	apn_size_t blocks = size - (size % 8);
 	apn_size_t counter = 0;
 
 	while (counter < blocks)

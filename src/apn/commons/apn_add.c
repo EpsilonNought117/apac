@@ -33,7 +33,7 @@ apn_seg_t apn_add(
 {
 	APAC_ASSERT(size2 != 0);
 	APAC_DETAILED_ASSERT(size1 >= size2,
-		"Expected size1 >= size2, got size1 (%zu) < size2 (%zu)",
+		"Expected size1 >= size2, got size1 (%" PRI_APN_SIZE ") < size2 (%" PRI_APN_SIZE ")\n",
 		size1, size2
 	);
 	APAC_ASSERT(result != NULL);

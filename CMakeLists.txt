@@ -83,6 +83,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
+
+# Option to disable runtime checks via APAC_ASSERTs
+option(APAC_DISABLE_ASSERT "Disable runtime checks via assert" ON)
     
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -223,8 +226,3 @@ else()
 endif()
 
 set(apac_target apac)
-    
-# Configuration-specific definitions
-target_compile_definitions(${apac_target} PRIVATE
-    "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
-)

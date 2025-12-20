@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
+#include <inttypes.h>
 
 /****************************************************************************************************/
 /******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
@@ -22,11 +23,15 @@
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
+            #define SIZE_OF_VOID_PTR 8
+
             #include <immintrin.h>
             #include <intrin.h>
 
         #elif defined(_M_ARM64) || defined(_M_ARM64EC)
 		
+            #define SIZE_OF_VOID_PTR 8
+
 			// TODO
 
 		#else
@@ -59,11 +64,15 @@
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
         
+            #define SIZE_OF_VOID_PTR 8
+
             #include <x86intrin.h>
             #include <cpuid.h>
             #include <immintrin.h>
         
         #elif defined(__aarch64__) || defined(__arm64__)
+
+            #define SIZE_OF_VOID_PTR 8
 
 		#else
 			#error "Unsupported Architecture on Linux/Unix/MacOS and GCC/Clang!"
@@ -84,6 +93,18 @@
 #else
 
     #error "Unknown Platform!"
+
+#endif
+
+#define PRI_APN_PTR     "p"
+#define PRI_APN_SIZE    "zu"
+
+#if (SIZE_OF_VOID_PTR == 8)
+
+    typedef uint64_t apn_seg_t;
+    typedef size_t  apn_size_t;
+
+    #define PRI_APN_SEG     PRIu64
 
 #endif
 
@@ -204,15 +225,16 @@ typedef enum apac_err
      * @note
      *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
      */
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                         \
-            APAC_ASSERT_IMPL(                                               \
-                ((op1) + (size1) <= (op2)) || ((op2) + (size2) <= (op1)),   \
-                "Memory regions overlap:\n"                                 \
-                "  op1: %p  size1: %zu\n"                                   \
-                "  op2: %p  size2: %zu",                                    \
-                (apn_seg_t*)(op1), (size_t)(size1),                         \
-                (apn_seg_t*)(op2), (size_t)(size2)                          \
-            )
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                             \
+        APAC_ASSERT_IMPL(                                                       \
+            ((uintptr_t)(op1) + (size1) <= (uintptr_t)(op2)) ||                 \
+            ((uintptr_t)(op2) + (size2) <= (uintptr_t)(op1)),                   \
+            "Memory regions overlap:\n"                                         \
+            "\t op1: (%" PRI_APN_PTR ") size1: (%" PRI_APN_SIZE ")\n"           \
+            "\t op2: (%" PRI_APN_PTR ") size2: (%" PRI_APN_SIZE ")\n",          \
+            (void *)(op1), (apn_size_t)(size1),                                 \
+            (void *)(op2), (apn_size_t)(size2)                                  \
+        )
 
     /**
      * @def APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)
@@ -235,18 +257,20 @@ typedef enum apac_err
      * @note
      *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
      */
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)              \
-            APAC_ASSERT_IMPL(                                               \
-                ((op1) + (size1) <= (op2)) ||                               \
-                ((op1) + (size1) <= (op2) + (size2)),                       \
-                "Invalid partial overlap: op1 extends beyond op2's end.\n"  \
-                "  op1: %p  size1: %zu  end: %p\n"                          \
-                "  op2: %p  size2: %zu  end: %p",                           \
-                (apn_seg_t*)(op1), (size_t)(size1),                         \
-                (apn_seg_t*)((apn_seg_t*)(op1) + (size1)),                  \
-                (apn_seg_t*)(op2), (size_t)(size2),                         \
-                (apn_seg_t*)((apn_seg_t*)(op2) + (size2))                   \
-            )
+
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                                  \
+        APAC_ASSERT_IMPL(                                                                       \
+            ((uintptr_t)(op1) + (size1) <= (uintptr_t)(op2)) ||                                 \
+            ((uintptr_t)(op1) + (size1) <=                                                      \
+             (uintptr_t)(op2) + (size2)),                                                       \
+            "Invalid partial overlap: op1 extends beyond op2's end.\n"                          \
+            "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n"  \
+            "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n", \
+            (void *)(op1), (apn_size_t)(size1),                                                 \
+            (void *)((uintptr_t)(op1) + (size1)),                                               \
+            (void *)(op2), (apn_size_t)(size2),                                                 \
+            (void *)((uintptr_t)(op2) + (size2))                                                \
+        )
 
     /**
      * @def APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)
@@ -265,16 +289,19 @@ typedef enum apac_err
      * @param size2
      *     Size of the second region.
      */
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)              \
-            APAC_ASSERT_IMPL(                                               \
-                ((op1) >= ((op2) + (size2))) ||                             \
-                (((op1) + (size1)) >= ((op2) + (size2))),                   \
-                "Invalid partial overlap: op1 extends below op2's start.\n" \
-                "  op1: %p  size1: %zu  start: %p\n"                        \
-                "  op2: %p  size2: %zu  start: %p",                         \
-                (apn_seg_t*)(op1), (size_t)(size1), (apn_seg_t*)(op1),      \
-                (apn_seg_t*)(op2), (size_t)(size2), (apn_seg_t*)(op2)       \
-            )
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                                      \
+        APAC_ASSERT_IMPL(                                                                           \
+            ((uintptr_t)(op1) >= (uintptr_t)(op2) + (size2)) ||                                     \
+            ((uintptr_t)(op1) + (size1) >= (uintptr_t)(op2) + (size2)),                             \
+            "Invalid partial overlap: op1 extends below op2's start.\n"                             \
+            "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n"    \
+            "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n",   \
+            (void *)(op1), (apn_size_t)(size1),                                                     \
+            (void *)(op1),                                                                          \
+            (void *)(op2), (apn_size_t)(size2),                                                     \
+            (void *)(op2)                                                                           \
+        )
+
 
 #else
 
@@ -301,8 +328,7 @@ typedef enum apac_err
  * @param ...
  *     Optional printf-style arguments.
  */
-#define APAC_ALWAYS_ASSERT(expr, fmt, ...)          \
-        APAC_ASSERT_IMPL(expr, fmt, __VA_ARGS__)
+#define APAC_ALWAYS_ASSERT(expr, fmt, ...) APAC_ASSERT_IMPL(expr, fmt, __VA_ARGS__)
 
 /**
  * @def APAC_LOG_ERR(msg)
@@ -330,9 +356,6 @@ APAC_API void apacSetMemFuncs(
 APAC_API void apacGetCPUSpec(void);
 
 APAC_API void apacInit(void);
-
-typedef uint64_t apn_seg_t;
-typedef size_t apn_size_t;
 
 typedef struct apac_cpu_params
 {

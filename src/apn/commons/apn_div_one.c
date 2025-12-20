@@ -17,7 +17,6 @@ apn_seg_t apn_div_one(
         "Malformed divisor: divisor64 must not be zero"
     );
 
-
     apn_seg_t rmdr = 0ULL;
 
     if (size_divd == 1)

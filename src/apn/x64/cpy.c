@@ -9,7 +9,8 @@ void cpy_avx512f_4unroll(
 	apn_size_t size
 )
 {
-	apn_size_t blocks = size & ((apn_size_t)(-32)); // first process blocks of 32 limbs
+	// first process blocks of 32 limbs
+	apn_size_t blocks = size - (size % 32);
 	apn_size_t counter = 0;
 
 	while (counter < blocks)
@@ -60,7 +61,8 @@ void cpy_avx_4unroll(
 	apn_size_t size
 )
 {
-	apn_size_t blocks = size & ((apn_size_t)(-16));  // first process blocks of 16 limbs
+	// first process blocks of 16 limbs
+	apn_size_t blocks = size - (size % 16);
 	apn_size_t counter = 0;
 
 	while (counter < blocks)
@@ -100,7 +102,8 @@ void cpy_sse2_4unroll(
 	apn_size_t size
 )
 {
-	apn_size_t blocks = size & ((apn_size_t)(-8));	// first process blocks of 8 limbs
+	// first process blocks of 8 limbs
+	apn_size_t blocks = size - (size % 8);
 	apn_size_t counter = 0;
 
 	while (counter < blocks)

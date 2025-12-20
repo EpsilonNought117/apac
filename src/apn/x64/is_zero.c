@@ -8,7 +8,7 @@ int is_zero_avx512f_4unroll(
     apn_size_t size
 )
 {
-    apn_size_t blocks = size & ((apn_size_t)(-32));
+    apn_size_t blocks = size - (size % 32);
     apn_size_t counter = 0;
     __m512i zero_reg = _mm512_setzero_si512();
 
@@ -86,7 +86,7 @@ int is_zero_avx2_4unroll(
     apn_size_t size
 )
 {
-    apn_size_t blocks = size & ((apn_size_t)(-16));
+    apn_size_t blocks = size - (size % 16);
     apn_size_t counter = 0;
     __m256i zero_reg = _mm256_setzero_si256();
 
@@ -143,7 +143,7 @@ int is_zero_sse2_4unroll(
     apn_size_t size
 )
 {
-    apn_size_t blocks = size & ((apn_size_t)(-8));
+    apn_size_t blocks = size - (size % 8);
     apn_size_t counter = 0;
     __m128i zero_reg = _mm_setzero_si128();
 

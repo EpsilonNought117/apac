@@ -19,8 +19,8 @@ int cmp_avx2_4unroll(
 	apn_size_t size
 )
 {
-	apn_size_t blocks = size & ((apn_seg_t)-16);
-	apn_size_t remainder = size & ((apn_seg_t)15);
+	apn_size_t remainder = size % 16;
+	apn_size_t blocks = size - remainder;
 
 	while (remainder)
 	{
@@ -109,8 +109,8 @@ int cmp_sse2_4unroll(
 	apn_size_t size
 )
 {
-	apn_size_t blocks = size & ((apn_seg_t)-8);
-	apn_size_t remainder = size & ((apn_seg_t)7);
+	apn_size_t remainder = size % 8;
+	apn_size_t blocks = size - remainder;
 
 	while (remainder)
 	{

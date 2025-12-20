@@ -23,9 +23,10 @@ apac_err apn_div(
     APAC_ASSERT(dividend != NULL);
     APAC_ASSERT(divisor != NULL);
     APAC_ASSERT(size_dvsr != 0);
-    APAC_DETAILED_ASSERT(size_divd >= size_dvsr,
-        "Expected size_divd >= size_dvsr, got size_divd (%zu) < size_dvsr (%zu)",
-        (size_t)size_divd, (size_t)size_dvsr
+    APAC_DETAILED_ASSERT(
+        size_divd >= size_dvsr,
+        "Expected size_divd >= size_dvsr, got size_divd (%" PRI_APN_SIZE ") < size_dvsr (%" PRI_APN_SIZE ")",
+        (apn_size_t)size_divd, (apn_size_t)size_dvsr
     );
 
     apn_size_t size_quot = size_divd - size_dvsr + 1;
