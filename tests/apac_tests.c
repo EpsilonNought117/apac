@@ -94,11 +94,11 @@ static void set_to_random(apn_seg_t* op1, apn_size_t size)
 *  7)  apn_add          - done
 *  8)  apn_neg          - done
 *  9)  apn_sub_one      - done
-* 10)  apn_sub_n
-* 11)  apn_sub
-* 12)  apn_lshift
-* 13)  apn_rshift
-* 14)  apn_addmul_one
+* 10)  apn_sub_n        - done
+* 11)  apn_sub          - done
+* 12)  apn_addmul_one   - done
+* 13)  apn_lshift
+* 14)  apn_rshift
 * 15)  apn_submul_one
 * 16)  apn_mul_n
 * 17)  apn_mul
@@ -141,9 +141,8 @@ static void check_apn_set(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_set() memcmp test failed!\n"
-            "\t Operand length tested       : %" PRI_APN_SIZE "\n"
-            "\t Expected comparison result  : 0\n"
-            "\t Actual comparison result    : %i\n",
+            "\t Operand length tested    : %" PRI_APN_SIZE "\n"
+            "\t Actual comparison result : %i\n",
             (apn_size_t)i,
             cmp_res
         );
@@ -180,9 +179,8 @@ static void check_apn_cpy(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_cpy() equality test failed!\n"
-            "\t Operand length tested           : %" PRI_APN_SIZE "\n"
-            "\t Expected comparison result      : 0\n"
-            "\t Actual comparison result        : %i\n",
+            "\t Operand length tested    : %" PRI_APN_SIZE "\n"
+            "\t Actual comparison result : %i\n",
             (apn_size_t)i,
             cmp_res
         );
@@ -228,9 +226,8 @@ static void check_apn_cmp(void)
         APAC_ALWAYS_ASSERT(
             cmp_res == 0,
             "apn_cmp() equality test failed!\n"
-            "\t Operand length tested        : %" PRI_APN_SIZE "\n"
-            "\t Expected comparison result  : 0\n"
-            "\t Actual comparison result    : %i\n",
+            "\t Operand length tested    : %" PRI_APN_SIZE "\n"
+            "\t Actual comparison result : %i\n",
             (apn_size_t)i,
             cmp_res
         );
@@ -329,7 +326,6 @@ static void check_apn_is_zero(void)
             res == 0,
             "apn_is_zero() all-zero test failed!\n"
             "\t Operand length tested        : %" PRI_APN_SIZE "\n"
-            "\t Expected result              : 0\n"
             "\t Actual result                : %i\n",
             (apn_size_t)i,
             res
@@ -359,7 +355,6 @@ static void check_apn_is_zero(void)
             "\t Operand length tested        : %" PRI_APN_SIZE "\n"
             "\t Non-zero position            : %" PRI_APN_SIZE "\n"
             "\t Non-zero value               : %" PRI_APN_SEG "\n"
-            "\t Expected result              : 1\n"
             "\t Actual result                : %i\n",
             (apn_size_t)i,
             (apn_size_t)pos,
@@ -402,7 +397,6 @@ static void check_apn_add_one(void)
             carry_out == 1,
             "apn_add_one() carry propagation test failed!\n"
             "\t Operand length tested      : %" PRI_APN_SIZE "\n"
-            "\t Expected carry value       : 1\n"
             "\t Actual carry value         : %" PRI_APN_SEG "\n",
             (apn_size_t)i,
             (apn_seg_t)carry_out
@@ -414,7 +408,6 @@ static void check_apn_add_one(void)
 			is_zero == 0,
 			"apn_add_one() carry propagation test failed!\n"
 			"\t Operand length tested      : %" PRI_APN_SIZE "\n"
-			"\t Expected result (is_zero)  : 0\n"
 			"\t Actual result (is_zero)    : %d\n",
 			i,
 			is_zero
@@ -446,7 +439,6 @@ static void check_apn_add_one(void)
             carry_out == 0,
             "apn_add_one() identity test failed!\n"
             "\t Operand length tested      : %" PRI_APN_SIZE "\n"
-            "\t Expected carry value       : 0\n"
             "\t Actual carry value         : %" PRI_APN_SEG "\n",
             (apn_size_t)i,
             (apn_seg_t)carry_out
@@ -458,7 +450,6 @@ static void check_apn_add_one(void)
 			is_equal == 0,
 			"apn_add_one() identity test failed!\n"
 			"\t Operand length tested      : %" PRI_APN_SIZE "\n"
-			"\t Expected result (cmp)      : 0 (identity property)\n"
 			"\t Actual result (cmp)        : %d\n",
 			i,
 			is_equal
@@ -578,8 +569,10 @@ static void check_apn_add_n(void)
         APAC_ALWAYS_ASSERT(
             carry == 1,
             "apn_add_n() carry-out test failed!\n"
-            "\t Operand length tested : %" PRI_APN_SIZE "\n",
-            (apn_size_t)i
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Actual carry          : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry
         );
 
         APAC_ALWAYS_ASSERT(
@@ -929,7 +922,6 @@ static void check_apn_sub_one(void)
             borrow_out == 1,
             "apn_sub_one() borrow propagation test failed!\n"
             "\t Operand length tested      : %" PRI_APN_SIZE "\n"
-            "\t Expected borrow value      : 1\n"
             "\t Actual borrow value        : %" PRI_APN_SEG "\n",
             i,
             borrow_out
@@ -941,7 +933,6 @@ static void check_apn_sub_one(void)
             cmp_res == 0,
             "apn_sub_one() borrow propagation test failed!\n"
             "\t Operand length tested   : %" PRI_APN_SIZE "\n"
-            "\t Expected result         : op3 == op2\n"
             "\t Actual cmp(op3, op2)    : %d\n",
             i,
             cmp_res
@@ -966,7 +957,6 @@ static void check_apn_sub_one(void)
             borrow_out == 0,
             "apn_sub_one() identity test failed!\n"
             "\t Operand length tested      : %" PRI_APN_SIZE "\n"
-            "\t Expected borrow value      : 0\n"
             "\t Actual borrow value        : %" PRI_APN_SEG "\n",
             i,
             borrow_out
@@ -1037,10 +1027,312 @@ static void check_apn_sub_one(void)
     TEST_END("apn_sub_one");
 }
 
+static void check_apn_sub_n(void)
+{
+    TEST_START("apn_sub_n");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL;
+    apn_seg_t* op3 = NULL, * op4 = NULL;;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX);
+
+    printf("\n\tTEST-1: Subtracting Identity Element:\n\n");
+    
+    apn_set(op2, TEST_SIZE_MAX, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
+
+        set_to_random(op1, i);
+
+        apn_seg_t carry = apn_sub_n(op3, op1, op2, i);
+
+        int cmp_res = apn_cmp(op3, op1, i);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_sub_n() identity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Actual cmp result     : %d\n",
+            (apn_size_t)i,
+            cmp_res
+        );
+
+        APAC_ALWAYS_ASSERT(
+            carry == 0,
+            "apn_add_n() identity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Actual carry          : %" PRI_APN_SEG  "\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-2: Full borrow propagation\n\n");
+
+    apn_set(op2, TEST_SIZE_MAX, 0);
+    apn_set(op1, TEST_SIZE_MAX, 0);
+    op1[0] = 1;
+
+    apn_set(op4, TEST_SIZE_MAX, APN_SEG_MAX);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
+
+        apn_seg_t carry = apn_sub_n(op3, op2, op1, i);
+
+        int is_max = apn_cmp(op4, op3, i);  // should be equal
+
+        APAC_ALWAYS_ASSERT(
+            carry == 1,
+            "apn_sub_n() full borrow propagation test failed: missing borrow!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Actual borrow         : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            (apn_seg_t)carry
+        );
+
+        APAC_ALWAYS_ASSERT(
+            is_max == 0,
+            "apn_sub_n() full borrow propagation test failed: result not zero!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t apn_is_zero(result)   : %d\n",
+            (apn_size_t)i,
+            is_max
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-3: Self subtraction (a - a = 0)\n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
+
+        set_to_random(op1, i);
+
+        /* op3 = op1 - op1 */
+        apn_seg_t borrow = apn_sub_n(op3, op1, op1, i);
+
+        int is_zero = apn_is_zero(op3, i);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == 0,
+            "apn_sub_n() self subtraction failed: unexpected borrow!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Borrow                : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            (apn_seg_t)borrow
+        );
+
+        APAC_ALWAYS_ASSERT(
+            is_zero == 0,
+            "apn_sub_n() self subtraction failed: result not zero!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t apn_is_zero(result)   : %d\n",
+            (apn_size_t)i,
+            is_zero
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-4: Borrow invariant (borrow == a < b)\n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
+
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+
+        apn_seg_t borrow = apn_sub_n(op3, op1, op2, i);
+
+        int cmp = apn_cmp(op1, op2, i);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == (cmp < 0),
+            "apn_sub_n() borrow invariant failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(a, b)             : %d\n"
+            "\t borrow                : %" PRI_APN_SEG "\n",
+            (apn_size_t)i,
+            cmp,
+            (apn_seg_t)borrow
+        );
+
+        printf("PASSED\n");
+    }
+
+    apac_free(op4);
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_sub_n");
+}
+
+static void check_apn_sub(void)
+{
+    TEST_START("apn_sub");
+
+    apn_seg_t* a = NULL, * b = NULL, * r = NULL, * t = NULL;
+
+    MALLOC_AND_CHECK(a, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(b, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(r, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(t, TEST_SIZE_MAX);
+
+    printf("\n\tTEST-1: Identity (a - 0 = a)\n\n");
+
+    apn_set(b, TEST_SIZE_MAX, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        for (apn_size_t j = 1; j <= i; j++)
+        {
+            printf("\tTesting size: %" PRI_APN_SIZE ", %" PRI_APN_SIZE " ... ",
+                i, j);
+
+            set_to_random(a, i);
+
+            apn_seg_t borrow = apn_sub(r, a, b, i, j);
+            int cmp = apn_cmp(r, a, i);
+
+            APAC_ALWAYS_ASSERT(
+                borrow == 0,
+                "apn_sub() identity failed: unexpected borrow!\n"
+                "\t size_a : %" PRI_APN_SIZE "\n"
+                "\t size_b : %" PRI_APN_SIZE "\n",
+                i, j
+            );
+
+            APAC_ALWAYS_ASSERT(
+                cmp == 0,
+                "apn_sub() identity failed: result mismatch!\n"
+                "\t size_a : %" PRI_APN_SIZE "\n"
+                "\t size_b : %" PRI_APN_SIZE "\n",
+                i, j
+            );
+
+            printf("PASSED\n");
+        }
+    }
+
+    printf("\n\tTEST-2: Borrow invariant (borrow == a < b)\n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        for (apn_size_t j = 1; j <= i; j++)
+        {
+            printf(
+                "\tTesting size: a=%" PRI_APN_SIZE ", b=%" PRI_APN_SIZE " ... ",
+                i, j
+            );
+
+            set_to_random(a, i);
+
+            /* IMPORTANT: zero b fully before setting lower j limbs */
+            apn_set(b, i, 0);
+            set_to_random(b, j);
+
+            apn_seg_t borrow = apn_sub(r, a, b, i, j);
+
+            int cmp = apn_cmp(a, b, i);
+
+            APAC_ALWAYS_ASSERT(
+                borrow == (cmp < 0),
+                "apn_sub() borrow invariant failed!\n"
+                "\t size_a : %" PRI_APN_SIZE "\n"
+                "\t size_b : %" PRI_APN_SIZE "\n"
+                "\t cmp    : %d\n"
+                "\t borrow : %" PRI_APN_SEG "\n",
+                i, j, cmp, borrow
+            );
+
+            printf("PASSED\n");
+        }
+    }
+
+    printf("\n\tTEST-3: Full borrow propagation (0 - 1)\n\n");
+
+    apn_set(t, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(a, TEST_SIZE_MAX, 0);
+    apn_set(b, TEST_SIZE_MAX, 0);
+    b[0] = 1;
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
+
+        apn_seg_t borrow = apn_sub(r, a, b, i, 1);
+        int is_max = apn_cmp(r, t, i);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == 1,
+            "apn_sub() full borrow propagation failed!\n"
+            "\t size : %" PRI_APN_SIZE "\n",
+            i
+        );
+
+        APAC_ALWAYS_ASSERT(
+            is_max == 0,
+            "apn_sub() full borrow propagation failed: result not zero!\n"
+            "\t size : %" PRI_APN_SIZE "\n",
+            i
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-4: Self subtraction (a - a = 0)\n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
+
+        set_to_random(a, i);
+
+        apn_seg_t borrow = apn_sub(r, a, a, i, i);
+        int is_zero = apn_is_zero(r, i);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == 0,
+            "apn_sub() self subtraction failed: borrow!\n"
+            "\t size : %" PRI_APN_SIZE "\n",
+            i
+        );
+
+        APAC_ALWAYS_ASSERT(
+            is_zero == 0,
+            "apn_sub() self subtraction failed: result not zero!\n"
+            "\t size : %" PRI_APN_SIZE "\n",
+            i
+        );
+
+        printf("PASSED\n");
+    }
+
+    apac_free(t);
+    apac_free(r);
+    apac_free(b);
+    apac_free(a);
+
+    TEST_END("apn_sub");
+}
+
 int main(void)
 {
 	apacInit();
-	random_sfc64_seed(0x117ULL);
+	random_sfc64_seed(0xFULL);
 
     check_apn_set();
     check_apn_cpy();
@@ -1051,6 +1343,8 @@ int main(void)
     check_apn_add();
     check_apn_neg();
     check_apn_sub_one();
+    check_apn_sub_n();
+    check_apn_sub();
 
     printf("\nALL FUNCTIONS TESTED!");
 	
