@@ -1329,6 +1329,174 @@ static void check_apn_sub(void)
     TEST_END("apn_sub");
 }
 
+static void check_apn_addmul_one(void)
+{
+    TEST_START("apn_addmul_one");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX + 1);
+
+    printf("\n\tTEST-1: Max Value * APN_SEG_MAX (full carry chain)\n\n");
+
+    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
+        
+        apn_set(op2, i + 1, 0);
+        apn_set(op3, i + 1, APN_SEG_MAX);
+        op3[i] = APN_SEG_MAX - 1;
+        op3[0] = 1;
+
+        apn_seg_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
+
+        APAC_ALWAYS_ASSERT(
+            carry == 0,
+            "apn_addmul_one() max value test failed!\n"
+            "\t size  : %" PRI_APN_SIZE "\n"
+            "\t carry : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)carry
+        );
+
+        int cmp_res = apn_cmp(op3, op2, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_addmul_one() max value test failed!\n"
+            "\t size                : %" PRI_APN_SIZE "\n"
+            "\t comparision result  : %d\n",
+            i,
+            cmp_res
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-2: Identity Test (k = 1)\n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
+
+        set_to_random(op1, i);
+        set_to_random(op2, i + 1);
+        apn_cpy(op3, op2, i + 1);
+
+        apn_seg_t carry_ref = apn_add(op3, op3, op1, i + 1, i);
+
+        apn_seg_t carry = apn_addmul_one(op2, op1, i, 1);
+
+        APAC_ALWAYS_ASSERT(
+            carry == carry_ref,
+            "apn_addmul_one() identity test failed: carry mismatch!\n"
+            "\t size  : %" PRI_APN_SIZE "\n"
+            "\t carry : %" PRI_APN_SEG "\n"
+            "\t ref   : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)carry,
+            (apn_seg_t)carry_ref
+        );
+
+        int cmp_res = apn_cmp(op3, op2, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_addmul_one() identity test failed: result mismatch!\n"
+            "\t size               : %" PRI_APN_SIZE "\n"
+            "\t comparison result  : %d\n",
+            i,
+            cmp_res
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-3: Multiplication with zero (k = 0)\n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
+
+        set_to_random(op1, i);
+        set_to_random(op2, i + 1);
+        apn_cpy(op3, op2, i + 1);
+
+        apn_seg_t carry = apn_addmul_one(op2, op1, i, 0);
+
+        int cmp_res = apn_cmp(op2, op3, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            carry == 0,
+            "apn_addmul_one() zero-multiply test failed: unexpected carry!\n"
+            "\t size  : %" PRI_APN_SIZE "\n"
+            "\t carry : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)carry
+        );
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_addmul_one() zero-multiply test failed: destination modified!\n"
+            "\t size               : %" PRI_APN_SIZE "\n"
+            "\t comparison result  : %d\n",
+            i,
+            cmp_res
+        );
+
+        printf("PASSED\n");
+    }
+
+    printf("\n\tTEST-X: Max Value * APN_SEG_MAX with non-zero destination\n\n");
+
+    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
+
+        apn_set(op2, i + 1, APN_SEG_MAX);
+        apn_set(op3, i + 1, APN_SEG_MAX);
+
+        op3[0] = 0;
+        op3[i] = APN_SEG_MAX - 1;
+
+        apn_seg_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
+
+        APAC_ALWAYS_ASSERT(
+            carry == 1,
+            "apn_addmul_one() non-zero destination test failed: missing carry!\n"
+            "\t size  : %" PRI_APN_SIZE "\n"
+            "\t carry : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)carry
+        );
+
+        int cmp_res = apn_cmp(op3, op2, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_addmul_one() non-zero destination test failed!\n"
+            "\t size               : %" PRI_APN_SIZE "\n"
+            "\t comparison result  : %d\n",
+            i,
+            cmp_res
+        );
+
+        printf("PASSED\n");
+    }
+
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_addmul_one");
+}
+
 int main(void)
 {
 	apacInit();
@@ -1345,6 +1513,7 @@ int main(void)
     check_apn_sub_one();
     check_apn_sub_n();
     check_apn_sub();
+    check_apn_addmul_one();
 
     printf("\nALL FUNCTIONS TESTED!");
 	
