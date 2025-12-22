@@ -28,7 +28,7 @@
 			}																			\
 		}	
 
-#define TEST_SIZE_MAX   (apn_size_t)256ULL
+#define TEST_SIZE_MAX   (apn_size_t)512ULL
 
 #if defined(_MSC_VER)
 
@@ -113,14 +113,13 @@ static void check_apn_set(void)
     TEST_START("apn_set");
 
     apn_seg_t* op1 = NULL, * op2 = NULL;
-    apn_size_t test_size = 256ULL;
 
-    MALLOC_AND_CHECK(op1, test_size);
-    MALLOC_AND_CHECK(op2, test_size);
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
 
     printf("\nTEST-1: Comparison against memset\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -163,14 +162,13 @@ static void check_apn_cpy(void)
     TEST_START("apn_cpy");
 
     apn_seg_t* op1 = NULL, * op2 = NULL;
-    apn_size_t test_size = 512ULL;
 
-    MALLOC_AND_CHECK(op1, test_size);
-    MALLOC_AND_CHECK(op2, test_size);
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
 
-    apn_set(op1, test_size, 0ULL);
+    apn_set(op1, TEST_SIZE_MAX, 0ULL);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
         
@@ -205,14 +203,13 @@ static void check_apn_cmp(void)
     TEST_START("apn_cmp");
 
     apn_seg_t* op1 = NULL, * op2 = NULL;
-    apn_size_t test_size = 512ULL;
 
-    MALLOC_AND_CHECK(op1, test_size);
-    MALLOC_AND_CHECK(op2, test_size);
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
 
     printf("\nTEST-1: Equality test\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -243,7 +240,7 @@ static void check_apn_cmp(void)
 
     printf("\nTEST-2: Single segment difference test\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -315,15 +312,14 @@ static void check_apn_is_zero(void)
     TEST_START("apn_is_zero");
 
     apn_seg_t* op = NULL;
-    apn_size_t test_size = 256ULL;
 
-    MALLOC_AND_CHECK(op, test_size);
+    MALLOC_AND_CHECK(op, TEST_SIZE_MAX);
 
-    apn_set(op, test_size, 0);
+    apn_set(op, TEST_SIZE_MAX, 0);
 
     printf("\n\tTEST-1: All-zero input\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -344,7 +340,7 @@ static void check_apn_is_zero(void)
 
     printf("\n\tTEST-2: Single non-zero segment\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -386,18 +382,17 @@ static void check_apn_add_one(void)
     TEST_START("apn_add_one");
 
 	apn_seg_t* op1 = NULL, *op2 = NULL;
-	apn_size_t test_size = 128ULL;
 
-	MALLOC_AND_CHECK(op1, test_size);
-	MALLOC_AND_CHECK(op2, test_size);
+	MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+	MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
 
 	/* TEST-1: Carry Propagation */
 	printf("\n\tTEST-1: Full Carry propagation\n\n");
 
-	apn_set(op1, test_size, APN_SEG_MAX);
-	apn_set(op2, test_size, 0x00ULL);
+	apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+	apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
-	for (apn_size_t i = 1; i <= test_size; i++)
+	for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
 	{
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -431,9 +426,9 @@ static void check_apn_add_one(void)
 	/* TEST-2 Adding Identity Element */
 	printf("\n\tTEST-2: Adding Identity Element\n\n");
 
-	apn_set(op2, test_size, 0x00ULL);
+	apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
-	for (apn_size_t i = 1; i <= test_size; i++)
+	for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
 	{
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -475,10 +470,10 @@ static void check_apn_add_one(void)
 	/* TEST-3 No Carry Test */
 	printf("\n\tTEST-3: Monotonicity Test\n\n");
 
-    apn_set(op1, test_size, 0ULL);
-    apn_set(op2, test_size, 0ULL);
+    apn_set(op1, TEST_SIZE_MAX, 0ULL);
+    apn_set(op2, TEST_SIZE_MAX, 0ULL);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -525,20 +520,19 @@ static void check_apn_add_n(void)
 
     apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
     apn_seg_t* op4 = NULL, * op5 = NULL, * op6 = NULL;
-    apn_size_t test_size = 128ULL;
 
-    MALLOC_AND_CHECK(op1, test_size);
-    MALLOC_AND_CHECK(op2, test_size);
-    MALLOC_AND_CHECK(op3, test_size);
-    MALLOC_AND_CHECK(op4, test_size);
-    MALLOC_AND_CHECK(op5, test_size);
-    MALLOC_AND_CHECK(op6, test_size);
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op5, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op6, TEST_SIZE_MAX);
 
-    apn_set(op2, test_size, 0);
+    apn_set(op2, TEST_SIZE_MAX, 0);
 
     printf("\n\tTEST-1: Adding identity element\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -570,11 +564,11 @@ static void check_apn_add_n(void)
 
     printf("\n\tTEST-2: Carry Out Test\n\n");
 
-    apn_set(op1, test_size, APN_SEG_MAX);
-    apn_set(op2, test_size, APN_SEG_MAX);
+    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op2, TEST_SIZE_MAX, APN_SEG_MAX);
     op2[0] = APN_SEG_MAX - 1;
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -602,7 +596,7 @@ static void check_apn_add_n(void)
 
     printf("\n\tTEST-3: Monotonicity Test\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -636,7 +630,7 @@ static void check_apn_add_n(void)
 
     printf("\n\tTEST-4: Commutativity Test\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -662,7 +656,7 @@ static void check_apn_add_n(void)
 
     printf("\n\tTEST-5: Associativity Test\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", (apn_size_t)i);
 
@@ -719,22 +713,20 @@ static void check_apn_add(void)
 {
     TEST_START("apn_add");
 
-    const apn_size_t test_size = 64;
-
     apn_seg_t* a = NULL, * b = NULL;
     apn_seg_t* r1 = NULL, * t1 = NULL;
 
-    MALLOC_AND_CHECK(a, test_size);
-    MALLOC_AND_CHECK(b, test_size);
-    MALLOC_AND_CHECK(r1, test_size);
-    MALLOC_AND_CHECK(t1, test_size);
+    MALLOC_AND_CHECK(a, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(b, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(r1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(t1, TEST_SIZE_MAX);
 
     printf("\n\tTEST-1: Identity (a + 0 = a)\n\n");
 
     /* b = 0 for entire test */
-    apn_set(b, test_size, 0);
+    apn_set(b, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (apn_size_t j = 1; j <= i; j++)
         {
@@ -772,7 +764,7 @@ static void check_apn_add(void)
 
     printf("\n\tTEST-2: Correctness vs apn_add_n()\n\n");
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: i=%" PRI_APN_SIZE " ... ", i);
 
@@ -805,10 +797,10 @@ static void check_apn_add(void)
 
     printf("\n\tTEST-3: Full carry-out (all-ones operands)\n\n");
 
-    apn_set(a, test_size, APN_SEG_MAX);
-    apn_set(b, test_size, APN_SEG_MAX);
+    apn_set(a, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(b, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (apn_size_t j = 1; j <= i; j++)
         {
@@ -862,15 +854,13 @@ static void check_apn_neg(void)
     apn_seg_t* op2 = NULL;
     apn_seg_t* op3 = NULL;
 
-    apn_size_t max_size = 128;
-
-    MALLOC_AND_CHECK(op1, max_size);
-    MALLOC_AND_CHECK(op2, max_size);
-    MALLOC_AND_CHECK(op3, max_size);
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
 
     printf("\n\tTEST-1: a + (-a) == 0 with carry\n\n");
 
-    for (apn_size_t size = 1; size <= max_size; size++)
+    for (apn_size_t size = 1; size <= TEST_SIZE_MAX; size++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", size);
 
@@ -917,20 +907,19 @@ static void check_apn_sub_one(void)
     apn_seg_t* op1 = NULL;
     apn_seg_t* op2 = NULL;
     apn_seg_t* op3 = NULL;
-    const apn_size_t test_size = 128ULL;
 
-    MALLOC_AND_CHECK(op1, test_size);
-    MALLOC_AND_CHECK(op2, test_size);
-    MALLOC_AND_CHECK(op3, test_size);
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
 
     /* TEST-1: Full Borrow Propagation */
     printf("\n\tTEST-1: Full Borrow propagation\n\n");
 
-    apn_set(op1, test_size, 0x00ULL);
-    apn_set(op2, test_size, 0x00ULL);
-    apn_set(op3, test_size, APN_SEG_MAX);
+    apn_set(op1, TEST_SIZE_MAX, 0x00ULL);
+    apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
+    apn_set(op3, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
 
@@ -964,9 +953,9 @@ static void check_apn_sub_one(void)
     /* TEST-2: Subtracting Identity Element */
     printf("\n\tTEST-2: Subtracting Identity Element\n\n");
 
-    apn_set(op2, test_size, 0x00ULL);
+    apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
 
@@ -1001,10 +990,10 @@ static void check_apn_sub_one(void)
     /* TEST-3: Monotonicity Test */
     printf("\n\tTEST-3: Monotonicity Test\n\n");
 
-    apn_set(op1, test_size, 0ULL);
-    apn_set(op2, test_size, 0ULL);
+    apn_set(op1, TEST_SIZE_MAX, 0ULL);
+    apn_set(op2, TEST_SIZE_MAX, 0ULL);
 
-    for (apn_size_t i = 1; i <= test_size; i++)
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         printf("\tTesting size: %" PRI_APN_SIZE " ... ", i);
 
