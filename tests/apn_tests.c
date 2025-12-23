@@ -30,7 +30,7 @@
 
 #endif
 
-/* PRNG */
+/* PRNG - SFC64 */
 
 static uint64_t prng_state[4] = { 0 };
 
@@ -83,7 +83,7 @@ static void set_to_random(apn_seg_t* op1, apn_size_t size)
 * 10)  apn_sub_n        - done
 * 11)  apn_sub          - done
 * 12)  apn_addmul_one   - done
-* 13)  apn_submul_one
+* 13)  apn_submul_one   - done
 * 14)  apn_lshift
 * 15)  apn_rshift
 * 16)  apn_mul_n
@@ -1335,6 +1335,43 @@ static void check_apn_addmul_one(void)
         );
     }
 
+    printf("TEST-5: Monotonicity (op2 + op1 * k >= op2)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        uint64_t val = 0;
+        do
+        {
+            val = random_sfc64();
+
+        } while (val == 0);
+
+        /* op2 initial */
+        set_to_random(op2, i + 1);
+        apn_cpy(op3, op2, i + 1);
+
+        apn_seg_t carry = apn_addmul_one(op2, op1, i, val);
+
+        int is_op1_zero = apn_is_zero(op1, i);
+        int cmp_res = apn_cmp(op2, op3, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            is_op1_zero == 0 ? (cmp_res == 0)
+            : (carry ? (cmp_res < 0) : (cmp_res > 0)),
+            "apn_addmul_one() monotonicity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t op1_is_zero           : %d\n"
+            "\t carry                 : %" PRI_APN_SEG "\n"
+            "\t cmp(new, old)         : %d\n",
+            i,
+            is_op1_zero,
+            (apn_seg_t)carry,
+            cmp_res
+        );
+    }
+
     apac_free(op3);
     apac_free(op2);
     apac_free(op1);
@@ -1344,18 +1381,211 @@ static void check_apn_addmul_one(void)
 
 static void check_apn_submul_one(void)
 {
-    // finish this
+    TEST_START("apn_submul_one");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL;
+    apn_seg_t* op3 = NULL;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX + 1);
+
+    printf("TEST-1: Max Value * APN_SEG_MAX subtracted from zero (full carry chain)\n");
+
+    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op3, TEST_SIZE_MAX + 1, 0);
+    op3[0] = APN_SEG_MAX;
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        op3[i] = 1;
+        apn_set(op2, i + 1, 0);
+
+        apn_seg_t borrow = apn_submul_one(op2, op1, i, APN_SEG_MAX);
+        int cmp_res = apn_cmp(op3, op2, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == 1,
+            "apn_submul_one() test failed: unexpected carry!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t borrow                : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)borrow
+        );
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_submul_one() test failed: result mismatch!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(expected, result) : %d\n",
+            i,
+            cmp_res
+        );
+
+        op3[i] = 0;
+    }
+
+    printf("TEST-2: Test against apn_addmul_one()\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op3, i + 1);
+        apn_cpy(op2, op3, i + 1);
+
+        uint64_t val = 0;
+        do
+        {
+            val = random_sfc64();
+
+        } while (val == 0);
+
+        apn_seg_t carry1 = apn_addmul_one(op2, op1, i, val);
+        apn_seg_t carry2 = apn_submul_one(op2, op1, i, val);
+
+        int cmp_res = apn_cmp(op2, op3, i + 1);
+    
+        APAC_ALWAYS_ASSERT(
+            carry1 == carry2,
+            "apn_submul_one() vs apn_addmul_one() test failed: carry mismatch!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t carry_addmul          : %" PRI_APN_SEG "\n"
+            "\t carry_submul          : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)carry1,
+            (apn_seg_t)carry2
+        );
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_submul_one() vs apn_addmul_one() test failed: result mismatch!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(op2, original)    : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-3: Multiply with 1 (op2 -= op1)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i + 1);
+        apn_cpy(op3, op2, i + 1);
+
+        /* Reference: op3 = op3 - op1 */
+        apn_seg_t borrow_ref = apn_sub(op3, op3, op1, i + 1, i);
+
+        /* Under test */
+        apn_seg_t borrow = apn_submul_one(op2, op1, i, 1);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == borrow_ref,
+            "apn_submul_one() k=1 test failed: borrow mismatch!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t borrow_submul         : %" PRI_APN_SEG "\n"
+            "\t borrow_sub            : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)borrow,
+            (apn_seg_t)borrow_ref
+        );
+
+        int cmp_res = apn_cmp(op2, op3, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_submul_one() k=1 test failed: result mismatch!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(op2, expected)    : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-4: Multiply with 0 (no-op)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i + 1);
+        apn_cpy(op3, op2, i + 1);
+
+        apn_seg_t borrow = apn_submul_one(op2, op1, i, 0);
+
+        APAC_ALWAYS_ASSERT(
+            borrow == 0,
+            "apn_submul_one() k=0 test failed: unexpected borrow!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t borrow                : %" PRI_APN_SEG "\n",
+            i,
+            (apn_seg_t)borrow
+        );
+
+        int cmp_res = apn_cmp(op2, op3, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_submul_one() k=0 test failed: destination modified!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(op2, original)    : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-5: Monotonicity (op2 - op1 * k <= op2)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        uint64_t val = 0;
+        do
+        {
+            val = random_sfc64();
+
+        } while (val == 0);
+
+        set_to_random(op2, i + 1);
+        apn_cpy(op3, op2, i + 1);
+
+        apn_seg_t borrow = apn_submul_one(op2, op1, i, val);
+
+        int is_op1_zero = apn_is_zero(op1, i);
+        int cmp = apn_cmp(op2, op3, i + 1);
+
+        APAC_ALWAYS_ASSERT(
+            is_op1_zero == 0 ? (cmp == 0)
+            : (borrow ? (cmp >= 0) : (cmp <= 0)),
+            "apn_submul_one() monotonicity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t op1_is_zero           : %d\n"
+            "\t borrow                : %" PRI_APN_SEG "\n"
+            "\t cmp(new, old)         : %d\n",
+            i,
+            is_op1_zero,
+            (apn_seg_t)borrow,
+            cmp
+        );
+    }
+
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_submul_one");
 }
 
 int main(int argc, char** argv)
 {
     apacInit();
 
-    uint64_t seed = 0xBEE; /* default seed */
+    uint64_t seed = 0xC0FFEE; /* default seed */
 
     if (argc >= 2)
     {
-        seed = strtoull(argv[1], NULL, 0);
+        seed = strtoull(argv[1], NULL, 16);
     }
 
     printf("Using seed: 0x%" PRIx64 "\n", seed);
@@ -1373,6 +1603,7 @@ int main(int argc, char** argv)
     check_apn_sub_n();
     check_apn_sub();
     check_apn_addmul_one();
+    check_apn_submul_one();
 
     printf("\nALL FUNCTIONS TESTED!\n");
     return 0;
