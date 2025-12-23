@@ -99,13 +99,13 @@
 
 typedef size_t  apn_size_t;
 
-#define PRI_APN_PTR     "p"
-#define PRI_APN_SIZE    "zu"
-#define APN_SIZE_MAX    SIZE_MAX
+#define PRI_APN_PTR         "p"
+#define PRI_APN_SIZE        "zu"
+#define APN_SIZE_MAX        SIZE_MAX
 
 #if (SIZE_OF_VOID_PTR == 8U)
 
-    typedef uint64_t apn_seg_t;
+    typedef uint64_t        apn_seg_t;
     #define APN_SEG_MAX     UINT64_MAX
     #define PRI_APN_SEG     PRIu64
 
