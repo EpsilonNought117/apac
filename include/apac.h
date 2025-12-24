@@ -229,16 +229,16 @@ typedef enum apac_err
      * @note
      *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
      */
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                             \
-        APAC_ASSERT_IMPL(                                                       \
-            ((uintptr_t)(op1) + (size1) <= (uintptr_t)(op2)) ||                 \
-            ((uintptr_t)(op2) + (size2) <= (uintptr_t)(op1)),                   \
-            "Memory regions overlap:\n"                                         \
-            "\t op1: (%" PRI_APN_PTR ") size1: (%" PRI_APN_SIZE ")\n"           \
-            "\t op2: (%" PRI_APN_PTR ") size2: (%" PRI_APN_SIZE ")\n",          \
-            (void *)(op1), (apn_size_t)(size1),                                 \
-            (void *)(op2), (apn_size_t)(size2)                                  \
-        )
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                         \
+            APAC_ASSERT_IMPL(                                               \
+                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2)) ||           \
+                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1)),             \
+                "Memory regions overlap:\n"                                 \
+                "\t op1: (%" PRI_APN_PTR ") size1: (%" PRI_APN_SIZE ")\n"   \
+                "\t op2: (%" PRI_APN_PTR ") size2: (%" PRI_APN_SIZE ")\n",  \
+                (void *)(op1), (apn_size_t)(size1),                         \
+                (void *)(op2), (apn_size_t)(size2)                          \
+            )
 
     /**
      * @def APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)
@@ -261,20 +261,18 @@ typedef enum apac_err
      * @note
      *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
      */
-
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                                  \
-        APAC_ASSERT_IMPL(                                                                       \
-            ((uintptr_t)(op1) + (size1) <= (uintptr_t)(op2)) ||                                 \
-            ((uintptr_t)(op1) + (size1) <=                                                      \
-             (uintptr_t)(op2) + (size2)),                                                       \
-            "Invalid partial overlap: op1 extends beyond op2's end.\n"                          \
-            "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n"  \
-            "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n", \
-            (void *)(op1), (apn_size_t)(size1),                                                 \
-            (void *)((uintptr_t)(op1) + (size1)),                                               \
-            (void *)(op2), (apn_size_t)(size2),                                                 \
-            (void *)((uintptr_t)(op2) + (size2))                                                \
-        )
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                                      \
+            APAC_ASSERT_IMPL(                                                                       \
+                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2 + size2)) ||                           \
+                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1)),                                     \
+                "Invalid partial overlap: op1 extends beyond op2's end.\n"                          \
+                "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n"  \
+                "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n", \
+                (void *)(op1), (apn_size_t)(size1),                                                 \
+                (void *)(uintptr_t)(op1 + size1),                                                   \
+                (void *)(op2), (apn_size_t)(size2),                                                 \
+                (void *)(uintptr_t)(op2 + size2)                                                    \
+            )
 
     /**
      * @def APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)
@@ -293,19 +291,18 @@ typedef enum apac_err
      * @param size2
      *     Size of the second region.
      */
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                                      \
-        APAC_ASSERT_IMPL(                                                                           \
-            ((uintptr_t)(op1) >= (uintptr_t)(op2) + (size2)) ||                                     \
-            ((uintptr_t)(op1) + (size1) >= (uintptr_t)(op2) + (size2)),                             \
-            "Invalid partial overlap: op1 extends below op2's start.\n"                             \
-            "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n"    \
-            "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n",   \
-            (void *)(op1), (apn_size_t)(size1),                                                     \
-            (void *)(op1),                                                                          \
-            (void *)(op2), (apn_size_t)(size2),                                                     \
-            (void *)(op2)                                                                           \
-        )
-
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                                          \
+            APAC_ASSERT_IMPL(                                                                           \
+                ((uintptr_t)(op1)) >= ((uintptr_t)(op2)) ||                                             \
+                ((uintptr_t)(op1 + size1)) <= ((uintptr_t)(op2)),                                       \
+                "Invalid partial overlap: op1 extends below op2's start.\n"                             \
+                "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n"    \
+                "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n",   \
+                (void *)(op1), (apn_size_t)(size1),                                                     \
+                (void *)(op1),                                                                          \
+                (void *)(op2), (apn_size_t)(size2),                                                     \
+                (void *)(op2)                                                                           \
+            )
 
 #else
 
