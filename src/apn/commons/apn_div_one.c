@@ -65,7 +65,7 @@ apn_seg_t apn_div_one(
     }
 
     temp_val = (dividend[0] << (apn_size_t)shift_val);
-    quotient[0] = udiv21(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+    quotient[0] = udiv64_2by1(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
 
     if (shift_to_normalize)
     {
