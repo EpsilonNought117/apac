@@ -11,7 +11,7 @@ apn_seg_t apn_basecase_div(
 {
     APAC_ASSERT(size_dvsr >= 2);
     APAC_ASSERT(size_divd > size_dvsr); // this guarantess the dividend has at least 3 segments
-    APAC_ASSERT((divisor[size_dvsr - 1] & (APN_SEG_HIGH_BIT)) != NULL);
+    APAC_ASSERT((divisor[size_dvsr - 1] & (APN_SEG_HIGH_BIT)));
     
     apn_size_t m = size_divd - size_dvsr;
     apn_size_t n = size_dvsr;

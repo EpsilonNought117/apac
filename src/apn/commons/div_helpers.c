@@ -226,7 +226,7 @@ apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-inline apn_seg_t udiv64_2by1(
+apn_seg_t udiv64_2by1(
     apn_seg_t divd1,
     apn_seg_t divd0,
     apn_seg_t dvsr,
@@ -318,7 +318,7 @@ inline apn_seg_t udiv64_2by1(
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-inline apn_seg_t udiv64_3by2_quot(
+apn_seg_t udiv64_3by2_quot(
     apn_seg_t divd2,
     apn_seg_t divd1,
     apn_seg_t divd0,
