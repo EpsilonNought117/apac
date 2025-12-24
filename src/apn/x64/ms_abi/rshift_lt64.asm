@@ -82,9 +82,8 @@ inner_loop_remainder:
 
 after_loop:
 
-    mov     r11, QWORD PTR [rdx]
-    shr     r11, cl
-    mov     QWORD PTR [rbx], r11
+    shrx    r11, QWORD PTR [rdx], rsi
+    mov     QWORD PTR [rcx], r11
 
 end_of_func:
 
