@@ -1691,7 +1691,121 @@ static void check_apn_lshift(void)
 
 static void check_apn_rshift(void)
 {
-    // TODO
+    TEST_START("apn_rshift");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
+
+    printf("TEST-1: Shift out random values (1..63 bits)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        {
+            apn_cpy(op3, op1, i);
+            apn_set(op2, i, 0);
+
+            apn_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
+
+            apn_seg_t expected_shift_out = op3[0] << (APN_SEG_BITS - sh);
+
+            APAC_ALWAYS_ASSERT(
+                shift_out_right == expected_shift_out,
+                "apn_rshift() random-input test failed: shift-out mismatch!\n"
+                "\t Operand length tested     : %" PRI_APN_SIZE "\n"
+                "\t Shift amount              : %u\n"
+                "\t Expected shift-out-right  : %" PRI_APN_SEG "\n"
+                "\t Actual shift-out-right    : %" PRI_APN_SEG "\n",
+                i,
+                sh,
+                expected_shift_out,
+                shift_out_right
+            );
+        }
+    }
+
+    printf("TEST-2: Shift out all zeros (1..63 bits)\n");
+
+    apn_set(op1, TEST_SIZE_MAX, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        {
+            apn_set(op2, i, 0);
+
+            apn_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
+            int cmp_res = apn_cmp(op2, op1, i);
+
+            APAC_ALWAYS_ASSERT(
+                shift_out_right == 0,
+                "apn_rshift() zero-input test failed: non-zero shift-out-right!\n"
+                "\t Operand length tested   : %" PRI_APN_SIZE "\n"
+                "\t Shift amount            : %u\n"
+                "\t Shift-out-right         : %" PRI_APN_SEG "\n",
+                i,
+                sh,
+                shift_out_right
+            );
+
+            APAC_ALWAYS_ASSERT(
+                cmp_res == 0,
+                "apn_rshift() zero-input test failed: result mismatch!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Shift amount          : %u\n"
+                "\t cmp(result, zero)     : %d\n",
+                i,
+                sh,
+                cmp_res
+            );
+        }
+    }
+
+    printf("TEST-3: Round-trip rshift + lshift + restore\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        {
+            /* Preserve original */
+            apn_cpy(op3, op1, i);
+
+            /* Step 1: right shift */
+            apn_set(op2, i, 0);
+            apn_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
+
+            /* Step 2: left shift back */
+            apn_lshift(op2, op2, i, sh);
+
+            /* Step 3: restore shifted-out bits into LSW */
+            op2[0] |= shift_out_right >> (APN_SEG_BITS - sh);
+
+            int cmp_res = apn_cmp(op2, op3, i);
+
+            APAC_ALWAYS_ASSERT(
+                cmp_res == 0,
+                "apn_rshift() round-trip test failed!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Shift amount          : %u\n"
+                "\t cmp(reconstructed, original) : %d\n",
+                i,
+                sh,
+                cmp_res
+            );
+        }
+    }
+    
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_rshift");
 }
 
 int main(int argc, char** argv)
@@ -1722,6 +1836,7 @@ int main(int argc, char** argv)
     check_apn_addmul_one();
     check_apn_submul_one();
     check_apn_lshift();
+    check_apn_rshift();
 
     printf("\nALL FUNCTIONS TESTED!\n");
     return 0;
