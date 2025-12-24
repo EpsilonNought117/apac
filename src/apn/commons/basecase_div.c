@@ -27,11 +27,11 @@ apn_seg_t apn_basecase_div(
 
     apn_seg_t dvsr1 = divisor[n - 1];
     apn_seg_t dvsr0 = divisor[n - 2];
-    apn_seg_t dvsr_recip = recip_word_3by2(dvsr1, dvsr0);
+    apn_seg_t dvsr_recip = recip_word64_3by2(dvsr1, dvsr0);
 
     for (apn_size_t j = m - 1; j < m; j--)
     {
-        apn_seg_t sel_quot = udiv32_quot(
+        apn_seg_t sel_quot = udiv64_3by2_quot(
                                 dividend[n + j],
                                 dividend[n + j - 1],
                                 dividend[n + j - 2],

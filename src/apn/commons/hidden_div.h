@@ -5,16 +5,16 @@
 
 /* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
 
-apn_seg_t recip_word_2by1(
+apn_seg_t recip_word64_2by1(
     apn_seg_t dvsr
 );
 
-apn_seg_t recip_word_3by2(
+apn_seg_t recip_word64_3by2(
     apn_seg_t dvsr1,
     apn_seg_t dvsr0
 );
 
-inline apn_seg_t udiv21(
+inline apn_seg_t udiv64_2by1(
     apn_seg_t divd1,
     apn_seg_t divd0,
     apn_seg_t dvsr,
@@ -22,7 +22,7 @@ inline apn_seg_t udiv21(
     apn_seg_t* rmdr
 );
 
-inline apn_seg_t udiv32_quot(
+inline apn_seg_t udiv64_3by2_quot(
     apn_seg_t divd2,
     apn_seg_t divd1,
     apn_seg_t divd0,

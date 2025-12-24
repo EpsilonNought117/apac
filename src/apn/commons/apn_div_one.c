@@ -55,13 +55,13 @@ apn_seg_t apn_div_one(
 
     // actual computation begins here xD
 
-    apn_seg_t dvsr_recip = recip_word_2by1(divisor64);
+    apn_seg_t dvsr_recip = recip_word64_2by1(divisor64);
     apn_seg_t temp_val = 0;
 
     for (apn_size_t j = size_divd - 1; j >= 1; j--)
     {
         temp_val = (dividend[j] << (apn_size_t)shift_val) | (dividend[j - 1] >> ((apn_size_t)64 - shift_val));
-        quotient[j] = udiv21(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+        quotient[j] = udiv64_2by1(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
     }
 
     temp_val = (dividend[0] << (apn_size_t)shift_val);
