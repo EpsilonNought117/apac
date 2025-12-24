@@ -45,7 +45,7 @@ static const uint32_t UDIV21_RECIP_LUT[256] =
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-apn_seg_t recip_word_2by1(apn_seg_t dvsr)
+apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
 {
     // pre-requisite condition
     APAC_ASSERT((dvsr & (1ULL << 63)) != 0);
@@ -136,7 +136,7 @@ apn_seg_t recip_word_2by1(apn_seg_t dvsr)
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-apn_seg_t recip_word_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
+apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 {
     // get recip word of dvsr1
     apn_seg_t v = recip_word_2by1(dvsr1);
@@ -226,7 +226,7 @@ apn_seg_t recip_word_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-inline apn_seg_t udiv21(
+inline apn_seg_t udiv64_2by1(
     apn_seg_t divd1,
     apn_seg_t divd0,
     apn_seg_t dvsr,
@@ -318,7 +318,7 @@ inline apn_seg_t udiv21(
 * Research Paper: Improved Division by Invariant Integers
 * Authors: Neils Moller and Torbjorn Granlund
 */
-inline apn_seg_t udiv32_quot(
+inline apn_seg_t udiv64_3by2_quot(
     apn_seg_t divd2,
     apn_seg_t divd1,
     apn_seg_t divd0,
