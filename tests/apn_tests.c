@@ -85,8 +85,8 @@ static void set_to_random(apn_seg_t* op1, apn_size_t size)
 * 12)  apn_addmul_one   - done
 * 13)  apn_submul_one   - done
 * 14)  apn_lshift       - done
-* 15)  apn_rshift
-* 16)  apn_mul_n
+* 15)  apn_rshift       - done
+* 16)  apn_mul_n        - done
 * 17)  apn_mul
 * 18)  apn_sqr
 * 19)  apn_div_one
@@ -1808,6 +1808,237 @@ static void check_apn_rshift(void)
     TEST_END("apn_rshift");
 }
 
+static void check_apn_mul_n(void)
+{
+    TEST_START("apn_mul_n");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL;
+    apn_seg_t* op3 = NULL, * op4 = NULL;
+    apn_seg_t* op5 = NULL;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX * 2);
+    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX * 2);
+    MALLOC_AND_CHECK(op5, TEST_SIZE_MAX);
+
+    printf("TEST-1: Compare against apn_addmul_one()\n");
+
+    for (apn_size_t i = 1; i <= (apn_size_t)64; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+
+        apn_set(op3, i * 2, 0);
+        apn_set(op4, i * 2, 0);
+
+        /* op3 = op1 * op2 */
+        apac_err err_out = apn_mul_n(op3, op1, op2, i);
+
+        if (err_out == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        for (apn_size_t k = 0; k < i; k++)
+        {
+            apn_seg_t carry = apn_addmul_one(&op4[k], op1, i, op2[k]);
+        }
+
+        int cmp_res = apn_cmp(op3, op4, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_mul_n() vs apn_addmul_one() balanced test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(mul_n, addmul_one): %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-2: Max value multiplied by itself\n");
+
+    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op2, TEST_SIZE_MAX, APN_SEG_MAX);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        apn_set(op4, i * 2, 0);
+
+        // set value to which to compare
+        apn_set(op3, i, 0);
+        op3[0] = 1;
+        apn_set(op3 + i, i, APN_SEG_MAX);
+        op3[i] = APN_SEG_MAX - 1;
+
+        apac_err err_out = apn_mul_n(op4, op1, op2, i);
+
+        if (err_out == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op3, op4, i * 2);
+    
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_mul_n() max-value self-multiply test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(expected, result) : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-3: Identity element (a * 1 == a)\n");
+
+    apn_set(op2, TEST_SIZE_MAX, 0);
+    op2[0] = 1;
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        apn_set(op3, i * 2, 0);
+
+        apac_err err_out = apn_mul_n(op3, op1, op2, i);
+
+        if (err_out == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op3, op1, i);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_mul_n() identity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(a*1, a)           : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-4: Absorbing element (a * 0 == 0)\n");
+
+    apn_set(op2, TEST_SIZE_MAX, 0);
+    apn_set(op4, TEST_SIZE_MAX * 2, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        apn_set(op3, i * 2, 0);
+
+        apac_err err_out = apn_mul_n(op3, op1, op2, i);
+
+        if (err_out == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op3, op4, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_mul_n() absorbing test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(a*0, 0)           : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-5: Commutativity (a * b == b * a)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+
+        apn_set(op3, i * 2, 0);
+        apn_set(op4, i * 2, 0);
+
+        apac_err err_out1 = apn_mul_n(op3, op1, op2, i);
+        if (err_out1 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        apac_err err_out2 = apn_mul_n(op4, op2, op1, i);
+        if (err_out2 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op3, op4, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_mul_n() commutativity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(a*b, b*a)         : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-6: Monotonicity\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+        set_to_random(op5, i);
+
+        apn_set(op3, i * 2, 0);
+        apn_set(op4, i * 2, 0);
+
+        int cmp_res1 = apn_cmp(op5, op2, i);
+
+        apac_err err_out1 = apn_mul_n(op3, op2, op1, i);
+        if (err_out1 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        apac_err err_out2 = apn_mul_n(op4, op5, op1, i);
+        if (err_out2 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res2 = apn_cmp(op4, op3, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res1 == cmp_res2,
+            "apn_mul_n() monotonicity test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(op5, op2)         : %d\n"
+            "\t cmp(op5*op1, op2*op1) : %d\n",
+            i,
+            cmp_res1,
+            cmp_res2
+        );
+    }
+
+    apac_free(op5);
+    apac_free(op4);
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_mul_n");
+}
+
 int main(int argc, char** argv)
 {
     apacInit();
@@ -1837,6 +2068,7 @@ int main(int argc, char** argv)
     check_apn_submul_one();
     check_apn_lshift();
     check_apn_rshift();
+    check_apn_mul_n();
 
     printf("\nALL FUNCTIONS TESTED!\n");
     return 0;
