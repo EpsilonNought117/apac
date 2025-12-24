@@ -139,7 +139,7 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
 apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 {
     // get recip word of dvsr1
-    apn_seg_t v = recip_word_2by1(dvsr1);
+    apn_seg_t v = recip_word64_2by1(dvsr1);
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
