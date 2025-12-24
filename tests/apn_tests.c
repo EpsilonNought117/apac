@@ -69,7 +69,7 @@ static void set_to_random(apn_seg_t* op1, apn_size_t size)
 // ---------------- TEST EDGE CASES AND MATH PROPERTIES (WHERE APPLICABLE) ----------------
 
 /*
-* TESTING ORDER:
+* ---- TESTING ORDER ----
 *
 *  1)  apn_set          - done
 *  2)  apn_cpy          - done
@@ -84,7 +84,7 @@ static void set_to_random(apn_seg_t* op1, apn_size_t size)
 * 11)  apn_sub          - done
 * 12)  apn_addmul_one   - done
 * 13)  apn_submul_one   - done
-* 14)  apn_lshift
+* 14)  apn_lshift       - done
 * 15)  apn_rshift
 * 16)  apn_mul_n
 * 17)  apn_mul
@@ -1577,6 +1577,123 @@ static void check_apn_submul_one(void)
     TEST_END("apn_submul_one");
 }
 
+static void check_apn_lshift(void)
+{
+    TEST_START("apn_lshift");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+
+    // (TEST_SIZE_MAX + 1) for test against apn_addmul_one
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX + 1);
+
+    printf("TEST-1: Shift zero value (1..63 bits)\n");
+
+    apn_set(op1, TEST_SIZE_MAX, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        {
+            apn_set(op2, i + 1, 0);
+
+            apn_seg_t carry = apn_lshift(op2, op1, i, sh);
+            int cmp_res = apn_cmp(op2, op1, i);
+
+            APAC_ALWAYS_ASSERT(
+                carry == 0,
+                "apn_lshift() zero-input test failed: non-zero carry!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Shift amount          : %u\n"
+                "\t Carry                 : %" PRI_APN_SEG "\n",
+                i,
+                sh,
+                carry
+            );
+
+            APAC_ALWAYS_ASSERT(
+                cmp_res == 0,
+                "apn_lshift() zero-input test failed: result mismatch!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Shift amount          : %u\n"
+                "\t cmp(result, zero)     : %d\n",
+                i,
+                sh,
+                cmp_res
+            );
+        }
+    }
+
+    printf("TEST-2: Shift random values\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        {
+            set_to_random(op1, i);
+            apn_set(op2, i + 1, 0);
+
+            apn_seg_t carry = apn_lshift(op2, op1, i, sh);
+
+            apn_seg_t expected_carry = (op1[i - 1] >> (APN_SEG_BITS - sh));
+
+            APAC_ALWAYS_ASSERT(
+                carry == expected_carry,
+                "apn_lshift() all-ones test failed!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Shift amount          : %u\n"
+                "\t Expected carry        : %" PRI_APN_SEG "\n"
+                "\t Actual carry          : %" PRI_APN_SEG "\n",
+                i,
+                sh,
+                expected_carry,
+                carry
+            );
+        }
+    }
+
+    printf("TEST-3: Test against apn_addmul_one()\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        {
+            set_to_random(op1, i);
+            apn_set(op2, i + 1, 0);
+            apn_set(op3, i + 1, 0);
+
+            op2[i] = apn_lshift(op2, op1, i, sh);
+
+            apn_addmul_one(op3, op1, i, 1ULL << sh);
+
+            int cmp_res = apn_cmp(op2, op3, i + 1);
+
+            APAC_ALWAYS_ASSERT(
+                cmp_res == 0,
+                "apn_lshift() vs apn_addmul_one() test failed!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Shift amount          : %u\n"
+                "\t cmp(op2, op3)         : %d\n",
+                i,
+                sh,
+                cmp_res
+            );
+        }
+    }
+
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_lshift");
+}
+
+static void check_apn_rshift(void)
+{
+    // TODO
+}
+
 int main(int argc, char** argv)
 {
     apacInit();
@@ -1588,7 +1705,7 @@ int main(int argc, char** argv)
         seed = strtoull(argv[1], NULL, 16);
     }
 
-    printf("Using seed: 0x%" PRIx64 "\n", seed);
+    printf("Using seed: 0x%" PRIX64 "\n", seed);
     random_sfc64_seed(seed);
 
     check_apn_set();
@@ -1604,6 +1721,7 @@ int main(int argc, char** argv)
     check_apn_sub();
     check_apn_addmul_one();
     check_apn_submul_one();
+    check_apn_lshift();
 
     printf("\nALL FUNCTIONS TESTED!\n");
     return 0;
