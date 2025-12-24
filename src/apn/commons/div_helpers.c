@@ -48,7 +48,7 @@ static const uint32_t UDIV21_RECIP_LUT[256] =
 apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
 {
     // pre-requisite condition
-    APAC_ASSERT((dvsr & (1ULL << 63)) != 0);
+    APAC_ASSERT((dvsr & (APN_SEG_HIGH_BIT)) != 0);
 
     // value to return
     apn_seg_t recip = 0;
@@ -73,7 +73,7 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
     // in theory, v1 * d40 is (41 + 21 = 63 bits wide)
     // but it is always less than (2 ^ 60)
     // ((2 ^ 60) - v1 * d40) is always less than (2 ^ 43 - 1) (as per the paper)
-    // therefore (v1 * ((2 ^ 60) - v1 * d40)) is at most 64-bits, then shifted by 47-bits
+    // therefore (v1 * ((2 ^ 60) - v1 * d40)) is at most (APN_SEG_BITS)-bits, then shifted by 47-bits
     // hence v2 is at most max_bits(v1) + 13 = 43 (v1 <= 2 ^ 21)
     apn_seg_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
 
@@ -81,8 +81,8 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
     *   Common comments for both sections
     *
     *   e = (2 ^ 96) - (v2 * d63) - floor(v2 / 2) * d0
-    *   e is at most 96-bits, but only the lower 64-bits are needed
-    *   v3 is truncated to lower 64-bits and so is v4
+    *   e is at most 96-bits, but only the lower (APN_SEG_BITS)-bits are needed
+    *   v3 is truncated to lower (APN_SEG_BITS)-bits and so is v4
     */
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
@@ -101,15 +101,15 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
     carry = _addcarry_u64(carry, lword, temp, &lword);
     carry = _addcarry_u64(carry, hword, 0, &hword); /* No carry-out should arise here */
 
-    // we only need the lower 64-bits, so no point to do the high64 SBB instr
+    // we only need the lower (APN_SEG_BITS)-bits, so no point to do the high64 SBB instr
     borrow = _subborrow_u64(borrow, lword, low64, &lword);
 
-    apn_seg_t e = (apn_seg_t)lword; // select the lower 64-bits
+    apn_seg_t e = (apn_seg_t)lword; // select the lower (APN_SEG_BITS)-bits
 
     low64 = _umul128(e, v2, &high64);
     high64 >>= 1;
     temp = v2 << 31;
-    apn_seg_t v3 = high64 + temp; // this might overflow, but we only need lower 64-bits
+    apn_seg_t v3 = high64 + temp; // this might overflow, but we only need lower (APN_SEG_BITS)-bits
 
     low64 = _umul128(v3 + 1ULL, dvsr, &high64);
     high64 += dvsr;
@@ -119,9 +119,9 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
 
     // exact same as the MSVC code
 
-    uint64_t e = (uint64_t)((__uint128_t)1 << 96) - ((__uint128_t)v2 * d63) + ((v2 >> 1) * d0); // discard high 64-bits
-    uint64_t v3 = (uint64_t)(((__uint128_t)v2 << 31) + (((__uint128_t)e * v2) >> 65)); // v3 (mod (2 ^ 64))
-    apn_seg_t v4 = (apn_seg_t)(((__uint128_t)v3 - ((((__uint128_t)v3 + 0xFFFFFFFFFFFFFFFF /* (2 ^ 64) - 1 */ + 2) * dvsr) >> 64)));
+    uint64_t e = (uint64_t)((__uint128_t)1 << 96) - ((__uint128_t)v2 * d63) + ((v2 >> 1) * d0); // discard high (APN_SEG_BITS)-bits
+    uint64_t v3 = (uint64_t)(((__uint128_t)v2 << 31) + (((__uint128_t)e * v2) >> 65)); // v3 (mod (2 ^ (APN_SEG_BITS)))
+    apn_seg_t v4 = (apn_seg_t)(((__uint128_t)v3 - ((((__uint128_t)v3 + 0xFFFFFFFFFFFFFFFF /* (2 ^ (APN_SEG_BITS)) - 1 */ + 2) * dvsr) >> (APN_SEG_BITS))));
 
 #else
 
@@ -143,11 +143,11 @@ apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
-    uint64_t high64 = 0, low64 = 0; // p = high64 * (2 ^ 64) + low64
+    uint64_t high64 = 0, low64 = 0; // p = high64 * (2 ^ (APN_SEG_BITS)) + low64
     uint8_t carry = 0;
 
-    low64 = _umul128(v, dvsr1, &high64);    // p = (d1 * v) (mod 2 ^ 64)
-    carry = _addcarry_u64(carry, low64, dvsr0, &low64); // p = (p + d0) (mod 2 ^ 64)
+    low64 = _umul128(v, dvsr1, &high64);    // p = (d1 * v) (mod 2 ^ (APN_SEG_BITS))
+    carry = _addcarry_u64(carry, low64, dvsr0, &low64); // p = (p + d0) (mod 2 ^ (APN_SEG_BITS))
 
     if (carry)  // if overflow
     {
@@ -166,7 +166,7 @@ apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 
     lword = _umul128(v, dvsr0, &hword); // <t1, t0> = v * d0
     carry = 0;
-    carry = _addcarry_u64(carry, low64, hword, &low64); // p = (p + t1) (mod 2 ^ 64)
+    carry = _addcarry_u64(carry, low64, hword, &low64); // p = (p + t1) (mod 2 ^ (APN_SEG_BITS))
 
     if (carry)
     {
@@ -201,13 +201,13 @@ apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 
     __uint128_t val = (__uint128_t)v * dvsr0;
 
-    prod += (uint64_t)(val >> 64);
+    prod += (uint64_t)(val >> (APN_SEG_BITS));
 
-    if (prod < (uint64_t)(val >> 64))
+    if (prod < (uint64_t)(val >> (APN_SEG_BITS)))
     {
         v--;
 
-        if ((((__uint128_t)prod << 64) | (val >> 64)) >= (((__uint128_t)dvsr1 << 64) | dvsr0))
+        if ((((__uint128_t)prod << (APN_SEG_BITS)) | (val >> (APN_SEG_BITS))) >= (((__uint128_t)dvsr1 << (APN_SEG_BITS)) | dvsr0))
         {
             v--;
         }
@@ -235,7 +235,7 @@ inline apn_seg_t udiv64_2by1(
 )
 {
     APAC_ASSERT(divd1 < dvsr);
-    APAC_ASSERT(dvsr & (1ULL << 63));
+    APAC_ASSERT(dvsr & (APN_SEG_HIGH_BIT));
 
     // v = recip
     // dvsr = d
@@ -246,7 +246,7 @@ inline apn_seg_t udiv64_2by1(
     uint64_t q[2] = { 0 };	// <q1, q0>
     uint64_t r = 0;
     uint8_t carry = 0;
-    uint64_t high64 = 0, low64 = 0;	// p = high64 * (2 ^ 64) + low64
+    uint64_t high64 = 0, low64 = 0;	// p = high64 * (2 ^ (APN_SEG_BITS)) + low64
 
     // <q1, q0> = v * u1
     q[0] = _umul128(divd1, recip, &q[1]);
@@ -256,14 +256,14 @@ inline apn_seg_t udiv64_2by1(
     carry = _addcarry_u64(carry, q[1], divd1, &q[1]);
     carry = 0;
 
-    q[1]++; // q1 = (q1 + 1) (mod (2 ^ 64))
+    q[1]++; // q1 = (q1 + 1) (mod (2 ^ (APN_SEG_BITS)))
     low64 = _umul128(q[1], dvsr, &high64);	//q1 * d
-    carry = _subborrow_u64(carry, divd0, low64, &r); // r = (u0 - q1 * d) (mod (2 ^ 64))
+    carry = _subborrow_u64(carry, divd0, low64, &r); // r = (u0 - q1 * d) (mod (2 ^ (APN_SEG_BITS)))
 
     if (r > q[0])
     {
-        q[1]--; // q1 = (q1 - 1) (mod (2 ^ 64))
-        r += dvsr;	// r = (r + d) (mod (2 ^ 64))
+        q[1]--; // q1 = (q1 - 1) (mod (2 ^ (APN_SEG_BITS)))
+        r += dvsr;	// r = (r + d) (mod (2 ^ (APN_SEG_BITS)))
     }
 
     if (r >= dvsr)
@@ -283,9 +283,9 @@ inline apn_seg_t udiv64_2by1(
     uint64_t r = 0;
 
     q = (__uint128_t)recip * divd1;
-    q += (((__uint128_t)divd1 << 64) | ((__uint128_t)divd0));
+    q += (((__uint128_t)divd1 << (APN_SEG_BITS)) | ((__uint128_t)divd0));
 
-    uint64_t q1 = (uint64_t)(q >> 64);
+    uint64_t q1 = (uint64_t)(q >> (APN_SEG_BITS));
     uint64_t q0 = (uint64_t)q;
 
     q1++;
@@ -328,7 +328,7 @@ inline apn_seg_t udiv64_3by2_quot(
 )
 {
     APAC_ASSERT((dvsr1 > divd2) || (dvsr1 == divd2 && dvsr0 > divd1));
-    APAC_ASSERT(dvsr1 & (1ULL << 63));
+    APAC_ASSERT(dvsr1 & (APN_SEG_HIGH_BIT));
 
     // <u2, u1, u0> = <divd2, divd1, divd0>
     // <d1, d0> = <dvsr1, dvsr0>
@@ -350,7 +350,7 @@ inline apn_seg_t udiv64_3by2_quot(
     low64 = _umul128(divd1, dvsr1, &high64);
 
     /* carry now acts as borrow */
-    // r1 = (u1 - q1 * d1) (mod 2 ^ 64) 
+    // r1 = (u1 - q1 * d1) (mod 2 ^ (APN_SEG_BITS)) 
     carry = _subborrow_u64(carry, r[0], low64, &r[0]);
     carry = _subborrow_u64(carry, r[1], high64, &r[1]);
 
@@ -395,15 +395,15 @@ inline apn_seg_t udiv64_3by2_quot(
     __uint128_t q = 0, r = 0;
 
     q = (__uint128_t)recip * divd2;
-    q += (((__uint128_t)divd2 << 64) | (__uint128_t)divd1);		// <q1, q0> += <u2, u1>
-    r = (__uint128_t)divd1 - (q >> 64) * dvsr1;					// r = (u1 - q1 * d1) (mod 2 ^ 64) 
-    __uint128_t t = (q >> 64) * dvsr0;							// <t1, t0> = d0 * q1
+    q += (((__uint128_t)divd2 << (APN_SEG_BITS)) | (__uint128_t)divd1);		// <q1, q0> += <u2, u1>
+    r = (__uint128_t)divd1 - (q >> (APN_SEG_BITS)) * dvsr1;					// r = (u1 - q1 * d1) (mod 2 ^ (APN_SEG_BITS)) 
+    __uint128_t t = (q >> (APN_SEG_BITS)) * dvsr0;							// <t1, t0> = d0 * q1
 
-    uint64_t r1 = (r >> 64);
-    __uint128_t d = (((__uint128_t)dvsr1 << 64) | (__uint128_t)dvsr0);
-    r = (((__uint128_t)r1 << 64) | (__uint128_t)divd0) - t - d;
+    uint64_t r1 = (r >> (APN_SEG_BITS));
+    __uint128_t d = (((__uint128_t)dvsr1 << (APN_SEG_BITS)) | (__uint128_t)dvsr0);
+    r = (((__uint128_t)r1 << (APN_SEG_BITS)) | (__uint128_t)divd0) - t - d;
 
-    uint64_t q1 = (uint64_t)(q >> 64);
+    uint64_t q1 = (uint64_t)(q >> (APN_SEG_BITS));
     uint64_t q0 = (uint64_t)q;
 
     if (r1 >= q0)

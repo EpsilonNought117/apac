@@ -93,10 +93,10 @@ full_division:
     apn_cpy(temp_divd, dividend, size_divd);
     temp_divd[size_divd] = 0ULL;
     
-    if (!(temp_dvsr[size_dvsr - 1] & (1ULL << 63)))
+    if (!(temp_dvsr[size_dvsr - 1] & (APN_SEG_HIGH_BIT)))
     {
         CLZ64(temp_dvsr[size_dvsr - 1], dvsr_shift_val);;
-        APAC_ASSERT(dvsr_shift_val != 64);
+        APAC_ASSERT(dvsr_shift_val != (APN_SEG_BITS));
 
         apn_seg_t out_val = apn_lshift(temp_dvsr, temp_dvsr, size_dvsr, (apn_seg_t)dvsr_shift_val);
         APAC_ASSERT(out_val == 0);

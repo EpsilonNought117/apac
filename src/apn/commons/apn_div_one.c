@@ -42,14 +42,14 @@ apn_seg_t apn_div_one(
     int shift_to_normalize = 0;         // flag if left-shift to normalize happened
     uint32_t shift_val = 0;
 
-    if (!(divisor64 & (1ULL << 63)))
+    if (!(divisor64 & (APN_SEG_HIGH_BIT)))
     {
         CLZ64(divisor64, shift_val);
-        APAC_ASSERT(shift_val != 64);
+        APAC_ASSERT(shift_val != (APN_SEG_BITS));
 
         divisor64 <<= (apn_size_t)shift_val;
 
-        rmdr = dividend[size_divd - 1] >> ((apn_size_t)64 - shift_val);
+        rmdr = dividend[size_divd - 1] >> ((apn_size_t)(APN_SEG_BITS) - shift_val);
         shift_to_normalize = 1;
     }
 
@@ -60,7 +60,7 @@ apn_seg_t apn_div_one(
 
     for (apn_size_t j = size_divd - 1; j >= 1; j--)
     {
-        temp_val = (dividend[j] << (apn_size_t)shift_val) | (dividend[j - 1] >> ((apn_size_t)64 - shift_val));
+        temp_val = (dividend[j] << (apn_size_t)shift_val) | (dividend[j - 1] >> ((apn_size_t)(APN_SEG_BITS) - shift_val));
         quotient[j] = udiv64_2by1(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
     }
 
