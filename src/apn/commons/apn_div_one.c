@@ -4,8 +4,8 @@
 
 apn_seg_t apn_div_one(
     apn_seg_t* quotient,    // must be (size_divd) length
-    const apn_seg_t* dividend,
-    apn_seg_t divisor64,
+    apn_seg_t* dividend,
+    apn_seg_t divisor,
     apn_size_t size_divd
 )
 {
@@ -13,63 +13,62 @@ apn_seg_t apn_div_one(
     APAC_ASSERT(dividend != NULL);
     APAC_ASSERT(size_divd != 0);
     APAC_NO_OVERLAP(quotient, size_divd, dividend, size_divd);
-    APAC_DETAILED_ASSERT(divisor64 != 0,
-        "Malformed divisor: divisor64 must not be zero"
+    APAC_DETAILED_ASSERT(divisor != 0,
+        "Malformed divisor: divisor must not be zero"
     );
 
-    apn_seg_t rmdr = 0ULL;
+    apn_seg_t rmdr = 0;
 
     if (size_divd == 1)
     {
-        if (divisor64 > dividend[0])
+        if (divisor > dividend[0])
         {
             quotient[0] = 0ULL;
             rmdr = dividend[0];
         }
-        else if (divisor64 == dividend[0])
+        else if (divisor == dividend[0])
         {
             quotient[0] = 1ULL;
         }
         else
         {
-            quotient[0] = dividend[0] / divisor64;
-            rmdr = dividend[0] % divisor64;
+            quotient[0] = dividend[0] / divisor;
+            rmdr = dividend[0] % divisor;
         }
 
         return rmdr;
     }
 
-    int shift_to_normalize = 0;         // flag if left-shift to normalize happened
     uint32_t shift_val = 0;
+    apn_seg_t divd_shift_out = 0;
 
-    if (!(divisor64 & (APN_SEG_HIGH_BIT)))
+    if (!(divisor & (APN_SEG_HIGH_BIT)))
     {
-        CLZ64(divisor64, shift_val);
+        CLZ64(divisor, shift_val);
         APAC_ASSERT(shift_val != (APN_SEG_BITS));
-
-        divisor64 <<= (apn_size_t)shift_val;
-
-        rmdr = dividend[size_divd - 1] >> ((apn_size_t)(APN_SEG_BITS) - shift_val);
-        shift_to_normalize = 1;
+    
+        divisor <<= (apn_size_t)shift_val;
+        rmdr = apn_lshift(dividend, dividend, size_divd, shift_val);
+        divd_shift_out = rmdr;
     }
 
     // actual computation begins here xD
 
-    apn_seg_t dvsr_recip = recip_word64_2by1(divisor64);
+    apn_seg_t dvsr_recip = recip_word64_2by1(divisor);
     apn_seg_t temp_val = 0;
 
-    for (apn_size_t j = size_divd - 1; j >= 1; j--)
+    for (apn_size_t j = size_divd - 1; j < size_divd; j--)
     {
-        temp_val = (dividend[j] << (apn_size_t)shift_val) | (dividend[j - 1] >> ((apn_size_t)(APN_SEG_BITS) - shift_val));
-        quotient[j] = udiv64_2by1(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+        quotient[j] = udiv64_2by1(rmdr, dividend[j], divisor, dvsr_recip, &rmdr);
     }
 
-    temp_val = (dividend[0] << (apn_size_t)shift_val);
-    quotient[0] = udiv64_2by1(rmdr, temp_val, divisor64, dvsr_recip, &rmdr);
+    // no need to shift-down the divisor as it is pass by value
 
-    if (shift_to_normalize)
+    if (shift_val)
     {
         rmdr >>= (apn_size_t)shift_val;
+        apn_rshift(dividend, dividend, size_divd, shift_val);
+        dividend[size_divd - 1] |= (divd_shift_out << (APN_SEG_BITS - shift_val));
     }
 
     return rmdr;
