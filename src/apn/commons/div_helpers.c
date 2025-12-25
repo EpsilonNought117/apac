@@ -4,7 +4,7 @@
 // where d9 is nine most significant bits of 
 // divisor
 
-// (256 <= d9 < 512) as high bit of divisor is assumed to be set by caller
+// (256 <= d9 <= 511) as high bit of divisor is assumed to be set by caller
 static const uint32_t UDIV21_RECIP_LUT[256] =
 {
       2045,   2037,   2029,   2021,   2013,   2005,   1998,   1990,
@@ -48,42 +48,13 @@ static const uint32_t UDIV21_RECIP_LUT[256] =
 apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
 {
     // pre-requisite condition
-    APAC_ASSERT((dvsr & (APN_SEG_HIGH_BIT)) != 0);
+    APAC_ASSERT(dvsr & (APN_SEG_HIGH_BIT));
 
-    // value to return
-    apn_seg_t recip = 0;
+    apn_seg_t recip = 0;        // value to return
+    apn_seg_t d0 = dvsr & 1;    // d0 = dvsr (mod 2)
+    apn_seg_t d9 = dvsr >> 55;  // d9 = floor(dvsr * (2 ^ -55))
 
-    apn_seg_t d0 = dvsr & 1ULL;     // d0 = dvsr (mod 2)
-    apn_seg_t d9 = dvsr >> 55;      // d9 = floor(dvsr * (2 ^ -55))
-    apn_seg_t d40 = (dvsr >> 24) + 1ULL;    // d40 = ceil(dvsr * (2 ^ -24))
-    apn_seg_t d63 = (dvsr >> 1) + 1ULL;     // d63 = ceil(dvsr / 2)
-
-    // done via table look-up, at most 11-bit value
-    apn_seg_t v0 = (apn_seg_t)UDIV21_RECIP_LUT[d9 - 256];   // v0 = ((2 ^ 19) - 3 * (2 ^ 8)) / d9
-
-    // v1 = (v0 * (2 ^ 11)) - (v0 * v0 * d40) - 1
-    // v0 is 11-bits
-    // d40 is at most 41 bits (2 ^ 40)
-    // ((v0 * v0 * d40) >> 40) is hence at most (63 - 40) = 23-bits wide
-    // however the actual value is less than max(v0) * (2 ^ 11)
-    // hence v1 is at-most 21-bits (lesser in practice)
-    apn_seg_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
-
-    // v2 = (v1 * (2 ^ 13)) + (v1 * ((2 ^ 60) - v1 * d40)) / (2 ^ 47)
-    // in theory, v1 * d40 is (41 + 21 = 63 bits wide)
-    // but it is always less than (2 ^ 60)
-    // ((2 ^ 60) - v1 * d40) is always less than (2 ^ 43 - 1) (as per the paper)
-    // therefore (v1 * ((2 ^ 60) - v1 * d40)) is at most (APN_SEG_BITS)-bits, then shifted by 47-bits
-    // hence v2 is at most max_bits(v1) + 13 = 43 (v1 <= 2 ^ 21)
-    apn_seg_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
-
-    /*
-    *   Common comments for both sections
-    *
-    *   e = (2 ^ 96) - (v2 * d63) - floor(v2 / 2) * d0
-    *   e is at most 96-bits, but only the lower (APN_SEG_BITS)-bits are needed
-    *   v3 is truncated to lower (APN_SEG_BITS)-bits and so is v4
-    */
+    // common part ends here
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
@@ -91,11 +62,28 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
     uint64_t hword = 0, lword = 0;
     uint8_t borrow = 0, carry = 0;
     uint64_t temp = 0;
+    
+    carry = _addcarry_u64(carry, dvsr, (uint64_t)1, &lword);
+    lword >>= 24;
+    lword |= ((uint64_t)carry << 40);
+    apn_seg_t d40 = lword;
+
+    lword = 0, carry = 0;
+
+    carry = _addcarry_u64(carry, dvsr, (uint64_t)1, &lword);
+    lword >>= 1;
+    lword |= ((uint64_t)carry << 63);
+    apn_seg_t d63 = lword;
+
+    apn_seg_t v0 = (apn_seg_t)UDIV21_RECIP_LUT[d9 - 256];
+    apn_seg_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
+    apn_seg_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
 
     // (2 ^ 96) - (v2 * d63)
-
     low64 = _umul128(v2, d63, &high64);
     hword = (1ULL << 32);
+
+    lword = 0, carry = 0;
 
     temp = (v2 >> 1) * d0;
     carry = _addcarry_u64(carry, lword, temp, &lword);
@@ -107,21 +95,45 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
     apn_seg_t e = (apn_seg_t)lword; // select the lower (APN_SEG_BITS)-bits
 
     low64 = _umul128(e, v2, &high64);
+    low64 >>= 1;
     high64 >>= 1;
     temp = v2 << 31;
     apn_seg_t v3 = high64 + temp; // this might overflow, but we only need lower (APN_SEG_BITS)-bits
 
-    low64 = _umul128(v3 + 1ULL, dvsr, &high64);
-    high64 += dvsr;
-    apn_seg_t v4 = v3 - high64;
+    uint64_t w2 = 0, w1 = 0, w0 = 0;
+    carry = 0, lword = 0, hword = 0, temp = 0;
 
-#elif defined(__GNUC__)  || defined(__clang__)
+    carry = _addcarry_u64(carry, v3, (uint64_t)1, &lword);
+    temp = (uint64_t)carry + 1;
 
-    // exact same as the MSVC code
 
-    uint64_t e = (uint64_t)((__uint128_t)1 << 96) - ((__uint128_t)v2 * d63) + ((v2 >> 1) * d0); // discard high (APN_SEG_BITS)-bits
-    uint64_t v3 = (uint64_t)(((__uint128_t)v2 << 31) + (((__uint128_t)e * v2) >> 65)); // v3 (mod (2 ^ (APN_SEG_BITS)))
-    apn_seg_t v4 = (apn_seg_t)(((__uint128_t)v3 - ((((__uint128_t)v3 + 0xFFFFFFFFFFFFFFFF /* (2 ^ (APN_SEG_BITS)) - 1 */ + 2) * dvsr) >> (APN_SEG_BITS))));
+    low64 = _umul128(lword, dvsr, &high64);
+    carry = 0;
+    carry = _addcarry_u64(carry, 0, low64, &w0);
+    carry = _addcarry_u64(carry, 0, high64, &w1);
+    w2 += carry;
+
+    carry = 0;
+
+    low64 = _umul128(temp, dvsr, &high64);
+    carry = _addcarry_u64(carry, low64, w1, &w1);
+    
+    apn_seg_t v4 = v3 - w1;
+
+#elif defined(__GNUC__) || defined(__clang__)
+
+    apn_seg_t d40 = (apn_seg_t)(((__uint128_t)dvsr + 1) >> 24);
+    apn_seg_t d63 = (apn_seg_t)(((__uint128_t)dvsr + 1) >> 1);
+
+    apn_seg_t v0 = (apn_seg_t)UDIV21_RECIP_LUT[d9 - 256];
+    apn_seg_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
+    apn_seg_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
+
+    apn_seg_t e = (apn_seg_t)((((__uint128_t)1 << 96) - ((__uint128_t)v2 * d63) + (((__uint128_t)v2 >> 1) * d0)));
+    apn_seg_t v3 = (apn_seg_t)((((__uint128_t)v2 << 31) + (((__uint128_t)e * v2) >> 65)));
+
+    __uint128_t prod = ((((__uint128_t)v3 + 1) + ((__uint128_t)1 << 64)) * dvsr) >> 64;
+    apn_seg_t v4 = v3 - (apn_seg_t)prod;
 
 #else
 
