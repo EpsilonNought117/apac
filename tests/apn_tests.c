@@ -87,9 +87,9 @@ static void set_to_random(apn_seg_t* op1, apn_size_t size)
 * 14)  apn_lshift       - done
 * 15)  apn_rshift       - done
 * 16)  apn_mul_n        - done
-* 17)  apn_mul
-* 18)  apn_sqr
-* 19)  apn_div_one
+* 17)  apn_sqr          - done
+* 18)  apn_mul          - done
+* 19)  apn_div_one      - done
 * 20)  apn_div
 *
 */
@@ -719,8 +719,12 @@ static void check_apn_add(void)
         {
             apn_set(t1, j, APN_SEG_MAX);
             t1[0] = APN_SEG_MAX - 1;
-            apn_set(t1 + j, i - j, 0);
 
+            if (i > j)
+            {
+                apn_set(t1 + j, i - j, 0);
+            }
+            
             apn_seg_t carry = apn_add(r1, a, b, i, j);
             int cmp_res = apn_cmp(r1, t1, i);
 
@@ -1926,7 +1930,6 @@ static void check_apn_mul_n(void)
     printf("TEST-4: Absorbing element (a * 0 == 0)\n");
 
     apn_set(op2, TEST_SIZE_MAX, 0);
-    apn_set(op4, TEST_SIZE_MAX * 2, 0);
 
     for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
@@ -1941,15 +1944,15 @@ static void check_apn_mul_n(void)
             abort();
         }
 
-        int cmp_res = apn_cmp(op3, op4, i * 2);
+        int is_zero = apn_is_zero(op3, i * 2);
 
         APAC_ALWAYS_ASSERT(
-            cmp_res == 0,
+            is_zero == 0,
             "apn_mul_n() absorbing test failed!\n"
             "\t Operand length tested : %" PRI_APN_SIZE "\n"
-            "\t cmp(a*0, 0)           : %d\n",
+            "\t apn_is_zero(result)   : %d\n",
             i,
-            cmp_res
+            is_zero
         );
     }
 
@@ -2039,6 +2042,376 @@ static void check_apn_mul_n(void)
     TEST_END("apn_mul_n");
 }
 
+static void check_apn_sqr(void)
+{
+    TEST_START("apn_sqr");
+
+    apn_seg_t* op1 = NULL;
+    apn_seg_t* op2 = NULL;
+    apn_seg_t* op3 = NULL;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX * 2);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX * 2);
+
+    printf("TEST-1: Zero squared (0 * 0 = 0)\n");
+
+    apn_set(op1, TEST_SIZE_MAX, 0);
+    apn_set(op3, TEST_SIZE_MAX * 2, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        apn_set(op2, i * 2, 0);
+
+        apac_err err_out = apn_sqr(op2, op1, i);
+
+        if (err_out == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op2, op3, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_sqr() zero test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(0 * 0, 0)         : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    printf("TEST-2: Random values vs apn_mul_n()\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        apn_set(op2, i * 2, 0);
+        apn_set(op3, i * 2, 0);
+
+        apac_err err_out1 = apn_sqr(op2, op1, i);
+        if (err_out1 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        apac_err err_out2 = apn_mul_n(op3, op1, op1, i);
+        if (err_out2 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op2, op3, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_sqr() vs apn_mul_n() test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(sqr, mul_n)       : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_sqr");
+}
+
+static void check_apn_mul(void)
+{
+    TEST_START("apn_mul");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL;
+    apn_seg_t* op3 = NULL, * op4 = NULL;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX * 2);
+    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX * 2);
+
+    printf("TEST-1: Compare against apn_addmul_one() (size2 <= 64)\n");
+
+    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX / 4); size1++)
+    {
+        for (apn_size_t size2 = 1; size2 <= size1; size2++)
+        {
+            set_to_random(op1, size1);
+            set_to_random(op2, size2);
+
+            apn_set(op3, size1 + size2, 0);
+            apn_set(op4, size1 + size2, 0);
+
+            /* op3 = op1 * op2 */
+            apac_err err_out = apn_mul(op3, op1, op2, size1, size2);
+
+            if (err_out == APAC_OOM)
+            {
+                APAC_LOG_ERR("Aborting test due to malloc failure!");
+                abort();
+            }
+
+            // O(n * n) code, might be slow
+            for (apn_size_t k = 0; k < size2; k++)
+            {
+                apn_seg_t carry = apn_addmul_one(&op4[k], op1, size1, op2[k]);
+            }
+
+            int cmp_res = apn_cmp(op3, op4, size1 + size2);
+
+            APAC_ALWAYS_ASSERT(
+                cmp_res == 0,
+                "apn_mul() vs apn_addmul_one() test failed!\n"
+                "\t Operand A length tested : %" PRI_APN_SIZE "\n"
+                "\t Operand B length tested : %" PRI_APN_SIZE "\n"
+                "\t cmp(mul, addmul_one)    : %d\n",
+                size1,
+                size2,
+                cmp_res
+            );
+        }
+    }
+
+    printf("TEST-2: Multiplication with zero\n");
+
+    apn_set(op2, TEST_SIZE_MAX, 0);
+
+    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX / 4); size1++)
+    {
+        for (apn_size_t size2 = 1; size2 <= size1; size2++)
+        {
+            set_to_random(op1, size1);
+            apn_set(op3, size1 + size2, 0);
+
+            apac_err err_out = apn_mul(op3, op1, op2, size1, size2);
+
+            if (err_out == APAC_OOM)
+            {
+                APAC_LOG_ERR("Aborting test due to malloc failure!");
+                abort();
+            }
+
+            int is_zero = apn_is_zero(op3, size1 + size2);
+
+            APAC_ALWAYS_ASSERT(
+                is_zero == 0,
+                "apn_mul() absorbing test failed!\n"
+                "\t Operand A length tested : %" PRI_APN_SIZE "\n"
+                "\t Operand B length tested : %" PRI_APN_SIZE "\n"
+                "\t apn_is_zero(result)     : %d\n",
+                size1,
+                size2,
+                is_zero
+            );
+        }
+    }
+
+    printf("TEST-3: Identity element (multiply by 1)\n");
+
+    apn_set(op2, TEST_SIZE_MAX, 0);
+    op2[0] = 1;
+
+    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX / 4); size1++)
+    {
+        for (apn_size_t size2 = 1; size2 <= size1; size2++)
+        {
+            set_to_random(op1, size1);
+            apn_set(op3, size1 + size2, 0);
+
+            apac_err err_out = apn_mul(op3, op1, op2, size1, size2);
+            
+            if (err_out == APAC_OOM)
+            {
+                APAC_LOG_ERR("Aborting test due to malloc failure!");
+                abort();
+            }
+
+            int cmp_res = apn_cmp(op3, op1, size1);
+
+            APAC_ALWAYS_ASSERT(
+                cmp_res == 0,
+                "apn_mul() identity test failed!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t cmp(a*1, a)           : %d\n",
+                size1,
+                cmp_res
+            );
+        }
+    }
+
+    printf("TEST-4: Random balanced multiplication vs apn_mul_n\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+        set_to_random(op2, i);
+
+        apn_set(op3, i * 2, 0);
+        apn_set(op4, i * 2, 0);
+
+        apac_err err_out1 = apn_mul(op3, op1, op2, i, i);
+        if (err_out1 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        apac_err err_out2 = apn_mul_n(op4, op1, op2, i);
+        if (err_out2 == APAC_OOM)
+        {
+            APAC_LOG_ERR("Aborting test due to malloc failure!");
+            abort();
+        }
+
+        int cmp_res = apn_cmp(op3, op4, i * 2);
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_mul() vs apn_mul_n() balanced random test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t cmp(mul, mul_n)       : %d\n",
+            i,
+            cmp_res
+        );
+    }
+
+    apac_free(op4);
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_mul");
+}
+
+static void check_apn_div_one(void)
+{
+    TEST_START("apn_div_one");
+
+    apn_seg_t* op1 = NULL, * op2 = NULL;
+    apn_seg_t* q1 = NULL;
+    apn_seg_t* q2 = NULL;
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_AND_CHECK(q1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(q2, TEST_SIZE_MAX);
+
+    printf("TEST-1: Division by powers of two vs apn_rshift (2^1 .. 2^63)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        for (uint32_t sh = 1; sh <= 63; sh++)
+        {
+            apn_set(q1, i, 0);
+            apn_set(q2, i, 0);
+
+            /* Reference: right shift */
+            apn_seg_t shift_out_right = apn_rshift(q2, op1, i, sh);
+
+            /* Test: divide by 2^sh */
+            apn_seg_t divisor = ((apn_seg_t)1 << sh);
+            apn_seg_t rem = apn_div_one(q1, op1, divisor, i);
+
+            int cmp_q = apn_cmp(q1, q2, i);
+
+            apn_seg_t expected_rem =
+                shift_out_right >> (APN_SEG_BITS - sh);
+
+            APAC_ALWAYS_ASSERT(
+                cmp_q == 0,
+                "apn_div_one() quotient mismatch vs apn_rshift!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Divisor power         : %u\n"
+                "\t cmp(div, rshift)      : %d\n",
+                i,
+                sh,
+                cmp_q
+            );
+
+            APAC_ALWAYS_ASSERT(
+                rem == expected_rem,
+                "apn_div_one() remainder mismatch vs apn_rshift!\n"
+                "\t Operand length tested : %" PRI_APN_SIZE "\n"
+                "\t Divisor power         : %u\n"
+                "\t Expected remainder    : %" PRI_APN_SEG "\n"
+                "\t Actual remainder      : %" PRI_APN_SEG "\n",
+                i,
+                sh,
+                expected_rem,
+                rem
+            );
+        }
+    }
+
+    printf("TEST-2: apn_div_one() inverse of apn_addmul_one()\n");
+
+    apn_set(op2, TEST_SIZE_MAX + 1, 0);
+    apn_set(op1, TEST_SIZE_MAX, 0);
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    {
+        set_to_random(op1, i);
+
+        apn_seg_t divisor = 0;
+        do
+        {
+            divisor = random_sfc64();
+        } while (divisor == 0);
+
+        apn_set(q1, i, 0);
+        apn_set(op2, i + 1, 0);
+
+        apn_seg_t rem = apn_div_one(q1, op1, divisor, i);
+
+        op2[0] += rem;
+        apn_seg_t carry1 = apn_addmul_one(op2, q1, i, divisor);
+
+        int cmp_res = apn_cmp(op1, op2, i);
+
+        APAC_ALWAYS_ASSERT(
+            carry1 == 0,
+            "apn_div_one() inverse test failed: non-zero carry!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Divisor               : %" PRI_APN_SEG "\n"
+            "\t Carry addmul_one      : %" PRI_APN_SEG "\n",
+            i,
+            divisor,
+            carry1
+        );
+
+        APAC_ALWAYS_ASSERT(
+            cmp_res == 0,
+            "apn_div_one() inverse test failed!\n"
+            "\t Operand length tested : %" PRI_APN_SIZE "\n"
+            "\t Divisor               : %" PRI_APN_SEG "\n"
+            "\t Remainder             : %" PRI_APN_SEG "\n"
+            "\t cmp(q*d+r, original)  : %d\n",
+            i,
+            divisor,
+            rem,
+            cmp_res
+        );
+
+        apn_set(op1, i, 0);
+    }
+
+    apac_free(q2);
+    apac_free(q1);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_div_one");
+}
+
 int main(int argc, char** argv)
 {
     apacInit();
@@ -2069,6 +2442,9 @@ int main(int argc, char** argv)
     check_apn_lshift();
     check_apn_rshift();
     check_apn_mul_n();
+    check_apn_sqr();
+    check_apn_mul();
+    check_apn_div_one();
 
     printf("\nALL FUNCTIONS TESTED!\n");
     return 0;
