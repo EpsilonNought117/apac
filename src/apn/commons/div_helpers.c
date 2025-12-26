@@ -102,86 +102,49 @@ apn_seg_t recip_word64_2by1(apn_seg_t dvsr)
 */
 apn_seg_t recip_word64_3by2(apn_seg_t dvsr1, apn_seg_t dvsr0)
 {
-    // get recip word of dvsr1
+    /* Initial reciprocal approximation */
     apn_seg_t v = recip_word64_2by1(dvsr1);
+
+    uint64_t p;
+
+    /* p = v*dvsr1 + dvsr0 */
+    p = v * dvsr1;
+    p += dvsr0;
+
+    {
+        uint64_t c = (p < dvsr0);
+        uint64_t d = c & (p >= dvsr1);
+
+        v -= c + d;
+        p -= dvsr1 * (c + d);
+    }
+
+    uint64_t t0, t1;
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
-    uint64_t high64 = 0, low64 = 0; // p = high64 * (2 ^ (APN_SEG_BITS)) + low64
-    uint8_t carry = 0;
-
-    low64 = _umul128(v, dvsr1, &high64);    // p = (d1 * v) (mod 2 ^ (APN_SEG_BITS))
-    carry = _addcarry_u64(carry, low64, dvsr0, &low64); // p = (p + d0) (mod 2 ^ (APN_SEG_BITS))
-
-    if (carry)  // if overflow
-    {
-        v--; // v = v - 1
-
-        if (low64 >= dvsr1)
-        {
-            v--;            // same here
-            low64 -= dvsr1; // p = p - d1
-        }
-
-        low64 -= dvsr1; // this results in borrow (carry) out
-    }
-
-    uint64_t hword = 0, lword = 0;
-
-    lword = _umul128(v, dvsr0, &hword); // <t1, t0> = v * d0
-    carry = 0;
-    carry = _addcarry_u64(carry, low64, hword, &low64); // p = (p + t1) (mod 2 ^ (APN_SEG_BITS))
-
-    if (carry)
-    {
-        v--;
-
-        // if (<p, t0> >= <d1, d0>)
-        if ((low64 > dvsr1) || (lword > dvsr0) || ((low64 == dvsr1 && lword == dvsr0)))
-        {
-            v--;
-        }
-    }
+    t0 = _umul128(v, dvsr0, &t1);
 
 #elif defined(__GNUC__) || defined(__clang__)
 
-    // exact same as MSVC code here
-
-    uint64_t prod = (uint64_t)(((__uint128_t)v * dvsr1));
-    prod = prod + dvsr0;
-
-    if (prod < dvsr0)
-    {
-        v--;
-
-        if (prod >= dvsr1)
-        {
-            v--;
-            prod -= dvsr1;
-        }
-
-        prod -= dvsr1;
-    }
-
-    __uint128_t val = (__uint128_t)v * dvsr0;
-
-    prod += (uint64_t)(val >> (APN_SEG_BITS));
-
-    if (prod < (uint64_t)(val >> (APN_SEG_BITS)))
-    {
-        v--;
-
-        if ((((__uint128_t)prod << (APN_SEG_BITS)) | (val >> (APN_SEG_BITS))) >= (((__uint128_t)dvsr1 << (APN_SEG_BITS)) | dvsr0))
-        {
-            v--;
-        }
-    }
+    __uint128_t prod = (__uint128_t)v * dvsr0;
+    t0 = (uint64_t)prod;
+    t1 = (uint64_t)(prod >> 64);
 
 #else
 
     #error "Unknown Compiler!"
 
 #endif
+
+    p += t1;
+
+    {
+        uint64_t c = (p < t1);
+        uint64_t d = c & ((p > dvsr1) | ((p == dvsr1) & (t0 >= dvsr0)));
+
+        v -= c + d;
+    }
 
     return v;
 }
@@ -199,63 +162,30 @@ apn_seg_t udiv64_2by1(
 )
 {
     APAC_ASSERT(divd1 < dvsr);
-    APAC_ASSERT(dvsr & (APN_SEG_HIGH_BIT));
+    APAC_ASSERT(dvsr & APN_SEG_HIGH_BIT);
 
-    // v = recip
-    // dvsr = d
-    // <u1, u0> = <divd1, divd0>
+    uint64_t q0, q1;
+    uint64_t r;
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
-    uint64_t q[2] = { 0 };	// <q1, q0>
-    uint64_t r = 0;
-    uint8_t carry = 0;
-    uint64_t low64 = 0;
+    /* <q1,q0> = recip * divd1 */
+    q0 = _umul128(divd1, recip, &q1);
 
-    // <q1, q0> = v * u1
-    q[0] = _umul128(divd1, recip, &q[1]);
-
-    // <q1, q0> += <u1, u0>
-    carry = _addcarry_u64(carry, q[0], divd0, &q[0]);
-    carry = _addcarry_u64(carry, q[1], divd1, &q[1]);
-    carry = 0;
-
-    q[1]++; // q1 = (q1 + 1) (mod (2 ^ (APN_SEG_BITS)))
-    low64 = q[1] * dvsr;
-    r = divd0 - low64;
-
-    q[1] -= (r > q[0]) ? 1 : 0;
-    r += (r > q[0]) ? dvsr : 0;
-
-    q[1] += (r >= dvsr) ? 1 : 0;
-    r -= (r >= dvsr) ? dvsr : 0;
-
-    uint64_t q1 = q[1];
-    *rmdr = (apn_seg_t)r;
+    /* <q1,q0> += <divd1,divd0> */
+    uint8_t c = 0;
+    c = _addcarry_u64(c, q0, divd0, &q0);
+    _addcarry_u64(c, q1, divd1, &q1);
 
 #elif defined(__GNUC__) || defined(__clang__)
 
-    // same as MSVC code here
-
-    __uint128_t q = 0;
-    uint64_t r = 0;
+    __uint128_t q;
 
     q = (__uint128_t)recip * divd1;
-    q += (((__uint128_t)divd1 << (APN_SEG_BITS)) | ((__uint128_t)divd0));
+    q += ((__uint128_t)divd1 << APN_SEG_BITS) | divd0;
 
-    uint64_t q1 = (uint64_t)(q >> (APN_SEG_BITS));
-    uint64_t q0 = (uint64_t)q;
-
-    q1++;
-    r = (uint64_t)((__uint128_t)divd0 - (__uint128_t)q1 * dvsr);
-
-    q1 -= (r > q0) ? 1 : 0;
-    r += (r > q0) ? dvsr : 0;
-
-    q1 += (r >= dvsr) ? 1 : 0;
-    r -= (r >= dvsr) ? dvsr : 0;
-
-    *rmdr = (apn_seg_t)r;
+    q1 = (uint64_t)(q >> APN_SEG_BITS);
+    q0 = (uint64_t)q;
 
 #else
 
@@ -263,6 +193,26 @@ apn_seg_t udiv64_2by1(
 
 #endif
 
+    /* ---- Common path from here ---- */
+
+    q1++;
+    r = divd0 - q1 * dvsr;
+
+    /* First correction */
+    {
+        uint64_t m = (r > q0);
+        q1 -= m;
+        r += dvsr * m;
+    }
+
+    /* Second correction */
+    {
+        uint64_t m = (r >= dvsr);
+        q1 += m;
+        r -= dvsr * m;
+    }
+
+    *rmdr = (apn_seg_t)r;
     return (apn_seg_t)q1;
 }
 
