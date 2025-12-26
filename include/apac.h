@@ -994,8 +994,8 @@ APAC_API apac_err apn_div(
  */
 APAC_API apn_seg_t apn_div_one(
     apn_seg_t* quotient,
-    apn_seg_t* dividend,
-    apn_seg_t divisor64,
+    const apn_seg_t* dividend,
+    apn_seg_t divisor,
     apn_size_t size_divd
 );
 

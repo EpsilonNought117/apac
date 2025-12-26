@@ -4,7 +4,7 @@
 
 apn_seg_t apn_div_one(
     apn_seg_t* quotient,    // must be (size_divd) length
-    apn_seg_t* dividend,
+    const apn_seg_t* dividend,
     apn_seg_t divisor,
     apn_size_t size_divd
 )
@@ -38,37 +38,35 @@ apn_seg_t apn_div_one(
 
         return rmdr;
     }
-
+    
     uint32_t shift_val = 0;
-    apn_seg_t divd_shift_out = 0;
 
-    if (!(divisor & (APN_SEG_HIGH_BIT)))
+    if (!(divisor & APN_SEG_HIGH_BIT))
     {
         CLZ64(divisor, shift_val);
-        APAC_ASSERT(shift_val != (APN_SEG_BITS));
-    
-        divisor <<= (apn_size_t)shift_val;
-        rmdr = apn_lshift(dividend, dividend, size_divd, shift_val);
-        divd_shift_out = rmdr;
-    }
+        APAC_ASSERT(shift_val != APN_SEG_BITS);
 
-    // actual computation begins here xD
+        divisor <<= shift_val;
+        rmdr = dividend[size_divd - 1] >> (APN_SEG_BITS - shift_val);
+    }
 
     apn_seg_t dvsr_recip = recip_word64_2by1(divisor);
     apn_seg_t temp_val = 0;
 
-    for (apn_size_t j = size_divd - 1; j < size_divd; j--)
+    for (apn_size_t j = size_divd - 1; j >= 1; j--)
     {
-        quotient[j] = udiv64_2by1(rmdr, dividend[j], divisor, dvsr_recip, &rmdr);
+        apn_seg_t valid_shift = (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_SEG_BITS - shift_val));
+
+        temp_val = (shift_val) ? valid_shift : dividend[j];
+        quotient[j] = udiv64_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
     }
 
-    // no need to shift-down the divisor as it is pass by value
+    temp_val = dividend[0] << shift_val;
+    quotient[0] = udiv64_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
 
     if (shift_val)
     {
         rmdr >>= (apn_size_t)shift_val;
-        apn_rshift(dividend, dividend, size_divd, shift_val);
-        dividend[size_divd - 1] |= (divd_shift_out << (APN_SEG_BITS - shift_val));
     }
 
     return rmdr;
