@@ -60,11 +60,12 @@ loop_unrolled:
 
 i = 0
 WHILE i LT 4
+
     mov     rax, QWORD PTR [rdx + i * 8]
     sbb     rax, 0
     mov     QWORD PTR [rcx + i * 8], rax
         
-    i = i + 1
+i = i + 1
 ENDM
 
     lea     rdx, [rdx + 32]
