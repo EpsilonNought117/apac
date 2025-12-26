@@ -62,6 +62,11 @@ apac_err apn_div(
 
         return APAC_OK;
     }
+    if (size_dvsr == 1)
+    {
+        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd);
+        return APAC_OK;
+    }
 
 full_division:
 
@@ -102,12 +107,7 @@ full_division:
 
     apn_seg_t outval = 0;
     
-    if (size_dvsr == 1)
-    {
-        remainder[0] = apn_div_one(quotient, temp_divd, temp_dvsr[0], size_divd);
-        return APAC_OK;
-    }
-    else if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
+    if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {
         outval = apn_basecase_div(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr);
     }
