@@ -83,20 +83,25 @@ ENDM
 ALIGN 16
 before_remainder:
 
-    lea     rbx, [rbx + r8 * 8]
-    lea     rbp, [rbp + r8 * 8]
     jmp     QWORD PTR [r9]
 
-FOR i, <7, 6, 5, 4, 3, 2, 1>
+FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
-ALIGN 32
-rem&i&:
+ALIGN 16
+rem&outer&:
 
-    mulx    r11, r10, QWORD PTR [rbx - i * 8]
+i = 0
+WHILE i LT outer
+    mulx    r11, r10, QWORD PTR [rbx + i*8]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rbp - i * 8 + 8]
-    mov     QWORD PTR [rbp - i * 8], r10
+    adox    r11, QWORD PTR [rbp + i*8 + 8]
+    mov     QWORD PTR [rbp + i*8], r10
     mov     rax, r11
+            
+i = i + 1
+ENDM
+
+    jmp end_of_loop
         
 ENDM
 
@@ -104,7 +109,7 @@ ALIGN 32
 end_of_loop:
     
     adcx    rax, rcx
-    mov     QWORD PTR [rbp], rax
+    mov     QWORD PTR [rbp + r8 * 8], rax
 
 end_of_func:
 
