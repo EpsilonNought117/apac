@@ -18,6 +18,10 @@
 .type  add_n_x64, @function
 .type  add_n_zen4, @function
 
+###############################################################################
+# add_n_zen4
+###############################################################################
+
 add_n_zen4:
     .cfi_startproc
 
@@ -25,9 +29,9 @@ add_n_zen4:
     mov     r11, rcx        # r11 = size
     shr     rcx, 2          # rcx = size / 4
     and     r11, 3          # r11 = size % 4
-    jz      2f
+    jz      .Ladd_n_zen4_after_small
 
-1:  # small remainder loop
+.Ladd_n_zen4_small_loop:
     mov     rax, [rsi]
     adc     rax, [rdx]
     mov     [rdi], rax
@@ -37,15 +41,15 @@ add_n_zen4:
     lea     rdi, [rdi + 8]
 
     dec     r11
-    jnz     1b
+    jnz     .Ladd_n_zen4_small_loop
 
-2:  # after small loop
+.Ladd_n_zen4_after_small:
     setc    al
     test    rcx, rcx
     bt      ax, 0
-    jz      4f
+    jz      .Ladd_n_zen4_return
 
-3:  # unrolled loop
+.Ladd_n_zen4_unrolled_loop:
     .macro UNROLL4 base
         mov     rax, [rsi + \base]
         adc     rax, [rdx + \base]
@@ -62,9 +66,9 @@ add_n_zen4:
     lea     rdi, [rdi + 32]
 
     dec     rcx
-    jnz     3b
+    jnz     .Ladd_n_zen4_unrolled_loop
 
-4:  # return
+.Ladd_n_zen4_return:
     setc    al
     movzx   rax, al
     ret
@@ -72,12 +76,16 @@ add_n_zen4:
     .cfi_endproc
 .size add_n_zen4, .-add_n_zen4
 
+###############################################################################
+# add_n_x64
+###############################################################################
+
 add_n_x64:
     .cfi_startproc
 
     xor     rax, rax
 
-1:  # simple loop
+.Ladd_n_x64_loop:
     mov     rax, [rsi]
     adc     rax, [rdx]
     mov     [rdi], rax
@@ -87,11 +95,11 @@ add_n_x64:
     lea     rdi, [rdi + 8]
 
     dec     rcx
-    jnz     1b
+    jnz     .Ladd_n_x64_loop
 
     .p2align 4
 
-2:
+.Ladd_n_x64_return:
     setc    al
     movzx   rax, al
     ret
