@@ -18,27 +18,6 @@ apn_seg_t apn_div_one(
     );
 
     apn_seg_t rmdr = 0;
-
-    if (size_divd == 1)
-    {
-        if (divisor > dividend[0])
-        {
-            quotient[0] = 0ULL;
-            rmdr = dividend[0];
-        }
-        else if (divisor == dividend[0])
-        {
-            quotient[0] = 1ULL;
-        }
-        else
-        {
-            quotient[0] = dividend[0] / divisor;
-            rmdr = dividend[0] % divisor;
-        }
-
-        return rmdr;
-    }
-    
     uint32_t shift_val = 0;
 
     if (!(divisor & APN_SEG_HIGH_BIT))
