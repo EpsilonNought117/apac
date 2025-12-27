@@ -9,14 +9,14 @@
 
 /* --------------------- ADD SINGLE-LIMB TO APN-ARR FUNCTIONS ------------------------- */
 
-extern apn_seg_t add_n_one_zen4(
+extern apn_seg_t add_one_zen4(
 	apn_seg_t* result,
 	const apn_seg_t* op1,
 	apn_size_t size,
 	apn_seg_t val
 );
 
-extern apn_seg_t add_n_one_x64(
+extern apn_seg_t add_one_x64(
 	apn_seg_t* result,
 	const apn_seg_t* op1,
 	apn_size_t size,
@@ -25,14 +25,14 @@ extern apn_seg_t add_n_one_x64(
 
 /* -------------------- SUB SINGLE-LIMB FROM APN-ARR FUNCTIONS ------------------------ */
 
-extern apn_seg_t sub_n_one_zen4(
+extern apn_seg_t sub_one_zen4(
 	apn_seg_t* result,
 	const apn_seg_t* op1,
 	apn_size_t size,
 	apn_seg_t val
 );
 
-extern apn_seg_t sub_n_one_x64(
+extern apn_seg_t sub_one_x64(
 	apn_seg_t* result,
 	const apn_seg_t* op1,
 	apn_size_t size,

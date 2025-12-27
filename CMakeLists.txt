@@ -140,13 +140,13 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
         message(STATUS "Using MS-ABI x64 assembly sources")
         set(x64_asm_sources
             "src/apn/x64/ms_abi/add_n.asm"
-            "src/apn/x64/ms_abi/add_n_one.asm"
+            "src/apn/x64/ms_abi/add_one.asm"
             "src/apn/x64/ms_abi/mul_bc.asm"
             "src/apn/x64/ms_abi/addmul_one.asm"
             "src/apn/x64/ms_abi/submul_one.asm"
             "src/apn/x64/ms_abi/sqr_bc.asm"
             "src/apn/x64/ms_abi/sub_n.asm"
-            "src/apn/x64/ms_abi/sub_n_one.asm"
+            "src/apn/x64/ms_abi/sub_one.asm"
             "src/apn/x64/ms_abi/neg.asm"
             "src/apn/x64/ms_abi/lshift_lt64.asm"
             "src/apn/x64/ms_abi/rshift_lt64.asm"

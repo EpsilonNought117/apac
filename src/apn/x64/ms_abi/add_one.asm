@@ -1,11 +1,11 @@
 
 ;   O---------------------------------------------------------------------------O
 ;   |                                                                           |
-;   |                   SUB SINGLE-LIMB FROM APN-ARR FUNCTIONS                  |
+;   |                   ADD SINGLE-LIMB TO APN-ARR FUNCTIONS                    |
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-SUB_N_ONE SEGMENT ALIGN(64) 'CODE'
+ADD_N_ONE SEGMENT ALIGN(64) 'CODE'
 
 	option casemap:none
 
@@ -16,14 +16,14 @@ SUB_N_ONE SEGMENT ALIGN(64) 'CODE'
     ;   r8  -> size         (apn_size_t)
     ;   r9  -> val          (apn_seg_t)
 
-sub_n_one_zen4 PROC FRAME
+add_one_zen4 PROC FRAME
 .endprolog
 
     ; assumes r8 is at least 1
     ; via APAC_ASSERT in caller function
 
     mov     rax, QWORD PTR [rdx]
-    sub     rax, r9
+    add     rax, r9
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
@@ -40,7 +40,7 @@ sub_n_one_zen4 PROC FRAME
 small_loop:
 
     mov     rax, QWORD PTR [rdx]
-    sbb     rax, 0
+    adc     rax, 0
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
@@ -62,7 +62,7 @@ i = 0
 WHILE i LT 4
 
     mov     rax, QWORD PTR [rdx + i * 8]
-    sbb     rax, 0
+    adc     rax, 0
     mov     QWORD PTR [rcx + i * 8], rax
         
 i = i + 1
@@ -79,16 +79,15 @@ end_of_func:
     movzx   rax, al
     ret
 
-sub_n_one_zen4 ENDP
-
+add_one_zen4 ENDP
 
 ; Generic x64 routine
 
-sub_n_one_x64 PROC FRAME
+add_one_x64 PROC FRAME
 .endprolog
 
     mov     rax, QWORD PTR [rdx]
-    sub     rax, r9
+    add     rax, r9
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
@@ -99,7 +98,7 @@ sub_n_one_x64 PROC FRAME
 main_loop:
 
     mov     rax, QWORD PTR [rdx]
-    sbb     rax, 0
+    adc     rax, 0
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
@@ -113,6 +112,6 @@ end_of_func:
     movzx   rax, al
     ret
 
-sub_n_one_x64 ENDP
+add_one_x64 ENDP
 
 END

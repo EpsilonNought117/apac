@@ -12,8 +12,8 @@ void zen4_set_params(void)
 
 	curr_cpu.apn_add_n_ptr = add_n_zen4;
 	curr_cpu.apn_sub_n_ptr = sub_n_zen4;
-	curr_cpu.apn_add_one_ptr = add_n_one_zen4;
-	curr_cpu.apn_sub_one_ptr = sub_n_one_zen4;
+	curr_cpu.apn_add_one_ptr = add_one_zen4;
+	curr_cpu.apn_sub_one_ptr = sub_one_zen4;
 	curr_cpu.apn_addmul_one_ptr = addmul_one_zen4;
 	curr_cpu.apn_submul_one_ptr = submul_one_zen4;
 	curr_cpu.apn_lshift_lt64_ptr = lshift_lt64_zen4;
@@ -41,8 +41,8 @@ void generic_x64_set_params(void)
 
 	curr_cpu.apn_add_n_ptr = add_n_x64;
 	curr_cpu.apn_sub_n_ptr = sub_n_x64;
-	curr_cpu.apn_add_one_ptr = add_n_one_x64;
-	curr_cpu.apn_sub_one_ptr = sub_n_one_x64;
+	curr_cpu.apn_add_one_ptr = add_one_x64;
+	curr_cpu.apn_sub_one_ptr = sub_one_x64;
 	curr_cpu.apn_addmul_one_ptr = addmul_one_x64;
 	curr_cpu.apn_submul_one_ptr = submul_one_x64;
 	curr_cpu.apn_lshift_lt64_ptr = lshift_lt64_x64;
