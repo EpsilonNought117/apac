@@ -9,8 +9,14 @@ apn_seg_t apn_basecase_div(
     apn_size_t size_dvsr
 )
 {
-    APAC_ASSERT(size_dvsr >= 2);
-    APAC_ASSERT(size_divd > size_dvsr); // this guarantess the dividend has at least 3 segments
+    APAC_DETAILED_ASSERT(size_dvsr >= 2,
+        "Invalid divisor size: size_dvsr (%" PRI_APN_SIZE ") < 2\n",
+        size_dvsr
+    );
+    APAC_DETAILED_ASSERT(size_divd >= size_dvsr + 1,
+        "Invalid dividend size: size_divd (%" PRI_APN_SIZE ") < size_dvsr + 1 (%" PRI_APN_SIZE ")\n",
+        size_divd, size_dvsr + 1
+    );
     APAC_ASSERT((divisor[size_dvsr - 1] & (APN_SEG_HIGH_BIT)));
     
     apn_size_t m = size_divd - size_dvsr;
