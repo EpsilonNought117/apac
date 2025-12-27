@@ -6,29 +6,29 @@
 /* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
 
 apn_seg_t recip_word64_2by1(
-    apn_seg_t dvsr
+    apn_seg_t d
 );
 
 apn_seg_t recip_word64_3by2(
-    apn_seg_t dvsr1,
-    apn_seg_t dvsr0
+    apn_seg_t d1,
+    apn_seg_t d0
 );
 
 apn_seg_t udiv64_2by1(
-    apn_seg_t divd1,
-    apn_seg_t divd0,
-    apn_seg_t dvsr,
-    apn_seg_t recip,
-    apn_seg_t* rmdr
+    apn_seg_t u1,
+    apn_seg_t u0,
+    apn_seg_t d,
+    apn_seg_t v,
+    apn_seg_t* r
 );
 
 apn_seg_t udiv64_3by2_quot(
-    apn_seg_t divd2,
-    apn_seg_t divd1,
-    apn_seg_t divd0,
-    apn_seg_t dvsr1,
-    apn_seg_t dvsr0,
-    apn_seg_t recip
+    apn_seg_t u2,
+    apn_seg_t u1,
+    apn_seg_t u0,
+    apn_seg_t d1,
+    apn_seg_t d0,
+    apn_seg_t v
 );
 
 /*
