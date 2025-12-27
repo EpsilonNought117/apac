@@ -2139,7 +2139,7 @@ static void check_apn_mul(void)
 
     printf("TEST-1: Compare against apn_addmul_one() (size2 <= 64)\n");
 
-    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX / 4); size1++)
+    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX / 2); size1++)
     {
         for (apn_size_t size2 = 1; size2 <= size1; size2++)
         {
