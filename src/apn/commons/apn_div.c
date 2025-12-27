@@ -109,9 +109,9 @@ full_division:
     
     if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {
-        outval = apn_basecase_div(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr);
+        apn_basecase_div(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr);
     }
-    else if ((size_divd - size_dvsr) <= size_divd)
+    else if (size_dvsr >= (size_divd + 1 - size_dvsr))
     {
         apn_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
         apn_seg_t* temp_ws = apac_malloc(sizeof(apn_seg_t) * ws_size);
@@ -125,7 +125,7 @@ full_division:
 
         apn_set(temp_ws, ws_size, 0);
 
-        outval = apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
+        apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
     else
@@ -142,20 +142,18 @@ full_division:
 
         apn_set(temp_ws, ws_size, 0);
 
-        outval = apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
+        apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
 
-    quotient[size_quot - 1] = outval;
+    if (dvsr_shift_val)
+    {
+        apn_seg_t shift_down = apn_rshift(temp_divd, temp_divd, size_rmdr, (apn_seg_t)dvsr_shift_val);
+        APAC_ASSERT(shift_down == 0);
+    }
 
     apn_cpy(remainder, temp_divd, size_rmdr);
     apac_free(temp_space);
-
-    if (dvsr_shift_val)
-    {
-        apn_seg_t shift_down = apn_rshift(remainder, remainder, size_rmdr, (apn_seg_t)dvsr_shift_val);
-        APAC_ASSERT(shift_down == 0);
-    }
 
     return APAC_OK;
 }

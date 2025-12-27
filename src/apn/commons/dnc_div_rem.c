@@ -29,17 +29,18 @@ apn_seg_t apn_dnc_div_balanced(
         return q_msd;
     }
 
-    APAC_ASSERT(m >= 2ULL);
+    APAC_ASSERT(m > 2);
 
     apn_size_t k = m >> 1;  // floor(size_divd - size_dvsr)
     const apn_seg_t* b0 = divisor, * b1 = divisor + k;
     apn_seg_t* q0 = quotient, * q1 = quotient + k;
-    
+
     // q1_msd will be at most 1-bit
     q1_msd = apn_dnc_div_balanced(q1, dividend + 2 * k, b1, (n + m) - 2 * k, n - k, temp);
+    APAC_ASSERT(q1_msd <= 1);
     
     // temp[0 : (m - 1)] = q1 * b0 
-    apn_mul(temp, b0, q1, k, m - k);
+    apn_mul(temp, q1, b0, m - k, k);
 
     // temp[(m - k) : m] = b0 * q1_msd
 
@@ -50,9 +51,9 @@ apn_seg_t apn_dnc_div_balanced(
 
     int cmp_res = apn_cmp(dividend + k, temp, n + 1);
 
-    if (cmp_res == -1)
+    while (cmp_res == -1)
     {
-        q1_msd -= apn_sub_one(q1, q1, m - k, 1ULL);
+        q1_msd -= apn_sub_one(q1, q1, m - k, 1);
         dividend[n + k] += apn_add_n(dividend + k, dividend + k, divisor, n);
         cmp_res = apn_cmp(dividend + k, temp, n + 1);
     }
@@ -73,10 +74,10 @@ apn_seg_t apn_dnc_div_balanced(
 
     cmp_res = apn_cmp(dividend, temp, n + 1);
 
-    if (cmp_res == -1)
+    while (cmp_res == -1)
     {
         q0_msd -= apn_sub_one(q0, q0, k, 1);
-        dividend[n] += apn_add_n(dividend, dividend, b0, n);
+        dividend[n] += apn_add_n(dividend, dividend, divisor, n);
         cmp_res = apn_cmp(dividend, temp, n + 1);
     }
 

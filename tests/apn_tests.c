@@ -2412,6 +2412,147 @@ static void check_apn_div_one(void)
     TEST_END("apn_div_one");
 }
 
+static void check_apn_div(void)
+{
+    TEST_START("apn_div");
+
+    apn_seg_t* op1 = NULL; /* divisor: i */
+    apn_seg_t* op2 = NULL; /* dividend: i + j */
+    apn_seg_t* quot = NULL; /* quotient: j + 1 */
+    apn_seg_t* rmdr = NULL; /* remainder: i */
+    apn_seg_t* temp = NULL; /* temp: i + j */
+
+    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX * 2);
+    MALLOC_AND_CHECK(quot, TEST_SIZE_MAX + 1);
+    MALLOC_AND_CHECK(rmdr, TEST_SIZE_MAX);
+    MALLOC_AND_CHECK(temp, TEST_SIZE_MAX * 2);
+
+    printf("TEST-1: apn_div identity (dividend = quot * divisor + remainder)\n");
+
+    for (apn_size_t i = 1; i <= TEST_SIZE_MAX / 2; i++)
+    {
+        for (apn_size_t j = 1; j <= TEST_SIZE_MAX / 2; j++)
+        {
+            /* divisor (size i), ensure top limb non-zero */
+            do {
+                set_to_random(op1, i);
+            } while (op1[i - 1] == 0);
+
+            /* dividend (size i + j) */
+            set_to_random(op2, i + j);
+
+            apn_set(quot, j + 1, 0);
+            apn_set(rmdr, i, 0);
+            apn_set(temp, i + j, 0);
+
+            /* divide */
+            apac_err ret = apn_div(
+                quot,
+                rmdr,
+                op2,
+                op1,
+                i + j, /* dividend size */
+                i      /* divisor size  */
+            );
+
+            if (ret == APAC_OOM)
+            {
+                APAC_LOG_ERR("Aborting test due to malloc failure in apn_div!");
+                abort();
+            }
+
+            /* decide multiplication order (quotient size is always j + 1) */
+            apn_seg_t* mul_a;
+            apn_seg_t* mul_b;
+            apn_size_t mul_asz;
+            apn_size_t mul_bsz;
+
+            if ((j + 1) >= i)
+            {
+                mul_a = quot;
+                mul_b = op1;
+                mul_asz = j + 1;
+                mul_bsz = i;
+            }
+            else
+            {
+                mul_a = op1;
+                mul_b = quot;
+                mul_asz = i;
+                mul_bsz = j + 1;
+            }
+
+            /* temp = quot * op1 */
+            ret = apn_mul(
+                temp,
+                mul_a,
+                mul_b,
+                mul_asz,
+                mul_bsz
+            );
+
+            if (ret == APAC_OOM)
+            {
+                APAC_LOG_ERR("Aborting test due to malloc failure in apn_mul!");
+                abort();
+            }
+
+            /* temp += rmdr */
+            apn_seg_t carry = apn_add(
+                temp,
+                temp,
+                rmdr,
+                i + j,
+                i
+            );
+
+            APAC_ALWAYS_ASSERT(
+                carry == 0,
+                "apn_div test failed: carry after adding remainder\n"
+                "  divisor size  = %" PRI_APN_SIZE "\n"
+                "  dividend size = %" PRI_APN_SIZE "\n",
+                i, (i + j)
+            );
+
+            /* reconstructed value must equal dividend */
+            int cmp = apn_cmp(temp, op2, i + j);
+
+            APAC_ALWAYS_ASSERT(
+                cmp == 0,
+                "apn_div failed: reconstruction mismatch\n"
+                "  divisor size  = %" PRI_APN_SIZE "\n"
+                "  dividend size = %" PRI_APN_SIZE "\n",
+                i, (i + j)
+            );
+
+            /* remainder invariant */
+            APAC_ALWAYS_ASSERT(
+                apn_cmp(rmdr, op1, i) < 0,
+                "apn_div failed: remainder >= divisor\n"
+                "  divisor size  = %" PRI_APN_SIZE "\n"
+                "  dividend size = %" PRI_APN_SIZE "\n",
+                i, (i + j)
+            );
+
+            /* reset */
+            apn_set(op1, i, 0);
+            apn_set(op2, i + j, 0);
+            apn_set(quot, j + 1, 0);
+            apn_set(rmdr, i, 0);
+            apn_set(temp, i + j, 0);
+        }
+    }
+
+    apac_free(temp);
+    apac_free(rmdr);
+    apac_free(quot);
+    apac_free(op2);
+    apac_free(op1);
+
+    TEST_END("apn_div");
+}
+
 int main(int argc, char** argv)
 {
     apacInit();
@@ -2445,7 +2586,8 @@ int main(int argc, char** argv)
     check_apn_sqr();
     check_apn_mul();
     check_apn_div_one();
+    check_apn_div();
 
-    printf("\nALL FUNCTIONS TESTED!\n");
+    printf("\nALL TESTS PASSED!\n");
     return 0;
 }
