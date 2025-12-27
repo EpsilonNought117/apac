@@ -6,10 +6,10 @@
 
     #   Function Arguments
     #
-    #   rdi -> result       (apn_seg_t*)   
-    #   rsi -> op1          (const apn_seg_t*)
-    #   rdx -> op2          (const apn_seg_t*)
-    #   rcx -> size         (apn_size_t)
+    #   rdi -> result   (apn_seg_t*)   
+    #   rsi -> op1      (const apn_seg_t*)
+    #   rdx -> op2      (const apn_seg_t*)
+    #   rcx -> size     (apn_size_t)
 
 .intel_syntax noprefix
 
@@ -17,6 +17,12 @@
 .globl add_n_x64, add_n_zen4
 .type  add_n_x64, @function
 .type  add_n_zen4, @function
+
+.macro ADD_CY base
+    mov     rax, [rsi + \base]
+    adc     rax, [rdx + \base]
+    mov     [rdi + \base], rax
+.endm
 
 ###############################################################################
 # add_n_zen4
@@ -49,17 +55,13 @@ add_n_zen4:
     bt      ax, 0
     jz      .Ladd_n_zen4_return
 
+.p2align 4
 .Ladd_n_zen4_unrolled_loop:
-    .macro UNROLL4 base
-        mov     rax, [rsi + \base]
-        adc     rax, [rdx + \base]
-        mov     [rdi + \base], rax
-    .endm
 
-    UNROLL4 0
-    UNROLL4 8
-    UNROLL4 16
-    UNROLL4 24
+    ADD_CY 0
+    ADD_CY 8
+    ADD_CY 16
+    ADD_CY 24
 
     lea     rsi, [rsi + 32]
     lea     rdx, [rdx + 32]
@@ -68,6 +70,7 @@ add_n_zen4:
     dec     rcx
     jnz     .Ladd_n_zen4_unrolled_loop
 
+.p2align 4
 .Ladd_n_zen4_return:
     setc    al
     movzx   rax, al
@@ -85,10 +88,10 @@ add_n_x64:
 
     xor     rax, rax
 
+.p2align 4
 .Ladd_n_x64_loop:
-    mov     rax, [rsi]
-    adc     rax, [rdx]
-    mov     [rdi], rax
+
+    ADD_CY 0
 
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
@@ -97,8 +100,7 @@ add_n_x64:
     dec     rcx
     jnz     .Ladd_n_x64_loop
 
-    .p2align 4
-
+.p2align 4
 .Ladd_n_x64_return:
     setc    al
     movzx   rax, al

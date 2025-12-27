@@ -6,10 +6,10 @@
 
     #   Function Arguments
     #
-    #   rdi -> result (apn_seg_t*)
-    #   rsi -> op1    (const apn_seg_t*)
-    #   rdx -> op2    (const apn_seg_t*)
-    #   rcx -> size   (apn_size_t)
+    #   rdi -> result   (apn_seg_t*)
+    #   rsi -> op1      (const apn_seg_t*)
+    #   rdx -> op2      (const apn_seg_t*)
+    #   rcx -> size     (apn_size_t)
 
 .intel_syntax noprefix
 
@@ -17,6 +17,12 @@
 .globl sub_n_x64, sub_n_zen4
 .type  sub_n_x64, @function
 .type  sub_n_zen4, @function
+
+.macro SUB_BRW base
+    mov     rax, [rsi + \base]
+    sbb     rax, [rdx + \base]
+    mov     [rdi + \base], rax
+.endm
 
 ###############################################################################
 # sub_n_zen4
@@ -49,17 +55,13 @@ sub_n_zen4:
     bt      ax, 0
     jz      .Lsub_n_zen4_return
 
+.p2align 4
 .Lsub_n_zen4_unrolled_loop:
-    .macro SUB4 base
-        mov     rax, [rsi + \base]
-        sbb     rax, [rdx + \base]
-        mov     [rdi + \base], rax
-    .endm
 
-    SUB4 0
-    SUB4 8
-    SUB4 16
-    SUB4 24
+    SUB_BRW 0
+    SUB_BRW 8
+    SUB_BRW 16
+    SUB_BRW 24
 
     lea     rsi, [rsi + 32]
     lea     rdx, [rdx + 32]
@@ -68,6 +70,7 @@ sub_n_zen4:
     dec     rcx
     jnz     .Lsub_n_zen4_unrolled_loop
 
+.p2align 4
 .Lsub_n_zen4_return:
     setc    al
     movzx   rax, al
@@ -85,10 +88,10 @@ sub_n_x64:
 
     xor     rax, rax
 
+.p2align 4
 .Lsub_n_x64_loop:
-    mov     rax, [rsi]
-    sbb     rax, [rdx]
-    mov     [rdi], rax
+
+    SUB_BRW 0
 
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
@@ -97,8 +100,7 @@ sub_n_x64:
     dec     rcx
     jnz     .Lsub_n_x64_loop
 
-    .p2align 4
-
+.p2align 4
 .Lsub_n_x64_return:
     setc    al
     movzx   rax, al
