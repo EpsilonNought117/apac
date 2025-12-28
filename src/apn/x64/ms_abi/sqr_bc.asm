@@ -67,10 +67,10 @@ outer_loop_pass1:
     mov     rdx, QWORD PTR [rbx]  
     mov     rax, QWORD PTR [rbp]   
     mov     rcx, r11
-    mov     r9,  r11                ; for later finding the jump_table label
-    shr     rcx, 3                  ; curr_size /= 8 (for 8x unrolled loop)
-    and     r9,  7                  ; curr_size %= 8
-    lea     r13, jump_table_pass1
+    mov     r9,  r11                    ; for later finding the jump_table label
+    shr     rcx, 3                      ; curr_size /= 8 (for 8x unrolled loop)
+    and     r9,  7                      ; curr_size %= 8
+    lea     r13, offset jump_table_pass1
     lea     r13, [r13 + r9 * 8]
     test    rcx, rcx
     jz      bef_inner_rmdr_pass1
@@ -385,8 +385,12 @@ loop_pass2:
 
     ; PASS-3 (O(n) step)
 
-before_pass3:
+pass2_end:
 
+    adc     QWORD PTR [r10], 0
+
+before_pass3:
+    
     mov     r10, rdi
     mov     r11, rsi
     mov     rcx, r8

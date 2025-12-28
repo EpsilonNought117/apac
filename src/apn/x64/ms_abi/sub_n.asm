@@ -84,6 +84,9 @@ sub_n_zen4 ENDP
 sub_n_x64 PROC FRAME
 .endprolog
 
+    test    r9,  r9
+    jz      end_of_func
+
 main_loop:
 
     mov     rax, QWORD PTR [rdx]

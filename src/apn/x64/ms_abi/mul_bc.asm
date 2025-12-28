@@ -71,7 +71,7 @@ start_of_func:
     shl     rax, 6
     and     r11, 7
     mov     r13, r11
-    lea     r12, jump_table
+    lea     r12, offset jump_table
     lea     r12, [r12 + r11*8]
 
 outer_loop_start:
@@ -153,20 +153,6 @@ mul_bc_zen4 ENDP
 
 ;   -------------------------
 ;
-;           MULX/ADC        
-;
-;   -------------------------
-
-; This ideally is only needed for Haswell micro-architecture
-
-mul_bc_haswell PROC FRAME
-.endprolog
-    
-    ret
-mul_bc_haswell ENDP
-
-;   -------------------------
-;
 ;            MUL/ADC        
 ;
 ;   -------------------------
@@ -200,8 +186,9 @@ outer_loop:
 ALIGN 16
 inner_loop:
 
+    mov     rdi, 0
     adc     rdi, rdx
-    mul     QWORD PTR [rbx] ; rdx : rax = rax * 
+    mul     QWORD PTR [rbx] ; rdx : rax = rax * op1[i]
 
     ; now product in rdx:rax
     ; rax = low64

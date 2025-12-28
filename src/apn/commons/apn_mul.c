@@ -86,7 +86,7 @@ apac_err apn_mul(
 		apac_err ret_val = apn_mul_n(result, op1, op2, size1);
 		return ret_val;
 	}
-	else if (size2 <= ((size1 + 1) >> 1) || size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD)
+	else if ((size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD) || size2 <= ((size1 + 1) >> 1))
 	{
 		apn_basecase_mul(result, op1, op2, size1, size2);
 	}

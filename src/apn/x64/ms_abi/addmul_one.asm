@@ -53,7 +53,7 @@ start_of_func:
     and     r8,  7
     shr     rcx, 3
 
-    lea     r9,  jump_table
+    lea     r9,  offset jump_table
     lea     r9,  [r9 + r8 * 8]
     mov     rax, QWORD PTR [rbp]
     test    rcx, rcx
@@ -129,60 +129,47 @@ addmul_one_zen4 ENDP
 ;   -------------------------
 
 addmul_one_x64 PROC FRAME
-
-    push    rbx
-.pushreg    rbx
-    push    rdi
-.pushreg    rdi
-    push    rsi
-.pushreg    rsi
 .endprolog
 
-    xchg    rdi, rcx    ; free up rcx for jrcxz/loop
-    xchg    rsi, rdx    ; free up rdx for mul
+    xchg    r10, rcx    ; free up rcx for jrcxz/loop
+    xchg    r11, rdx    ; free up rdx for mul
 
-    ; rdi <- result
-    ; rsi <- op1
+    ; r10 <- result
+    ; r11 <- op1
     ; r8  <- size
     
     ; rbx is temp_reg
 
     xor     rdx, rdx
-    xor     rbx, rbx
-    mov     rcx, r8
-    mov     r10, rdi
-    mov     r11, rsi
-    test    rcx, rcx
+    xor     rcx, rcx
+    test    r8,  r8
     jz      end_of_func
 
 main_loop:
     
     mov     rax, r9         ; restore clobbered rax
-    adc     rbx, rdx        ; temp_reg += (CF + high64)
+    adc     rcx, rdx          ; temp_reg += (CF + high64)
     mul     QWORD PTR [r11] ; rdx:rax = rax * op1[idx]
 
-    add     rbx, rax
+    add     rcx, rax
     adc     rdx, 0
-    add     QWORD PTR [r10], rbx
+    add     QWORD PTR [r10], rcx
 
-    mov     rbx, 0
+    mov     rcx, 0
 
     lea     r10, [r10 + 8]
     lea     r11, [r11 + 8]
-    loop    main_loop
+    dec     r8
+    jnz     main_loop
 
 end_of_loop:
 
-    adc     QWORD PTR [rbp], rbx
+    adc     QWORD PTR [r10], rdx
 
 end_of_func:
 
     setc    al
     movzx   rax, al
-
-    pop     rsi
-    pop     rdi
-    pop     rbx
     ret   
 
 addmul_one_x64 ENDP

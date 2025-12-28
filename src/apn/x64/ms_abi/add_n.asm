@@ -84,6 +84,9 @@ add_n_zen4 ENDP
 add_n_x64 PROC FRAME
 .endprolog
 
+    test    r9,  r9
+    jz      end_of_func
+
 main_loop:
 
     mov     rax, QWORD PTR [rdx] 
@@ -91,7 +94,7 @@ main_loop:
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
-    lea     r8,  [r8 + 8]
+    lea     r8,  [r8  + 8]
     lea     rcx, [rcx + 8]
     dec     r9
     jnz     main_loop

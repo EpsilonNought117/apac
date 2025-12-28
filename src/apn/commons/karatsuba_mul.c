@@ -103,7 +103,7 @@ void apn_karatsuba_mul_unbalanced(
 	APAC_ASSERT(temp != NULL);
 	APAC_ASSERT(size1 >= size2);
 
-	if ((size2 <= ((size1 + 1) >> 1)) || (size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD))
+	if ((size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD) || (size2 <= ((size1 + 1) >> 1)))
 	{
 		// Highly unbalanced values or values below threshold
 		// handled by basecase multiplication
