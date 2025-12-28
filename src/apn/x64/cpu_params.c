@@ -6,9 +6,9 @@ extern apac_cpu_params curr_cpu;
 void zen4_set_params(void)
 {
 	curr_cpu.karatsuba_mul_balanced_threshold = 28;
-	curr_cpu.karatsuba_mul_unbalanced_threshold = 33;
-	curr_cpu.karatsuba_sqr_threshold = 58;
-	curr_cpu.dnc_div_threshold = 45;
+	curr_cpu.karatsuba_mul_unbalanced_threshold = 33;	// needs to be tuned
+	curr_cpu.karatsuba_sqr_threshold = 53;
+	curr_cpu.dnc_div_threshold = 45;		// needs to be tuned
 
 	curr_cpu.apn_add_n_ptr = add_n_zen4;
 	curr_cpu.apn_sub_n_ptr = sub_n_zen4;
