@@ -1,0 +1,44 @@
+name: x64 Linux
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    name: >-
+      ubuntu-x64
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print gcc version
+        run: |
+          gcc -v
+
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+      
+      - name: Tests
+        run: |
+          cd build
+          ctest -V -C Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          retention-days: 1
+          path: |
+            ./build/*

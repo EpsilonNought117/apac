@@ -1,0 +1,47 @@
+name: x64 Windows
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-2025
+
+    name: >-
+      windows
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Print msvc version
+        run: |
+          cl
+
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -A x64
+          cmake --build . --config Release
+      
+      - name: Tests
+        run: |
+          cd build
+          ctest -V -C Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          retention-days: 1
+          path: |
+            ./build/Release/*
