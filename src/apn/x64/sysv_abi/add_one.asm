@@ -1,9 +1,9 @@
+
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
 #   |                   ADD SINGLE-LIMB TO APN-ARR FUNCTIONS                    |
 #   |                                                                           |
 #   O---------------------------------------------------------------------------O
-
 
     #   Function Arguments
     #
@@ -13,7 +13,6 @@
     #   rcx -> val      (apn_seg_t)
 
 .intel_syntax noprefix
-
 .text
 .globl add_one_x64, add_one_zen4
 .type  add_one_x64, @function
@@ -45,26 +44,23 @@ add_one_zen4:
     shr     rdx, 2
     and     r11, 3
     bt      ax,  0          ; doesn't modify zero flag
-    jz      .Ladd_one_zen4_before_unroll
+    jz      2f
 
-.Ladd_one_zen4_small_loop:
-
+1:
     ADD_CY_ZERO 0
 
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     r11
-    jnz     .Ladd_one_zen4_small_loop
+    jnz     1b
 
-.Ladd_one_zen4_before_unroll:
-
+2:
     setc    r11
     test    rdx, rdx
     bt      ax,  0
-    jz      .Ladd_one_zen4_end_of_func
+    jz      4f
 
-.Ladd_one_zen4_unrolled_loop:
-
+3:
     ADD_CY_ZERO 0
     ADD_CY_ZERO 8
     ADD_CY_ZERO 16
@@ -73,10 +69,9 @@ add_one_zen4:
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     dec     rdx
-    jnz     .Ladd_one_zen4_unrolled_loop
+    jnz     3b
 
-.Ladd_one_zen4_end_of_func:
-
+4:
     setc    al
     movzx   rax, al
     ret
@@ -84,4 +79,34 @@ add_one_zen4:
 .cfi_endproc
 .size add_one_zen4, .-add_one_zen4
 
+###############################################################################
+# add_one_x64
+###############################################################################
 
+add_one_x64:
+.cfi_startproc
+
+    mov     rax, QWORD PTR [rsi]
+    add     rax, rcx
+    mov     QWORD PTR [rdi], rax
+
+    lea     rdi, [rdi + 8]
+    lea     rsi, [rsi + 8]
+    dec     rdx
+    jz      2f
+
+1:
+    ADD_CY_ZERO 0
+
+    lea     rdi, [rdi + 8]
+    lea     rsi, [rsi + 8]
+    dec     rdx
+    jnz     1b
+
+2:
+    setc    al
+    movzx   rax, al
+    ret
+
+.cfi_endproc
+.size add_one_x64, .-add_one_x64
