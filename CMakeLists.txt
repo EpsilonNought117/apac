@@ -83,7 +83,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-    
+
 # --- COMMON C SOURCES ----------------------------------------------------------
 
 set(apac_c_sources
@@ -122,7 +122,7 @@ set(apac_c_sources
     "src/apn/commons/karatsuba_sqr.c"
     "src/apn/commons/div_helpers.c"
 )
-    
+
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
@@ -154,17 +154,17 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/ms_abi/add_n.asm"
-            "src/apn/x64/ms_abi/add_one.asm"
-            "src/apn/x64/ms_abi/mul_bc.asm"
-            "src/apn/x64/ms_abi/addmul_one.asm"
-            "src/apn/x64/ms_abi/submul_one.asm"
-            "src/apn/x64/ms_abi/sqr_bc.asm"
-            "src/apn/x64/ms_abi/sub_n.asm"
-            "src/apn/x64/ms_abi/sub_one.asm"
-            "src/apn/x64/ms_abi/neg.asm"
-            "src/apn/x64/ms_abi/lshift_lt64.asm"
-            "src/apn/x64/ms_abi/rshift_lt64.asm"
+            "src/apn/x64/sysv_abi/add_n.asm"
+            "src/apn/x64/sysv_abi/add_one.asm"
+            "src/apn/x64/sysv_abi/mul_bc.asm"
+            "src/apn/x64/sysv_abi/addmul_one.asm"
+            "src/apn/x64/sysv_abi/submul_one.asm"
+            "src/apn/x64/sysv_abi/sqr_bc.asm"
+            "src/apn/x64/sysv_abi/sub_n.asm"
+            "src/apn/x64/sysv_abi/sub_one.asm"
+            "src/apn/x64/sysv_abi/neg.asm"
+            "src/apn/x64/sysv_abi/lshift_lt64.asm"
+            "src/apn/x64/sysv_abi/rshift_lt64.asm"
         )
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
@@ -209,7 +209,7 @@ endforeach()
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     set(isa_sources ${x64_specific})
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "AARCH64|aarch64")
-    
+
 endif()
 
 set(apac_sources ${apac_c_sources} ${isa_sources} ${hidden_headers})
