@@ -13,7 +13,6 @@
     #   rcx -> val          (apn_seg_t)
 
 .intel_syntax noprefix
-
 .text
 .globl submul_one_x64, submul_one_zen4
 .type  submul_one_x64, @function
@@ -37,55 +36,43 @@
 submul_one_zen4:
 .cfi_startproc
 
-.Lsubmul_one_zen4_start_of_func:
-
     xchg    rcx, rdx
-
     mov     r8,  rcx
     and     r8,  3
     shr     rcx, 2
-
     xor     r9,  r9
     test    rcx, rcx
-    jz      .Lsubmul_one_zen4_before_rmdr
+    jz      2f
 
-.Lsubmul_one_zen4_unroll_loop:
-
+1:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
     ADX_MULX_ITER 24
-
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     lea     rcx, [rcx - 1]
-    jrcxz   .Lsubmul_one_zen4_before_rmdr
+    jrcxz   2f
 
-.Lsubmul_one_zen4_before_rmdr:
-
+2:
     mov     rcx, r8
-    jrcxz   .Lsubmul_one_zen4_end_of_loop
+    jrcxz   4f
 
-.Lsubmul_one_zen4_loop_rmdr:
-
+3:
     ADX_MULX_ITER 0
-
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
-    loop    .Lsubmul_one_zen4_loop_rmdr
+    loop    3b
 
-.Lsubmul_one_zen4_end_of_loop:
-
+4:
     adox    r9,  rcx
     not     r9
     adcx    r9,  QWORD PTR [rdi]
     mov     QWORD PTR [rdi], r9
 
-.Lsubmul_one_zen4_end_of_func:
-
+5:
     setnc   al
     movzx   rax, al
-
     ret
 
 .cfi_endproc
@@ -98,43 +85,35 @@ submul_one_zen4:
 #   -------------------------
 
 submul_one_x64:
-.cfi_start_proc
-
-.Lsubmul_one_x64_start_of_func:
+.cfi_startproc
 
     xchg    rcx, rdx
     mov     r9,  rdx
     xor     r10, r10
     test    rcx, rcx
-    jz      .Lsubmul_one_x64_end_of_func
+    jz      3f
 
-.Lsubmul_one_x64_main_loop:
-
+1:
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
-
     ; mul clobbers the original Carry Flag value
-
     add     r10, rax                # temp_reg += low64
     adc     rdx, 0                  # high64 += CF
     sub     QWORD PTR [rdi], r10    # result[i] -= temp_reg
-
     mov     r10, rdx        # temp_reg = high64
     mov     rax, r9         # restore clobbered rax
     adc     r10, 0          # temp_reg += borrow (from last seg)
-
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     rcx
-    jnz     .Lsubmul_one_x64_main_loop
+    jnz     1b
 
-.Lsubmul_one_x64_end_of_loop:
-
+2:
     sbb     QWORD PTR [rdi], rdx
 
-.Lsubmul_one_x64_end_of_func:
-
+3:
     setc    al
     movzx   rax, al
+    ret
 
 .cfi_endproc
 .size submul_one_x64, .-submul_one_x64

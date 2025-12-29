@@ -12,7 +12,6 @@
     #   rcx -> size     (apn_size_t)
 
 .intel_syntax noprefix
-
 .text
 .globl add_n_x64, add_n_zen4
 .type  add_n_x64, @function
@@ -24,10 +23,6 @@
     mov     QWORD PTR [rdi + \base], rax
 .endm
 
-###############################################################################
-# add_n_zen4
-###############################################################################
-
 add_n_zen4:
 .cfi_startproc
 
@@ -35,9 +30,9 @@ add_n_zen4:
     mov     r11, rcx        # r11 = size
     shr     rcx, 2          # rcx = size / 4
     and     r11, 3          # r11 = size % 4
-    jz      .Ladd_n_zen4_after_small
+    jz      2f
 
-.Ladd_n_zen4_small_loop:
+1:
     mov     rax, [rsi]
     adc     rax, [rdx]
     mov     [rdi], rax
@@ -45,19 +40,18 @@ add_n_zen4:
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
     lea     rdi, [rdi + 8]
-
+    
     dec     r11
-    jnz     .Ladd_n_zen4_small_loop
+    jnz     1b
 
-.Ladd_n_zen4_after_small:
+2:   
     setc    al
     test    rcx, rcx
     bt      ax, 0
-    jz      .Ladd_n_zen4_return
+    jz      4f
 
 .p2align 4
-.Ladd_n_zen4_unrolled_loop:
-
+3:
     ADD_CY 0
     ADD_CY 8
     ADD_CY 16
@@ -66,12 +60,12 @@ add_n_zen4:
     lea     rsi, [rsi + 32]
     lea     rdx, [rdx + 32]
     lea     rdi, [rdi + 32]
-
+    
     dec     rcx
-    jnz     .Ladd_n_zen4_unrolled_loop
+    jnz     3b
 
 .p2align 4
-.Ladd_n_zen4_return:
+4:
     setc    al
     movzx   rax, al
     ret
@@ -79,19 +73,15 @@ add_n_zen4:
 .cfi_endproc
 .size add_n_zen4, .-add_n_zen4
 
-###############################################################################
-# add_n_x64
-###############################################################################
-
 add_n_x64:
 .cfi_startproc
 
     xor     rax, rax
     test    rcx, rcx
-    jz      .Ladd_n_x64_return
+    jz      2f
 
 .p2align 4
-.Ladd_n_x64_loop:
+1:
 
     ADD_CY 0
 
@@ -100,10 +90,11 @@ add_n_x64:
     lea     rdi, [rdi + 8]
 
     dec     rcx
-    jnz     .Ladd_n_x64_loop
+    jnz     1b
 
 .p2align 4
-.Ladd_n_x64_return:
+2:
+
     setc    al
     movzx   rax, al
     ret

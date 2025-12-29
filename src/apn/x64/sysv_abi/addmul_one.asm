@@ -34,39 +34,37 @@
 #   -------------------------
 
 addmul_one_zen4:
-    .cfi_startproc
+.cfi_startproc
 
-    jmp     .Laddmul_one_zen4_start_of_func
+    jmp     1f
 
 .p2align 4
-.Laddmul_one_zen4_jump_table:
-    .quad .Laddmul_one_zen4_end_of_loop
-    .quad .Laddmul_one_zen4_rem1
-    .quad .Laddmul_one_zen4_rem2
-    .quad .Laddmul_one_zen4_rem3
-    .quad .Laddmul_one_zen4_rem4
-    .quad .Laddmul_one_zen4_rem5
-    .quad .Laddmul_one_zen4_rem6
-    .quad .Laddmul_one_zen4_rem7
+0:
+    .quad 9f
+    .quad 10f
+    .quad 11f
+    .quad 12f
+    .quad 13f
+    .quad 14f
+    .quad 15f
+    .quad 16f
 
-.Laddmul_one_zen4_start_of_func:
-
+1:
     xchg    rcx, rdx
 
     mov     r8,  rcx
     and     r8,  7
     shr     rcx, 3
 
-    lea     r9,  [rip + .Laddmul_one_zen4_jump_table]
+    lea     r9,  [rip + 0b]
     lea     r9,  [r9 + r8 * 8]
 
     mov     rax, QWORD PTR [rdi]
     test    rcx, rcx
-    jz      .Laddmul_one_zen4_before_remainder
+    jz      3f
 
 .p2align 6
-.Laddmul_one_zen4_unroll8_loop:
-
+2:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
@@ -79,15 +77,15 @@ addmul_one_zen4:
     lea     rsi, [rsi + 64]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   .Laddmul_one_zen4_before_remainder
-    jmp     .Laddmul_one_zen4_unroll8_loop
+    jrcxz   3f
+    jmp     2b
 
 .p2align 4
-.Laddmul_one_zen4_before_remainder:
+3:
     jmp     QWORD PTR [r9]
 
 .p2align 4
-.Laddmul_one_zen4_rem7:
+16:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
@@ -95,60 +93,54 @@ addmul_one_zen4:
     ADX_MULX_ITER 32
     ADX_MULX_ITER 40
     ADX_MULX_ITER 48
-
-    jmp .Laddmul_one_zen4_end_of_loop
+    jmp     9f
 
 .p2align 4
-.Laddmul_one_zen4_rem6:
+15:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
     ADX_MULX_ITER 24
     ADX_MULX_ITER 32
     ADX_MULX_ITER 40
-
-    jmp .Laddmul_one_zen4_end_of_loop
+    jmp     9f
 
 .p2align 4
-.Laddmul_one_zen4_rem5:
+14:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
     ADX_MULX_ITER 24
     ADX_MULX_ITER 32
-
-    jmp .Laddmul_one_zen4_end_of_loop
+    jmp     9f
 
 .p2align 4
-.Laddmul_one_zen4_rem4:
+13:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
     ADX_MULX_ITER 24
-
-    jmp .Laddmul_one_zen4_end_of_loop
+    jmp     9f
 
 .p2align 4
-.Laddmul_one_zen4_rem3:
+12:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
     ADX_MULX_ITER 16
-
-    jmp .Laddmul_one_zen4_end_of_loop
+    jmp     9f
 
 .p2align 4
-.Laddmul_one_zen4_rem2:
+11:
     ADX_MULX_ITER 0
     ADX_MULX_ITER 8
-
-    jmp .Laddmul_one_zen4_end_of_loop
+    jmp     9f
 
 .p2align 4
-.Laddmul_one_zen4_rem1:
+10:
     ADX_MULX_ITER 0
 
 .p2align 5
-.Laddmul_one_zen4_end_of_loop:
+9:
     adcx    rax, rcx
     mov     QWORD PTR [rdi + r8 * 8], rax
 
@@ -156,7 +148,7 @@ addmul_one_zen4:
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size addmul_one_zen4, .-addmul_one_zen4
 
 #   -------------------------
@@ -166,7 +158,7 @@ addmul_one_zen4:
 #   -------------------------
 
 addmul_one_x64:
-    .cfi_startproc
+.cfi_startproc
 
     xchg    rcx, rdx
 
@@ -178,10 +170,9 @@ addmul_one_x64:
     xor     rdx, rdx
     xor     r10, r10
     test    rcx, rcx
-    jz      .Lend_of_func
+    jz      3f
 
-.Laddmul_one_x64_main_loop:
-
+1:
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
 
     add     r10, rax
@@ -195,15 +186,15 @@ addmul_one_x64:
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rcx
-    jnz     .Laddmul_one_x64_main_loop
+    jnz     1b
 
-.Laddmul_one_end_of_loop:
+2:
     adc     QWORD PTR [rdi], rdx
 
-.Laddmul_one_end_of_func:
+3:
     setc    al
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size addmul_one_x64, .-addmul_one_x64
