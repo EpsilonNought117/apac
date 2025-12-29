@@ -307,8 +307,6 @@ outer_loop_pass1:
 ALIGN 16
 inner_loop_pass1:
 
-    mov     rax, r13            ; restore clobbered rax or load for the first time
-    adc     rbx, rdx            ; temp_reg += (CF + high64)
     mul     QWORD PTR [r11]     ; rdx:rax = rax * op1[counter + 1]
 
     add     rbx, rax                ; temp_reg += low64
@@ -316,6 +314,9 @@ inner_loop_pass1:
     add     QWORD PTR [r10], rbx    ; result[counter + 1] += temp_reg
 
     mov     rbx, 0
+    mov     rax, r13            ; restore clobbered rax or load for the first time
+    adc     rbx, rdx            ; temp_reg += (CF + high64)
+
     lea     r10, [r10 + 8]
     lea     r11, [r11 + 8]
     loop    inner_loop_pass1

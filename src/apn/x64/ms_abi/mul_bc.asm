@@ -186,8 +186,6 @@ outer_loop:
 ALIGN 16
 inner_loop:
 
-    mov     rdi, 0
-    adc     rdi, rdx
     mul     QWORD PTR [rbx] ; rdx : rax = rax * op1[i]
 
     ; now product in rdx:rax
@@ -199,6 +197,9 @@ inner_loop:
     add     QWORD PTR [rcx], rdi    ; result[i + j] += temp_reg
 
     mov     rax, rsi                ; restore rax for next mul
+    mov     rdi, rdx
+    adc     rdi, 0
+
     lea     rbx, [rbx + 8]          ; update ptrs
     lea     rcx, [rcx + 8]          
     dec     r11

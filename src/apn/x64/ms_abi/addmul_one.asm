@@ -146,16 +146,16 @@ addmul_one_x64 PROC FRAME
     jz      end_of_func
 
 main_loop:
-    
-    mov     rax, r9         ; restore clobbered rax
-    adc     rcx, rdx          ; temp_reg += (CF + high64)
+
     mul     QWORD PTR [r11] ; rdx:rax = rax * op1[idx]
 
     add     rcx, rax
     adc     rdx, 0
     add     QWORD PTR [r10], rcx
 
-    mov     rcx, 0
+    mov     rcx, rdx
+    mov     rax, r9         ; restore clobbered rax
+    adc     rcx, 0          ; temp_reg += (CF + high64)
 
     lea     r10, [r10 + 8]
     lea     r11, [r11 + 8]

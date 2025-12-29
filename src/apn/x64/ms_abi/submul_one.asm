@@ -129,8 +129,6 @@ start_of_func:
 
 main_loop:
 
-    mov     rax, r9         ; restore clobbered rax
-    adc     rcx, 0          ; temp_reg -= borrow
     mul     QWORD PTR [r11] ; rdx:rax = rax * op1[idx]
     
     ; mul clobbers the original Carry Flag value
@@ -140,6 +138,8 @@ main_loop:
     sub     QWORD PTR [r10], rcx    ; result[i] -= temp_reg
     
     mov     rcx, rdx        ; temp_reg = high64
+    mov     rax, r9         ; restore clobbered rax
+    adc     rcx, 0          ; temp_reg += borrow
 
     lea     r10, [r10 + 8]
     lea     r11, [r11 + 8]
