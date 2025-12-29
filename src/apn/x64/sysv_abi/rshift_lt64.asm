@@ -1,10 +1,10 @@
 
 # O---------------------------------------------------------------------------O
 # | |
-# | LEFT BITWISE SHIFT FUNCTIONS |
+# | RIGHT BITWISE SHIFT FUNCTIONS |
 # | |
 # O---------------------------------------------------------------------------O
-    
+
     # Function Arguments
     #
     # rdi -> result (apn_seg_t*)
@@ -17,25 +17,23 @@
 
 .intel_syntax noprefix
 .text
-.globl lshift_lt64_x64, lshift_lt64_zen4
-.type lshift_lt64_x64, @function
-.type lshift_lt64_zen4, @function
+.globl rshift_lt64_x64, rshift_lt64_zen4
+.type rshift_lt64_x64, @function
+.type rshift_lt64_zen4, @function
 
-lshift_lt64_zen4:
+rshift_lt64_zen4:
 .cfi_startproc
-    
+
     mov     r9,  64
-    sub     r9,  rcx # rshift val in r9 (64 - bit_cnt)
+    sub     r9,  rcx # lshift val in r9 (64 - bit_cnt)
 
 1:
-    lea     rsi, [rsi + rdx * 8 - 8]
-    lea     rdi, [rdi + rdx * 8 - 8]
-
-    shrx    rax, QWORD PTR [rsi], r9
+    shlx    rax, QWORD PTR [rsi], r9
+    
     dec     rdx
     jz      4f
-
-    mov     r8, rdx
+    
+    mov     r8,  rdx
     and     r8,  3  # size %= 4
     shr     rdx, 2  # size /= 4
     test    rdx, rdx
@@ -45,74 +43,70 @@ lshift_lt64_zen4:
 2:
 .set i, 0
 .rept 4
-    shlx    r10, QWORD PTR [rsi - i * 8], rcx
-    shrx    r11, QWORD PTR [rsi - i * 8 - 8], r9
+    shrx    r10, QWORD PTR [rsi + i * 8], rcx
+    shlx    r11, QWORD PTR [rsi + i * 8 + 8], r9
     or      r11, r10
-    mov     QWORD PTR [rdi - i * 8], r11
+    mov     QWORD PTR [rdi + i * 8], r11
 .set i, i + 1
 .endr
 
-    sub     rsi, 32
-    sub     rdi, 32
+    add     rsi, 32
+    add     rdi, 32
     dec     rdx
     jnz     2b
 
 3:
-    test    r8, r8
+    test    r8,  r8
     jz      4f
 
 5:
-    shlx    r10, QWORD PTR [rsi], rcx
-    shrx    r11, QWORD PTR [rsi - 8], r9
+    shrx    r10, QWORD PTR [rsi], rcx
+    shlx    r11, QWORD PTR [rsi + 8], r9
     or      r11, r10
     mov     QWORD PTR [rdi], r11
     
-    sub     rsi, 8
-    sub     rdi, 8
+    add     rsi, 8
+    add     rdi, 8
     dec     r8
     jnz     5b
 
 4:
-    shlx    r11, QWORD PTR [rsi], rcx
+    shrx    r11, QWORD PTR [rsi], rcx
     mov     QWORD PTR [rdi], r11
     ret
 
 .cfi_endproc
-.size lshift_lt64_zen4, .-lshift_lt64_zen4
+.size rshift_lt64_zen4, .-rshift_lt64_zen4
 
-lshift_lt64_x64:
+rshift_lt64_x64:
 .cfi_startproc
 
     xor     rax, rax
     # bit_cnt already in rcx
 1:
-    lea     rsi, [rsi + rdx * 8 - 8]
-    lea     rdi, [rdi + rdx * 8 - 8]
     mov     r11, QWORD PTR [rsi]
-    shld    rax, r11, cl
-   
+    shrd    rax, r11, cl
+    
     dec     rdx
-    jz      3f
-    # loop never entered if size is less than 2
-
+    jz 3f
 2:
-    mov     r10, QWORD PTR [rsi - 8]
+    mov     r10, QWORD PTR [rsi + 8]
     mov     r11, QWORD PTR [rsi]
-    shld    r11, r10, cl
+    shrd    r11, r10, cl
     mov     QWORD PTR [rdi], r11
-   
-    sub     rsi, 8
-    sub     rdi, 8
+    
+    add     rsi, 8
+    add     rdi, 8
     dec     rdx
     jnz     2b
 
 3:
     mov     r11, QWORD PTR [rsi]
-    shl     r11, cl
+    shr     r11, cl
     mov     QWORD PTR [rdi], r11
 
 4:
     ret
 
 .cfi_endproc
-.size lshift_lt64_x64, .-lshift_lt64_x64
+.size rshift_lt64_x64, .-rshift_lt64_x64
