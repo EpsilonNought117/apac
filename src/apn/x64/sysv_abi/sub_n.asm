@@ -19,9 +19,9 @@
 .type  sub_n_zen4, @function
 
 .macro SUB_BRW base
-    mov     rax, [rsi + \base]
-    sbb     rax, [rdx + \base]
-    mov     [rdi + \base], rax
+    mov     rax, QWORD PTR [rsi + \base]
+    sbb     rax, QWORD PTR [rdx + \base]
+    mov     QWORD PTR [rdi + \base], rax
 .endm
 
 ###############################################################################
@@ -29,7 +29,7 @@
 ###############################################################################
 
 sub_n_zen4:
-    .cfi_startproc
+.cfi_startproc
 
     xor     rax, rax
     mov     r11, rcx            # r11 = size
@@ -76,7 +76,7 @@ sub_n_zen4:
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size sub_n_zen4, .-sub_n_zen4
 
 ###############################################################################
@@ -84,9 +84,11 @@ sub_n_zen4:
 ###############################################################################
 
 sub_n_x64:
-    .cfi_startproc
+.cfi_startproc
 
     xor     rax, rax
+    test    rcx, rcx
+    jz      .Lsub_n_x64_return
 
 .p2align 4
 .Lsub_n_x64_loop:
@@ -106,5 +108,5 @@ sub_n_x64:
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size sub_n_x64, .-sub_n_x64

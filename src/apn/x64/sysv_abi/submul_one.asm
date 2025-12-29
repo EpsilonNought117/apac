@@ -7,7 +7,7 @@
 
 	#   Function Arguments
     #
-    #   rdi -> result       (apn_seg_t*)   
+    #   rdi -> result       (apn_seg_t*)
     #   rsi -> op1          (const apn_seg_t*)
     #   rdx -> size         (apn_size_t)
     #   rcx -> val          (apn_seg_t)
@@ -30,12 +30,12 @@
 
 #   -------------------------
 #
-#        MULX/ADOX/ADCX        
+#        MULX/ADOX/ADCX
 #
 #   -------------------------
 
 submul_one_zen4:
-    .cfi_startproc
+.cfi_startproc
 
 .Lsubmul_one_zen4_start_of_func:
 
@@ -44,7 +44,7 @@ submul_one_zen4:
     mov     r8,  rcx
     and     r8,  3
     shr     rcx, 2
-    
+
     xor     r9,  r9
     test    rcx, rcx
     jz      .Lsubmul_one_zen4_before_rmdr
@@ -85,42 +85,42 @@ submul_one_zen4:
 
     setnc   al
     movzx   rax, al
-    
+
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size submul_one_zen4, .-submul_one_zen4
 
 #   -------------------------
 #
-#            MUL/ADC        
+#            MUL/ADC
 #
 #   -------------------------
 
 submul_one_x64:
-    .cfi_start_proc
+.cfi_start_proc
 
 .Lsubmul_one_x64_start_of_func:
-    
+
     xchg    rcx, rdx
     mov     r9,  rdx
     xor     r10, r10
     test    rcx, rcx
-    jz      .Lsubmul_one_x64_end_of_loop
+    jz      .Lsubmul_one_x64_end_of_func
 
 .Lsubmul_one_x64_main_loop:
 
-    mul     QWORD PTR [rsi] ; rdx:rax = rax * op1[idx]
-    
+    mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
+
     ; mul clobbers the original Carry Flag value
 
-    add     r10, rax                ; temp_reg += low64
-    adc     rdx, 0                  ; high64 += CF
-    sub     QWORD PTR [rdi], r10    ; result[i] -= temp_reg
-    
-    mov     r10, rdx        ; temp_reg = high64
-    mov     rax, r9         ; restore clobbered rax
-    adc     r10, 0          ; temp_reg += borrow (from last seg)
+    add     r10, rax                # temp_reg += low64
+    adc     rdx, 0                  # high64 += CF
+    sub     QWORD PTR [rdi], r10    # result[i] -= temp_reg
+
+    mov     r10, rdx        # temp_reg = high64
+    mov     rax, r9         # restore clobbered rax
+    adc     r10, 0          # temp_reg += borrow (from last seg)
 
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
@@ -129,4 +129,12 @@ submul_one_x64:
 
 .Lsubmul_one_x64_end_of_loop:
 
-    
+    sbb     QWORD PTR [rdi], rdx
+
+.Lsubmul_one_x64_end_of_func:
+
+    setc    al
+    movzx   rax, al
+
+.cfi_endproc
+.size submul_one_x64, .-submul_one_x64

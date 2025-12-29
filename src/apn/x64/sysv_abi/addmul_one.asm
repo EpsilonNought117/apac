@@ -7,7 +7,7 @@
 
 	#   Function Arguments
     #
-    #   rdi -> result       (apn_seg_t*)   
+    #   rdi -> result       (apn_seg_t*)
     #   rsi -> op1          (const apn_seg_t*)
     #   rdx -> size         (apn_size_t)
     #   rcx -> val          (apn_seg_t)
@@ -29,7 +29,7 @@
 
 #   -------------------------
 #
-#        MULX/ADOX/ADCX        
+#        MULX/ADOX/ADCX
 #
 #   -------------------------
 
@@ -117,7 +117,7 @@ addmul_one_zen4:
     ADX_MULX_ITER 24
     ADX_MULX_ITER 32
 
-    jmp .Laddmul_one_zen4_end_of_loop    
+    jmp .Laddmul_one_zen4_end_of_loop
 
 .p2align 4
 .Laddmul_one_zen4_rem4:
@@ -161,7 +161,7 @@ addmul_one_zen4:
 
 #   -------------------------
 #
-#            MUL/ADC        
+#            MUL/ADC
 #
 #   -------------------------
 
@@ -181,8 +181,7 @@ addmul_one_x64:
     jz      .Lend_of_func
 
 .Laddmul_one_x64_main_loop:
-    mov     rax, r9         # restore clobbered rax
-    adc     r10, 0          # temp_reg += (CF + high64)
+
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
 
     add     r10, rax
@@ -190,6 +189,8 @@ addmul_one_x64:
     add     QWORD PTR [rdi], r10
 
     mov     r10, rdx
+    mov     rax, r9         # restore clobbered rax
+    adc     r10, 0          # temp_reg += (CF + high64)
 
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]

@@ -6,7 +6,7 @@
 
     #   Function Arguments
     #
-    #   rdi -> result   (apn_seg_t*)   
+    #   rdi -> result   (apn_seg_t*)
     #   rsi -> op1      (const apn_seg_t*)
     #   rdx -> op2      (const apn_seg_t*)
     #   rcx -> size     (apn_size_t)
@@ -19,9 +19,9 @@
 .type  add_n_zen4, @function
 
 .macro ADD_CY base
-    mov     rax, [rsi + \base]
-    adc     rax, [rdx + \base]
-    mov     [rdi + \base], rax
+    mov     rax, QWORD PTR [rsi + \base]
+    adc     rax, QWORD PTR [rdx + \base]
+    mov     QWORD PTR [rdi + \base], rax
 .endm
 
 ###############################################################################
@@ -29,7 +29,7 @@
 ###############################################################################
 
 add_n_zen4:
-    .cfi_startproc
+.cfi_startproc
 
     xor     rax, rax
     mov     r11, rcx        # r11 = size
@@ -76,7 +76,7 @@ add_n_zen4:
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size add_n_zen4, .-add_n_zen4
 
 ###############################################################################
@@ -84,9 +84,11 @@ add_n_zen4:
 ###############################################################################
 
 add_n_x64:
-    .cfi_startproc
+.cfi_startproc
 
     xor     rax, rax
+    test    rcx, rcx
+    jz      .Ladd_n_x64_return
 
 .p2align 4
 .Ladd_n_x64_loop:
@@ -106,5 +108,5 @@ add_n_x64:
     movzx   rax, al
     ret
 
-    .cfi_endproc
+.cfi_endproc
 .size add_n_x64, .-add_n_x64
