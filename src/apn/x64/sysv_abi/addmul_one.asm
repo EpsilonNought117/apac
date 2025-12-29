@@ -57,7 +57,7 @@ addmul_one_zen4:
     and     r8,  7
     shr     rcx, 3
 
-    lea     r9,  .Laddmul_one_zen4_jump_table
+    lea     r9,  [rip + .Laddmul_one_zen4_jump_table]
     lea     r9,  [r9 + r8 * 8]
 
     mov     rax, QWORD PTR [rdi]
@@ -76,8 +76,8 @@ addmul_one_zen4:
     ADX_MULX_ITER 48
     ADX_MULX_ITER 56
 
-    lea     rdi, [rdi + 64]
     lea     rsi, [rsi + 64]
+    lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
     jrcxz   .Laddmul_one_zen4_before_remainder
     jmp     .Laddmul_one_zen4_unroll8_loop
@@ -180,25 +180,26 @@ addmul_one_x64:
     test    rcx, rcx
     jz      .Lend_of_func
 
-.Lmain_loop:
+.Laddmul_one_x64_main_loop:
     mov     rax, r9         # restore clobbered rax
-    adc     r10, rdx        # temp_reg += (CF + high64)
+    adc     r10, 0          # temp_reg += (CF + high64)
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
 
     add     r10, rax
     adc     rdx, 0
     add     QWORD PTR [rdi], r10
 
-    mov     r10, 0
+    mov     r10, rdx
 
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
-    loop    .Lmain_loop
+    dec     rcx
+    jnz     .Laddmul_one_x64_main_loop
 
-.Lend_of_loop:
-    adc     QWORD PTR [rdi], rbx
+.Laddmul_one_end_of_loop:
+    adc     QWORD PTR [rdi], rdx
 
-.Lend_of_func:
+.Laddmul_one_end_of_func:
     setc    al
     movzx   rax, al
     ret
