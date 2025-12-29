@@ -93,18 +93,17 @@ ENDM
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
-ALIGN 32
     jrcxz   bef_inner_rmdr_pass1
     jmp     inner_loop_unroll_pass1
 
-ALIGN 32
+ALIGN 16
 bef_inner_rmdr_pass1:
 
     jmp     QWORD PTR [r13]
 
 FOR i, <7, 6, 5, 4, 3, 2, 1>
 
-ALIGN 32
+ALIGN 16
 inner_pass1_rem&i&:
 
 j = 0
@@ -125,6 +124,7 @@ ENDM
 
 ENDM
 
+ALIGN 16
 outer_loop_end_pass1:
 
     adc     QWORD PTR [rbp], rax
