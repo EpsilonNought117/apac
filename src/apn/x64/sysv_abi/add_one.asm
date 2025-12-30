@@ -4,7 +4,7 @@
 #   |                   ADD SINGLE-LIMB TO APN-ARR FUNCTIONS                    |
 #   |                                                                           |
 #   O---------------------------------------------------------------------------O
-
+    
     #   Function Arguments
     #
     #   rdi -> result   (apn_seg_t*)
@@ -18,21 +18,11 @@
 .type  add_one_x64, @function
 .type  add_one_zen4, @function
 
-.macro ADD_CY_ZERO base
-    mov     rax, QWORD PTR [rsi + \base]
-    adc     rax, 0
-    mov     QWORD PTR [rdi + \base], rax
-.endm
-
-###############################################################################
-# add_one_zen4
-###############################################################################
-
 add_one_zen4:
 .cfi_startproc
 
     mov     rax, QWORD PTR [rsi]
-    adc     rax, rcx
+    add     rax, rcx
     mov     QWORD PTR [rdi], rax
 
     lea     rdi, [rdi + 8]
@@ -47,7 +37,9 @@ add_one_zen4:
     jz      2f
 
 1:
-    ADD_CY_ZERO 0
+    mov     rax, QWORD PTR [rsi]
+    adc     rax, 0
+    mov     QWORD PTR [rdi], rax
 
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
@@ -55,17 +47,22 @@ add_one_zen4:
     jnz     1b
 
 2:
-    setc    r11
+    setc    r11b
     test    rdx, rdx
-    bt      ax,  0
+    bt      r11w, 0
     jz      4f
 
 3:
-    ADD_CY_ZERO 0
-    ADD_CY_ZERO 8
-    ADD_CY_ZERO 16
-    ADD_CY_ZERO 24
+.set i, 0
+.rept 4
 
+    mov     rax, QWORD PTR [rsi + i * 8]
+    adc     rax, 0
+    mov     QWORD PTR [rdi + i * 8], rax
+
+.set i, i + 1
+.endr
+    
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     dec     rdx
@@ -79,25 +76,22 @@ add_one_zen4:
 .cfi_endproc
 .size add_one_zen4, .-add_one_zen4
 
-###############################################################################
-# add_one_x64
-###############################################################################
-
 add_one_x64:
 .cfi_startproc
-
+    
     mov     rax, QWORD PTR [rsi]
     add     rax, rcx
     mov     QWORD PTR [rdi], rax
-
+    
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rdx
     jz      2f
 
 1:
-    ADD_CY_ZERO 0
-
+    mov     rax, QWORD PTR [rsi]
+    adc     rax, 0
+    mov     QWORD PTR [rdi], rax
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rdx

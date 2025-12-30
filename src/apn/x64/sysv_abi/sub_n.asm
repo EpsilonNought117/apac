@@ -17,12 +17,6 @@
 .type  sub_n_x64, @function
 .type  sub_n_zen4, @function
 
-.macro SUB_BRW base
-    mov     rax, QWORD PTR [rsi + \base]
-    sbb     rax, QWORD PTR [rdx + \base]
-    mov     QWORD PTR [rdi + \base], rax
-.endm
-
 sub_n_zen4:
 .cfi_startproc
 
@@ -36,6 +30,7 @@ sub_n_zen4:
     mov     rax, [rsi]
     sbb     rax, [rdx]
     mov     [rdi], rax
+
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
     lea     rdi, [rdi + 8]
@@ -50,10 +45,16 @@ sub_n_zen4:
 
 .p2align 4
 3:
-    SUB_BRW 0
-    SUB_BRW 8
-    SUB_BRW 16
-    SUB_BRW 24
+.set i, 0
+.rept 4
+
+    mov     rax, QWORD PTR [rsi + i * 8]
+    sbb     rax, QWORD PTR [rdx + i * 8]
+    mov     QWORD PTR [rdi + i * 8], rax
+
+.set i, i + 1
+.endr
+
     lea     rsi, [rsi + 32]
     lea     rdx, [rdx + 32]
     lea     rdi, [rdi + 32]
@@ -69,10 +70,6 @@ sub_n_zen4:
 .cfi_endproc
 .size sub_n_zen4, .-sub_n_zen4
 
-###############################################################################
-# sub_n_x64
-###############################################################################
-
 sub_n_x64:
 .cfi_startproc
     
@@ -82,10 +79,14 @@ sub_n_x64:
 
 .p2align 4
 1:
-    SUB_BRW 0
+    mov     rax, QWORD PTR [rsi]
+    sbb     rax, QWORD PTR [rdx]
+    mov     QWORD PTR [rdi], rax
+    
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
     lea     rdi, [rdi + 8]
+    
     dec     rcx
     jnz     1b
 

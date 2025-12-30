@@ -17,12 +17,6 @@
 .type  add_n_x64, @function
 .type  add_n_zen4, @function
 
-.macro ADD_CY base
-    mov     rax, QWORD PTR [rsi + \base]
-    adc     rax, QWORD PTR [rdx + \base]
-    mov     QWORD PTR [rdi + \base], rax
-.endm
-
 add_n_zen4:
 .cfi_startproc
 
@@ -40,11 +34,11 @@ add_n_zen4:
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
     lea     rdi, [rdi + 8]
-    
+
     dec     r11
     jnz     1b
 
-2:   
+2:
     setc    al
     test    rcx, rcx
     bt      ax, 0
@@ -52,15 +46,20 @@ add_n_zen4:
 
 .p2align 4
 3:
-    ADD_CY 0
-    ADD_CY 8
-    ADD_CY 16
-    ADD_CY 24
+.set i, 0
+.rept 4
+
+    mov     rax, QWORD PTR [rsi + i * 8]
+    adc     rax, QWORD PTR [rdx + i * 8]
+    mov     QWORD PTR [rdi + i * 8], rax
+
+.set i, i + 1
+.endr
 
     lea     rsi, [rsi + 32]
     lea     rdx, [rdx + 32]
     lea     rdi, [rdi + 32]
-    
+
     dec     rcx
     jnz     3b
 
@@ -82,19 +81,19 @@ add_n_x64:
 
 .p2align 4
 1:
-
-    ADD_CY 0
-
+    mov     rax, QWORD PTR [rsi]
+    adc     rax, QWORD PTR [rdx]
+    mov     QWORD PTR [rdi], rax
+    
     lea     rsi, [rsi + 8]
     lea     rdx, [rdx + 8]
     lea     rdi, [rdi + 8]
-
+    
     dec     rcx
     jnz     1b
 
 .p2align 4
 2:
-
     setc    al
     movzx   rax, al
     ret

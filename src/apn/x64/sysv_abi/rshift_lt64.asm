@@ -43,10 +43,12 @@ rshift_lt64_zen4:
 2:
 .set i, 0
 .rept 4
+
     shrx    r10, QWORD PTR [rsi + i * 8], rcx
     shlx    r11, QWORD PTR [rsi + i * 8 + 8], r9
     or      r11, r10
     mov     QWORD PTR [rdi + i * 8], r11
+
 .set i, i + 1
 .endr
 

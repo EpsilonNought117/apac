@@ -18,15 +18,6 @@
 .type  submul_one_x64, @function
 .type  submul_one_zen4, @function
 
-.macro ADX_MULX_ITER offset
-    mulx    r11, r10, QWORD PTR [rsi + \offset]
-    adox    r10, r9
-    not     r10
-    adcx    r10, QWORD PTR [rdi + \offset]
-    mov     QWORD PTR [rdi + \offset], r10
-    mov     r9,  r11
-.endm
-
 #   -------------------------
 #
 #        MULX/ADOX/ADCX
@@ -45,21 +36,37 @@ submul_one_zen4:
     jz      2f
 
 1:
-    ADX_MULX_ITER 0
-    ADX_MULX_ITER 8
-    ADX_MULX_ITER 16
-    ADX_MULX_ITER 24
+.set i, 0
+.rept 4
+
+    mulx    r11, r10, QWORD PTR [rsi + i * 8]
+    adox    r10, r9
+    not     r10
+    adcx    r10, QWORD PTR [rdi + i * 8]
+    mov     QWORD PTR [rdi + i * 8], r10
+    mov     r9,  r11
+
+.set i, i + 1
+.endr
+
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     lea     rcx, [rcx - 1]
     jrcxz   2f
+    jmp     1b
 
 2:
     mov     rcx, r8
     jrcxz   4f
 
 3:
-    ADX_MULX_ITER 0
+    mulx    r11, r10, QWORD PTR [rsi]
+    adox    r10, r9
+    not     r10
+    adcx    r10, QWORD PTR [rdi]
+    mov     QWORD PTR [rdi], r10
+    mov     r9,  r11
+
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     loop    3b
