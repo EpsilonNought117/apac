@@ -3,10 +3,10 @@
 #include "hidden_mul.h"
 
 // scratch workspace size of balanced karatsuba
-#define KARATSUBA_MUL_BALANCED_WS_SIZE(size) (((size) + 32) * 2)
+#define KARATSUBA_MUL_BALANCED_WS_SIZE(size) (((size) + 16) * 2)
 
 // scratch workspace size of unbalanced karatsuba
-#define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2) (((size1) + 32) * 2)
+#define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2) (((size1) + 16) * 2)
 
 apac_err apn_mul_n(
 	apn_seg_t* result, 
