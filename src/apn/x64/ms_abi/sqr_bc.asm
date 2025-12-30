@@ -184,12 +184,13 @@ ENDM
     jrcxz   pass2_before_rmdr
     jmp     pass2_unrolled_loop
 
+ALIGN 16
 pass2_before_rmdr:
 
     mov     rcx, r9
     jrcxz   end_of_func
 
-ALIGN 32
+ALIGN 16
 pass2_rmdr_loop:
 
     mov     rdx, QWORD PTR [rbx]
