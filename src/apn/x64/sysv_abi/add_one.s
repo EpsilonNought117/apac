@@ -33,7 +33,7 @@ add_one_zen4:
     mov     r11, rdx
     shr     rdx, 2
     and     r11, 3
-    bt      ax,  0          ; doesn't modify zero flag
+    bt      ax,  0          # doesn't modify zero flag
     jz      2f
 
 1:
@@ -104,3 +104,4 @@ add_one_x64:
 
 .cfi_endproc
 .size add_one_x64, .-add_one_x64
+

@@ -33,7 +33,7 @@ sub_one_zen4:
     mov     r11, rdx
     shr     rdx, 2
     and     r11, 3
-    bt      ax,  0          ; doesn't modify zero flag
+    bt      ax,  0          # doesn't modify zero flag
     jz      2f
 
 1:
@@ -105,3 +105,4 @@ sub_one_x64:
 
 .cfi_endproc
 .size sub_one_x64, .-sub_one_x64
+

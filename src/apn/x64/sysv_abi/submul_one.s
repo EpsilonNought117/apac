@@ -102,13 +102,17 @@ submul_one_x64:
 
 1:
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
-    ; mul clobbers the original Carry Flag value
+    
+    # mul clobbers the original Carry Flag value
+    
     add     r10, rax                # temp_reg += low64
     adc     rdx, 0                  # high64 += CF
     sub     QWORD PTR [rdi], r10    # result[i] -= temp_reg
-    mov     r10, rdx        # temp_reg = high64
-    mov     rax, r9         # restore clobbered rax
-    adc     r10, 0          # temp_reg += borrow (from last seg)
+
+    mov     r10, rdx            # temp_reg = high64
+    mov     rax, r9             # restore clobbered rax
+    adc     r10, 0              # temp_reg += borrow (from last seg)
+    
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     rcx
@@ -124,3 +128,4 @@ submul_one_x64:
 
 .cfi_endproc
 .size submul_one_x64, .-submul_one_x64
+

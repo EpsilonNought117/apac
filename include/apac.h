@@ -140,7 +140,7 @@ typedef enum apac_err
  *     Optional arguments to format according to `fmt`.
  *
  * @note
- *     This macro should not be used directly — use one of the
+ *     This macro should not be used directly ï¿½ use one of the
  *     higher-level wrappers such as @ref APAC_ASSERT,
  *     @ref APAC_DETAILED_ASSERT, or @ref APAC_ALWAYS_ASSERT.
  */
@@ -276,7 +276,7 @@ typedef enum apac_err
 
     /**
      * @def APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)
-     * @brief Ensures that any partial overlap occurs only above op2’s start.
+     * @brief Ensures that any partial overlap occurs only above op2ï¿½s start.
      *
      * This check is the inverse of @ref APAC_PARTIAL_OVERLAP_BELOW.
      * It allows overlap only if the first region (`op1`) starts at or after `op2`,
@@ -344,9 +344,9 @@ typedef enum apac_err
 /*********************************         MISCELLANEOUS          ***********************************/
 /****************************************************************************************************/
 
-APAC_API void* (*apac_malloc)(size_t);
-APAC_API void* (*apac_realloc)(void*, size_t);
-APAC_API void (*apac_free)(void*);
+APAC_API extern void* (*apac_malloc)(size_t);
+APAC_API extern void* (*apac_realloc)(void*, size_t);
+APAC_API extern void (*apac_free)(void*);
 
 APAC_API void apacSetMemFuncs(
 	void* (*ptr1)(size_t),

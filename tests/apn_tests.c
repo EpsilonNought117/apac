@@ -1,4 +1,4 @@
-#include "apac.h"
+#include "../include/apac.h"
 
 #define TEST_START(name) printf("\nTEST START: %s()\n", name)
 
@@ -22,7 +22,8 @@
 
 #elif defined(__GNUC__) || defined(__clang__)
 
-	#define ROTL64(x, k) (__builtin_rotateleft64((x), (k)))
+    #define ROTL64(x, k) \
+            (((uint64_t)(x) << ((k) & 63)) | ((uint64_t)(x) >> (64 - ((k) & 63))))
 
 #else
 

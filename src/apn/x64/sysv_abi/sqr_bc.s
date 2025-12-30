@@ -1,10 +1,8 @@
-
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
 #   |                        BASECASE SQUARING FUNCTIONS                        |
 #   |                                                                           |
 #   O---------------------------------------------------------------------------O
-
     #   Function Arguments
     #
     #   rdi -> result       (apn_seg_t*)
@@ -33,6 +31,9 @@ sqr_bc_zen4:
     push    r13
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r13, 0
+    push    r14
+.cfi_adjust_cfa_offset 8
+.cfi_rel_offset r14, 0
 
     jmp     2f
 
@@ -48,6 +49,7 @@ sqr_bc_zen4:
     .quad 17f
 
 2:
+    mov     r14, rdx        # save original size in r14
     mov     r13, rdx        # copy of size in r13
     dec     r13             # curr_size = size - 1
     jz      20f
@@ -72,13 +74,11 @@ sqr_bc_zen4:
 4:
 .set i, 0
 .rept 8
-
     mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
     adcx    r10, rax
     adox    r11, QWORD PTR [rdi + i * 8 + 8]
     mov     QWORD PTR [rdi + i * 8], r10
     mov     rax, r11
-
 .set i, i + 1
 .endr
 
@@ -92,43 +92,111 @@ sqr_bc_zen4:
 5:
     jmp     QWORD PTR [r12]
 
-.macro PASS1_REM outer
-
 .p2align 4
-.Lpass1_rem\outer:
-
+17:
 .set i, 0
-.rept \outer
-
+.rept 7
     mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
     adcx    r10, rax
     adox    r11, QWORD PTR [rdi + i * 8 + 8]
     mov     QWORD PTR [rdi + i * 8], r10
     mov     rax, r11
-
 .set i, i + 1
 .endr
-
-    lea     rdi, [rdi + \outer * 8]
-    lea     rsi, [rsi + \outer * 8]
+    lea     rdi, [rdi + 7 * 8]
+    lea     rsi, [rsi + 7 * 8]
     jmp     10f
 
-.endm
+.p2align 4
+16:
+.set i, 0
+.rept 6
+    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rdi + i * 8 + 8]
+    mov     QWORD PTR [rdi + i * 8], r10
+    mov     rax, r11
+.set i, i + 1
+.endr
+    lea     rdi, [rdi + 6 * 8]
+    lea     rsi, [rsi + 6 * 8]
+    jmp     10f
 
-PASS1_REM 7
-PASS1_REM 6
-PASS1_REM 5
-PASS1_REM 4
-PASS1_REM 3
-PASS1_REM 2
-PASS1_REM 1
+.p2align 4
+15:
+.set i, 0
+.rept 5
+    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rdi + i * 8 + 8]
+    mov     QWORD PTR [rdi + i * 8], r10
+    mov     rax, r11
+.set i, i + 1
+.endr
+    lea     rdi, [rdi + 5 * 8]
+    lea     rsi, [rsi + 5 * 8]
+    jmp     10f
+
+.p2align 4
+14:
+.set i, 0
+.rept 4
+    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rdi + i * 8 + 8]
+    mov     QWORD PTR [rdi + i * 8], r10
+    mov     rax, r11
+.set i, i + 1
+.endr
+    lea     rdi, [rdi + 4 * 8]
+    lea     rsi, [rsi + 4 * 8]
+    jmp     10f
+
+.p2align 4
+13:
+.set i, 0
+.rept 3
+    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rdi + i * 8 + 8]
+    mov     QWORD PTR [rdi + i * 8], r10
+    mov     rax, r11
+.set i, i + 1
+.endr
+    lea     rdi, [rdi + 3 * 8]
+    lea     rsi, [rsi + 3 * 8]
+    jmp     10f
+
+.p2align 4
+12:
+.set i, 0
+.rept 2
+    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rdi + i * 8 + 8]
+    mov     QWORD PTR [rdi + i * 8], r10
+    mov     rax, r11
+.set i, i + 1
+.endr
+    lea     rdi, [rdi + 2 * 8]
+    lea     rsi, [rsi + 2 * 8]
+    jmp     10f
+
+.p2align 4
+11:
+    mulx    r11, r10, QWORD PTR [rsi + 8]
+    adcx    r10, rax
+    adox    r11, QWORD PTR [rdi + 8]
+    mov     QWORD PTR [rdi], r10
+    mov     rax, r11
+    lea     rdi, [rdi + 8]
+    lea     rsi, [rsi + 8]
 
 .p2align 4
 10:
     adc     QWORD PTR [rdi], rax
-
-    sub     rsi, r15
-    sub     rdi, r15
+    sub     rsi, r8
+    sub     rdi, r8
     add     rsi, 8
     add     rdi, 16
     sub     r8,  8
@@ -136,8 +204,8 @@ PASS1_REM 1
     jnz     3b
 
 19:
-    mov     r12, rdx
-    mov     r13, rdx
+    mov     r12, r14
+    mov     r13, r14
     shl     r13, 4
     shl     r12, 3
     sub     rsi, r12
@@ -147,8 +215,8 @@ PASS1_REM 1
 
 .p2align 5
 20:
-    mov     rcx, rdx
-    mov     r9,  rdx
+    mov     rcx, r14
+    mov     r9,  r14
     shr     rcx, 2
     and     r9,  3
 
@@ -159,7 +227,6 @@ PASS1_REM 1
 21:
 .set i, 0
 .rept 4
-    
     mov     rdx, QWORD PTR [rsi + i * 8]
     mov     r10, QWORD PTR [rdi + i * 16]
     mov     r11, QWORD PTR [rdi + i * 16 + 8]
@@ -170,14 +237,12 @@ PASS1_REM 1
     adox    r11, r13
     mov     QWORD PTR [rdi + i * 16], r10
     mov     QWORD PTR [rdi + i * 16 + 8], r11
-
 .set i, i + 1
 .endr
 
     lea     rsi, [rsi + 32]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-
     jrcxz   22f
     jmp     21b
 
@@ -204,12 +269,13 @@ PASS1_REM 1
     loop    23b
 
 30:
+    pop     r14
+.cfi_adjust_cfa_offset -8
     pop     r13
 .cfi_adjust_cfa_offset -8
     pop     r12
 .cfi_adjust_cfa_offset -8
     ret
-
 .cfi_endproc
 .size sqr_bc_zen4, .-sqr_bc_zen4
 
@@ -384,3 +450,4 @@ sqr_bc_x64:
     ret
 .cfi_endproc
 .size sqr_bc_x64, .-sqr_bc_x64
+

@@ -31,7 +31,6 @@ addmul_one_zen4:
 
 .p2align 4
 0:
-    .quad 9f
     .quad 10f
     .quad 11f
     .quad 12f
@@ -39,6 +38,7 @@ addmul_one_zen4:
     .quad 14f
     .quad 15f
     .quad 16f
+    .quad 17f
 
 1:
     xchg    rcx, rdx
@@ -95,7 +95,7 @@ addmul_one_zen4:
 .set i, i + 1
 .endr
 
-    jmp     9f
+    jmp     10f
 
 .endm
 
@@ -108,7 +108,7 @@ REM_CASE 2
 REM_CASE 1
 
 .p2align 5
-9:
+10:
     adcx    rax, rcx
     mov     QWORD PTR [rdi + r8 * 8], rax
     
@@ -166,3 +166,4 @@ addmul_one_x64:
 
 .cfi_endproc
 .size addmul_one_x64, .-addmul_one_x64
+
