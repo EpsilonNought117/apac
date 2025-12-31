@@ -33,6 +33,7 @@ submul_one_zen4:
     shr     rcx, 2
     xor     r9,  r9
     test    rcx, rcx
+    stc
     jz      .Lzen4_before_rmdr
 
 .Lzen4_unroll4_loop:
