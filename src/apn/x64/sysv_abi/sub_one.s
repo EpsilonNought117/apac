@@ -1,4 +1,3 @@
-
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
 #   |                   SUB SINGLE-LIMB FROM APN-ARR FUNCTIONS                  |
@@ -34,9 +33,10 @@ sub_one_zen4:
     shr     rdx, 2
     and     r11, 3
     bt      ax,  0          # doesn't modify zero flag
-    jz      2f
+    jz      .Lzen4_before_unroll4
 
-1:
+.Lzen4_rmdr_loop:
+
     mov     rax, QWORD PTR [rsi]
     sbb     rax, 0
     mov     QWORD PTR [rdi], rax
@@ -44,15 +44,17 @@ sub_one_zen4:
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     r11
-    jnz     1b
+    jnz     .Lzen4_rmdr_loop
 
-2:
+.Lzen4_before_unroll4:
+
     setc    r11b
     test    rdx, rdx
     bt      r11w, 0
-    jz      4f
+    jz      .Lzen4_end_of_func
 
-3:
+.Lzen4_unroll4_loop:
+
 .set i, 0
 .rept 4
 
@@ -66,9 +68,10 @@ sub_one_zen4:
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     dec     rdx
-    jnz     3b
+    jnz     .Lzen4_unroll4_loop
 
-4:
+.Lzen4_end_of_func:
+
     setc    al
     movzx   rax, al
     ret
@@ -86,23 +89,23 @@ sub_one_x64:
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rdx
-    jz      2f
+    jz      .Lx64_end_of_func
 
-1:
+.Lx64_loop:
+
     mov     rax, QWORD PTR [rsi]
     sbb     rax, 0
     mov     QWORD PTR [rdi], rax
-
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rdx
-    jnz     1b
+    jnz     .Lx64_loop
 
-2:
+.Lx64_end_of_func:
+
     setc    al
     movzx   rax, al
     ret
 
 .cfi_endproc
 .size sub_one_x64, .-sub_one_x64
-
