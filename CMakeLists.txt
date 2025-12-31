@@ -82,6 +82,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
+option(ENABLE_APN_TESTS "Build and run apn_tests" OFF)
+option(ENABLE_APN_TUNING "Build and run apn_tune" OFF)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -222,4 +224,63 @@ else()
     target_compile_options(${apac_target} PRIVATE 
         -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
     )
+endif()
+
+# --- APN TESTS -----------------------------------------------------------------
+
+if (ENABLE_APN_TESTS)
+    message(STATUS "Building apn_tests")
+
+    add_executable(apn_tests
+        tests/apn_tests.c
+    )
+
+    target_link_libraries(apn_tests PRIVATE ${apac_target})
+
+    target_include_directories(apn_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    # Run tests immediately after build
+    if (NOT CMAKE_CROSSCOMPILING)
+        add_custom_command(
+            TARGET apn_tests
+            POST_BUILD
+            COMMAND $<TARGET_FILE:apn_tests>
+            COMMENT "Running apn_tests after build"
+            VERBATIM
+        )
+    endif()
+endif()
+
+# --- APN TUNING ----------------------------------------------------------------
+
+if (ENABLE_APN_TUNING)
+    message(STATUS "Building apn_tune")
+
+    add_executable(apn_tune
+        tuning/apn_tune.c
+    )
+
+    target_link_libraries(apn_tune PRIVATE ${apac_target})
+
+    target_include_directories(apn_tune PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    # Ensure apn_tests builds (and runs) first
+    if (ENABLE_APN_TESTS)
+        add_dependencies(apn_tune apn_tests)
+    endif()
+
+    # Run tuning only after successful build/tests
+    if (NOT CMAKE_CROSSCOMPILING)
+        add_custom_command(
+            TARGET apn_tune
+            POST_BUILD
+            COMMAND $<TARGET_FILE:apn_tune>
+            COMMENT "Running apn_tune after successful tests"
+            VERBATIM
+        )
+    endif()
 endif()
