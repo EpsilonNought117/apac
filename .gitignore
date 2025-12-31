@@ -4,3 +4,5 @@ out/
 .vs/
 build/
 *.exe
+*.out
+*.bin
