@@ -1,4 +1,3 @@
-
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
 #   |                   ADD SINGLE-LIMB TO APN-ARR FUNCTIONS                    |
@@ -29,14 +28,15 @@ add_one_zen4:
     lea     rsi, [rsi + 8]
     setc    al
     dec     rdx
-
+    
     mov     r11, rdx
     shr     rdx, 2
     and     r11, 3
-    bt      ax,  0          # doesn't modify zero flag
-    jz      2f
+    bt      ax,  0
+    jz      .Lzen4_before_main_loop
 
-1:
+.Lzen4_rmdr_loop:
+
     mov     rax, QWORD PTR [rsi]
     adc     rax, 0
     mov     QWORD PTR [rdi], rax
@@ -44,15 +44,18 @@ add_one_zen4:
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     r11
-    jnz     1b
+    jnz     .Lzen4_rmdr_loop
 
-2:
+.Lzen4_before_main_loop:
+    
     setc    r11b
     test    rdx, rdx
     bt      r11w, 0
-    jz      4f
+    jz      .Lzen4_end_of_func
 
-3:
+.p2align 6
+.Lzen4_unroll4_loop:
+
 .set i, 0
 .rept 4
 
@@ -62,13 +65,14 @@ add_one_zen4:
 
 .set i, i + 1
 .endr
-    
+
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     dec     rdx
-    jnz     3b
+    jnz     .Lzen4_unroll4_loop
 
-4:
+.Lzen4_end_of_func:
+
     setc    al
     movzx   rax, al
     ret
@@ -82,26 +86,28 @@ add_one_x64:
     mov     rax, QWORD PTR [rsi]
     add     rax, rcx
     mov     QWORD PTR [rdi], rax
+
+    lea     rdi, [rdi + 8]
+    lea     rsi, [rsi + 8]
+    dec     rdx
+    jz      .Lx64_end_of_func
+
+.Lx64_main_loop:
+
+    mov     rax, QWORD PTR [rsi]
+    adc     rax, 0
+    mov     QWORD PTR [rdi], rax
     
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rdx
-    jz      2f
+    jnz     .Lx64_main_loop
 
-1:
-    mov     rax, QWORD PTR [rsi]
-    adc     rax, 0
-    mov     QWORD PTR [rdi], rax
-    lea     rdi, [rdi + 8]
-    lea     rsi, [rsi + 8]
-    dec     rdx
-    jnz     1b
+.Lx64_end_of_func:
 
-2:
     setc    al
     movzx   rax, al
     ret
 
 .cfi_endproc
 .size add_one_x64, .-add_one_x64
-
