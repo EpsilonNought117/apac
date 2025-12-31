@@ -122,3 +122,5 @@ lshift_lt64_x64:
 .cfi_endproc
 .size lshift_lt64_x64, .-lshift_lt64_x64
 
+.section .note.GNU-stack,"",@progbits
+

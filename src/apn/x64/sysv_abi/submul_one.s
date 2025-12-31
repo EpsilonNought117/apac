@@ -71,6 +71,7 @@ submul_one_zen4:
     adcx    r10, QWORD PTR [rdi]
     mov     QWORD PTR [rdi], r10
     mov     r9,  r11
+    
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     loop    .Lzen4_rmdr_loop
@@ -136,4 +137,6 @@ submul_one_x64:
 
 .cfi_endproc
 .size submul_one_x64, .-submul_one_x64
+
+.section .note.GNU-stack,"",@progbits
 

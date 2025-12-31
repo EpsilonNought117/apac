@@ -57,7 +57,7 @@ sqr_bc_zen4:
     shr     rcx, 3          # curr_size /= 8 (for 8x unrolled loop)
     and     r9,  7          # curr_size %= 8
 
-    lea     r12, [rip + .Lzen4_jump_table]
+    lea     r12, [rip + .Lzen4_pass1_jump_table]
     lea     r12, [r12 + r9 * 8]
     test    rcx, rcx
     jz      .Lzen4_pass1_before_rmdr
@@ -89,7 +89,7 @@ sqr_bc_zen4:
     jmp     QWORD PTR [r12]
 
 .p2align 4
-.Lpass1_jump_table:
+.Lzen4_pass1_jump_table:
 
     .quad .Lpass1_outer_loop_end
     .quad .Lpass1_rem1
@@ -407,4 +407,6 @@ sqr_bc_x64:
 
 .cfi_endproc
 .size sqr_bc_x64, .-sqr_bc_x64
+
+.section .note.GNU-stack,"",@progbits
 

@@ -55,7 +55,7 @@ mul_bc_zen4:
     and     r14, 7
     mov     r13, r9
     shl     r13, 6          # floor(size1 / 8) * 64
-    lea     r12, [rip + .Lzen4_jump_table]
+    lea     r12, [rip + .Lzen4_mul_bc_jump_table]
     lea     r12, [r12 + r14 * 8]
 
 .Lzen4_outer_loop_start:
@@ -93,7 +93,7 @@ mul_bc_zen4:
     jmp     QWORD PTR [r12]
 
 .p2align 4
-.Lzen4_jump_table:
+.Lzen4_mul_bc_jump_table:
 
     .quad .Lzen4_outer_loop_end
     .quad .Lzen4_rem1
@@ -122,7 +122,7 @@ mul_bc_zen4:
 .set i, i + 1
 .endr
 
-    jmp     Lzen4_outer_loop_end
+    jmp     .Lzen4_outer_loop_end
 
 .endm
 
@@ -227,7 +227,7 @@ mul_bc_x64:
     add     rbx, 8
 
     dec     r8
-    jnz     .Lx64_outer_loop_starts
+    jnz     .Lx64_outer_loop_start
 
 .Lx64_end_of_func:
 
@@ -237,4 +237,7 @@ mul_bc_x64:
 
 .cfi_endproc
 .size mul_bc_x64, .-mul_bc_x64
+
+.section .note.GNU-stack,"",@progbits
+
 

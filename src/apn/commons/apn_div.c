@@ -41,6 +41,8 @@ apac_err apn_div(
         "Divisor is malformed, MSD cannot be zero!"
     );
 
+    uint32_t dvsr_shift_val = 0;
+
     if (size_divd == size_dvsr)
     {
         int cmp_res = apn_cmp(dividend, divisor, size_divd);
@@ -69,8 +71,6 @@ apac_err apn_div(
     }
 
 full_division:
-
-    uint32_t dvsr_shift_val = 0;
 
     APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
         "Memory allocator not initialized: apacInit() or apacSetMemFuncs() not invoked!"
