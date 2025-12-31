@@ -328,7 +328,7 @@ sqr_bc_x64:
     jnz     .Lx64_pass1_inner_loop
 
 .Lx64_pass1_outer_loop_end:
-    adc     QWORD PTR [r10], rbxx
+    adc     QWORD PTR [r10], rbx
     add     r12, 8
     dec     r9
     jnz     .Lx64_pass1_outer_loop
