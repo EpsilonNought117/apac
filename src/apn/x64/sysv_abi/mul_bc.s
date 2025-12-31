@@ -55,7 +55,7 @@ mul_bc_zen4:
     and     r14, 7
     mov     r13, r9
     shl     r13, 6          # floor(size1 / 8) * 64
-    lea     r12, [rip + 1b]
+    lea     r12, [rip + .Lzen4_jump_table]
     lea     r12, [r12 + r14 * 8]
 
 .Lzen4_outer_loop_start:
@@ -145,7 +145,7 @@ REM_CASE 1
     add     rdi, 8
 
     dec     r8
-    jnz     3b
+    jnz     .Lzen4_outer_loop_start
 
 .Lzen4_end_of_func:
 

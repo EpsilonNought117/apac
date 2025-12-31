@@ -24,6 +24,7 @@
 # Optimized routine for AMD Zen 4
 
 sqr_bc_zen4:
+
 .cfi_startproc
     push    r12
 .cfi_adjust_cfa_offset 8
@@ -35,165 +36,105 @@ sqr_bc_zen4:
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r14, 0
 
-    jmp     2f
+.Lzen4_start_of_func:
 
-.p2align 4
-1:
-    .quad 10f
-    .quad 11f
-    .quad 12f
-    .quad 13f
-    .quad 14f
-    .quad 15f
-    .quad 16f
-    .quad 17f
-
-2:
     mov     r14, rdx        # save original size in r14
     mov     r13, rdx        # copy of size in r13
     dec     r13             # curr_size = size - 1
-    jz      20f
+    jz      .Lzen4_pass2
 
     mov     r8,  r13
     shl     r8,  3          # curr_size * sizeof(apn_seg_t)
     add     rdi, 8
 
-3:
+3.Lzen4_pass1_outer_loop_start:
+
     mov     rdx, QWORD PTR [rsi]
     mov     rax, QWORD PTR [rdi]
+    
     mov     rcx, r13
     mov     r9,  r13        # for later finding the jump_table label
     shr     rcx, 3          # curr_size /= 8 (for 8x unrolled loop)
     and     r9,  7          # curr_size %= 8
-    lea     r12, [rip + 1b]
+
+    lea     r12, [rip + .Lzen4_jump_table]
     lea     r12, [r12 + r9 * 8]
     test    rcx, rcx
-    jz      5f
+    jz      .Lzen4_pass1_before_rmdr
 
 .p2align 6
-4:
+.Lzen4_pass1_inner_unroll_loop:
+
 .set i, 0
 .rept 8
+
     mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
     adcx    r10, rax
     adox    r11, QWORD PTR [rdi + i * 8 + 8]
     mov     QWORD PTR [rdi + i * 8], r10
     mov     rax, r11
+
 .set i, i + 1
 .endr
 
     lea     rsi, [rsi + 64]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   5f
-    jmp     4b
+    jrcxz   .Lzen4_pass1_before_rmdr
+    jmp     .Lzen4_pass1_inner_unroll_loop
 
 .p2align 4
-5:
+.Lzen4_pass1_before_rmdr:
+
     jmp     QWORD PTR [r12]
 
 .p2align 4
-17:
+.Lpass1_jump_table:
+
+    .quad .Lpass1_outer_loop_end
+    .quad .Lpass1_rem1
+    .quad .Lpass1_rem2
+    .quad .Lpass1_rem3
+    .quad .Lpass1_rem4
+    .quad .Lpass1_rem5
+    .quad .Lpass1_rem6
+    .quad .Lpass1_rem7
+
+.macro PASS1_REM_CASE count
+
+.p2align 4
+.Lpass1_rem\count\():
+
 .set i, 0
-.rept 7
+.rept \count
+
     mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
     adcx    r10, rax
     adox    r11, QWORD PTR [rdi + i * 8 + 8]
     mov     QWORD PTR [rdi + i * 8], r10
     mov     rax, r11
+
 .set i, i + 1
 .endr
-    lea     rdi, [rdi + 7 * 8]
-    lea     rsi, [rsi + 7 * 8]
+
+    lea     rdi, [rdi + \count * 8]
+    lea     rsi, [rsi + \count * 8]
     jmp     10f
 
-.p2align 4
-16:
-.set i, 0
-.rept 6
-    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
-    mov     rax, r11
-.set i, i + 1
-.endr
-    lea     rdi, [rdi + 6 * 8]
-    lea     rsi, [rsi + 6 * 8]
-    jmp     10f
+.endm
+
+# Generate all remainder cases from 7 down to 1
+PASS1_REM_CASE 7
+PASS1_REM_CASE 6
+PASS1_REM_CASE 5
+PASS1_REM_CASE 4
+PASS1_REM_CASE 3
+PASS1_REM_CASE 2
+PASS1_REM_CASE 1
 
 .p2align 4
-15:
-.set i, 0
-.rept 5
-    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
-    mov     rax, r11
-.set i, i + 1
-.endr
-    lea     rdi, [rdi + 5 * 8]
-    lea     rsi, [rsi + 5 * 8]
-    jmp     10f
+.Lpass1_outer_loop_end:
 
-.p2align 4
-14:
-.set i, 0
-.rept 4
-    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
-    mov     rax, r11
-.set i, i + 1
-.endr
-    lea     rdi, [rdi + 4 * 8]
-    lea     rsi, [rsi + 4 * 8]
-    jmp     10f
-
-.p2align 4
-13:
-.set i, 0
-.rept 3
-    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
-    mov     rax, r11
-.set i, i + 1
-.endr
-    lea     rdi, [rdi + 3 * 8]
-    lea     rsi, [rsi + 3 * 8]
-    jmp     10f
-
-.p2align 4
-12:
-.set i, 0
-.rept 2
-    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
-    mov     rax, r11
-.set i, i + 1
-.endr
-    lea     rdi, [rdi + 2 * 8]
-    lea     rsi, [rsi + 2 * 8]
-    jmp     10f
-
-.p2align 4
-11:
-    mulx    r11, r10, QWORD PTR [rsi + 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + 8]
-    mov     QWORD PTR [rdi], r10
-    mov     rax, r11
-    lea     rdi, [rdi + 8]
-    lea     rsi, [rsi + 8]
-
-.p2align 4
-10:
     adc     QWORD PTR [rdi], rax
     sub     rsi, r8
     sub     rdi, r8
@@ -201,9 +142,10 @@ sqr_bc_zen4:
     add     rdi, 16
     sub     r8,  8
     dec     r13
-    jnz     3b
+    jnz     .Lzen4_pass1_outer_loop_start
 
-19:
+.Lzen4_before_pass2:
+
     mov     r12, r14
     mov     r13, r14
     shl     r13, 4
@@ -214,19 +156,22 @@ sqr_bc_zen4:
     add     rsi, 8
 
 .p2align 5
-20:
+.Lzen4_pass2:
+
     mov     rcx, r14
     mov     r9,  r14
     shr     rcx, 2
     and     r9,  3
 
     test    rcx, rcx
-    jz      22f
+    jz      .Lzen4_pass2_before_rmdr
 
 .p2align 6
-21:
+.Lzen4_pass2_unroll4_loop:
+
 .set i, 0
 .rept 4
+
     mov     rdx, QWORD PTR [rsi + i * 8]
     mov     r10, QWORD PTR [rdi + i * 16]
     mov     r11, QWORD PTR [rdi + i * 16 + 8]
@@ -237,22 +182,25 @@ sqr_bc_zen4:
     adox    r11, r13
     mov     QWORD PTR [rdi + i * 16], r10
     mov     QWORD PTR [rdi + i * 16 + 8], r11
+
 .set i, i + 1
 .endr
 
     lea     rsi, [rsi + 32]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   22f
-    jmp     21b
+    jrcxz   .Lzen4_pass2_before_rmdr
+    jmp     .Lzen4_pass2_unroll4_loop
 
 .p2align 4
-22:
+.Lzen4_pass2_before_rmdr:
+
     mov     rcx, r9
-    jrcxz   30f
+    jrcxz   .Lzen4_end_of_func
 
 .p2align 4
-23:
+.Lzen4_pass2_rmdr_loop:
+
     mov     rdx, QWORD PTR [rsi]
     mov     r10, QWORD PTR [rdi]
     mov     r11, QWORD PTR [rdi + 8]
@@ -266,9 +214,10 @@ sqr_bc_zen4:
 
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 16]
-    loop    23b
+    loop    .Lzen4_pass2_rmdr_loop
 
-30:
+.Lzen4_end_of_func:
+
     pop     r14
 .cfi_adjust_cfa_offset -8
     pop     r13
@@ -276,6 +225,7 @@ sqr_bc_zen4:
     pop     r12
 .cfi_adjust_cfa_offset -8
     ret
+
 .cfi_endproc
 .size sqr_bc_zen4, .-sqr_bc_zen4
 
@@ -285,9 +235,8 @@ sqr_bc_zen4:
 #
 #   -------------------------
 
-# generic x64 fallback routine
-
 sqr_bc_x64:
+
 .cfi_startproc
     push    rbx
 .cfi_adjust_cfa_offset 8
@@ -339,34 +288,35 @@ sqr_bc_x64:
     #
     #   These squares only need to be added once as shown along the diagonal.
 
-    mov     r14, rdi        # result in r14
-    mov     r15, rsi        # op1 in r15
-    mov     r9,  rdx        # copy of size in r9
+    mov     rcx, rdx
+    mov     r9,  rcx        # copy of size in r9
     dec     r9              # lower triangular matrix elems start with
                             # (n - 1) -> (n - 2) -> ... -> 2 -> 1 -> 0
     test    r9,  r9         # test if the basecase sqr size is 1, then no double sum prods
-    jz      10f             # do the single diagonal sqr prod
+    jz      .Lx64_pass3     # do the single diagonal sqr prod
 
     # PASS-1 (O(n^2) step)
 
     xor     r12, r12        # counter (starts at 0)
     xor     r13, r13        # to restore rax after it has been clobbered by mul
 
-1:
+.Lx64_pass1_outer_loop:
+
     # rdx:rax for accumulating the product via mul
     # r10 <- result (copy for loop)
     # r11 <- op1    (copy for loop)
     # r9 <- (size - 1) (copy for loop)
 
-    mov     rcx,  r9        # rcx is inner loop counter
+    mov     r8,  r9
     xor     rbx, rbx        # temp_reg
     xor     rdx, rdx        # high64 = 0
     mov     r13, QWORD PTR [r15 + r12 * 1]
-    lea     r10, [r14 + r12 * 2 + 8]
-    lea     r11, [r15 + r12 * 1 + 8]
+    lea     r11, [rsi + r12 * 1 + 8]
+    lea     r10, [rdi + r12 * 2 + 8]
 
 .p2align 4
-2:
+.Lx64_pass1_inner_loop:
+
     mul     QWORD PTR [r11] # rdx:rax = rax * op1[counter + 1]
 
     add     rbx, rax                # temp_reg += low64
@@ -379,20 +329,22 @@ sqr_bc_x64:
 
     lea     r10, [r10 + 8]
     lea     r11, [r11 + 8]
-    loop    2b
+    dec     r8
+    jnz     .Lx64_pass1_inner_loop
 
-3:
+.Lx64_pass1_outer_loop_end:
     adc     QWORD PTR [r10], rdx
     add     r12, 8
     dec     r9
-    jnz     1b
+    jnz     .Lx64_pass1_outer_loop
 
     # PASS-2 (O(n) step)
 
-4:
-    lea     r10, [r14 + 8]
-    mov     rcx, rdx
-    sub     rcx, 1
+.Lx64_pass2:
+
+    lea     r10, [rdi + 8]
+    mov     r9,  rcx
+    dec     r9
 
     # 2 * (n - 1) limbs in result need to be shifted left by 1
     # the first and last limb don't contain any values
@@ -401,27 +353,30 @@ sqr_bc_x64:
 
     xor     r11, r11        # zeroes out the carry flag
                             # before the rcl
-
-5:
+.Lx64_pass2_loop:
+    
     rcl     QWORD PTR [r10], 1
     rcl     QWORD PTR [r10 + 8], 1
 
     lea     r10, [r10 + 16]
-    loop    5b
+    dec     r9
+    jnz     .Lx64_pass2_loop
 
     # PASS-3 (O(n) step)
 
-6:
+.Lx64_pass2_end:
+
     adc     QWORD PTR [r10], 0
 
-10:
-    mov     r10, r14
-    mov     r11, r15
-    mov     rcx, rdx
+.Lx64_pass3:
+
+    mov     r10, rdi
+    mov     r11, rsi
 
     xor     r12, r12        # to clear CF/OF
 
-11:
+.Lx64_pass3_loop:
+
     adc     r12, 0                      # accumulate CF from last iter as mul clobbers both
                                         # OF & CF, does nothing in first iter
     mov     rax, QWORD PTR [r11]
@@ -434,9 +389,10 @@ sqr_bc_x64:
 
     lea     r11, [r11 + 8]
     lea     r10, [r10 + 16]
-    loop    11b
+    loop    .Lx64_pass3_loop
 
-20:
+.Lx64_end_of_func:
+
     pop     r15
 .cfi_adjust_cfa_offset -8
     pop     r14
@@ -448,6 +404,6 @@ sqr_bc_x64:
     pop     rbx
 .cfi_adjust_cfa_offset -8
     ret
+
 .cfi_endproc
 .size sqr_bc_x64, .-sqr_bc_x64
-
