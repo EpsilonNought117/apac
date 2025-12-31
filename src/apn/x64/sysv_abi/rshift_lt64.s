@@ -27,20 +27,22 @@ rshift_lt64_zen4:
     mov     r9,  64
     sub     r9,  rcx # lshift val in r9 (64 - bit_cnt)
 
-1:
+.Lzen4_start_of_func:
+
     shlx    rax, QWORD PTR [rsi], r9
     
     dec     rdx
-    jz      4f
+    jz      .Lzen4_end_of_func
     
     mov     r8,  rdx
     and     r8,  3  # size %= 4
     shr     rdx, 2  # size /= 4
     test    rdx, rdx
-    jz      3f
+    jz      .Lzen4_before_rmdr_loop
 
 .p2align 6
-2:
+.Lzen4_unroll_loop:
+
 .set i, 0
 .rept 4
 
@@ -55,13 +57,15 @@ rshift_lt64_zen4:
     add     rsi, 32
     add     rdi, 32
     dec     rdx
-    jnz     2b
+    jnz     .Lzen4_unroll_loop
 
-3:
+.Lzen4_before_rmdr_loop:
+
     test    r8,  r8
-    jz      4f
+    jz      .Lzen4_end_of_func
 
-5:
+.Lzen4_rmdr_loop:
+
     shrx    r10, QWORD PTR [rsi], rcx
     shlx    r11, QWORD PTR [rsi + 8], r9
     or      r11, r10
@@ -70,9 +74,10 @@ rshift_lt64_zen4:
     add     rsi, 8
     add     rdi, 8
     dec     r8
-    jnz     5b
+    jnz     .Lzen4_rmdr_loop
 
-4:
+.Lzen4_end_of_func:
+
     shrx    r11, QWORD PTR [rsi], rcx
     mov     QWORD PTR [rdi], r11
     ret
@@ -85,13 +90,17 @@ rshift_lt64_x64:
 
     xor     rax, rax
     # bit_cnt already in rcx
-1:
+
+.Lx64_start_of_func:
+
     mov     r11, QWORD PTR [rsi]
     shrd    rax, r11, cl
     
     dec     rdx
-    jz 3f
-2:
+    jz      .Lx64_end_of_func
+
+.Lx64_main_loop:
+
     mov     r10, QWORD PTR [rsi + 8]
     mov     r11, QWORD PTR [rsi]
     shrd    r11, r10, cl
@@ -100,14 +109,13 @@ rshift_lt64_x64:
     add     rsi, 8
     add     rdi, 8
     dec     rdx
-    jnz     2b
+    jnz     .Lx64_main_loop
 
-3:
+.Lx64_end_of_func:
+
     mov     r11, QWORD PTR [rsi]
     shr     r11, cl
     mov     QWORD PTR [rdi], r11
-
-4:
     ret
 
 .cfi_endproc
