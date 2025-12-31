@@ -27,35 +27,22 @@
 addmul_one_zen4:
 .cfi_startproc
 
-    jmp     1f
-
-.p2align 4
-0:
-    .quad 10f
-    .quad 11f
-    .quad 12f
-    .quad 13f
-    .quad 14f
-    .quad 15f
-    .quad 16f
-    .quad 17f
-
-1:
-    xchg    rcx, rdx
+.Lzen4_start_of_func:
     
+    xchg    rcx, rdx
     mov     r8,  rcx
     and     r8,  7
     shr     rcx, 3
-    
-    lea     r9,  [rip + 0b]
+    lea     r9,  [rip + .Lzen4_jump_table]
     lea     r9,  [r9 + r8 * 8]
-
+    
     mov     rax, QWORD PTR [rdi]
     test    rcx, rcx
-    jz      3f
+    jz      .Lzen4_before_remainder
 
 .p2align 6
-2:
+.Lzen4_unroll8_loop:
+
 .set i, 0
 .rept 8
 
@@ -71,17 +58,30 @@ addmul_one_zen4:
     lea     rsi, [rsi + 64]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-
-    jrcxz   3f
-    jmp     2b
+    jrcxz   .Lzen4_before_remainder
+    jmp     .Lzen4_unroll8_loop
 
 .p2align 4
-3:
+.Lzen4_before_remainder:
+
     jmp     QWORD PTR [r9]
+
+.p2align 4
+.Lzen4_jump_table:
+
+    .quad .Lzen4_end_of_loop
+    .quad .Lzen4_rem1
+    .quad .Lzen4_rem2
+    .quad .Lzen4_rem3
+    .quad .Lzen4_rem4
+    .quad .Lzen4_rem5
+    .quad .Lzen4_rem6
+    .quad .Lzen4_rem7
 
 .macro REM_CASE outer
 .p2align 4
-1\outer\():
+
+.Lzen4_rem\outer\():
 
 .set i, 0
 .rept \outer
@@ -95,7 +95,7 @@ addmul_one_zen4:
 .set i, i + 1
 .endr
 
-    jmp     10f
+    jmp     .Lzen4_end_of_loop
 
 .endm
 
@@ -108,10 +108,13 @@ REM_CASE 2
 REM_CASE 1
 
 .p2align 5
-10:
+.Lzen4_end_of_loop:
+
     adcx    rax, rcx
     mov     QWORD PTR [rdi + r8 * 8], rax
-    
+
+.Lzen4_end_of_func:
+
     seto    al
     movzx   rax, al
     ret
@@ -127,43 +130,37 @@ REM_CASE 1
 
 addmul_one_x64:
 .cfi_startproc
-    
+
     xchg    rcx, rdx
-    
-    # rbx is temp_reg
-    # val   -> rdx
-    # size  -> rcx
-    
-    mov     r9,  rdx        # copy of val in r9
+    mov     r9,  rdx
     xor     rdx, rdx
     xor     r10, r10
     test    rcx, rcx
-    jz      3f
+    jz      .Lx64_end_of_func
 
-1:
-    mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
-    
+.Lx64_main_loop:
+
+    mul     QWORD PTR [rsi]
     add     r10, rax
     adc     rdx, 0
     add     QWORD PTR [rdi], r10
-    
     mov     r10, rdx
-    mov     rax, r9         # restore clobbered rax
-    adc     r10, 0          # temp_reg += (CF + high64)
-    
+    mov     rax, r9
+    adc     r10, 0
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
     dec     rcx
-    jnz     1b
+    jnz     .Lx64_main_loop
 
-2:
+.Lx64_end_of_loop:
+
     adc     QWORD PTR [rdi], rdx
 
-3:
+.Lx64_end_of_func:
+
     setc    al
     movzx   rax, al
     ret
 
 .cfi_endproc
 .size addmul_one_x64, .-addmul_one_x64
-
