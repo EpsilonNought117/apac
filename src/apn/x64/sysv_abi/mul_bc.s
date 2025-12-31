@@ -46,20 +46,8 @@ mul_bc_zen4:
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r14, 0
 
-    jmp     2f
+.Lzen4_start_of_func:
 
-.p2align 4
-1:
-    .quad 10f
-    .quad 11f
-    .quad 12f
-    .quad 13f
-    .quad 14f
-    .quad 15f
-    .quad 16f
-    .quad 17f
-
-2:
     mov     rbx, rdx        # op2 in rbx
     mov     r9,  rcx        # size1 copy in r9
     mov     r14, rcx        # another copy for remainder
@@ -70,15 +58,17 @@ mul_bc_zen4:
     lea     r12, [rip + 1b]
     lea     r12, [r12 + r14 * 8]
 
-3:
+.Lzen4_outer_loop_start:
+
     mov     rcx, r9
     mov     rax, QWORD PTR [rdi]
     mov     rdx, QWORD PTR [rbx]
     test    rcx, rcx
-    jz      5f
+    jz      .Lzen4_before_rmdr
 
 .p2align 6
-4:
+.Lzen4_inner_loop_unroll:
+
 .set i, 0
 .rept 8
 
@@ -94,18 +84,30 @@ mul_bc_zen4:
     lea     rsi, [rsi + 64]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   5f
-    jmp     4b
+    jrcxz   .Lzen4_before_rmdr
+    jmp     .Lzen4_inner_loop_unroll
 
-.p2align 5
-5:
+.p2align 4
+.Lzen4_before_rmdr 
     jmp     QWORD PTR [r12]
+
+.p2align 4
+.Lzen4_jump_table:
+
+    .quad .Lzen4_outer_loop_end
+    .quad .Lzen4_rem1
+    .quad .Lzen4_rem2
+    .quad .Lzen4_rem3
+    .quad .Lzen4_rem4
+    .quad .Lzen4_rem5
+    .quad .Lzen4_rem6
+    .quad .Lzen4_rem7
 
 # Generate remainder cases using a macro
 .macro REM_CASE outer
 
 .p2align 4
-1\outer\():
+.Lzen4_rem\outer\():
 
 .set i, 0
 .rept \outer
@@ -119,7 +121,7 @@ mul_bc_zen4:
 .set i, i + 1
 .endr
 
-    jmp     10f
+    jmp     Lzen4_outer_loop_end
 
 .endm
 
@@ -132,7 +134,8 @@ REM_CASE 3
 REM_CASE 2
 REM_CASE 1
 
-10:
+.Lzen4_outer_loop_end:
+
     adc     rax, 0
     mov     QWORD PTR [rdi + r14 * 8], rax
 
@@ -144,7 +147,8 @@ REM_CASE 1
     dec     r8
     jnz     3b
 
-20:
+.Lzen4_end_of_func:
+
     pop     r14
 .cfi_adjust_cfa_offset -8
     pop     r13
@@ -168,22 +172,29 @@ REM_CASE 1
 # Not particularly optimized
 
 mul_bc_x64:
+
 .cfi_startproc
     push    rbx
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset rbx, 0
 
-1:
+.Lx64_start_of_func:
+
     mov     rbx, rdx        # op2 in rbx
 
-2:
+.Lx64_outer_loop_start:
+
     mov     r11, rcx        # temp size1
     xor     r10, r10        # temp_reg
     mov     r9,  QWORD PTR [rbx]    # op2[i]
     mov     rax, r9
 
+    test    r11, r11
+    jz      .Lx64_outer_loop_end
+
 .p2align 4
-3:
+.Lx64_inner_loop:
+
     mul     QWORD PTR [rsi]         # rdx : rax = rax * op1[i]
 
     # now product in rdx:rax
@@ -201,9 +212,10 @@ mul_bc_x64:
     lea     rsi, [rsi + 8]          # update ptrs
     lea     rdi, [rdi + 8]
     dec     r11
-    jnz     3b
+    jnz     .Lx64_inner_loop
 
-4:
+.Lx64_outer_loop_end:
+
     adc     QWORD PTR [rdi], rdx
     mov     r11, rcx
     shl     r11, 3
@@ -214,9 +226,10 @@ mul_bc_x64:
     add     rbx, 8
 
     dec     r8
-    jnz     2b
+    jnz     .Lx64_outer_loop_starts
 
-5:
+.Lx64_end_of_func:
+
     pop     rbx
 .cfi_adjust_cfa_offset -8
     ret
