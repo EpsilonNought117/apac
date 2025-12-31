@@ -47,7 +47,7 @@ sqr_bc_zen4:
     shl     r8,  3          # curr_size * sizeof(apn_seg_t)
     add     rdi, 8
 
-3.Lzen4_pass1_outer_loop_start:
+.Lzen4_pass1_outer_loop_start:
 
     mov     rdx, QWORD PTR [rsi]
     mov     rax, QWORD PTR [rdi]
@@ -119,7 +119,7 @@ sqr_bc_zen4:
 
     lea     rdi, [rdi + \count * 8]
     lea     rsi, [rsi + \count * 8]
-    jmp     10f
+    jmp     .Lpass1_outer_loop_end
 
 .endm
 
@@ -407,3 +407,4 @@ sqr_bc_x64:
 
 .cfi_endproc
 .size sqr_bc_x64, .-sqr_bc_x64
+

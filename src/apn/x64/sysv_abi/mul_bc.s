@@ -88,7 +88,8 @@ mul_bc_zen4:
     jmp     .Lzen4_inner_loop_unroll
 
 .p2align 4
-.Lzen4_before_rmdr 
+.Lzen4_before_rmdr:
+ 
     jmp     QWORD PTR [r12]
 
 .p2align 4
@@ -236,3 +237,4 @@ mul_bc_x64:
 
 .cfi_endproc
 .size mul_bc_x64, .-mul_bc_x64
+

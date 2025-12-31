@@ -97,7 +97,7 @@ submul_one_zen4:
 #
 #   -------------------------
 
-submul_one_x64
+submul_one_x64:
 .cfi_startproc
 
     xchg    rcx, rdx
@@ -106,7 +106,7 @@ submul_one_x64
     test    rcx, rcx
     jz      .Lx64_final_borrow
 
-.Lx64_loop:
+.Lx64_main_loop:
 
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
     
@@ -122,7 +122,7 @@ submul_one_x64
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     rcx
-    jnz     .Lx64_loop
+    jnz     .Lx64_main_loop
 
 .Lx64_loop_end:
 
@@ -136,3 +136,4 @@ submul_one_x64
 
 .cfi_endproc
 .size submul_one_x64, .-submul_one_x64
+
