@@ -241,13 +241,13 @@ if (ENABLE_APN_TESTS)
         ${CMAKE_SOURCE_DIR}/include
     )
 
-    # Run tests immediately after build
     if (NOT CMAKE_CROSSCOMPILING)
         add_custom_command(
             TARGET apn_tests
             POST_BUILD
             COMMAND $<TARGET_FILE:apn_tests>
             COMMENT "Running apn_tests after build"
+            USES_TERMINAL
             VERBATIM
         )
     endif()
@@ -268,19 +268,19 @@ if (ENABLE_APN_TUNING)
         ${CMAKE_SOURCE_DIR}/include
     )
 
-    # Ensure apn_tests builds (and runs) first
     if (ENABLE_APN_TESTS)
         add_dependencies(apn_tune apn_tests)
     endif()
 
-    # Run tuning only after successful build/tests
     if (NOT CMAKE_CROSSCOMPILING)
         add_custom_command(
             TARGET apn_tune
             POST_BUILD
             COMMAND $<TARGET_FILE:apn_tune>
             COMMENT "Running apn_tune after successful tests"
+            USES_TERMINAL
             VERBATIM
         )
     endif()
 endif()
+
