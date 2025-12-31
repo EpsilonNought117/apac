@@ -33,9 +33,10 @@ submul_one_zen4:
     shr     rcx, 2
     xor     r9,  r9
     test    rcx, rcx
-    jz      2f
+    jz      .Lzen4_before_rmdr
 
-1:
+.Lzen4_unroll4_loop:
+
 .set i, 0
 .rept 4
 
@@ -52,32 +53,37 @@ submul_one_zen4:
     lea     rdi, [rdi + 32]
     lea     rsi, [rsi + 32]
     lea     rcx, [rcx - 1]
-    jrcxz   2f
-    jmp     1b
 
-2:
+    jrcxz   .Lzen4_before_rmdr
+    jmp     .Lzen4_unroll4_loop
+
+.p2align 4
+.Lzen4_before_rmdr:
+    
     mov     rcx, r8
-    jrcxz   4f
+    jrcxz   .Lzen4_final_carry
 
-3:
+.Lzen4_rmdr_loop:
+    
     mulx    r11, r10, QWORD PTR [rsi]
     adox    r10, r9
     not     r10
     adcx    r10, QWORD PTR [rdi]
     mov     QWORD PTR [rdi], r10
     mov     r9,  r11
-
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
-    loop    3b
+    loop    .Lzen4_rmdr_loop
 
-4:
+.Lzen4_final_carry:
+
     adox    r9,  rcx
     not     r9
     adcx    r9,  QWORD PTR [rdi]
     mov     QWORD PTR [rdi], r9
 
-5:
+.Lzen4_end_of_func:
+
     setnc   al
     movzx   rax, al
     ret
@@ -91,16 +97,17 @@ submul_one_zen4:
 #
 #   -------------------------
 
-submul_one_x64:
+submul_one_x64
 .cfi_startproc
 
     xchg    rcx, rdx
     mov     r9,  rdx
     xor     r10, r10
     test    rcx, rcx
-    jz      3f
+    jz      .Lx64_final_borrow
 
-1:
+.Lx64_loop:
+
     mul     QWORD PTR [rsi] # rdx:rax = rax * op1[idx]
     
     # mul clobbers the original Carry Flag value
@@ -108,24 +115,24 @@ submul_one_x64:
     add     r10, rax                # temp_reg += low64
     adc     rdx, 0                  # high64 += CF
     sub     QWORD PTR [rdi], r10    # result[i] -= temp_reg
-
-    mov     r10, rdx            # temp_reg = high64
-    mov     rax, r9             # restore clobbered rax
-    adc     r10, 0              # temp_reg += borrow (from last seg)
+    mov     r10, rdx                # temp_reg = high64
+    mov     rax, r9                 # restore clobbered rax
+    adc     r10, 0                  # temp_reg += borrow (from last seg)
     
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     rcx
-    jnz     1b
+    jnz     .Lx64_loop
 
-2:
+.Lx64_loop_end:
+
     sbb     QWORD PTR [rdi], rdx
 
-3:
+.Lx64_final_borrow:
+
     setc    al
     movzx   rax, al
     ret
 
 .cfi_endproc
 .size submul_one_x64, .-submul_one_x64
-
