@@ -1,7 +1,21 @@
-#include "apac.h"
+#include "../include/apac.h"
 
 /* ============================================================
-              1) x86-64 — Windows (MSVC / Clang-cl)
+   RD_CPU_CNT(out)
+
+   Reads a high-resolution, fixed-frequency time counter.
+
+   - x86-64: invariant TSC (time at reference frequency)
+   - ARM64 : CNTVCT_EL0 (time at CNTFRQ frequency)
+
+   NOTE:
+   - Units are NOT architectural CPU cycles.
+   - Values represent elapsed time in counter ticks.
+   - Safe for relative comparisons and threshold tuning.
+   ============================================================ */
+
+/* ============================================================
+   1) x86-64 â€” Windows (MSVC / Clang-cl)
    ============================================================ */
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
@@ -9,10 +23,11 @@
         do {                    \
             _mm_lfence();       \
             (out) = __rdtsc();  \
+            _mm_lfence();       \
         } while (0)
 
 /* ============================================================
-         2) x86-64 — Unix / Linux / macOS (GCC / Clang)
+   2) x86-64 â€” Unix / Linux / macOS (GCC / Clang)
    ============================================================ */
 #elif defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
 
@@ -21,7 +36,8 @@
             uint32_t __lo, __hi;                    \
             asm volatile (                          \
                 "lfence\n\t"                        \
-                "rdtsc"                             \
+                "rdtsc\n\t"                         \
+                "lfence\n\t"                        \
                 : "=a"(__lo), "=d"(__hi)            \
                 :                                   \
                 : "memory"                          \
@@ -30,7 +46,7 @@
         } while (0)
 
 /* ============================================================
-            3) ARM64 — Windows / MSVC (NO inline asm)
+   3) ARM64 â€” Windows / MSVC
    ============================================================ */
 #elif defined(_M_ARM64) && defined(_MSC_VER)
 
@@ -41,7 +57,7 @@
         } while (0)
 
 /* ============================================================
-          4) ARM64 — Unix / Linux / macOS (GCC / Clang)
+   4) ARM64 â€” Unix / Linux / macOS (GCC / Clang)
    ============================================================ */
 #elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
 
@@ -49,7 +65,7 @@
         do {                            \
             uint64_t __val;             \
             asm volatile (              \
-                "isb\n"                 \
+                "isb\n\t"               \
                 "mrs %0, cntvct_el0"    \
                 : "=r"(__val)           \
                 :                       \
@@ -59,15 +75,10 @@
         } while (0)
 
 #else
-    #error "Unsupported architecture or compiler"
+    #error "RD_CPU_CNT: unsupported architecture or compiler"
 #endif
 
-static void getKaratsubaBalancedThreshold(void)
+static void getOptimalKaratsubaBalancedThreshold(void)
 {
-
-}
-
-static void getKaratsubaUnbalancedThreshold(void)
-{
-
+    
 }
