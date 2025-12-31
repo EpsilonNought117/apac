@@ -325,7 +325,7 @@ inner_loop_pass1:
 
 outer_loop_end_pass1:
 
-    adc     QWORD PTR [r10], rdx
+    adc     QWORD PTR [r10], rbx
     add     r12, 8
     dec     r9
     jnz     outer_loop_pass1

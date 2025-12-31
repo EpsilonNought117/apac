@@ -155,7 +155,7 @@ addmul_one_x64:
 
 .Lx64_end_of_loop:
 
-    adc     QWORD PTR [rdi], rdx
+    adc     QWORD PTR [rdi], r10
 
 .Lx64_end_of_func:
 

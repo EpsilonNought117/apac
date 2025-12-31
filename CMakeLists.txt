@@ -78,19 +78,6 @@ endif()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# --- COMPILER OPTIMIZATION FLAGS -----------------------------------------------
-
-# Set custom optimization flags for Release and RelWithDebInfo
-if (MSVC)
-    # MSVC uses /O2
-    set(CMAKE_C_FLAGS_RELEASE "/O2 /DNDEBUG")
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "/O2 /Zi /DNDEBUG")
-else()
-    # GCC and Clang use -O2
-    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
-endif()
-
 # --- BUILD OPTIONS -------------------------------------------------------------
 
 # Option to build a shared lib instead of a static lib
@@ -229,7 +216,7 @@ target_compile_definitions(${apac_target} PRIVATE
 # --- STRIP PATHS FROM __FILE__ -------------------------------------------------
 
 if (MSVC)
-    target_compile_options(${apac_target} PRIVATE /d1trimfile:${CMAKE_SOURCE_DIR}/)
+    target_compile_options(${apac_target} PRIVATE $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>)
 else()
     # For GCC/Clang, use -ffile-prefix-map to strip the build path
     target_compile_options(${apac_target} PRIVATE 

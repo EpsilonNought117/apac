@@ -217,7 +217,7 @@ mul_bc_x64:
 
 .Lx64_outer_loop_end:
 
-    adc     QWORD PTR [rdi], rdx
+    adc     QWORD PTR [rdi], r10
     mov     r11, rcx
     shl     r11, 3
     

@@ -136,12 +136,12 @@ addmul_one_x64 PROC FRAME
     ; r11 <- op1
     ; r8  <- size
     
-    ; rbx is temp_reg
+    ; rcx is temp_reg
 
     xor     rdx, rdx
     xor     rcx, rcx
-    test    r8,  r8
     mov     rax, r9
+    test    r8,  r8
     jz      end_of_func
 
 main_loop:
@@ -163,7 +163,7 @@ main_loop:
 
 end_of_loop:
 
-    adc     QWORD PTR [r10], rdx
+    adc     QWORD PTR [r10], rcx
 
 end_of_func:
 

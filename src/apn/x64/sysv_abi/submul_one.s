@@ -129,7 +129,7 @@ submul_one_x64:
 
 .Lx64_loop_end:
 
-    sbb     QWORD PTR [rdi], rdx
+    sbb     QWORD PTR [rdi], r10
 
 .Lx64_final_borrow:
 
