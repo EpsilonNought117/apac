@@ -141,6 +141,7 @@ addmul_one_x64 PROC FRAME
     xor     rdx, rdx
     xor     rcx, rcx
     test    r8,  r8
+    mov     rax, r9
     jz      end_of_func
 
 main_loop:

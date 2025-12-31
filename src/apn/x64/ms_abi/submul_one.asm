@@ -124,6 +124,7 @@ start_of_func:
     
     xor     rdx, rdx
     xor     rcx, rcx
+    mov     rax, r9
     test    r8,  r8
     jz      end_of_func
 

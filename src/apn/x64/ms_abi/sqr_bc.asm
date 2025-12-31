@@ -302,6 +302,7 @@ outer_loop_pass1:
     xor     rbx, rbx    ; temp_reg
     xor     rdx, rdx    ; high64 = 0
     mov     r13, QWORD PTR [rsi + r12 * 1]
+    mov     rax, r13
     lea     r10, [rdi + r12 * 2 + 8]      
     lea     r11, [rsi + r12 * 1 + 8]      
 

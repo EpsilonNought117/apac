@@ -135,6 +135,7 @@ addmul_one_x64:
     mov     r9,  rdx
     xor     rdx, rdx
     xor     r10, r10
+    mov     rax, r9
     test    rcx, rcx
     jz      .Lx64_end_of_func
 

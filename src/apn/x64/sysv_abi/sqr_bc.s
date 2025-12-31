@@ -247,12 +247,6 @@ sqr_bc_x64:
     push    r13
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r13, 0
-    push    r14
-.cfi_adjust_cfa_offset 8
-.cfi_rel_offset r14, 0
-    push    r15
-.cfi_adjust_cfa_offset 8
-.cfi_rel_offset r15, 0
 
     #   5-limb bignum squaring matrix example with the
     #   symmetric non-diagonal terms marked as DUP
@@ -310,7 +304,8 @@ sqr_bc_x64:
     mov     r8,  r9
     xor     rbx, rbx        # temp_reg
     xor     rdx, rdx        # high64 = 0
-    mov     r13, QWORD PTR [r15 + r12 * 1]
+    mov     r13, QWORD PTR [rsi + r12 * 1]
+    mov     rax, r13
     lea     r11, [rsi + r12 * 1 + 8]
     lea     r10, [rdi + r12 * 2 + 8]
 
@@ -393,10 +388,6 @@ sqr_bc_x64:
 
 .Lx64_end_of_func:
 
-    pop     r15
-.cfi_adjust_cfa_offset -8
-    pop     r14
-.cfi_adjust_cfa_offset -8
     pop     r13
 .cfi_adjust_cfa_offset -8
     pop     r12
