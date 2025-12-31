@@ -26,9 +26,10 @@ neg_zen4:
     mov     r11, rdx
     shr     rdx, 2
     and     r11, 3
-    jz      2f
+    jz      .Lzen4_before_unroll_loop
 
-1:
+.Lzen4_rmdr_loop:
+
     mov     rax, 0
     mov     r9, QWORD PTR [rsi]
     sbb     rax, r9
@@ -37,15 +38,17 @@ neg_zen4:
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     r11
-    jnz     1b
+    jnz     .Lzen4_rmdr_loop
 
-2:
+.Lzen4_before_unroll_loop:
+    
     setc    al
     test    rdx, rdx
     bt      ax, 0
-    jz      4f
+    jz      .Lzen4_end_of_func
 
-3:
+.Lzen4_unroll_loop:
+
 .set i, 0
 .rept 4
 
@@ -60,10 +63,11 @@ neg_zen4:
     lea     rsi, [rsi + 32]
     lea     rdi, [rdi + 32]
     dec     rdx
-    jnz     3b
+    jnz     .Lzen4_unroll_loop
 
 .p2align 4
-4:
+.Lzen4_end_of_func:
+
     # discard any carry or borrow if generated
     ret
 
@@ -76,9 +80,10 @@ neg_x64:
 .cfi_startproc
 
     test    rdx, rdx
-    jz      2f
+    jz      .Lx64_end_of_func
 
-1:
+.Lx64_main_loop:
+
     mov     rax, 0
     mov     r9, QWORD PTR [rsi]
     sbb     rax, r9
@@ -87,9 +92,10 @@ neg_x64:
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     rdx
-    jnz     1b
+    jnz     .Lx64_main_loop
 
-2:
+.Lx64_end_of_func:
+
     # no need to return the borrow as this is
     # 2's complement negation
     ret
