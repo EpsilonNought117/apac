@@ -30,7 +30,9 @@
 /* ============================================================
    2) x86-64 — Unix / Linux / macOS (GCC / Clang)
    ============================================================ */
-#elif defined(__x86_64__) && ((defined(__GNUC__) || defined(__clang__))
+#elif (defined(__GNUC__)  || defined(__clang__))  && \
+      (defined(__x86_64)  || defined(__amd64)     || \
+       defined(__x86_64__)|| defined(__amd64__))
 
     #define RD_CPU_CNT(out)                         \
         do                                          \
@@ -62,13 +64,11 @@
                 (out) = (__cnt * 1000000000ULL) / __frq;        \
             } while (0)
 
-
 /* ============================================================
    4) ARM64 — Unix / Linux / macOS (GCC / Clang)
    ============================================================ */
-#elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
-
-#elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
+#elif (defined(__GNUC__)    || defined(__clang__)) && \
+      (defined(__aarch64__) || defined(__arm64__))
 
     #define RD_CPU_CNT(out)                                 \
             do                                              \
@@ -151,7 +151,7 @@ static inline int pin_thread_to_core(uint32_t core_id)
 #define DNC_DIV_START                   (apn_size_t)10
 #define DNC_DIV_END                     (apn_size_t)100
 
-#define RUNTIME                         2ULL * 1000 * 1000 * 1000
+#define RUNTIME                         (uint64_t)2 * 1000 * 1000 * 1000
 
 static void getOptimalBalancedKaratsubaMulThreshold(void)
 {
