@@ -20,6 +20,7 @@
 
     #if defined(_MSC_VER)
 
+        #define WIN32_LEAN_AND_MEAN
         #include <Windows.h> // for win32 threads
 
         #if defined(_M_X64) || defined(_M_AMD64)

@@ -2590,5 +2590,5 @@ int main(int argc, char** argv)
     check_apn_div();
 
     printf("\nALL TESTS PASSED!\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
