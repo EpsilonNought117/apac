@@ -139,23 +139,50 @@ static inline int pin_thread_to_core(uint32_t core_id)
 #endif
 }
 
-#define BALANCED_KARATSUBA_MUL_START    (apn_size_t)10
-#define BALANCED_KARATSUBA_MUL_END      (apn_size_t)100
+#define BALANCED_KARATSUBA_MUL_START        ((apn_size_t)10)
+#define BALANCED_KARATSUBA_MUL_END          ((apn_size_t)100)
+#define MAX_SIZE_KARATSUBA_BALANCED         ((apn_size_t)384)
 
-#define UNBALANCED_KARATSUBA_MUL_START  (apn_size_t)10
-#define UNBALANCED_KARATSUBA_MUL_END    (apn_size_t)100
+#define UNBALANCED_KARATSUBA_MUL_START      ((apn_size_t)10)
+#define UNBALANCED_KARATSUBA_MUL_END        ((apn_size_t)100)
+#define MAX_SIZE_KARATSUBA_UNBALANCED       ((apn_size_t)384)
 
-#define KARATSUBA_SQR_START             (apn_size_t)10
-#define KARATSUBA_SQR_END               (apn_size_t)100
+#define KARATSUBA_SQR_START                 ((apn_size_t)10)
+#define KARATSUBA_SQR_END                   ((apn_size_t)100)
+#define MAX_SIZE_KARATSUBA_SQR              ((apn_size_t)384)
 
-#define DNC_DIV_START                   (apn_size_t)10
-#define DNC_DIV_END                     (apn_size_t)100
+#define DNC_DIV_START                       ((apn_size_t)10)
+#define DNC_DIV_END                         ((apn_size_t)100)
+#define MAX_SIZE_DNC_DIV                    ((apn_size_t)512)
 
-#define RUNTIME                         (uint64_t)2 * 1000 * 1000 * 1000
+#define RUN_ITERS                           ((uint64_t)1 << 13)
 
-static void getOptimalBalancedKaratsubaMulThreshold(void)
+typedef struct
 {
+    apn_size_t threshold_used;
+    apn_size_t test_size;
+    uint64_t avg_time;
+
+}   run_data_t;
+
+/* pass size in bytes */
+#define MALLOC_CHECK(p, size)														    \
+		{																				\
+			p = apac_malloc((size));                   								    \
+			if (!(p))																	\
+			{																			\
+				APAC_LOG_ERR("Memory allocation failure in unit test! Aborting ...");	\
+				abort();																\
+			}																			\
+		}	
+
+static apn_size_t getOptimalBalancedKaratsubaMulThreshold(void)
+{
+    apn_size_t optimal_thresh = 0;
+
+
     
+    return optimal_thresh;
 }
 
 int main(void)
