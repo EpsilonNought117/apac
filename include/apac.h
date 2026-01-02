@@ -75,6 +75,7 @@
         #elif defined(__aarch64__) || defined(__arm64__)
 
             #define SIZE_OF_VOID_PTR 8U
+            #include <arm_acle.h>                
 
 		#else
 			#error "Unsupported Architecture on Linux/Unix/MacOS and GCC/Clang!"
