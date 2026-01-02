@@ -4,7 +4,7 @@
 
 #define TEST_END(name) printf("TEST END: %s()\n", name);
 
-#define MALLOC_AND_CHECK(op, size)														\
+#define MALLOC_CHECK(op, size)														\
 		{																				\
 			op = apac_malloc(sizeof(apn_seg_t) * (size));								\
 			if (!(op))																	\
@@ -101,8 +101,8 @@ static void check_apn_set(void)
 
     apn_seg_t* op1 = NULL, * op2 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
 
     printf("TEST-1: Comparison against memset\n");
 
@@ -145,8 +145,8 @@ static void check_apn_cpy(void)
 
     apn_seg_t* op1 = NULL, * op2 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
 
     printf("TEST-1: Comparison using memcmp\n");
 
@@ -183,8 +183,8 @@ static void check_apn_cmp(void)
 
     apn_seg_t* op1 = NULL, * op2 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
 
     printf("TEST-1: Equality test\n");
 
@@ -283,7 +283,7 @@ static void check_apn_is_zero(void)
 
     apn_seg_t* op = NULL;
 
-    MALLOC_AND_CHECK(op, TEST_SIZE_MAX);
+    MALLOC_CHECK(op, TEST_SIZE_MAX);
 
     apn_set(op, TEST_SIZE_MAX, 0);
 
@@ -343,8 +343,8 @@ static void check_apn_add_one(void)
 
 	apn_seg_t* op1 = NULL, *op2 = NULL;
 
-	MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-	MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
+	MALLOC_CHECK(op1, TEST_SIZE_MAX);
+	MALLOC_CHECK(op2, TEST_SIZE_MAX);
 
 	/* TEST-1: Carry Propagation */
 	printf("TEST-1: Full Carry propagation\n");
@@ -465,12 +465,12 @@ static void check_apn_add_n(void)
     apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
     apn_seg_t* op4 = NULL, * op5 = NULL, * op6 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op5, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op6, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_CHECK(op4, TEST_SIZE_MAX);
+    MALLOC_CHECK(op5, TEST_SIZE_MAX);
+    MALLOC_CHECK(op6, TEST_SIZE_MAX);
 
     apn_set(op2, TEST_SIZE_MAX, 0);
 
@@ -642,10 +642,10 @@ static void check_apn_add(void)
     apn_seg_t* a = NULL, * b = NULL;
     apn_seg_t* r1 = NULL, * t1 = NULL;
 
-    MALLOC_AND_CHECK(a, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(b, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(r1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(t1, TEST_SIZE_MAX);
+    MALLOC_CHECK(a, TEST_SIZE_MAX);
+    MALLOC_CHECK(b, TEST_SIZE_MAX);
+    MALLOC_CHECK(r1, TEST_SIZE_MAX);
+    MALLOC_CHECK(t1, TEST_SIZE_MAX);
 
     printf("TEST-1: Identity (a + 0 = a)\n");
 
@@ -765,9 +765,9 @@ static void check_apn_neg(void)
     apn_seg_t* op2 = NULL;
     apn_seg_t* op3 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX);
 
     printf("TEST-1: a + (-a) == 0 with carry\n");
 
@@ -815,9 +815,9 @@ static void check_apn_sub_one(void)
     apn_seg_t* op2 = NULL;
     apn_seg_t* op3 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX);
 
     /* TEST-1: Full Borrow Propagation */
     printf("TEST-1: Full Borrow propagation\n");
@@ -936,10 +936,10 @@ static void check_apn_sub_n(void)
     apn_seg_t* op1 = NULL, * op2 = NULL;
     apn_seg_t* op3 = NULL, * op4 = NULL;;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_CHECK(op4, TEST_SIZE_MAX);
 
     printf("TEST-1: Subtracting Identity Element:\n");
     
@@ -1072,10 +1072,10 @@ static void check_apn_sub(void)
 
     apn_seg_t* a = NULL, * b = NULL, * r = NULL, * t = NULL;
 
-    MALLOC_AND_CHECK(a, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(b, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(r, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(t, TEST_SIZE_MAX);
+    MALLOC_CHECK(a, TEST_SIZE_MAX);
+    MALLOC_CHECK(b, TEST_SIZE_MAX);
+    MALLOC_CHECK(r, TEST_SIZE_MAX);
+    MALLOC_CHECK(t, TEST_SIZE_MAX);
 
     printf("TEST-1: Identity (a - 0 = a)\n");
 
@@ -1201,9 +1201,9 @@ static void check_apn_addmul_one(void)
 
     apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX + 1);
 
     printf("TEST-1: Max Value * APN_SEG_MAX (full carry chain)\n");
 
@@ -1391,9 +1391,9 @@ static void check_apn_submul_one(void)
     apn_seg_t* op1 = NULL, * op2 = NULL;
     apn_seg_t* op3 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX + 1);
 
     printf("TEST-1: Max Value * APN_SEG_MAX subtracted from zero (full carry chain)\n");
 
@@ -1587,11 +1587,11 @@ static void check_apn_lshift(void)
     TEST_START("apn_lshift");
 
     apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
 
     // (TEST_SIZE_MAX + 1) for test against apn_addmul_one
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX + 1);
 
     printf("TEST-1: Shift zero value (1..63 bits)\n");
 
@@ -1699,9 +1699,9 @@ static void check_apn_rshift(void)
     TEST_START("apn_rshift");
 
     apn_seg_t* op1 = NULL, * op2 = NULL, * op3 = NULL;
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX);
 
     printf("TEST-1: Shift out random values (1..63 bits)\n");
 
@@ -1821,11 +1821,11 @@ static void check_apn_mul_n(void)
     apn_seg_t* op3 = NULL, * op4 = NULL;
     apn_seg_t* op5 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX * 2);
-    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX * 2);
-    MALLOC_AND_CHECK(op5, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op4, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op5, TEST_SIZE_MAX);
 
     printf("TEST-1: Compare against apn_addmul_one()\n");
 
@@ -2051,9 +2051,9 @@ static void check_apn_sqr(void)
     apn_seg_t* op2 = NULL;
     apn_seg_t* op3 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX * 2);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX * 2);
 
     printf("TEST-1: Zero squared (0 * 0 = 0)\n");
 
@@ -2133,10 +2133,10 @@ static void check_apn_mul(void)
     apn_seg_t* op1 = NULL, * op2 = NULL;
     apn_seg_t* op3 = NULL, * op4 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op3, TEST_SIZE_MAX * 2);
-    MALLOC_AND_CHECK(op4, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op3, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op4, TEST_SIZE_MAX * 2);
 
     printf("TEST-1: Compare against apn_addmul_one() (size2 <= 64)\n");
 
@@ -2299,10 +2299,10 @@ static void check_apn_div_one(void)
     apn_seg_t* q1 = NULL;
     apn_seg_t* q2 = NULL;
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX + 1);
-    MALLOC_AND_CHECK(q1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(q2, TEST_SIZE_MAX);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(q1, TEST_SIZE_MAX);
+    MALLOC_CHECK(q2, TEST_SIZE_MAX);
 
     printf("TEST-1: Division by powers of two vs apn_rshift (2^1 .. 2^63)\n");
 
@@ -2423,11 +2423,11 @@ static void check_apn_div(void)
     apn_seg_t* rmdr = NULL; /* remainder: i */
     apn_seg_t* temp = NULL; /* temp: i + j */
 
-    MALLOC_AND_CHECK(op1, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(op2, TEST_SIZE_MAX * 2);
-    MALLOC_AND_CHECK(quot, TEST_SIZE_MAX + 1);
-    MALLOC_AND_CHECK(rmdr, TEST_SIZE_MAX);
-    MALLOC_AND_CHECK(temp, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(op1, TEST_SIZE_MAX);
+    MALLOC_CHECK(op2, TEST_SIZE_MAX * 2);
+    MALLOC_CHECK(quot, TEST_SIZE_MAX + 1);
+    MALLOC_CHECK(rmdr, TEST_SIZE_MAX);
+    MALLOC_CHECK(temp, TEST_SIZE_MAX * 2);
 
     printf("TEST-1: apn_div identity (dividend = quot * divisor + remainder)\n");
 
