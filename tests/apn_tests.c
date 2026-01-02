@@ -4,15 +4,16 @@
 
 #define TEST_END(name) printf("TEST END: %s()\n", name);
 
-#define MALLOC_CHECK(op, size)														\
-		{																				\
-			op = apac_malloc(sizeof(apn_seg_t) * (size));								\
-			if (!(op))																	\
-			{																			\
-				APAC_LOG_ERR("Memory allocation failure in unit test! Aborting ...");	\
-				abort();																\
-			}																			\
-		}	
+#define MALLOC_CHECK(op, size)                                                        \
+    do                                                                                \
+    {                                                                                 \
+        (op) = apac_malloc(sizeof(apn_seg_t) * (size));                               \
+        if (!(op))                                                                    \
+        {                                                                             \
+            APAC_LOG_ERR("Memory allocation failure in unit test! Aborting ...");     \
+            abort();                                                                  \
+        }                                                                             \
+    } while (0)
 
 #define TEST_SIZE_MAX   (apn_size_t)1024ULL
 
