@@ -229,17 +229,19 @@ endif()
 # --- APN TESTS -----------------------------------------------------------------
 
 if (ENABLE_APN_TESTS)
-    
+
     message(STATUS "Building apn_tests")
 
     add_executable(apn_tests
         tests/apn_tests.c
+        utilities/apac_utilities.c
     )
 
     target_link_libraries(apn_tests PRIVATE ${apac_target})
 
     target_include_directories(apn_tests PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include     # for apac.h
+        ${CMAKE_SOURCE_DIR}/utilities   # for apac_utilities.h
     )
 
 endif()
@@ -247,17 +249,19 @@ endif()
 # --- APN TUNING ----------------------------------------------------------------
 
 if (ENABLE_APN_TUNING)
-    
+
     message(STATUS "Building apn_tune")
 
     add_executable(apn_tune
         tuning/apn_tune.c
+        utilities/apac_utilities.c
     )
 
     target_link_libraries(apn_tune PRIVATE ${apac_target})
 
     target_include_directories(apn_tune PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include     # for apac.h
+        ${CMAKE_SOURCE_DIR}/utilities   # for apac_utilities.h
     )
 
 endif()

@@ -1,0 +1,169 @@
+#include "apac_utilities.h"
+
+uint64_t cpu_timer(void)
+{
+#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
+
+    _mm_lfence();
+    uint64_t t = __rdtsc();
+    _mm_lfence();
+    return t;
+
+#elif (defined(__GNUC__) || defined(__clang__)) && \
+      (defined(__x86_64__) || defined(__amd64__))
+
+    _mm_lfence();
+    uint64_t t = __rdtsc();
+    _mm_lfence();
+    return t;
+
+#elif defined(_M_ARM64) && defined(_MSC_VER)
+
+    uint64_t cnt, frq;
+    __isb(0xF);
+    cnt = _ReadStatusReg(ARM64_CNTVCT_EL0);
+    frq = _ReadStatusReg(ARM64_CNTFRQ_EL0);
+    return (cnt * 1000000000ULL) / frq;
+
+#elif (defined(__GNUC__) || defined(__clang__)) && \
+      (defined(__aarch64__) || defined(__arm64__))
+
+    __isb();
+    uint64_t cnt = __arm_rsr64("cntvct_el0");
+    uint64_t frq = __arm_rsr64("cntfrq_el0");
+    return (cnt * 1000000000ULL) / frq;
+
+#else
+    #error "cpu_timer(): unsupported architecture or compiler"
+#endif
+}
+
+static uint64_t prng_state[4] = { 0 };
+
+uint64_t random_sfc64(void)
+{
+	uint64_t out = prng_state[1] + prng_state[2] + prng_state[0];
+	prng_state[0]++;
+	prng_state[1] = prng_state[2] ^ (prng_state[2] >> 11);
+	prng_state[2] = prng_state[3] + (prng_state[3] << 3);
+	prng_state[3] = ROTL64(prng_state[3], 24) + out;
+	return out;
+}
+
+void random_sfc64_seed(uint64_t seed)
+{
+	prng_state[0] = 1;
+	prng_state[1] = seed;
+	prng_state[2] = seed;
+	prng_state[3] = seed;
+	for (int i = 0; i < 16; i++)
+		random_sfc64();
+}
+
+void set_to_random(apn_seg_t* op1, apn_size_t size)
+{
+	for (apn_size_t i = 0; i < size; i++)
+	{
+		op1[i] = random_sfc64();
+	}
+}
+
+int pin_curr_thread_to_core(uint32_t core_id)
+{
+#if defined(_WIN32)
+
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    uint32_t num_cores = (uint32_t)sysinfo.dwNumberOfProcessors;
+    core_id = core_id % num_cores;
+
+    DWORD_PTR mask = (DWORD_PTR)1 << core_id;
+    HANDLE thread = GetCurrentThread();
+    return (SetThreadAffinityMask(thread, mask) != 0) ? 0 : -1;
+
+#elif defined(__linux__) || defined(__linux)
+
+    long num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    if (num_cores > 0)
+    {
+        core_id = core_id % (uint32_t)num_cores;
+    }
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(core_id, &cpuset);
+    pthread_t thread = pthread_self();
+    return (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset) == 0) ? 0 : -1;
+
+#else
+
+    return -1;
+
+#endif
+}
+
+
+#if defined(_WIN32)
+
+    static GUID* CurrentScheme;
+    static DWORD CurrentMode;
+
+#endif
+
+void disable_turbo_boost(void)
+{
+#if defined(_WIN32)
+
+    PowerGetActiveScheme(NULL, &CurrentScheme);
+
+    PowerReadACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, &CurrentMode);
+
+    PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, PROCESSOR_PERF_BOOST_MODE_DISABLED);
+
+    PowerSetActiveScheme(NULL, CurrentScheme);
+
+#else
+
+    fprintf(stderr, "\n");
+    fprintf(stderr, "WARNING: Turbo boost cannot be disabled on this platform.\n");
+    fprintf(stderr, "         Disable it manually for optimal, consistent, and accurate results.\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Continue anyway? (y/n): ");
+    fflush(stderr);
+
+    char buffer[16];
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL)
+    {
+        fprintf(stderr, "\nError reading input. Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (buffer[0] != 'y' && buffer[0] != 'Y')
+    {
+        fprintf(stderr, "Aborting...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(stderr, "\n");
+
+#endif
+}
+
+void restore_turbo_boost(void)
+{
+#if defined(_WIN32) && (defined(_M_X64) || defined(_M_AMD64))
+
+    PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, CurrentMode);
+
+    PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, PROCESSOR_PERF_BOOST_MODE_ENABLED);
+
+    PowerSetActiveScheme(NULL, CurrentScheme);
+
+    LocalFree(CurrentScheme);
+
+    CurrentScheme = NULL;
+
+#else
+     /* Nothing to restore on non-Windows platforms */
+#endif
+}
