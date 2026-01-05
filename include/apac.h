@@ -58,6 +58,7 @@
     #if defined(__GNUC__) || defined(__clang__)
 
         #include <pthread.h>  // POSIX Thread
+        #include <unistd.h>
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
