@@ -99,7 +99,8 @@ typedef size_t              apn_size_t;
 #define PRI_APN_SIZE        "zu"
 #define APN_SIZE_MAX        SIZE_MAX
 #define APN_SEG_MAX         UINT64_MAX
-#define PRI_APN_SEG         PRIu64
+#define PRI_APN_SEGU        PRIu64
+#define PRI_APN_SEGX        PRIx64
 #define APN_SEG_BITS        64U
 #define APN_SEG_HIGH_BIT    (1ULL << 63)
 
