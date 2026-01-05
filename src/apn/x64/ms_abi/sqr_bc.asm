@@ -37,19 +37,6 @@ sqr_bc_zen4 PROC FRAME
 .pushreg    r13
 .endprolog
 
-    jmp     start_of_func
-
-jump_table_pass1:
-
-    QWORD offset outer_loop_end_pass1
-    QWORD offset inner_pass1_rem1
-    QWORD offset inner_pass1_rem2
-    QWORD offset inner_pass1_rem3
-    QWORD offset inner_pass1_rem4
-    QWORD offset inner_pass1_rem5
-    QWORD offset inner_pass1_rem6
-    QWORD offset inner_pass1_rem7
-
 start_of_func:
 
     xchg    rbp, rcx        ; free up rcx for jrcxz/loop
@@ -100,6 +87,19 @@ ALIGN 16
 bef_inner_rmdr_pass1:
 
     jmp     QWORD PTR [r13]
+
+    jmp     start_of_func
+
+jump_table_pass1:
+
+    QWORD offset outer_loop_end_pass1
+    QWORD offset inner_pass1_rem1
+    QWORD offset inner_pass1_rem2
+    QWORD offset inner_pass1_rem3
+    QWORD offset inner_pass1_rem4
+    QWORD offset inner_pass1_rem5
+    QWORD offset inner_pass1_rem6
+    QWORD offset inner_pass1_rem7
 
 FOR i, <7, 6, 5, 4, 3, 2, 1>
 
@@ -184,12 +184,13 @@ ENDM
     jrcxz   pass2_before_rmdr
     jmp     pass2_unrolled_loop
 
+ALIGN 16
 pass2_before_rmdr:
 
     mov     rcx, r9
     jrcxz   end_of_func
 
-ALIGN 32
+ALIGN 16
 pass2_rmdr_loop:
 
     mov     rdx, QWORD PTR [rbx]
@@ -301,6 +302,7 @@ outer_loop_pass1:
     xor     rbx, rbx    ; temp_reg
     xor     rdx, rdx    ; high64 = 0
     mov     r13, QWORD PTR [rsi + r12 * 1]
+    mov     rax, r13
     lea     r10, [rdi + r12 * 2 + 8]      
     lea     r11, [rsi + r12 * 1 + 8]      
 
@@ -323,7 +325,7 @@ inner_loop_pass1:
 
 outer_loop_end_pass1:
 
-    adc     QWORD PTR [r10], rdx
+    adc     QWORD PTR [r10], rbx
     add     r12, 8
     dec     r9
     jnz     outer_loop_pass1

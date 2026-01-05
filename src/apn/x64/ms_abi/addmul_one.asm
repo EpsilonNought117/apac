@@ -30,20 +30,6 @@ addmul_one_zen4 PROC FRAME
 .pushreg    rbp
 .endprolog
 
-jmp     start_of_func
-
-ALIGN 16
-jump_table:
-
-    QWORD offset end_of_loop
-    QWORD offset rem1
-    QWORD offset rem2
-    QWORD offset rem3
-    QWORD offset rem4
-    QWORD offset rem5
-    QWORD offset rem6
-    QWORD offset rem7
-
 start_of_func:
 
     xchg    rbp, rcx
@@ -84,6 +70,18 @@ ALIGN 16
 before_remainder:
 
     jmp     QWORD PTR [r9]
+
+ALIGN 16
+jump_table:
+
+    QWORD offset end_of_loop
+    QWORD offset rem1
+    QWORD offset rem2
+    QWORD offset rem3
+    QWORD offset rem4
+    QWORD offset rem5
+    QWORD offset rem6
+    QWORD offset rem7
 
 FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
@@ -138,10 +136,11 @@ addmul_one_x64 PROC FRAME
     ; r11 <- op1
     ; r8  <- size
     
-    ; rbx is temp_reg
+    ; rcx is temp_reg
 
     xor     rdx, rdx
     xor     rcx, rcx
+    mov     rax, r9
     test    r8,  r8
     jz      end_of_func
 
@@ -164,7 +163,7 @@ main_loop:
 
 end_of_loop:
 
-    adc     QWORD PTR [r10], rdx
+    adc     QWORD PTR [r10], rcx
 
 end_of_func:
 

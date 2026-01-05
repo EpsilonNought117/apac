@@ -46,20 +46,6 @@ mul_bc_zen4 PROC FRAME
 .pushreg    r13
 .endprolog
 
-    jmp     start_of_func
-
-ALIGN 16
-jump_table:
-
-    QWORD offset outer_loop_end
-    QWORD offset rem1
-    QWORD offset rem2
-    QWORD offset rem3
-    QWORD offset rem4
-    QWORD offset rem5
-    QWORD offset rem6
-    QWORD offset rem7
-
 start_of_func:
 
     xchg    rbp, rcx
@@ -105,6 +91,18 @@ ALIGN 32
 before_remainder:
 
     jmp     QWORD PTR [r12]
+
+ALIGN 16
+jump_table:
+
+    QWORD offset outer_loop_end
+    QWORD offset rem1
+    QWORD offset rem2
+    QWORD offset rem3
+    QWORD offset rem4
+    QWORD offset rem5
+    QWORD offset rem6
+    QWORD offset rem7
 
 FOR outer, <7, 6, 5, 4, 3, 2, 1>
 
@@ -207,7 +205,8 @@ inner_loop:
 
 outer_loop_end:
 
-    adc     QWORD PTR [rcx], rdx
+    adc     QWORD PTR [rcx], rdi
+
     mov     r11, r9
     shl     r11, 3
     sub     rbx, r11

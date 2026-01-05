@@ -124,6 +124,7 @@ start_of_func:
     
     xor     rdx, rdx
     xor     rcx, rcx
+    mov     rax, r9
     test    r8,  r8
     jz      end_of_func
 
@@ -148,7 +149,7 @@ main_loop:
 
 end_of_loop:
 
-    sbb     QWORD PTR [r10], rdx
+    sbb     QWORD PTR [r10], rcx
 
 end_of_func:
 

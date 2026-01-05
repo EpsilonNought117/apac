@@ -10,9 +10,7 @@ void apn_basecase_mul(
 	apn_size_t size2
 )
 {
-	APAC_DETAILED_ASSERT(curr_cpu.apn_mul_bc_ptr != NULL,
-		"apacInit() or apacGetCPUSpec() not invoked!"
-	);
+	APAC_ASSERT(curr_cpu.apn_mul_bc_ptr != NULL);
 
 	curr_cpu.apn_mul_bc_ptr(result, op1, op2, size1, size2);
 	return;

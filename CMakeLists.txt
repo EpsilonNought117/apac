@@ -1,4 +1,3 @@
-
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
 #   |                          LIBAPAC CMAKE BUILD FILE                         |
@@ -83,6 +82,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
+option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" ON)
+option(BUILD_APN_TUNE "Build apn_tune threshold tuning program" ON)
+option(BUILD_EXAMPLES "Build programming examples to demonstrate working of the library" ON)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -154,23 +156,23 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/sysv_abi/add_n.asm"
-            "src/apn/x64/sysv_abi/add_one.asm"
-            "src/apn/x64/sysv_abi/mul_bc.asm"
-            "src/apn/x64/sysv_abi/addmul_one.asm"
-            "src/apn/x64/sysv_abi/submul_one.asm"
-            "src/apn/x64/sysv_abi/sqr_bc.asm"
-            "src/apn/x64/sysv_abi/sub_n.asm"
-            "src/apn/x64/sysv_abi/sub_one.asm"
-            "src/apn/x64/sysv_abi/neg.asm"
-            "src/apn/x64/sysv_abi/lshift_lt64.asm"
-            "src/apn/x64/sysv_abi/rshift_lt64.asm"
+            "src/apn/x64/sysv_abi/add_n.s"
+            "src/apn/x64/sysv_abi/add_one.s"
+            "src/apn/x64/sysv_abi/mul_bc.s"
+            "src/apn/x64/sysv_abi/addmul_one.s"
+            "src/apn/x64/sysv_abi/submul_one.s"
+            "src/apn/x64/sysv_abi/sqr_bc.s"
+            "src/apn/x64/sysv_abi/sub_n.s"
+            "src/apn/x64/sysv_abi/sub_one.s"
+            "src/apn/x64/sysv_abi/neg.s"
+            "src/apn/x64/sysv_abi/lshift_lt64.s"
+            "src/apn/x64/sysv_abi/rshift_lt64.s"
         )
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
     endif()
 
-    set(x64_specific ${x64_c_sources} ${x64_asm_sources})
+    set(x64_specific "src/apn/x64/x64_hidden_funcs.h" ${x64_c_sources} ${x64_asm_sources})
 
 # --- AArch64 SPECIFIC SOURCES --------------------------------------------------
 
@@ -179,6 +181,7 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 endif()
 
 # --- HIDDEN HEADERS ------------------------------------------------------------
+
 set(hidden_headers
     # COMMONS
     "src/apn/commons/hidden_mul.h"
@@ -186,23 +189,7 @@ set(hidden_headers
     "src/apn/commons/hidden_div.h"
     "src/apn/commons/hidden_helpers.h"
     "src/apn/commons/apn_thresholds.h"
-
-    # x64 SPECIFIC
-    "src/apn/x64/x64_hidden_funcs.h"
-
-    # AArch64 SPECIFIC
 )
-
-# --- STRIP PATHS FROM __FILE__ -------------------------------------------------\
-
-foreach(src_file ${apac_sources})
-    get_filename_component(file_name ${src_file} NAME)
-    set_source_files_properties(
-        ${src_file}
-        PROPERTIES
-        COMPILE_DEFINITIONS "__FILE__=\"${file_name}\""
-    )
-endforeach()
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 
@@ -229,11 +216,79 @@ target_compile_definitions(${apac_target} PRIVATE
     "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
 )
 
-enable_testing()
-add_executable(tests tests/apn_tests.c)
-target_include_directories(tests
-    PRIVATE
+# --- STRIP PATHS FROM __FILE__ -------------------------------------------------
+
+if (MSVC)
+    target_compile_options(${apac_target} PRIVATE $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>)
+else()
+    # For GCC/Clang, use -ffile-prefix-map to strip the build path
+    target_compile_options(${apac_target} PRIVATE 
+        -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
+    )
+endif()
+
+# --- APN TESTS -----------------------------------------------------------------
+
+if (BUILD_APN_TESTS)
+
+    message(STATUS "Building apn_tests")
+
+    add_executable(apn_tests
+        tests/apn_tests.c
+        utilities/apac_utilities.c
+    )
+
+    target_link_libraries(apn_tests PRIVATE ${apac_target})
+
+    target_include_directories(apn_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/include     # for apac.h
+        ${CMAKE_SOURCE_DIR}/utilities   # for apac_utilities.h
+    )
+
+endif()
+
+# --- APN TUNING ----------------------------------------------------------------
+
+if (BUILD_APN_TUNE)
+
+    message(STATUS "Building apn_tune")
+
+    add_executable(apn_tune
+        tuning/apn_tune.c
+        utilities/apac_utilities.c
+    )
+
+    target_link_libraries(apn_tune PRIVATE ${apac_target})
+
+    target_include_directories(apn_tune PRIVATE
+        ${CMAKE_SOURCE_DIR}/include     # for apac.h
+        ${CMAKE_SOURCE_DIR}/utilities   # for apac_utilities.h
+    )
+
+endif()
+
+# --- EXAMPLES -----------------------------------------------------------------
+
+if (BUILD_EXAMPLES)
+
+    message(STATUS "Building examples")
+
+    # factorial
+    add_executable(factorial
+        examples/factorial.c
+    )
+    target_link_libraries(factorial PRIVATE ${apac_target})
+    target_include_directories(factorial PRIVATE
         ${CMAKE_SOURCE_DIR}/include
-)
-target_link_libraries(tests PRIVATE apac)
-add_test(NAME ApacTests COMMAND tests)
+    )
+
+    # fibonacci
+    add_executable(fibonacci
+        examples/fibonacci.c
+    )
+    target_link_libraries(fibonacci PRIVATE ${apac_target})
+    target_include_directories(fibonacci PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+endif()
