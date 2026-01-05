@@ -24,7 +24,7 @@ void apacSetMemFuncs(
     }
     else
     {
-        APAC_REPORT_ERR("One or more invalid arguments passed in setMemFuncs.\nDefaulting to <stdlib.h> malloc and friends.");
+        APAC_LOG_ERR("One or more invalid arguments passed in setMemFuncs.\nDefaulting to <stdlib.h> malloc and friends.");
         apac_malloc = &malloc;
         apac_realloc = &realloc;
         apac_free = &free;   

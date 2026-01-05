@@ -2,54 +2,65 @@
 
 extern apac_cpu_params curr_cpu;
 
-extern u8 add_n_one(u64* result, const u64* op1, u64 size, u64 val);
-
-extern u8 add_n_one_till_carry(u64* result, const u64* op1, u64 size, u64 val);
-
-u8 apn_add_n(u64* result, const u64* op1, const u64* op2, u64 size)
+apn_seg_t apn_add_n(
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	const apn_seg_t* op2,
+	apn_size_t size
+)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op2, size);
+	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
 
-	if (curr_cpu.apn_add_n_ptr == NULL)
-		apacGetCPUSpec();
-	
-	return curr_cpu.apn_add_n_ptr(result, op1, op2, size);
+	apn_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size);
+	return carry;
 }
 
-u8 apn_add(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
+apn_seg_t apn_add(
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	const apn_seg_t* op2,
+	apn_size_t size1,
+	apn_size_t size2
+)
 {
-	APAC_ASSERT(size1 != 0);
 	APAC_ASSERT(size2 != 0);
 	APAC_ASSERT(size1 >= size2);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op1, size1);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op2, size2);
+	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
+	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
 
-	if (curr_cpu.apn_add_n_ptr == NULL)
-		apacGetCPUSpec();
-
-	u8 carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
+	apn_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
 
 	if (size1 == size2)
 		return carry;
-	
-	if (result == op1)
-		return add_n_one_till_carry(&result[size2], &op1[size2], size1 - size2, carry);
 
-	return add_n_one(&result[size2], &op1[size2], size1 - size2, carry);
+	carry = curr_cpu.apn_add_one_ptr(&result[size2], &op1[size2], size1 - size2, carry);
+	return carry;
 }
 
-u8 apn_add_one(u64* result, const u64* op1, u64 size, u64 val)
+apn_seg_t apn_add_one(
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	apn_size_t size,
+	apn_seg_t val
+)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
-
-	if (result == op1)
-		return add_n_one_till_carry(result, op1, size, val);
-
-	return add_n_one(result, op1, size, val);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
+	
+	apn_seg_t carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);
+	return carry;
 }

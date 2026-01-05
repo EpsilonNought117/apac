@@ -2,54 +2,65 @@
 
 extern apac_cpu_params curr_cpu;
 
-extern u8 sub_n_one(u64* result, const u64* op1, u64 size, u64 val);
-
-extern u8 sub_n_one_till_borrow(u64* result, const u64* op1, u64 size, u64 val);
-
-u8 apn_sub_n(u64* result, const u64* op1, const u64* op2, u64 size)
+apn_seg_t apn_sub_n(
+	apn_seg_t* result, 
+	const apn_seg_t* op1, 
+	const apn_seg_t* op2, 
+	apn_size_t size
+)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op2, size);
+	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 
-	if (curr_cpu.apn_sub_n_ptr == NULL)
-		apacGetCPUSpec();
-
-	return curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
+	apn_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
+	return borrow;
 }
 
-u8 apn_sub(u64* result, const u64* op1, const u64* op2, u64 size1, u64 size2)
+apn_seg_t apn_sub(
+	apn_seg_t* result, 
+	const apn_seg_t* op1, 
+	const apn_seg_t* op2, 
+	apn_size_t size1, 
+	apn_size_t size2
+)
 {
-	APAC_ASSERT(size1 != 0);
 	APAC_ASSERT(size2 != 0);
 	APAC_ASSERT(size1 >= size2);
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op1, size1);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op2, size2);
+	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
+	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
-	if (curr_cpu.apn_sub_n_ptr == NULL)
-		apacGetCPUSpec();
-
-	u8 borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size2);
+	apn_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size2);
 
 	if (size1 == size2)
 		return borrow;
 
-	if (result == op1)
-		return sub_n_one_till_borrow(&result[size2], &op1[size2], size1 - size2, borrow);
-
-	return sub_n_one(&result[size2], &op1[size2], size1 - size2, borrow);
+	borrow = curr_cpu.apn_sub_one_ptr(&result[size2], &op1[size2], size1 - size2, borrow);
+	return borrow;
 }
 
-u8 apn_sub_one(u64* result, const u64* op1, u64 size, u64 val)
+apn_seg_t apn_sub_one(
+	apn_seg_t* result, 
+	const apn_seg_t* op1, 
+	apn_size_t size, 
+	apn_seg_t val
+)
 {
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
+	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
-	if (result == op1)
-		return sub_n_one_till_borrow(result, op1, size, val);
-
-	return sub_n_one(result, op1, size, val);
+	apn_seg_t borrow = curr_cpu.apn_sub_one_ptr(result, op1, size, val);
+	return borrow;
 }

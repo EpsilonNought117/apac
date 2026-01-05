@@ -1,85 +1,69 @@
 #include "../../../include/apac.h"
 
-void cpy_avx512f_4unroll(u64* result, const u64* op1, u64 size)
+#if defined(__GNUC__)
+__attribute__((target("avx512f,bmi2")))
+#endif
+void cpy_avx512f_4unroll(
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	apn_size_t size
+)
 {
-	u64 blocks = size & ((u64)(-32)); // first process blocks of 32 limbs
-	u64 counter = 0;
+	// first process blocks of 32 limbs
+	apn_size_t blocks = size - (size % 32);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
 		// no typecasts needed as per function declaration
 
-		_mm512_storeu_epi64(&result[counter], _mm512_loadu_epi64(&op1[counter]));
-		_mm512_storeu_epi64(&result[counter + 8], _mm512_loadu_epi64(&op1[counter + 8]));
-		_mm512_storeu_epi64(&result[counter + 16], _mm512_loadu_epi64(&op1[counter + 16]));
-		_mm512_storeu_epi64(&result[counter + 24], _mm512_loadu_epi64(&op1[counter + 24]));
+		_mm512_storeu_si512(&result[counter], _mm512_loadu_si512(&op1[counter]));
+		_mm512_storeu_si512(&result[counter + 8], _mm512_loadu_si512(&op1[counter + 8]));
+		_mm512_storeu_si512(&result[counter + 16], _mm512_loadu_si512(&op1[counter + 16]));
+		_mm512_storeu_si512(&result[counter + 24], _mm512_loadu_si512(&op1[counter + 24]));
 
 		counter += 32;
 	}
 
-	u64 remaining = size - counter;
-	u64 limb_mask = _bzhi_u64(~0ULL, remaining);
+	apn_size_t remaining = size - counter;
+	apn_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
 
 	_mm512_mask_storeu_epi64(
 		&result[counter],
-		(u8)(limb_mask),
+		(unsigned char)(limb_mask),
 		_mm512_maskz_loadu_epi64((limb_mask), &op1[counter])
 	);
 	_mm512_mask_storeu_epi64(
 		&result[counter + 8],
-		(u8)(limb_mask >> 8),
+		(unsigned char)(limb_mask >> 8),
 		_mm512_maskz_loadu_epi64((limb_mask >> 8), &op1[counter + 8])
 	);
 	_mm512_mask_storeu_epi64(
 		&result[counter + 16],
-		(u8)(limb_mask >> 16),
+		(unsigned char)(limb_mask >> 16),
 		_mm512_maskz_loadu_epi64((limb_mask >> 16), &op1[counter + 16])
 	);
 	_mm512_mask_storeu_epi64(
 		&result[counter + 24],
-		(u8)(limb_mask >> 24),
+		(unsigned char)(limb_mask >> 24),
 		_mm512_maskz_loadu_epi64((limb_mask >> 24), &op1[counter + 24])
 	);
 
 	return;
 }
 
-void cpy_avx512f_2unroll(u64* result, const u64* op1, u64 size)
+#if defined(__GNUC__)
+__attribute__((target("avx")))
+#endif
+void cpy_avx_4unroll(
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	apn_size_t size
+)
 {
-	u64 blocks = size & ((u64)(-16)); // first process blocks of 16 limbs
-	u64 counter = 0;
-
-	while (counter < blocks)
-	{
-		// no typecasts needed as per function declaration
-
-		_mm512_storeu_epi64(&result[counter], _mm512_loadu_epi64(&op1[counter]));
-		_mm512_storeu_epi64(&result[counter + 8], _mm512_loadu_epi64(&op1[counter + 8]));
-
-		counter += 16;
-	}
-
-	u64 remaining = size - counter;
-	u64 limb_mask = _bzhi_u64(~0ULL, remaining);
-
-	_mm512_mask_storeu_epi64(
-		&result[counter],
-		(u8)(limb_mask),
-		_mm512_maskz_loadu_epi64((limb_mask), &op1[counter])
-	);
-	_mm512_mask_storeu_epi64(
-		&result[counter + 8],
-		(u8)(limb_mask >> 8),
-		_mm512_maskz_loadu_epi64((limb_mask >> 8), &op1[counter + 8])
-	);
-
-	return;
-}
-
-void cpy_avx_4unroll(u64* result, const u64* op1, u64 size)
-{
-	u64 blocks = size & ((u64)(-16));  // first process blocks of 16 limbs
-	u64 counter = 0;
+	// first process blocks of 16 limbs
+	apn_size_t blocks = size - (size % 16);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{
@@ -109,10 +93,18 @@ void cpy_avx_4unroll(u64* result, const u64* op1, u64 size)
 	}
 }
 
-void cpy_sse2_4unroll(u64* result, const u64* op1, u64 size)
+#if defined(__GNUC__)
+__attribute__((target("sse2")))
+#endif
+void cpy_sse2_4unroll(
+	apn_seg_t* result,
+	const apn_seg_t* op1,
+	apn_size_t size
+)
 {
-	u64 blocks = size & ((u64)(-8));	// first process blocks of 8 limbs
-	u64 counter = 0;
+	// first process blocks of 8 limbs
+	apn_size_t blocks = size - (size % 8);
+	apn_size_t counter = 0;
 
 	while (counter < blocks)
 	{

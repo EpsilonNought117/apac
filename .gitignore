@@ -1,3 +1,9 @@
-.vs/
+.vscode/
+*.json
 out/
+.vs/
 build/
+*.exe
+*.out
+*.bin
+*.o
