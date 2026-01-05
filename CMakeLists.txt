@@ -82,8 +82,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-option(BUILD_APN_TESTS "Build and run apn_tests" OFF)
-option(BUILD_APN_TUNE "Build and run apn_tune" OFF)
+option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" ON)
+option(BUILD_APN_TUNE "Build apn_tune threshold tuning program" ON)
+option(BUILD_EXAMPLES "Build programming examples to demonstrate working of the library" ON)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -266,3 +267,28 @@ if (BUILD_APN_TUNE)
 
 endif()
 
+# --- EXAMPLES -----------------------------------------------------------------
+
+if (BUILD_EXAMPLES)
+
+    message(STATUS "Building examples")
+
+    # factorial
+    add_executable(factorial
+        examples/factorial.c
+    )
+    target_link_libraries(factorial PRIVATE ${apac_target})
+    target_include_directories(factorial PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    # fibonacci
+    add_executable(fibonacci
+        examples/fibonacci.c
+    )
+    target_link_libraries(fibonacci PRIVATE ${apac_target})
+    target_include_directories(fibonacci PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+endif()
