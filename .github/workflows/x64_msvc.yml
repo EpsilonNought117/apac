@@ -35,8 +35,8 @@ jobs:
       
       - name: Tests
         run: |
-          cd build
-          ctest -V -C Release
+          cd build/Release
+          ./apn_tests
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
