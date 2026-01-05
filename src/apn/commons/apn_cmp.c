@@ -11,9 +11,7 @@ int apn_cmp(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size != 0);
-	APAC_DETAILED_ASSERT(curr_cpu.apn_cmp_ptr != NULL,
-		"apacInit() or apacGetCPUSpec() not invoked!"
-	);
+	APAC_ASSERT(curr_cpu.apn_cmp_ptr != NULL);
 
 	int ret_val = curr_cpu.apn_cmp_ptr(op1, op2, size);
 	return ret_val;

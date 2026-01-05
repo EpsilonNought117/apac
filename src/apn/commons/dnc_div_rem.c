@@ -11,16 +11,8 @@ apn_seg_t apn_dnc_div_balanced(
 )
 {
     APAC_ASSERT(temp != NULL);
-    APAC_DETAILED_ASSERT(size_dvsr < size_divd,
-        "Invalid sizes: expected size_dvsr < size_divd, "
-        "got size_dvsr (%" PRI_APN_SIZE ") >= size_divd (%" PRI_APN_SIZE ")\n",
-        size_dvsr, size_divd
-    );
-    APAC_DETAILED_ASSERT(size_dvsr >= (size_divd - size_dvsr),
-        "Invalid sizes: expected size_dvsr >= (size_divd - size_dvsr), "
-        "got size_dvsr (%" PRI_APN_SIZE ") < (size_divd - size_dvsr) (%" PRI_APN_SIZE ")\n",
-        size_dvsr, size_divd - size_dvsr
-    );
+    APAC_ASSERT(size_dvsr < size_divd);
+    APAC_ASSERT(size_dvsr >= (size_divd - size_dvsr));
 
     apn_size_t m = size_divd - size_dvsr;
     apn_size_t n = size_dvsr;
@@ -113,17 +105,8 @@ apn_seg_t apn_dnc_div_unbalanced(
 )
 {
     APAC_ASSERT(temp != NULL);
-    APAC_DETAILED_ASSERT(size_dvsr < size_divd,
-        "Invalid sizes: expected size_dvsr < size_divd, "
-        "got size_dvsr (%" PRI_APN_SIZE ") >= size_divd (%" PRI_APN_SIZE ")\n",
-        size_dvsr, size_divd
-    );
-
-    APAC_DETAILED_ASSERT(size_dvsr < (size_divd - size_dvsr),
-        "Invalid sizes: expected size_dvsr < (size_divd - size_dvsr), "
-        "got size_dvsr (%" PRI_APN_SIZE ") >= (size_divd - size_dvsr) (%" PRI_APN_SIZE ")\n",
-        size_dvsr, size_divd - size_dvsr
-    );
+    APAC_ASSERT(size_dvsr < size_divd);
+    APAC_ASSERT(size_dvsr < (size_divd - size_dvsr));
 
     apn_size_t m = size_divd - size_dvsr;
     apn_size_t orig_m = m;

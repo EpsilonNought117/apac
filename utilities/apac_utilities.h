@@ -19,6 +19,7 @@
     
         #include <pthread.h>
         #include <sched.h>
+        #include <time.h>
 
     #endif
 
@@ -34,18 +35,9 @@
 
 #define TEST_END(name) printf("TEST END: %s()\n", name);
 
-#define OP_MALLOC_CHECK(op, size)                                                       \
-        do                                                                              \
-        {                                                                               \
-            (op) = apac_malloc(sizeof(apn_seg_t) * (size));                             \
-            if (!(op))                                                                  \
-            {                                                                           \
-                APAC_LOG_ERR("Memory allocation failure in unit test! Aborting ...");   \
-                abort();                                                                \
-            }                                                                           \
-        } while (0)
-
 uint64_t cpu_timer(void);
+
+uint64_t os_timer(void);
 
 uint64_t random_sfc64(void);
 

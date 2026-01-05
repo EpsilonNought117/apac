@@ -1,8 +1,18 @@
 #include "../include/apac.h"
 #include "../utilities/apac_utilities.h"
 
-#define RUN_COUNT_1 ((apn_size_t)1 << 10)
-#define RUN_COUNT_2 ((apn_size_t)1 << 5)
+#define MAX_RUNTIME_1 (uint64_t)10 * 1000 * 1000
+#define MAX_RUNTIME_2 (uint64_t)100 * 1000
+
+#define APN_TUNE_ASSERT(expr)                   \
+        do                                      \
+        {                                       \
+            if (!(expr))                        \
+            {                                   \
+                restore_turbo_boost();          \
+            }                                   \
+            APAC_ALWAYS_ASSERT((expr));         \
+        } while (0)
 
 static apn_size_t get_karatsuba_mul_balanced_threshold(void)
 {
@@ -11,11 +21,13 @@ static apn_size_t get_karatsuba_mul_balanced_threshold(void)
     const apn_size_t size_start = 1;
     const apn_size_t size_end = 256;
 
-    apn_seg_t* op1 = NULL, * op2 = NULL, * res = NULL;
+    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * size_end);
+    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * size_end);
+    apn_seg_t* res = apac_malloc(sizeof(apn_seg_t) * (2 * size_end));
 
-    OP_MALLOC_CHECK(op1, size_end);
-    OP_MALLOC_CHECK(op2, size_end);
-    OP_MALLOC_CHECK(res, 2 * size_end);
+    APN_TUNE_ASSERT(op1 != NULL);
+    APN_TUNE_ASSERT(op2 != NULL);
+    APN_TUNE_ASSERT(res != NULL);
 
     set_to_random(op1, size_end);
     set_to_random(op2, size_end);
@@ -28,9 +40,9 @@ static apn_size_t get_karatsuba_mul_balanced_threshold(void)
         abort();
     }
 
-    fprintf(fp, "threshold,size,avg_cycles\n");
+    fprintf(fp, "threshold,size,min_cycles\n");
 
-    double best_avg_cost = 1e300;
+    double best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
     const apn_size_t size_count = size_end - size_start + 1;
 
@@ -40,43 +52,50 @@ static apn_size_t get_karatsuba_mul_balanced_threshold(void)
         fflush(stdout);
 
         curr_cpu.karatsuba_mul_balanced_threshold = thresh;
-        double sum_cycles = 0.0;
+
+        double sum_mintimes = 0.0;
 
         for (apn_size_t size = size_start; size <= size_end; size++)
         {
-            uint64_t start = cpu_timer();
-            for (uint64_t k = 0; k < RUN_COUNT_1; k++)
-                apn_mul_n(res, op1, op2, size);
-            uint64_t end = cpu_timer();
+            uint64_t mintime = UINT64_MAX;
+            uint64_t start_ns = os_timer();
 
-            double avg_cycles =
-                (double)(end - start) / (double)RUN_COUNT_1;
+            while (os_timer() - start_ns < MAX_RUNTIME_1)
+            {
+                uint64_t t0 = cpu_timer();
+                apn_mul_n(res, op1, op2, size);
+                uint64_t t1 = cpu_timer();
+
+                uint64_t dur = t1 - t0;
+                if (dur < mintime)
+                    mintime = dur;
+            }
 
             fprintf(fp,
-                "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%.3f\n",
-                thresh, size, avg_cycles);
+                "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n",
+                thresh, size, mintime);
 
-            sum_cycles += avg_cycles;
+            sum_mintimes += (double)mintime;
         }
 
-        double avg_cost = sum_cycles / (double)size_count;
-        if (avg_cost < best_avg_cost)
+        double avg_mintime = sum_mintimes / size_count;
+
+        if (avg_mintime < best_avg)
         {
-            best_avg_cost = avg_cost;
+            best_avg = avg_mintime;
             best_thresh = thresh;
         }
 
-        printf("Done\n");
+        printf("Done (avg min cycles = %.3f)\n", avg_mintime);
     }
 
     fclose(fp);
 
-    /* Restore original threshold */
     curr_cpu.karatsuba_mul_balanced_threshold = best_thresh;
 
-    free(op1);
-    free(op2);
-    free(res);
+    apac_free(op1);
+    apac_free(op2);
+    apac_free(res);
 
     return best_thresh;
 }
@@ -88,10 +107,11 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
     const apn_size_t size_start = 1;
     const apn_size_t size_end = 256;
 
-    apn_seg_t* op1 = NULL, * res = NULL;
+    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * size_end);
+    apn_seg_t* res = apac_malloc(sizeof(apn_seg_t) * (2 * size_end));
 
-    OP_MALLOC_CHECK(op1, size_end);
-    OP_MALLOC_CHECK(res, 2 * size_end);
+    APN_TUNE_ASSERT(op1 != NULL);
+    APN_TUNE_ASSERT(res != NULL);
 
     set_to_random(op1, size_end);
 
@@ -103,9 +123,9 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
         abort();
     }
 
-    fprintf(fp, "threshold,size,avg_cycles\n");
+    fprintf(fp, "threshold,size,min_cycles\n");
 
-    double best_avg_cost = 1e300;
+    double best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
     const apn_size_t size_count = size_end - size_start + 1;
 
@@ -115,41 +135,49 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
         fflush(stdout);
 
         curr_cpu.karatsuba_sqr_threshold = thresh;
-        double sum_cycles = 0.0;
+
+        double sum_mintimes = 0.0;
 
         for (apn_size_t size = size_start; size <= size_end; size++)
         {
-            uint64_t start = cpu_timer();
-            for (uint64_t k = 0; k < RUN_COUNT_1; k++)
-                apn_sqr(res, op1, size);
-            uint64_t end = cpu_timer();
+            uint64_t mintime = UINT64_MAX;
+            uint64_t start_ns = os_timer();
 
-            double avg_cycles =
-                (double)(end - start) / (double)RUN_COUNT_1;
+            while (os_timer() - start_ns < MAX_RUNTIME_1)
+            {
+                uint64_t t0 = cpu_timer();
+                apn_sqr(res, op1, size);
+                uint64_t t1 = cpu_timer();
+
+                uint64_t dur = t1 - t0;
+                if (dur < mintime)
+                    mintime = dur;
+            }
 
             fprintf(fp,
-                "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%.3f\n",
-                thresh, size, avg_cycles);
+                "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n",
+                thresh, size, mintime);
 
-            sum_cycles += avg_cycles;
+            sum_mintimes += (double)mintime;
         }
 
-        double avg_cost = sum_cycles / (double)size_count;
-        if (avg_cost < best_avg_cost)
+        double avg_mintime = sum_mintimes / size_count;
+
+        if (avg_mintime < best_avg)
         {
-            best_avg_cost = avg_cost;
+            best_avg = avg_mintime;
             best_thresh = thresh;
         }
 
-        printf("Done\n");
+        printf("Done (avg min cycles = %.3f)\n", avg_mintime);
     }
 
     fclose(fp);
 
     curr_cpu.karatsuba_sqr_threshold = best_thresh;
 
-    free(op1);
-    free(res);
+    apac_free(op1);
+    apac_free(res);
 
     return best_thresh;
 }
@@ -161,11 +189,13 @@ static apn_size_t get_karatsuba_mul_unbalanced_threshold(void)
     const apn_size_t size_start = 1;
     const apn_size_t size_end = 256;
 
-    apn_seg_t* op1 = NULL, * op2 = NULL, * res = NULL;
+    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * size_end);
+    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * size_end);
+    apn_seg_t* res = apac_malloc(sizeof(apn_seg_t) * (2 * size_end));
 
-    OP_MALLOC_CHECK(op1, size_end);
-    OP_MALLOC_CHECK(op2, size_end);
-    OP_MALLOC_CHECK(res, 2 * size_end);
+    APN_TUNE_ASSERT(op1 != NULL);
+    APN_TUNE_ASSERT(op2 != NULL);
+    APN_TUNE_ASSERT(res != NULL);
 
     set_to_random(op1, size_end);
     set_to_random(op2, size_end);
@@ -173,17 +203,18 @@ static apn_size_t get_karatsuba_mul_unbalanced_threshold(void)
     FILE* fp = fopen("karatsuba_mul_unbalanced_threshold.csv", "w");
     if (!fp)
     {
+        restore_turbo_boost();
         APAC_LOG_ERR("Failed to open karatsuba_mul_unbalanced_threshold.csv");
         abort();
     }
 
-    fprintf(fp, "threshold,size1,size2,avg_cycles\n");
+    fprintf(fp, "threshold,size1,size2,min_cycles\n");
 
-    double best_avg_cost = 1e300;
+    double best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
 
-    const double pair_count =
-        (double)(size_end * (size_end + 1)) / 2.0;
+    const uint64_t range = size_end - size_start + 1;
+    const uint64_t pair_count = (range * (range + 1)) / 2;
 
     for (apn_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
     {
@@ -191,45 +222,53 @@ static apn_size_t get_karatsuba_mul_unbalanced_threshold(void)
         fflush(stdout);
 
         curr_cpu.karatsuba_mul_unbalanced_threshold = thresh;
-        double sum_cycles = 0.0;
+
+        double sum_mintimes = 0.0;
 
         for (apn_size_t size1 = size_start; size1 <= size_end; size1++)
         {
             for (apn_size_t size2 = size_start; size2 <= size1; size2++)
             {
-                uint64_t start = cpu_timer();
-                for (uint64_t k = 0; k < RUN_COUNT_2; k++)
-                    apn_mul(res, op1, op2, size1, size2);
-                uint64_t end = cpu_timer();
+                uint64_t mintime = UINT64_MAX;
+                uint64_t start_ns = os_timer();
 
-                double avg_cycles =
-                    (double)(end - start) / (double)RUN_COUNT_2;
+                while (os_timer() - start_ns < MAX_RUNTIME_2)
+                {
+                    uint64_t t0 = cpu_timer();
+                    apn_mul(res, op1, op2, size1, size2);
+                    uint64_t t1 = cpu_timer();
+
+                    uint64_t dur = t1 - t0;
+                    if (dur < mintime)
+                        mintime = dur;
+                }
 
                 fprintf(fp,
-                    "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%.3f\n",
-                    thresh, size1, size2, avg_cycles);
+                    "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n",
+                    thresh, size1, size2, mintime);
 
-                sum_cycles += avg_cycles;
+                sum_mintimes += (double)mintime;
             }
         }
 
-        double avg_cost = sum_cycles / pair_count;
-        if (avg_cost < best_avg_cost)
+        double avg_mintime = sum_mintimes / pair_count;
+
+        if (avg_mintime < best_avg)
         {
-            best_avg_cost = avg_cost;
+            best_avg = avg_mintime;
             best_thresh = thresh;
         }
 
-        printf("Done\n");
+        printf("Done (avg min cycles = %.3f)\n", avg_mintime);
     }
 
     fclose(fp);
 
-    curr_cpu.karatsuba_mul_unbalanced_threshold =best_thresh;
+    curr_cpu.karatsuba_mul_unbalanced_threshold = best_thresh;
 
-    free(op1);
-    free(op2);
-    free(res);
+    apac_free(op1);
+    apac_free(op2);
+    apac_free(res);
 
     return best_thresh;
 }
@@ -238,33 +277,46 @@ static apn_size_t get_dnc_div_threshold(void)
 {
     const apn_size_t thresh_start = 10;
     const apn_size_t thresh_end = 70;
-    const apn_size_t size_start = 1;
+    const apn_size_t size_start = 1;     /* may be changed safely */
     const apn_size_t size_end = 256;
 
-    apn_seg_t* dividend = NULL, * divisor = NULL;
-    apn_seg_t* quot = NULL, * rem = NULL;
+    apn_seg_t* dividend = apac_malloc(sizeof(apn_seg_t) * (size_end * 2));
+    apn_seg_t* divisor = apac_malloc(sizeof(apn_seg_t) * size_end);
+    apn_seg_t* quot = apac_malloc(sizeof(apn_seg_t) * (size_end * 2));
+    apn_seg_t* rem = apac_malloc(sizeof(apn_seg_t) * size_end);
 
-    OP_MALLOC_CHECK(dividend, size_end);
-    OP_MALLOC_CHECK(divisor, size_end);
-    OP_MALLOC_CHECK(quot, size_end);
-    OP_MALLOC_CHECK(rem, size_end);
+    APN_TUNE_ASSERT(dividend != NULL);
+    APN_TUNE_ASSERT(divisor != NULL);
+    APN_TUNE_ASSERT(quot != NULL);
+    APN_TUNE_ASSERT(rem != NULL);
 
-    set_to_random(dividend, size_end);
+    /* dividend can be reused across all sizes */
+    set_to_random(dividend, size_end * 2);
 
     FILE* fp = fopen("dnc_div_threshold.csv", "w");
     if (!fp)
     {
+        restore_turbo_boost();
         APAC_LOG_ERR("Failed to open dnc_div_threshold.csv");
         abort();
     }
 
-    fprintf(fp, "threshold,size_divd,size_dvsr,avg_cycles\n");
+    fprintf(fp, "threshold,size_divd,size_dvsr,min_cycles\n");
 
-    double best_avg_cost = 1e300;
+    double best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
 
-    const double pair_count =
-        (double)(size_end * (size_end + 1)) / 2.0;
+    /*
+     * Count all (size_dvsr, size_divd) pairs:
+     *
+     * size_dvsr = size_start .. size_end
+     * size_divd = size_dvsr .. 2*size_end
+     */
+    const uint64_t dvsr_count = size_end - size_start + 1;
+
+    const uint64_t pair_count =
+        dvsr_count * (2 * (uint64_t)size_end + 1)
+        - (dvsr_count * (size_end + size_start)) / 2;
 
     for (apn_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
     {
@@ -272,56 +324,69 @@ static apn_size_t get_dnc_div_threshold(void)
         fflush(stdout);
 
         curr_cpu.dnc_div_threshold = thresh;
-        double sum_cycles = 0.0;
+        double sum_mintimes = 0.0;
 
-        for (apn_size_t size_divd = size_start; size_divd <= size_end; size_divd++)
+        /* divisor size loop */
+        for (apn_size_t size_dvsr = size_start;
+            size_dvsr <= size_end;
+            size_dvsr++)
         {
-            for (apn_size_t size_dvsr = size_start;
-                size_dvsr <= size_divd;
-                size_dvsr++)
-            {
-                do {
-                    set_to_random(divisor, size_dvsr);
-                } while (divisor[size_dvsr - 1] == 0);
+            /* generate a normalized divisor */
+            do {
+                set_to_random(divisor, size_dvsr);
+            } while (divisor[size_dvsr - 1] == 0);
 
+            /* dividend size loop */
+            for (apn_size_t size_divd = size_dvsr;
+                size_divd <= size_end * 2;
+                size_divd++)
+            {
                 apn_set(quot, size_divd - size_dvsr + 1, 0);
                 apn_set(rem, size_dvsr, 0);
 
-                uint64_t start = cpu_timer();
-                for (uint64_t k = 0; k < RUN_COUNT_2; k++)
-                    apn_div(quot, rem, dividend, divisor,
-                        size_divd, size_dvsr);
-                uint64_t end = cpu_timer();
+                uint64_t mintime = UINT64_MAX;
+                uint64_t start_ns = os_timer();
 
-                double avg_cycles =
-                    (double)(end - start) / (double)RUN_COUNT_2;
+                while (os_timer() - start_ns < MAX_RUNTIME_2)
+                {
+                    uint64_t t0 = cpu_timer();
+                    apn_div(quot, rem,
+                        dividend, divisor,
+                        size_divd, size_dvsr);
+                    uint64_t t1 = cpu_timer();
+
+                    uint64_t dur = t1 - t0;
+                    if (dur < mintime)
+                        mintime = dur;
+                }
 
                 fprintf(fp,
-                    "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%.3f\n",
-                    thresh, size_divd, size_dvsr, avg_cycles);
+                    "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n",
+                    thresh, size_divd, size_dvsr, mintime);
 
-                sum_cycles += avg_cycles;
+                sum_mintimes += (double)mintime;
             }
         }
 
-        double avg_cost = sum_cycles / pair_count;
-        if (avg_cost < best_avg_cost)
+        const double avg_mintime = sum_mintimes / pair_count;
+
+        if (avg_mintime < best_avg)
         {
-            best_avg_cost = avg_cost;
+            best_avg = avg_mintime;
             best_thresh = thresh;
         }
 
-        printf("Done\n");
+        printf("Done (avg min cycles = %.3f)\n", avg_mintime);
     }
 
     fclose(fp);
 
     curr_cpu.dnc_div_threshold = best_thresh;
 
-    free(dividend);
-    free(divisor);
-    free(quot);
-    free(rem);
+    apac_free(dividend);
+    apac_free(divisor);
+    apac_free(quot);
+    apac_free(rem);
 
     return best_thresh;
 }

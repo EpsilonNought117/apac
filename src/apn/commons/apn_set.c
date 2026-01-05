@@ -10,9 +10,7 @@ void apn_set(
 {
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(size != 0);
-	APAC_DETAILED_ASSERT(curr_cpu.apn_set_ptr != NULL,
-		"apacInit() or apacGetCPUSpec() not invoked!"
-	);
+	APAC_ASSERT(curr_cpu.apn_set_ptr != NULL);
 
 	curr_cpu.apn_set_ptr(result, size, val);
 }

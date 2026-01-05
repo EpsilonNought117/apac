@@ -82,8 +82,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-option(ENABLE_APN_TESTS "Build and run apn_tests" OFF)
-option(ENABLE_APN_TUNING "Build and run apn_tune" OFF)
+option(BUILD_APN_TESTS "Build and run apn_tests" OFF)
+option(BUILD_APN_TUNE "Build and run apn_tune" OFF)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -228,7 +228,7 @@ endif()
 
 # --- APN TESTS -----------------------------------------------------------------
 
-if (ENABLE_APN_TESTS)
+if (BUILD_APN_TESTS)
 
     message(STATUS "Building apn_tests")
 
@@ -248,7 +248,7 @@ endif()
 
 # --- APN TUNING ----------------------------------------------------------------
 
-if (ENABLE_APN_TUNING)
+if (BUILD_APN_TUNE)
 
     message(STATUS "Building apn_tune")
 

@@ -25,14 +25,10 @@
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
-            #define SIZE_OF_VOID_PTR 8U
-
             #include <immintrin.h>
             #include <intrin.h>
 
         #elif defined(_M_ARM64) || defined(_M_ARM64EC)
-		
-            #define SIZE_OF_VOID_PTR 8U
 
 			// TODO
 
@@ -65,8 +61,6 @@
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
-        
-            #define SIZE_OF_VOID_PTR 8U
 
             #include <x86intrin.h>
             #include <cpuid.h>
@@ -74,7 +68,6 @@
         
         #elif defined(__aarch64__) || defined(__arm64__)
 
-            #define SIZE_OF_VOID_PTR 8U
             #include <arm_acle.h>                
 
 		#else
@@ -99,20 +92,16 @@
 
 #endif
 
+typedef uint64_t            apn_seg_t;
 typedef size_t              apn_size_t;
+
 #define PRI_APN_PTR         "p"
 #define PRI_APN_SIZE        "zu"
 #define APN_SIZE_MAX        SIZE_MAX
-
-#if (SIZE_OF_VOID_PTR == 8U)
-
-    typedef uint64_t            apn_seg_t;
-    #define APN_SEG_MAX         UINT64_MAX
-    #define PRI_APN_SEG         PRIu64
-    #define APN_SEG_BITS        64U
-    #define APN_SEG_HIGH_BIT    (1ULL << 63)
-
-#endif
+#define APN_SEG_MAX         UINT64_MAX
+#define PRI_APN_SEG         PRIu64
+#define APN_SEG_BITS        64U
+#define APN_SEG_HIGH_BIT    (1ULL << 63)
 
 /****************************************************************************************************/
 /*********************************      ERROR HANDLING MACROS      **********************************/
@@ -125,53 +114,23 @@ typedef enum apac_err
 
 }   apac_err;
 
-/**
- * @brief Internal core assertion implementation used by all APAC_ASSERT variants.
- *
- * This macro performs the actual assertion check and logs failure information
- * to `stderr` when the condition fails. It reports the failed expression,
- * file name, and line number, and optionally prints a formatted message
- * when a message string is provided.
- *
- * @param expr
- *     Expression to evaluate. If false, the assertion fails.
- * @param fmt
- *     Optional format string for an additional message.
- *     If this is an empty string, no message is printed.
- * @param ...
- *     Optional arguments to format according to `fmt`.
- *
- * @note
- *     This macro should not be used directly � use one of the
- *     higher-level wrappers such as @ref APAC_ASSERT,
- *     @ref APAC_DETAILED_ASSERT, or @ref APAC_ALWAYS_ASSERT.
- */
-#define APAC_ASSERT_IMPL(expr, fmt, ...)                    \
-        do                                                  \
+#define APAC_ALWAYS_ASSERT(expr)                            \
+    do                                                      \
+    {                                                       \
+        if (!(expr))                                        \
         {                                                   \
-            if (!(expr))                                    \
-            {                                               \
-                fprintf(                                    \
-                    stderr,                                 \
-                    "\n\nAPAC ASSERTION FAILED!\n"          \
-                    "ASSERTION: %s\n"                       \
-                    "FILE: %s\nLINE: %d\n",                 \
-                    #expr, __FILE__, __LINE__               \
-                );                                          \
-                if (*(fmt))                                 \
-                {                                           \
-                    fprintf(                                \
-                        stderr,                             \
-                        "DETAILS: "                         \
-                        fmt "\n",                           \
-                        ##__VA_ARGS__                       \
-                    );                                      \
-                }                                           \
-                fprintf(stderr, "ABORTING ...\n\n");        \
-                abort();                                    \
-            }                                               \
+            fprintf(                                        \
+                stderr,                                     \
+                "\n\nAPAC ASSERTION FAILED!\n"              \
+                "ASSERTION: %s\n"                           \
+                "FILE: %s\nLINE: %d\n",                     \
+                #expr, __FILE__, __LINE__                   \
+            );                                              \
+            fprintf(stderr, "EXITING ...\n\n");             \
+            exit(EXIT_FAILURE);                             \
         }                                                   \
-        while (0)
+    }                                                       \
+    while (0)
 
 #ifndef APAC_DISABLE_ASSERT
 
@@ -179,159 +138,54 @@ typedef enum apac_err
      * @def APAC_ASSERT(expr)
      * @brief Base assertion macro for simple expression validation.
      *
-     * Evaluates an expression and aborts the program if it evaluates to false.
-     * Prints the expression, file name, and line number on failure.
+     * Evaluates an expression and terminates the program if it evaluates to false.
      *
      * @param expr
      *     Boolean expression to check.
      *
      * @note
-     *     This macro is disabled if @ref APAC_DISABLE_ASSERT is defined.
+     *     This macro is disabled if APAC_DISABLE_ASSERT is defined.
      */
-    #define APAC_ASSERT(expr)           \
-            APAC_ASSERT_IMPL(expr, "")
-
-    /**
-     * @def APAC_DETAILED_ASSERT(expr, fmt, ...)
-     * @brief Assertion with an optional formatted message.
-     *
-     * Similar to @ref APAC_ASSERT, but allows an additional custom message
-     * to be printed when the assertion fails.
-     *
-     * @param expr
-     *     Expression to check.
-     * @param fmt
-     *     Format string for an optional message (printf-style).
-     * @param ...
-     *     Optional arguments corresponding to the format string.
-     *
-     * @note
-     *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
-     */
-    #define APAC_DETAILED_ASSERT(expr, fmt, ...)        \
-            APAC_ASSERT_IMPL(expr, fmt, ##__VA_ARGS__)
+    #define APAC_ASSERT(expr) APAC_ALWAYS_ASSERT(expr)
 
     /**
      * @def APAC_NO_OVERLAP(op1, size1, op2, size2)
      * @brief Ensures that two memory regions do not overlap.
-     *
-     * Verifies that the memory range `[op1, op1 + size1)` does not intersect
-     * with `[op2, op2 + size2)`. If overlap is detected, prints diagnostic
-     * details and aborts execution.
-     *
-     * @param op1
-     *     Pointer to the start of the first memory region.
-     * @param size1
-     *     Size of the first region, in elements or bytes.
-     * @param op2
-     *     Pointer to the start of the second memory region.
-     * @param size2
-     *     Size of the second region, in elements or bytes.
-     *
-     * @note
-     *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
      */
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                         \
-            APAC_ASSERT_IMPL(                                               \
-                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2)) ||           \
-                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1)),             \
-                "Memory regions overlap:\n"                                 \
-                "\t op1: (%" PRI_APN_PTR ") size1: (%" PRI_APN_SIZE ")\n"   \
-                "\t op2: (%" PRI_APN_PTR ") size2: (%" PRI_APN_SIZE ")\n",  \
-                (void *)(op1), (apn_size_t)(size1),                         \
-                (void *)(op2), (apn_size_t)(size2)                          \
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                 \
+            APAC_ALWAYS_ASSERT(                                     \
+                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2)) ||   \
+                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1))      \
             )
 
     /**
      * @def APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)
-     * @brief Ensures that any partial overlap occurs only below `op2`'s end.
-     *
-     * Checks that if two memory regions overlap, the first region (`op1`)
-     * does not extend beyond the end of the second (`op2`). In other words,
-     * `op1 + size1` must be less than or equal to `op2 + size2` when overlap
-     * occurs.
-     *
-     * @param op1
-     *     Pointer to the start of the first region.
-     * @param size1
-     *     Size of the first region.
-     * @param op2
-     *     Pointer to the start of the second region.
-     * @param size2
-     *     Size of the second region.
-     *
-     * @note
-     *     Disabled if @ref APAC_DISABLE_ASSERT is defined.
+     * @brief Allows overlap only if op1 does not extend beyond op2's end.
      */
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                                      \
-            APAC_ASSERT_IMPL(                                                                       \
-                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2 + size2)) ||                           \
-                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1)),                                     \
-                "Invalid partial overlap: op1 extends beyond op2's end.\n"                          \
-                "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n"  \
-                "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  end: (%" PRI_APN_PTR ")\n", \
-                (void *)(op1), (apn_size_t)(size1),                                                 \
-                (void *)(uintptr_t)(op1 + size1),                                                   \
-                (void *)(op2), (apn_size_t)(size2),                                                 \
-                (void *)(uintptr_t)(op2 + size2)                                                    \
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)              \
+            APAC_ALWAYS_ASSERT(                                             \
+                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2 + size2)) ||   \
+                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1))              \
             )
 
     /**
      * @def APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)
-     * @brief Ensures that any partial overlap occurs only above op2�s start.
-     *
-     * This check is the inverse of @ref APAC_PARTIAL_OVERLAP_BELOW.
-     * It allows overlap only if the first region (`op1`) starts at or after `op2`,
-     * and ensures that `op1` does not extend below `op2`'s start.
-     *
-     * @param op1
-     *     Pointer to the start of the first region (e.g., result).
-     * @param size1
-     *     Size of the first region.
-     * @param op2
-     *     Pointer to the start of the second region (e.g., op1).
-     * @param size2
-     *     Size of the second region.
+     * @brief Allows overlap only if op1 does not extend below op2's start.
      */
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                                          \
-            APAC_ASSERT_IMPL(                                                                           \
-                ((uintptr_t)(op1)) >= ((uintptr_t)(op2)) ||                                             \
-                ((uintptr_t)(op1 + size1)) <= ((uintptr_t)(op2)),                                       \
-                "Invalid partial overlap: op1 extends below op2's start.\n"                             \
-                "  op1: (%" PRI_APN_PTR ")  size1: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n"    \
-                "  op2: (%" PRI_APN_PTR ")  size2: (%" PRI_APN_SIZE ")  start: (%" PRI_APN_PTR ")\n",   \
-                (void *)(op1), (apn_size_t)(size1),                                                     \
-                (void *)(op1),                                                                          \
-                (void *)(op2), (apn_size_t)(size2),                                                     \
-                (void *)(op2)                                                                           \
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)      \
+            APAC_ALWAYS_ASSERT(                                     \
+                ((uintptr_t)(op1)) >= ((uintptr_t)(op2)) ||         \
+                ((uintptr_t)(op1 + size1)) <= ((uintptr_t)(op2))    \
             )
 
 #else
 
     #define APAC_ASSERT(expr)                                   do { } while (0)
-    #define APAC_DETAILED_ASSERT(expr, fmt, ...)                do { } while (0)
     #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { } while (0)
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { } while (0)
     #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { } while (0)
 
 #endif
-
-
-/**
- * @def APAC_ALWAYS_ASSERT(expr, fmt, ...)
- * @brief Assertion that is never disabled, even when @ref APAC_DISABLE_ASSERT is defined.
- *
- * Always performs the assertion check and aborts on failure.
- * Useful for critical runtime invariants that must always be enforced.
- *
- * @param expr
- *     Expression to validate.
- * @param fmt
- *     Optional format string for a message.
- * @param ...
- *     Optional printf-style arguments.
- */
-#define APAC_ALWAYS_ASSERT(expr, fmt, ...) APAC_ASSERT_IMPL(expr, fmt, __VA_ARGS__)
 
 /**
  * @def APAC_LOG_ERR(msg)

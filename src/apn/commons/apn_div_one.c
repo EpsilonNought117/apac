@@ -13,9 +13,7 @@ apn_seg_t apn_div_one(
     APAC_ASSERT(dividend != NULL);
     APAC_ASSERT(size_divd != 0);
     APAC_NO_OVERLAP(quotient, size_divd, dividend, size_divd);
-    APAC_DETAILED_ASSERT(divisor != 0,
-        "Malformed divisor: divisor must not be zero"
-    );
+    APAC_ASSERT(divisor != 0);
 
     apn_seg_t rmdr = 0;
     uint32_t shift_val = 0;

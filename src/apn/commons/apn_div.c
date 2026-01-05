@@ -23,11 +23,7 @@ apac_err apn_div(
     APAC_ASSERT(dividend != NULL);
     APAC_ASSERT(divisor != NULL);
     APAC_ASSERT(size_dvsr != 0);
-    APAC_DETAILED_ASSERT(
-        size_divd >= size_dvsr,
-        "Expected size_divd >= size_dvsr, got size_divd (%" PRI_APN_SIZE ") < size_dvsr (%" PRI_APN_SIZE ")",
-        (apn_size_t)size_divd, (apn_size_t)size_dvsr
-    );
+    APAC_ASSERT(size_divd >= size_dvsr);
 
     apn_size_t size_quot = size_divd - size_dvsr + 1;
     apn_size_t size_rmdr = size_dvsr;
@@ -37,9 +33,7 @@ apac_err apn_div(
     APAC_NO_OVERLAP(quotient, size_quot, divisor, size_dvsr);
     APAC_NO_OVERLAP(dividend, size_divd, divisor, size_dvsr);
     APAC_NO_OVERLAP(divisor, size_dvsr, remainder, size_rmdr);
-    APAC_DETAILED_ASSERT(divisor[size_dvsr - 1] != 0, 
-        "Divisor is malformed, MSD cannot be zero!"
-    );
+    APAC_ASSERT(divisor[size_dvsr - 1] != 0);
 
     uint32_t dvsr_shift_val = 0;
 
@@ -72,9 +66,7 @@ apac_err apn_div(
 
 full_division:
 
-    APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
-        "Memory allocator not initialized: apacInit() or apacSetMemFuncs() not invoked!"
-    );
+    APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm

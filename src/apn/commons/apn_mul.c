@@ -31,9 +31,7 @@ apac_err apn_mul_n(
 	}
 	else
 	{
-		APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
-			"Memory allocator not initialized: apacInit() or apacSetMemFuncs() not invoked!"
-		);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		apn_size_t ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
@@ -65,11 +63,7 @@ apac_err apn_mul(
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
 	APAC_ASSERT(size2 != 0);
-	APAC_DETAILED_ASSERT(
-		size1 >= size2,
-		"Expected size1 >= size2, got size1 (%" PRI_APN_SIZE ") < size2 (%" PRI_APN_SIZE ")",
-		(apn_size_t)size1, (apn_size_t)size2
-	);
+	APAC_ASSERT(size1 >= size2);
 	APAC_NO_OVERLAP(result, size1 + size2, op1, size1);
 	APAC_NO_OVERLAP(result, size1 + size2, op2, size2);
 
@@ -92,9 +86,7 @@ apac_err apn_mul(
 	}
 	else
 	{
-		APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
-			"Memory allocator not initialized: apacInit() or apacSetMemFuncs() not invoked!"
-		);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		apn_size_t ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);

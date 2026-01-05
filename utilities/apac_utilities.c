@@ -38,6 +38,55 @@ uint64_t cpu_timer(void)
 #endif
 }
 
+uint64_t os_timer(void)
+{
+#if defined(_WIN32)
+
+    static uint64_t freq = 0;
+    LARGE_INTEGER t;
+
+    if (!freq)
+    {
+        LARGE_INTEGER f;
+        QueryPerformanceFrequency(&f);
+        freq = (uint64_t)f.QuadPart;
+    }
+
+    QueryPerformanceCounter(&t);
+
+    return (uint64_t)((t.QuadPart * 1000000000ULL) / freq);
+
+#elif (defined(__linux__)  || defined(__linux) || \
+       defined(__unix__)   || defined(__unix))
+
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (uint64_t)ts.tv_sec * 1000000000ULL +
+        (uint64_t)ts.tv_nsec;
+
+#elif defined(__APPLE__) && defined(__MACH__)
+
+    static uint64_t timebase = 0;
+    uint64_t t = mach_absolute_time();
+
+    if (!timebase)
+    {
+        mach_timebase_info_data_t tb;
+        mach_timebase_info(&tb);
+        timebase = ((uint64_t)tb.numer << 32) | tb.denom;
+    }
+
+    return (t * (timebase >> 32)) /
+        (timebase & 0xffffffffu);
+
+#else
+
+    #error "os_timer(): unsupported operating system"
+
+#endif
+}
+
 static uint64_t prng_state[4] = { 0 };
 
 uint64_t random_sfc64(void)

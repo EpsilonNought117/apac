@@ -24,9 +24,7 @@ apac_err apn_sqr(
 	else
 	{
 
-		APAC_DETAILED_ASSERT(apac_malloc != NULL && apac_free != NULL,
-			"Memory allocator not initialized: apacInit() or apacSetMemFuncs() not invoked!"
-		);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		apn_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
 		apn_seg_t* workspace = apac_malloc(sizeof(apn_seg_t) * ws_size);
