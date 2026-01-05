@@ -60,10 +60,18 @@ uint64_t os_timer(void)
        defined(__unix__)   || defined(__unix))
 
     struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
 
-    return (uint64_t)ts.tv_sec * 1000000000ULL +
-        (uint64_t)ts.tv_nsec;
+    /* Prefer RAW if available (no NTP adjustments) */
+    #ifdef CLOCK_MONOTONIC_RAW
+        if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts) != 0)
+            return 0;
+    #else
+        if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
+            return 0;
+    #endif
+
+    return ((uint64_t)ts.tv_sec * 1000000000ULL) +
+           (uint64_t)ts.tv_nsec;
 
 #elif defined(__APPLE__) && defined(__MACH__)
 

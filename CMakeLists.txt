@@ -273,22 +273,23 @@ if (BUILD_EXAMPLES)
 
     message(STATUS "Building examples")
 
-    # factorial
-    add_executable(factorial
-        examples/factorial.c
-    )
-    target_link_libraries(factorial PRIVATE ${apac_target})
-    target_include_directories(factorial PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
+    set(APAC_EXAMPLES
+        factorial
+        fibonacci
     )
 
-    # fibonacci
-    add_executable(fibonacci
-        examples/fibonacci.c
-    )
-    target_link_libraries(fibonacci PRIVATE ${apac_target})
-    target_include_directories(fibonacci PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-    )
+    foreach(exe IN LISTS APAC_EXAMPLES)
+        add_executable(${exe} examples/${exe}.c)
+
+        target_link_libraries(${exe} PRIVATE ${apac_target})
+
+        target_include_directories(${exe} PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+        )
+
+        if (UNIX AND NOT APPLE)
+            target_link_libraries(${exe} PRIVATE m)
+        endif()
+    endforeach()
 
 endif()

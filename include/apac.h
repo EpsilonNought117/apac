@@ -5,6 +5,10 @@
 /********************************      REQUIRED STANDARD HEADERS      *******************************/
 /****************************************************************************************************/
 
+#if defined(__GNUC__)
+    #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -57,8 +61,10 @@
 
     #if defined(__GNUC__) || defined(__clang__)
 
-        #include <pthread.h>  // POSIX Thread
         #include <unistd.h>
+        #include <time.h>
+        #include <sched.h>
+        #include <pthread.h>
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)

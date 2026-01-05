@@ -1,7 +1,6 @@
 #ifndef APAC_UTILITIES_H
 #define APAC_UTILITIES_H
 
-#include <stdint.h>
 #include "../include/apac.h"
 
 #if defined(_WIN32) && defined(_MSC_VER)
@@ -14,14 +13,6 @@
 	#define ROTL64(x, k) (_rotl64((x), (k)))
 
 #elif defined(__GNUC__) || defined(__clang__)
-
-    #if defined(__linux__) || defined(__linux)
-    
-        #include <pthread.h>
-        #include <sched.h>
-        #include <time.h>
-
-    #endif
 
 	#define ROTL64(x, k) (((uint64_t)(x) << ((k) & 63)) | ((uint64_t)(x) >> (64 - ((k) & 63))))
 

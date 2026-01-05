@@ -42,7 +42,7 @@ int main(int argc, char** argv)
      * Factorial invariants
      * ------------------------------------------------------------ */
     APAC_ALWAYS_ASSERT(N >= 1);
-    APAC_ALWAYS_ASSERT(N <= 50000);
+    APAC_ALWAYS_ASSERT(N <= 1000 * 1000);
 
     apacInit();
 

@@ -50,7 +50,7 @@ int main(int argc, char** argv)
      * Fibonacci index must be >= 2 and < 2 ^ 20
      * ------------------------------------------------------------ */
     APAC_ALWAYS_ASSERT(N >= 2);
-    APAC_ALWAYS_ASSERT(N <= (1ULL << 20));
+    APAC_ALWAYS_ASSERT(N <= (1ULL << 22));
 
     apacInit();
 
