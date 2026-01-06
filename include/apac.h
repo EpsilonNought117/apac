@@ -115,10 +115,11 @@ typedef size_t              apn_size_t;
 /*********************************      ERROR HANDLING MACROS      **********************************/
 /****************************************************************************************************/
 
-typedef enum apac_err
+typedef enum
 {
     APAC_OK,
-    APAC_OOM
+    APAC_OOM,
+    APAC_DIV_BY_ZERO
 
 }   apac_err;
 
@@ -943,6 +944,52 @@ APAC_API int apn_is_zero(
 APAC_API apn_size_t apn_clamp(
     const apn_seg_t* op1,
     apn_size_t size
+);
+
+
+/****************************************************************************************************/
+/*********************************          APZ FUNCTIONS         ***********************************/
+/****************************************************************************************************/
+
+#define APZ_POS         (signed int)1
+#define APZ_NEG         (signed int)-1
+#define APZ_ZERO        (signed int)0
+
+#define APZ_MAX_SIZE    ((apn_size_t)1 << 50)
+
+typedef struct
+{
+    apn_seg_t* data;
+    apn_size_t max_size, used_size;
+    signed int is_neg;
+
+} apz_t;
+
+typedef enum
+{
+
+    BASE10 = 10,
+    BASE16 = 16
+
+} apac_str_base;
+
+APAC_API apac_err apz_init(
+    apz_t* op,
+    apn_size_t size
+);
+
+APAC_API apac_err apz_free(
+    apz_t* op
+);
+
+APAC_API apac_err apz_resize(
+    apz_t* op,
+    apn_size_t new_size
+);
+
+APAC_API apac_err apz_set(
+    apz_t* op,
+    apn_seg_t val
 );
 
 #endif
