@@ -1,9 +1,26 @@
-﻿# libapac - A library for arbitrary precision arithmetic and computation
+﻿# libapac
 
-**libapac** is a high-performance arbitrary precision arithmetic library for scientific computing  
-and number crunching with infinite precision, only limited by the amount of memory on your system.
+**libapac** is a free and open source high-performance C library for  
+arithmetic and computation with arbitrary-precision integers.
 
 ---
 
-The library is currently Work in Progress.
+## Pre-requisites for Building the Library
 
+### Windows
+
+- Windows 10 or Windows 11
+- Microsoft Visual Studio Build Tools (VS26)
+  - MSVC (Microsoft Visual C/C++ Compiler)
+  - MASM64 (Microsoft Macro Assembler for x86-64)
+- CMake (minimum version: 3.12)
+- Optional: `clang-cl` (LLVM toolchain compatible with MSVC)
+
+### Linux
+
+- GCC or Clang
+- CMake (minimum version: 3.12)
+
+---
+
+## Building the Library
