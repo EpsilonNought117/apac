@@ -197,7 +197,7 @@ void disable_turbo_boost(void)
 
     if (buffer[0] != 'y' && buffer[0] != 'Y')
     {
-        fprintf(stderr, "Aborting...\n");
+        fprintf(stderr, "Exiting ...\n");
         exit(EXIT_FAILURE);
     }
 

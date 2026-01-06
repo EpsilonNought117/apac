@@ -1485,7 +1485,7 @@ static void check_apn_mul(void)
     APAC_ALWAYS_ASSERT(op3 != NULL);
     APAC_ALWAYS_ASSERT(op4 != NULL);
 
-    printf("TEST-1: Compare against apn_addmul_one() (size2 <= 64)\n");
+    printf("TEST-1: Compare against apn_addmul_one()\n");
 
     for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
     {
