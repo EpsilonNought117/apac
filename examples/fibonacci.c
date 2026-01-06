@@ -85,7 +85,8 @@ int main(int argc, char** argv)
      * ------------------------------------------------------------ */
     for (apn_seg_t i = 2; i <= N; i++)
     {
-        apn_add_n(fib[i & 1], fib[0], fib[1], max_limbs);
+        apn_size_t curr_size = (apn_size_t)((((double)i * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
+        apn_add_n(fib[i & 1], fib[0], fib[1], curr_size);
     }
 
     apn_size_t answer = N & 1;
@@ -106,10 +107,18 @@ int main(int argc, char** argv)
     }
 
     fprintf(fp, "F(%" PRI_APN_SEGU ") = 0x", N);
-    for (apn_size_t i = nlimbs - 1; i < nlimbs; i--)
-        fprintf(fp, "%" PRI_APN_SEGX, fib[answer][i]);
-    fprintf(fp, "\n");
+    apn_size_t count = 0;
 
+    for (apn_size_t i = nlimbs - 1; i < nlimbs; i--)
+    {    
+        fprintf(fp, "%016" PRI_APN_SEGX, fib[answer][i]);
+        count++;
+
+        if ((count & 7) == 0)
+            fputc('\n', fp);
+    }
+    
+    fprintf(fp, "\n");
     fclose(fp);
 
     printf("Computed F(%" PRI_APN_SEGU ")\n", N);

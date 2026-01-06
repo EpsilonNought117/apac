@@ -47,43 +47,39 @@ int main(int argc, char** argv)
     apacInit();
 
     /* ------------------------------------------------------------
-     * Stirling-based upper bound for N! limb count
-     * ------------------------------------------------------------ */
+    * Stirling-based upper bound for N! limb count
+    * ------------------------------------------------------------ */
     apn_size_t max_limbs = 0;
-    
-    double n = (double)N;
-    
-    double bits = (n * log2(n))
-        - (n * LOG2E)
-        + (0.5 * log2(2.0 * PI * n))
-        + 1.0;   /* safety margin */
 
-    max_limbs = (apn_size_t)(bits / (double)APN_SEG_BITS) + 2;
+    double n = (double)N;
+
+    double bits = n * log2(n)- (n * LOG2E) + (0.5 * log2(2.0 * PI * n));
+
+    /* Round up bits → limbs, then pad */
+    max_limbs = (apn_size_t)ceil(bits / APN_SEG_BITS);
 
     apn_seg_t* src = apac_malloc((max_limbs + 2) * sizeof(apn_seg_t));
-    apn_seg_t* dst = apac_malloc((max_limbs + 4) * sizeof(apn_seg_t));
+    apn_seg_t* dst = apac_malloc((max_limbs + 2) * sizeof(apn_seg_t));
 
     APAC_ALWAYS_ASSERT(src != NULL);
     APAC_ALWAYS_ASSERT(dst != NULL);
 
-    apn_size_t nlimbs = 1;
+    apn_size_t curr_limbs = 1;
 
     /* src = 1 */
-    apn_set(dst, max_limbs + 4, 0);
+    apn_set(dst, max_limbs + 2, 0);
     apn_set(src, max_limbs + 2, 0);
     src[0] = 1;
 
     /* ------------------------------------------------------------
-     * Factorial loop
-     * ------------------------------------------------------------ */
+    * Factorial loop (FIXED)
+    * ------------------------------------------------------------ */
     for (apn_seg_t k = 2; k <= N; k++)
     {
-        apn_set(dst, nlimbs + 2, 0);
-
-        dst[nlimbs + 1] = apn_addmul_one(dst, src, nlimbs, k);
-
-        nlimbs = apn_clamp(dst, nlimbs + 2);
-        apn_cpy(src, dst, nlimbs);
+        apn_addmul_one(dst, src, curr_limbs, k);
+        curr_limbs = apn_clamp(dst, curr_limbs + 1);
+        apn_cpy(src, dst, curr_limbs);
+        apn_set(dst, curr_limbs, 0);
     }
 
     /* ------------------------------------------------------------
@@ -99,15 +95,21 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    fprintf(fp, "%" PRI_APN_SEGU "! = 0x", N);
-    for (apn_size_t i = nlimbs - 1; i < nlimbs; i--)
-        fprintf(fp, "%" PRI_APN_SEGX, src[i]);
-    fprintf(fp, "\n");
+    fprintf(fp, "%" PRI_APN_SEGU "! (in hexadecimal) = \n", N);
 
-    fclose(fp);
+    apn_size_t count = 0;
+
+    for (apn_size_t i = curr_limbs - 1; i < curr_limbs; i--)
+    {
+        fprintf(fp, "%016" PRI_APN_SEGX, src[i]);
+        count++;
+
+        if ((count & 7) == 0)
+            fputc('\n', fp);
+    }
 
     printf("Computed %" PRI_APN_SEGU "!\n", N);
-    printf("Limbs used : %" PRI_APN_SIZE "\n", nlimbs);
+    printf("Limbs used : %" PRI_APN_SIZE "\n", curr_limbs);
     printf("Output     : %s\n", fname);
 
     apac_free(src);
