@@ -115,14 +115,63 @@ typedef size_t              apn_size_t;
 /*********************************      ERROR HANDLING MACROS      **********************************/
 /****************************************************************************************************/
 
+/**
+ * @defgroup apac_error Error Handling and Debug Assertions
+ * @brief Error codes, logging, and debug-time validation macros.
+ *
+ * This module defines:
+ *
+ * - Error codes returned by libapac functions
+ * - Assertion macros used for validating API preconditions in debug builds
+ * - Memory overlap checking helpers
+ *
+ * Assertion macros are intended for internal use and for catching programming
+ * errors during development. They are disabled in release builds when
+ * `APAC_DISABLE_ASSERT` is defined.
+ *
+ * @{
+ */
+
+/* ============================================================================
+ * Error codes
+ * ========================================================================== */
+
+/**
+ * @ingroup apac_error
+ * @brief Error codes returned by libapac functions.
+ */
 typedef enum
 {
+    /** Operation completed successfully. */
     APAC_OK,
+
+    /** Operation failed due to out-of-memory condition. */
     APAC_OOM,
+
+    /** Division by zero was detected. */
     APAC_DIV_BY_ZERO
 
-}   apac_err;
+} apac_err;
 
+
+/* ============================================================================
+ * Always-enabled assertion
+ * ========================================================================== */
+
+/**
+ * @ingroup apac_error
+ * @def APAC_ALWAYS_ASSERT(expr)
+ * @brief Assertion macro that is always enabled.
+ *
+ * Evaluates the expression and terminates the program if it evaluates to false.
+ * Prints diagnostic information including the failed expression, source file,
+ * and line number.
+ *
+ * This macro is used internally as the base implementation for other assertion
+ * helpers.
+ *
+ * @param expr Boolean expression to validate.
+ */
 #define APAC_ALWAYS_ASSERT(expr)                            \
     do                                                      \
     {                                                       \
@@ -138,28 +187,39 @@ typedef enum
             fprintf(stderr, "EXITING ...\n\n");             \
             exit(EXIT_FAILURE);                             \
         }                                                   \
-    }                                                       \
-    while (0)
+    } while (0)
+
+
+/* ============================================================================
+ * Debug-only assertions
+ * ========================================================================== */
 
 #ifndef APAC_DISABLE_ASSERT
 
     /**
+     * @ingroup apac_error
      * @def APAC_ASSERT(expr)
-     * @brief Base assertion macro for simple expression validation.
+     * @brief Debug assertion for validating API preconditions.
      *
-     * Evaluates an expression and terminates the program if it evaluates to false.
+     * Behaves like ::APAC_ALWAYS_ASSERT when assertions are enabled.
+     * When `APAC_DISABLE_ASSERT` is defined, this macro expands to a no-op.
      *
-     * @param expr
-     *     Boolean expression to check.
-     *
-     * @note
-     *     This macro is disabled if APAC_DISABLE_ASSERT is defined.
+     * @param expr Boolean expression to validate.
      */
     #define APAC_ASSERT(expr) APAC_ALWAYS_ASSERT(expr)
 
     /**
+     * @ingroup apac_error
      * @def APAC_NO_OVERLAP(op1, size1, op2, size2)
-     * @brief Ensures that two memory regions do not overlap.
+     * @brief Assert that two memory regions do not overlap.
+     *
+     * Verifies that the ranges:
+     *
+     *   [op1, op1 + size1) and [op2, op2 + size2)
+     *
+     * do not overlap in memory.
+     *
+     * Intended for validating aliasing constraints in low-level arithmetic kernels.
      */
     #define APAC_NO_OVERLAP(op1, size1, op2, size2)                 \
             APAC_ALWAYS_ASSERT(                                     \
@@ -168,8 +228,17 @@ typedef enum
             )
 
     /**
+     * @ingroup apac_error
      * @def APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)
-     * @brief Allows overlap only if op1 does not extend beyond op2's end.
+     * @brief Assert that overlap is allowed only if op1 does not extend above op2.
+     *
+     * Allows overlap only when:
+     *
+     *   op1 + size1 <= op2 + size2
+     *
+     * or when the regions do not overlap at all.
+     *
+     * Used for kernels that process data from low to high addresses.
      */
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)              \
             APAC_ALWAYS_ASSERT(                                             \
@@ -178,8 +247,17 @@ typedef enum
             )
 
     /**
+     * @ingroup apac_error
      * @def APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)
-     * @brief Allows overlap only if op1 does not extend below op2's start.
+     * @brief Assert that overlap is allowed only if op1 does not extend below op2.
+     *
+     * Allows overlap only when:
+     *
+     *   op1 >= op2
+     *
+     * or when the regions do not overlap at all.
+     *
+     * Used for kernels that process data from high to low addresses.
      */
     #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)      \
             APAC_ALWAYS_ASSERT(                                     \
@@ -196,128 +274,287 @@ typedef enum
 
 #endif
 
+
+/* ============================================================================
+ * Error logging
+ * ========================================================================== */
+
 /**
+ * @ingroup apac_error
  * @def APAC_LOG_ERR(msg)
- * @brief Logs an error message to `stderr` with the "APAC ERROR" prefix.
+ * @brief Log an error message to standard error.
  *
- * @param msg
- *     Null-terminated string message to print.
+ * Prints the given message to `stderr` prefixed with `"APAC ERROR: "`.
+ *
+ * @param msg Null-terminated error message string.
  */
 #define APAC_LOG_ERR(msg) fprintf(stderr, "APAC ERROR: %s\n", msg)
+
+/** @} */ /* end of apac_error */
+
 
 /****************************************************************************************************/
 /*********************************         MISCELLANEOUS          ***********************************/
 /****************************************************************************************************/
 
+/**
+ * @defgroup apac_runtime Runtime Initialization and CPU Dispatch
+ * @brief Memory management hooks, CPU feature detection, and dispatch control.
+ *
+ * This module provides functions and global state used to configure libapac
+ * at runtime, including:
+ *
+ * - Custom memory allocation functions
+ * - CPU feature detection
+ * - Selection of optimized arithmetic kernels
+ *
+ * Most users should only call ::apacInit() before using any arithmetic
+ * functions. Advanced users may inspect or modify ::curr_cpu to experiment
+ * with algorithm thresholds or kernel selection.
+ *
+ * @{
+ */
+
+/* ============================================================================
+ * Memory management hooks
+ * ========================================================================== */
+
+/**
+ * @ingroup apac_runtime
+ * @brief Function pointer used by libapac for memory allocation.
+ *
+ * By default, this points to the system `malloc()` implementation, but can be
+ * overridden via ::apacSetMemFuncs().
+ */
 APAC_API extern void* (*apac_malloc)(size_t);
+
+/**
+ * @ingroup apac_runtime
+ * @brief Function pointer used by libapac for memory reallocation.
+ *
+ * By default, this points to the system `realloc()` implementation, but can be
+ * overridden via ::apacSetMemFuncs().
+ */
 APAC_API extern void* (*apac_realloc)(void*, size_t);
+
+/**
+ * @ingroup apac_runtime
+ * @brief Function pointer used by libapac for freeing memory.
+ *
+ * By default, this points to the system `free()` implementation, but can be
+ * overridden via ::apacSetMemFuncs().
+ */
 APAC_API extern void (*apac_free)(void*);
 
+/**
+ * @ingroup apac_runtime
+ * @brief Set custom memory management functions for libapac.
+ *
+ * Replaces the internal memory allocation hooks used by libapac.
+ * This affects all subsequent allocations performed by the library.
+ *
+ * @param[in] ptr1 Function used for allocation (malloc-like)
+ * @param[in] ptr2 Function used for reallocation (realloc-like)
+ * @param[in] ptr3 Function used for deallocation (free-like)
+ *
+ * @note This function should be called before ::apacInit() and before any
+ *       other libapac API functions are used.
+ */
 APAC_API void apacSetMemFuncs(
-	void* (*ptr1)(size_t),
-	void* (*ptr2)(void*, size_t),
-	void (*ptr3)(void*)
+    void* (*ptr1)(size_t),
+    void* (*ptr2)(void*, size_t),
+    void (*ptr3)(void*)
 );
 
+/* ============================================================================
+ * CPU detection and initialization
+ * ========================================================================== */
+
+/**
+ * @ingroup apac_runtime
+ * @brief Detect CPU features and select optimized kernels.
+ *
+ * Performs runtime CPU feature detection and configures internal dispatch
+ * tables to use the most appropriate implementations available for the
+ * current microarchitecture.
+ *
+ * @note This function is automatically called by ::apacInit().
+ *       It is exposed primarily for testing and benchmarking purposes.
+ */
 APAC_API void apacGetCPUSpec(void);
 
+/**
+ * @ingroup apac_runtime
+ * @brief Initialize libapac runtime state.
+ *
+ * Initializes internal global state, including:
+ *
+ * - Setting default memory allocation functions
+ * - Performing CPU feature detection
+ * - Selecting optimized arithmetic kernels
+ *
+ * This function must be called before using any arithmetic routines in libapac.
+ */
 APAC_API void apacInit(void);
 
+/* ============================================================================
+ * CPU dispatch parameters
+ * ========================================================================== */
+
+/**
+ * @ingroup apac_runtime
+ * @brief CPU-specific dispatch parameters and algorithm thresholds.
+ *
+ * This structure contains:
+ *
+ * - Algorithm selection thresholds
+ * - Function pointers to optimized kernel implementations
+ *
+ * The active instance is stored in the global ::curr_cpu variable and is used
+ * internally by all arithmetic routines.
+ *
+ * Advanced users may modify fields in this structure to experiment with:
+ *
+ * - Different algorithm cutover thresholds
+ * - Forcing use of specific kernel implementations
+ *
+ * @warning Modifying this structure may lead to incorrect results or crashes
+ *          if incompatible kernels or invalid thresholds are selected.
+ */
 typedef struct apac_cpu_params
 {
-	apn_size_t karatsuba_mul_balanced_threshold;
-	apn_size_t karatsuba_mul_unbalanced_threshold;
-	apn_size_t karatsuba_sqr_threshold;
-    apn_size_t dnc_div_threshold;   // recursive divide-&-conquer division threshold
+    /** Threshold for switching to balanced Karatsuba multiplication. */
+    apn_size_t karatsuba_mul_balanced_threshold;
 
-	apn_seg_t(*apn_add_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
-	apn_seg_t(*apn_sub_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
-    apn_seg_t(*apn_add_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
-    apn_seg_t(*apn_sub_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
-    apn_seg_t(*apn_addmul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
-    apn_seg_t(*apn_submul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
-    apn_seg_t(*apn_lshift_lt64_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
-    apn_seg_t(*apn_rshift_lt64_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    /** Threshold for switching to unbalanced Karatsuba multiplication. */
+    apn_size_t karatsuba_mul_unbalanced_threshold;
 
+    /** Threshold for switching to Karatsuba squaring. */
+    apn_size_t karatsuba_sqr_threshold;
+
+    /** Threshold for recursive divide-and-conquer division. */
+    apn_size_t dnc_div_threshold;
+
+    /** Pointer to equal-size addition kernel. */
+    apn_seg_t (*apn_add_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to equal-size subtraction kernel. */
+    apn_seg_t (*apn_sub_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to add-single-limb kernel. */
+    apn_seg_t (*apn_add_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+
+    /** Pointer to subtract-single-limb kernel. */
+    apn_seg_t (*apn_sub_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+
+    /** Pointer to fused multiply-add by single limb kernel. */
+    apn_seg_t (*apn_addmul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+
+    /** Pointer to fused multiply-sub by single limb kernel. */
+    apn_seg_t (*apn_submul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+
+    /** Pointer to left-shift-by-<64-bits kernel. */
+    apn_seg_t (*apn_lshift_lt64_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+
+    /** Pointer to right-shift-by-<64-bits kernel. */
+    apn_seg_t (*apn_rshift_lt64_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+
+    /** Pointer to basecase multiplication kernel. */
     void (*apn_mul_bc_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t, apn_size_t);
-	void (*apn_sqr_bc_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to basecase squaring kernel. */
+    void (*apn_sqr_bc_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to negation kernel. */
     void (*apn_neg_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
-	void (*apn_cpy_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to copy kernel. */
+    void (*apn_cpy_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to set/fill kernel. */
     void (*apn_set_ptr)(apn_seg_t*, apn_size_t, apn_seg_t);
 
+    /** Pointer to comparison kernel. */
     int (*apn_cmp_ptr)(const apn_seg_t*, const apn_seg_t*, apn_size_t);
+
+    /** Pointer to zero-test kernel. */
     int (*apn_is_zero_ptr)(const apn_seg_t*, apn_size_t);
 
-}   apac_cpu_params;
+} apac_cpu_params;
 
+/**
+ * @ingroup apac_runtime
+ * @brief Active CPU dispatch configuration.
+ *
+ * This global structure contains the currently selected algorithm thresholds
+ * and kernel function pointers used by libapac.
+ *
+ * It is initialized by ::apacInit() based on detected CPU features.
+ *
+ * Advanced users may modify this structure to perform controlled experiments,
+ * benchmarking, or algorithm research.
+ *
+ * @warning Modifying this structure incorrectly can lead to crashes or
+ *          incorrect arithmetic results.
+ */
 extern apac_cpu_params curr_cpu;
+
+/** @} */ /* end of apac_runtime */
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
 /****************************************************************************************************/
 
 /**
-* ---------------------------------------- IMPORTANT NOTES -----------------------------------------
-*
-* 1) THESE FUNCTIONS DO NOT PERFORM ANY MEMORY ALLOCATIONS IN INPUT OPERAND/S AND RESULT/S.
-*
-* 2) ASSERTS ARE USED IN DEBUG MODE FOR CATCHING INVALID ARGUMENT ERRORS.
-* 
-* 3) THEY DO NOT PERFORM ANY BOUNDS CHECKING.
-* 
-* 4) NO POINTER INPUT SHOULD BE NULL.
-* 
-* 5) THE SIZE INPUTS SHOULD NOT BE ZERO.
-* 
-* 6) IN CASES OF TWO INPUT SIZES, SIZE-1 IS ALWAYS GREATER THAN SIZE-2
-*
-* 7) SOME BUT NOT ALL FUNCTIONS ALLOW INPUTS/RESULTS OVERLAP (Will be covered in documentation soon)
-*/
+ * @defgroup apn_api APN Low-Level Segment Arithmetic
+ * @brief Low-level arbitrary-precision integer operations on limb arrays.
+ *
+ * These functions operate directly on arrays of limbs (`apn_seg_t`) and do not
+ * perform any memory allocation or resizing.
+ *
+ * @par Common Requirements
+ * The following conditions apply to all functions in this module unless stated otherwise:
+ *
+ * - All pointer arguments must point to valid memory regions.
+ * - No size argument may be zero.
+ * - Output buffers must already be large enough to hold the result.
+ * - No bounds checking is performed.
+ * - In debug builds, `APAC_ASSERT` and its variants are used to catch invalid
+ *   arguments and illegal operand overlaps; these checks are disabled in
+ *   release builds.
+ *
+ * @par Return Types
+ * Functions in this module use the following return conventions:
+ *
+ * - `void` — No return value and no runtime memory allocation is performed.
+ * - `apac_err` — Operation may fail (e.g. division or internally allocated
+ *   temporaries); return value indicates success or error condition.
+ * - `apn_seg_t` — Function returns a computed single-limb value such as
+ *   carry-out or borrow-out.
+ * - `int` — Pure comparison result with no allocation or arithmetic side effects.
+ * - `apn_size_t` — Returns a computed size value (currently only `apn_clamp`).
+ *
+ * @{
+ */
 
 /**
-* -------------------------------------- RETURN TYPES ----------------------------------------
-*
-* 1) void (functions that don't perform runtime memory allocation and don't return anything)
-* 
-* 2) apac_err (functions that either perform division and/or perform memory allocations)
-* 
-* 3) apn_seg_t (functions that have some computed return value such as carry/borrow out)
-* 
-* 4) int (functions that don't perform memory allocation or computation, but do comparisions)
-* 
-* 5) apn_size_t (only apn_clamp returns this)
-*/
-
-/**
- * @brief Add two arbitrary-precision numbers of `size` segments each (carry-propagating).
+ * @ingroup apn_api
+ * @brief Add two arbitrary-precision numbers of equal sizes.
  *
- * This function performs a carry-propagating addition of two multi-segment
- * arbitrary-precision numbers (`op1` and `op2`), each consisting of `size`
- * segments of type apn_seg_t.
- * Addition begins at the least-significant segment and carries are propagated
- * through the segment array as needed until the most-significant segment.
+ * Computes:
+ *   result = op1 + op2
  *
- * The sum is written to the `result` array.
+ * Carry is propagated across all `size` limbs from least to most significant.
  *
- * @pre `result`, `op1`, and `op2` each point to valid memory containing at least
- *      `size` segments.
- * @pre Partial overlaps between arrays are not allowed; only full aliasing
- *      (`result == op1` or `result == op2`) is permitted.
+ * @param[out] result Output array receiving the sum (length = size)
+ * @param[in]  op1    First operand (length = size)
+ * @param[in]  op2    Second operand (length = size)
+ * @param[in]  size   Number of limbs in each operand
  *
- * @param[out] result
- *     Pointer to the output array receiving the sum (length = `size` segments).
+ * @return Carry-out from the most significant limb (0 or 1).
  *
- * @param[in] op1
- *     Pointer to the first arbitrary-precision number (length = `size` segments).
- *
- * @param[in] op2
- *     Pointer to the second arbitrary-precision number (length = `size` segments).
- *
- * @param[in] size
- *     Number of segments in each operand.
- *
- * @return apn_seg_t
- *     Final carry-out propagated from the most significant segment (0 or 1).
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
 APAC_API apn_seg_t apn_add_n(
     apn_seg_t* result,
@@ -327,35 +564,23 @@ APAC_API apn_seg_t apn_add_n(
 );
 
 /**
- * @brief Add a single-segment value to an arbitrary-precision number (carry-propagating).
+ * @ingroup apn_api
+ * @brief Add a single-limb value to an arbitrary-precision number.
  *
- * This function performs a carry-propagating addition of an arbitrary-precision
- * number (`op1`), consisting of `size` segments, with a single-segment value
- * (`val`).
- * The least-significant segment is incremented by `val`, and any resulting
- * carries are propagated through the segment array as needed.
+ * Computes:
+ *   result = op1 + val
  *
- * The sum is written to the `result` array.
+ * Carry is propagated across all `size` limbs from least to most significant.
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size` segments.
- * @pre Partial overlaps are not allowed; only full aliasing
- *      (`result == op1`) is permitted.
+ * @param[out] result Output array receiving the sum (length = size)
+ * @param[in]  op1    Input operand (length = size)
+ * @param[in]  size   Number of limbs in the operand
+ * @param[in]  val    Single-limb value added to the least significant limb
  *
- * @param[out] result
- *     Pointer to the output array receiving the sum (length = `size` segments).
+ * @return Carry-out from the most significant limb (0 or 1).
  *
- * @param[in] op1
- *     Pointer to the arbitrary-precision number (length = `size` segments).
- *
- * @param[in] size
- *     Number of segments in the operand.
- *
- * @param[in] val
- *     Single-segment value to add to the least-significant segment of `op1`.
- *
- * @return apn_seg_t
- *     Final carry-out propagated from the most significant segment (0 or 1).
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API apn_seg_t apn_add_one(
     apn_seg_t* result,
@@ -365,40 +590,26 @@ APAC_API apn_seg_t apn_add_one(
 );
 
 /**
- * @brief Add two arbitrary-precision numbers of sizes `size1` and `size2`
- *        (carry-propagating).
+ * @ingroup apn_api
+ * @brief Add two arbitrary-precision numbers of unequal sizes.
  *
- * This function performs a carry-propagating addition of two arbitrary-precision
- * numbers (`op1` and `op2`) whose segment counts may differ.
- * The addition begins at the least-significant segment and carries are
- * propagated through the overlapping segment range.
- * If one operand is longer than the other, its remaining segments are copied
- * while continuing to propagate carries as needed.
+ * Computes:
+ *   result = op1 + op2
  *
- * The sum is written to the `result` array.
+ * Carry is propagated across the overlapping limb range and into the remaining
+ * limbs of `op1` as needed.
  *
- * @pre `result`, `op1`, and `op2` each point to valid memory containing at
- *      least `size1` and `size2` segments respectively.
- * @pre Partial overlaps are not allowed; only full aliasing
- *      (`result == op1` or `result == op2`) is permitted.
+ * @param[out] result Output array receiving the sum (length = size1)
+ * @param[in]  op1    First operand (length = size1)
+ * @param[in]  op2    Second operand (length = size2)
+ * @param[in]  size1  Number of limbs in op1 and result (must be >= size2)
+ * @param[in]  size2  Number of limbs in op2
  *
- * @param[out] result
- *     Pointer to the output array receiving the sum (length = max(size1, size2)).
+ * @return Carry-out from the most significant limb (0 or 1).
  *
- * @param[in] op1
- *     Pointer to the first arbitrary-precision number (`size1` segments).
- *
- * @param[in] op2
- *     Pointer to the second arbitrary-precision number (`size2` segments).
- *
- * @param[in] size1
- *     Number of segments in `op1`.
- *
- * @param[in] size2
- *     Number of segments in `op2`.
- *
- * @return apn_seg_t
- *     Final carry-out propagated from the most significant segment (0 or 1).
+ * @pre size1 >= size2
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
 APAC_API apn_seg_t apn_add(
     apn_seg_t* result,
@@ -409,36 +620,28 @@ APAC_API apn_seg_t apn_add(
 );
 
 /**
- * @brief Subtract two arbitrary-precision numbers of `size` segments each
- *        (borrow-propagating).
+ * @ingroup apn_api
+ * @brief Subtract two arbitrary-precision numbers of equal sizes.
  *
- * This function performs a borrow-propagating subtraction of two equal-sized
- * arbitrary-precision numbers (`op1 - op2`).
- * Subtraction starts at the least-significant segment and borrows are
- * propagated as necessary through the entire segment array.
+ * Computes:
+ *   result = op1 - op2
  *
- * The difference is written to the `result` array.
+ * Borrow is propagated across all `size` limbs from least to most significant.
  *
- * @pre `result`, `op1`, and `op2` each point to valid memory containing at least
- *      `size` segments.
- * @pre Partial overlaps are not allowed; only full aliasing
- *      (`result == op1` or `result == op2`) is permitted.
+ * @param[out] result Output array receiving the difference (length = size)
+ * @param[in]  op1    Minuend operand (length = size)
+ * @param[in]  op2    Subtrahend operand (length = size)
+ * @param[in]  size   Number of limbs in each operand
  *
- * @param[out] result
- *     Output array receiving the difference (length = `size` segments).
+ * @return Borrow-out from the most significant limb (0 or 1).
+ *         A return value of 1 indicates underflow.
  *
- * @param[in] op1
- *     Minuend operand (`size` segments).
+ * @note If the magnitude of `op1` is less than the magnitude of `op2`, the result
+ *       contains the two's-complement representation of `abs(op1 - op2)` modulo
+ *       2^(size * APN_SEG_BITS).
  *
- * @param[in] op2
- *     Subtrahend operand (`size` segments).
- *
- * @param[in] size
- *     Number of segments in each operand.
- *
- * @return apn_seg_t
- *     Final borrow-out from the most significant segment (0 or 1).
- *     (1 means underflow occurred.)
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
 APAC_API apn_seg_t apn_sub_n(
     apn_seg_t* result,
@@ -448,34 +651,28 @@ APAC_API apn_seg_t apn_sub_n(
 );
 
 /**
- * @brief Subtract a single-segment value from an arbitrary-precision number
- *        (borrow-propagating).
+ * @ingroup apn_api
+ * @brief Subtract a single-limb value from an arbitrary-precision number.
  *
- * This function subtracts a single-segment value (`val`) from the least-
- * significant segment of an arbitrary-precision number (`op1`, length = `size`),
- * propagating borrows as needed through the segment array.
+ * Computes:
+ *   result = op1 - val
  *
- * The result is written to the `result` array.
+ * Borrow is propagated across all `size` limbs from least to most significant.
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size` segments.
- * @pre Partial overlaps are not allowed; only full aliasing
- *      (`result == op1`) is permitted.
+ * @param[out] result Output array receiving the difference (length = size)
+ * @param[in]  op1    Minuend operand (length = size)
+ * @param[in]  size   Number of limbs in op1
+ * @param[in]  val    Single-limb value subtracted from the least significant limb
  *
- * @param[out] result
- *     Output array receiving the difference (length = `size` segments).
+ * @return Borrow-out from the most significant limb (0 or 1).
+ *         A return value of 1 indicates underflow.
  *
- * @param[in] op1
- *     Minuend operand (`size` segments).
+ * @note If the magnitude of `op1` is less than `val`, the result contains the
+ *       two's-complement representation of `abs(op1 - val)` modulo
+ *       2^(size * APN_SEG_BITS).
  *
- * @param[in] size
- *     Number of segments in `op1`.
- *
- * @param[in] val
- *     Single-segment value to subtract from the least-significant segment.
- *
- * @return apn_seg_t
- *     Final borrow-out from the most significant segment (0 or 1).
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API apn_seg_t apn_sub_one(
     apn_seg_t* result,
@@ -485,42 +682,31 @@ APAC_API apn_seg_t apn_sub_one(
 );
 
 /**
- * @brief Subtract two arbitrary-precision numbers of sizes `size1` and `size2`
- *        (borrow-propagating).
+ * @ingroup apn_api
+ * @brief Subtract two arbitrary-precision numbers where the first operand is not smaller.
  *
- * This function performs a borrow-propagating subtraction of two arbitrary-
- * precision numbers (`op1 - op2`) whose sizes may differ.
- * Subtraction begins at the least-significant segment of both operands.
+ * Computes:
+ *   result = op1 - op2
  *
- * Borrow propagation continues through the overlapping segments, and if
- * `op1` is longer than `op2`, its remaining segments are processed while
- * continuing to propagate borrows as needed.
+ * Borrow is propagated across the overlapping limb range and into the remaining
+ * limbs of `op1` as needed.
  *
- * The difference is written to the `result` array.
+ * @param[out] result Output array receiving the difference (length = size1)
+ * @param[in]  op1    Minuend operand (length = size1)
+ * @param[in]  op2    Subtrahend operand (length = size2)
+ * @param[in]  size1  Number of limbs in op1 and result (must be >= size2)
+ * @param[in]  size2  Number of limbs in op2
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size1` segments.
- * @pre `op2` points to valid memory containing at least `size2` segments.
- * @pre Partial overlaps are not allowed; only full aliasing
- *      (`result == op1`) is permitted.
+ * @return Borrow-out from the most significant limb (0 or 1).
+ *         A return value of 1 indicates underflow.
  *
- * @param[out] result
- *     Output array receiving the difference (length = size1 segments).
+ * @note If the magnitude of `op1` is less than the magnitude of `op2`, the result
+ *       contains the two's-complement representation of `abs(op1 - op2)` modulo
+ *       2^(size1 * APN_SEG_BITS).
  *
- * @param[in] op1
- *     Minuend operand (`size1` segments).
- *
- * @param[in] op2
- *     Subtrahend operand (`size2` segments).
- *
- * @param[in] size1
- *     Number of segments in `op1`.
- *
- * @param[in] size2
- *     Number of segments in `op2`.
- *
- * @return apn_seg_t
- *     Final borrow-out from the most significant segment (0 or 1).
+ * @pre size1 >= size2
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
 APAC_API apn_seg_t apn_sub(
     apn_seg_t* result,
@@ -531,26 +717,20 @@ APAC_API apn_seg_t apn_sub(
 );
 
 /**
- * @brief Copy an arbitrary-precision number of `size` segments.
+ * @ingroup apn_api
+ * @brief Copy an arbitrary-precision number of equal size.
  *
- * This function copies an arbitrary-precision number (`op1`) consisting of
- * `size` segments into the destination array (`result`).
+ * Computes:
+ *   result = op1
  *
- * The copy is performed from segment 0 through segment `size - 1` in order.
+ * The copy is performed from limb 0 through limb `size - 1` in increasing order.
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size` segments.
- * @pre Partial overlaps between arrays are not allowed; full aliasing
- *      (`result == op1`) is permitted.
+ * @param[out] result Output array receiving the copied value (length = size)
+ * @param[in]  op1    Source operand (length = size)
+ * @param[in]  size   Number of limbs to copy
  *
- * @param[out] result
- *     Pointer to the output array receiving the copied segments.
- *
- * @param[in] op1
- *     Pointer to the source arbitrary-precision number (length = `size` segments).
- *
- * @param[in] size
- *     Number of segments to copy.
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API void apn_cpy(
     apn_seg_t* result,
@@ -559,25 +739,21 @@ APAC_API void apn_cpy(
 );
 
 /**
- * @brief Compute the two's complement negation of an arbitrary-precision number.
+ * @ingroup apn_api
+ * @brief Compute the two's-complement negation of an arbitrary-precision number.
  *
- * This function negates an arbitrary-precision number (`op1`) of `size` segments
- * using two's complement arithmetic, storing the result in `result`.
- * The negation is equivalent to computing `(0 - op1)` in a carry-propagating manner.
+ * Computes:
+ *   result = -op1   (mod 2^(size * APN_SEG_BITS))
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size` segments.
- * @pre Partial overlaps between arrays are not allowed; full aliasing
- *      (`result == op1`) is permitted.
+ * Negation is performed using two's-complement arithmetic with carry propagation
+ * from least to most significant limb.
  *
- * @param[out] result
- *     Pointer to the output array receiving the negated value (length = `size` segments).
+ * @param[out] result Output array receiving the negated value (length = size)
+ * @param[in]  op1    Input operand to negate (length = size)
+ * @param[in]  size   Number of limbs in the operand
  *
- * @param[in] op1
- *     Pointer to the input arbitrary-precision number to negate (length = `size` segments).
- *
- * @param[in] size
- *     Number of segments in the operand.
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API void apn_neg(
     apn_seg_t* result,
@@ -586,30 +762,23 @@ APAC_API void apn_neg(
 );
 
 /**
- * @brief Multiply two arbitrary-precision numbers of `size` segments each.
+ * @ingroup apn_api
+ * @brief Multiply two arbitrary-precision numbers of equal size.
  *
- * This function performs a carry-propagating multiplication of two arbitrary-
- * precision numbers (`op1` and `op2`), each consisting of `size` segments.
- * The full product is written to the `result` array.
+ * Computes:
+ *   result = op1 * op2
  *
- * @pre `result`, `op1`, and `op2` each point to valid memory containing at least
- *      `size` segments for `op1` and `op2`, and `2 * size` segments for `result`.
- * @pre The `result` array **must not overlap** with `op1` or `op2`.
+ * The full product is written to `result` using carry-propagating multiplication.
  *
- * @param[out] result
- *     Pointer to the output array receiving the product (length = `2 * size` segments).
+ * @param[out] result Output array receiving the product (length = 2 * size)
+ * @param[in]  op1    First operand (length = size)
+ * @param[in]  op2    Second operand (length = size)
+ * @param[in]  size   Number of limbs in each operand
  *
- * @param[in] op1
- *     Pointer to the first operand (length = `size` segments).
+ * @return APAC_SUCCESS on success, or an error code on failure.
  *
- * @param[in] op2
- *     Pointer to the second operand (length = `size` segments).
- *
- * @param[in] size
- *     Number of segments in each operand.
- *
- * @return apac_err
- *     Error code indicating success or failure of the multiplication.
+ * @pre The `result` array must not overlap with either `op1` or `op2`.
+ * @note `op1` and `op2` may overlap arbitrarily.
  */
 APAC_API apac_err apn_mul_n(
     apn_seg_t* result,
@@ -619,34 +788,24 @@ APAC_API apac_err apn_mul_n(
 );
 
 /**
- * @brief Multiply two arbitrary-precision numbers of potentially different sizes.
+ * @ingroup apn_api
+ * @brief Multiply two arbitrary-precision numbers of possibly different sizes.
  *
- * This function performs a carry-propagating multiplication of two arbitrary-
- * precision numbers (`op1` of `size1` segments and `op2` of `size2` segments).
- * The full product is written to the `result` array.
+ * Computes:
+ *   result = op1 * op2
  *
- * @pre `result` must point to valid memory containing at least `size1 + size2` segments.
- * @pre `op1` and `op2` must point to valid memory containing at least `size1` and
- *      `size2` segments, respectively.
- * @pre The `result` array **must not overlap** with `op1` or `op2`.
+ * The full product is written to `result` using carry-propagating multiplication.
  *
- * @param[out] result
- *     Pointer to the output array receiving the product (length = `size1 + size2` segments).
+ * @param[out] result Output array receiving the product (length = size1 + size2)
+ * @param[in]  op1    First operand (length = size1)
+ * @param[in]  op2    Second operand (length = size2)
+ * @param[in]  size1  Number of limbs in op1
+ * @param[in]  size2  Number of limbs in op2
  *
- * @param[in] op1
- *     Pointer to the first operand (length = `size1` segments).
+ * @return APAC_SUCCESS on success, or an error code on failure.
  *
- * @param[in] op2
- *     Pointer to the second operand (length = `size2` segments).
- *
- * @param[in] size1
- *     Number of segments in the first operand.
- *
- * @param[in] size2
- *     Number of segments in the second operand.
- *
- * @return apac_err
- *     Error code indicating success or failure of the multiplication.
+ * @pre The `result` array must not overlap with either `op1` or `op2`.
+ * @note `op1` and `op2` may overlap arbitrarily.
  */
 APAC_API apac_err apn_mul(
     apn_seg_t* result,
@@ -657,34 +816,24 @@ APAC_API apac_err apn_mul(
 );
 
 /**
- * @brief Multiply an arbitrary-precision number by a single-segment value and add the result to another number.
+ * @ingroup apn_api
+ * @brief Multiply an arbitrary-precision number by a single limb and add to another number.
  *
- * This function computes a carry-propagating operation equivalent to:
- * ```
- * result[] += op1[] * val
- * ```
- * where `op1` has `size` segments and `val` is a single-segment value.
- * The result is written to the `result` array, which must have `size + 1` segments
- * to accommodate potential carry-out.
+ * Computes:
+ *   result += op1 * val
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size + 1` and `size` segments, respectively.
- * @pre Partial or full aliasing between `op1` and `result` is allowed.
+ * Carry is propagated across `size + 1` limbs to account for the full product
+ * and accumulated sum.
  *
- * @param[out] result
- *     Pointer to the output array receiving the sum (length = `size + 1` segments).
+ * @param[in,out] result Accumulator array (length = size + 1)
+ * @param[in]     op1    Multiplicand operand (length = size)
+ * @param[in]     size   Number of limbs in op1
+ * @param[in]     val    Single-limb multiplier
  *
- * @param[in] op1
- *     Pointer to the arbitrary-precision operand (length = `size` segments).
+ * @return Carry-out from the most significant limb (0 or 1).
  *
- * @param[in] size
- *     Number of segments in `op1`.
- *
- * @param[in] val
- *     Single-segment multiplier to multiply with `op1` before addition.
- *
- * @return apn_seg_t
- *     Carry-out from the most significant segment (0 or 1).
+ * @pre If the arrays overlap, the start of `result` must be strictly less than
+ *      the start of `op1` (i.e., `result < op1`).
  */
 APAC_API apn_seg_t apn_addmul_one(
     apn_seg_t* result,
@@ -694,34 +843,24 @@ APAC_API apn_seg_t apn_addmul_one(
 );
 
 /**
- * @brief Multiply an arbitrary-precision number by a single-segment value and subtract the result from another number.
+ * @ingroup apn_api
+ * @brief Multiply an arbitrary-precision number by a single limb and subtract from another number.
  *
- * This function computes a borrow-propagating operation equivalent to:
- * ```
- * result[] -= op1[] * val
- * ```
- * where `op1` has `size` segments and `val` is a single-segment value.
- * The result is written to the `result` array, which must have `size + 1` segments
- * to accommodate potential borrow-out.
+ * Computes:
+ *   result -= op1 * val
  *
- * @pre `result` and `op1` each point to valid memory containing at least
- *      `size + 1` and `size` segments, respectively.
- * @pre Partial or full aliasing between `op1` and `result` is allowed.
+ * Borrow is propagated across `size + 1` limbs to account for the full product
+ * and accumulated subtraction.
  *
- * @param[out] result
- *     Pointer to the output array receiving the difference (length = `size + 1` segments).
+ * @param[in,out] result Accumulator array (length = size + 1)
+ * @param[in]     op1    Multiplicand operand (length = size)
+ * @param[in]     size   Number of limbs in op1
+ * @param[in]     val    Single-limb multiplier
  *
- * @param[in] op1
- *     Pointer to the arbitrary-precision operand (length = `size` segments).
+ * @return Borrow-out from the most significant limb (0 or 1).
  *
- * @param[in] size
- *     Number of segments in `op1`.
- *
- * @param[in] val
- *     Single-segment multiplier to multiply with `op1` before subtraction.
- *
- * @return apn_seg_t
- *     Borrow-out from the most significant segment (0 or 1).
+ * @pre If the arrays overlap, the start of `result` must be strictly less than
+ *      the start of `op1` (i.e., `result < op1`).
  */
 APAC_API apn_seg_t apn_submul_one(
     apn_seg_t* result,
@@ -731,24 +870,21 @@ APAC_API apn_seg_t apn_submul_one(
 );
 
 /**
+ * @ingroup apn_api
  * @brief Square an arbitrary-precision number.
  *
- * Computes the carry-propagating square of `op1` (length = `size` segments)
- * and stores the result in `result` (length = `2 * size` segments).
+ * Computes:
+ *   result = op1 * op1
  *
- * @pre `result` must not overlap with `op1`.
+ * The full square is written to `result` using carry-propagating multiplication.
  *
- * @param[out] result
- *     Output array receiving the square.
+ * @param[out] result Output array receiving the square (length = 2 * size)
+ * @param[in]  op1    Input operand to square (length = size)
+ * @param[in]  size   Number of limbs in op1
  *
- * @param[in] op1
- *     Input number to square.
+ * @return APAC_SUCCESS on success, or an error code on failure.
  *
- * @param[in] size
- *     Number of segments in `op1`.
- *
- * @return apac_err
- *     Error code indicating success or failure.
+ * @pre The `result` array must not overlap with `op1`.
  */
 APAC_API apac_err apn_sqr(
     apn_seg_t* result,
@@ -757,18 +893,15 @@ APAC_API apac_err apn_sqr(
 );
 
 /**
+ * @ingroup apn_api
  * @brief Fill an arbitrary-precision number with a constant value.
  *
- * Sets all `size` segments of `result` to `val`.
+ * Computes:
+ *   for i in [0, size): result[i] = val
  *
- * @param[out] result
- *     Array to fill.
- *
- * @param[in] size
- *     Number of segments to set.
- *
- * @param[in] val
- *     Value to assign to each segment.
+ * @param[out] result Output array to fill (length = size)
+ * @param[in]  size   Number of limbs to set
+ * @param[in]  val    Value assigned to each limb
  */
 APAC_API void apn_set(
     apn_seg_t* result,
@@ -777,21 +910,25 @@ APAC_API void apn_set(
 );
 
 /**
- * @brief Compare two arbitrary-precision numbers.
+ * @ingroup apn_api
+ * @brief Compare two arbitrary-precision numbers by magnitude.
  *
- * Compares `op1` and `op2` (length = `size` segments each).
+ * Computes the magnitude comparison of two numbers of equal length:
  *
- * @param[in] op1
- *     First number.
+ *   compare(op1, op2)
  *
- * @param[in] op2
- *     Second number.
+ * where comparison is performed from most significant limb to least significant.
  *
- * @param[in] size
- *     Number of segments to compare.
+ * @param[in] op1  First operand (length = size)
+ * @param[in] op2  Second operand (length = size)
+ * @param[in] size Number of limbs to compare
  *
- * @return int
- *     0 if equal, 1 if `op1 > op2`, -1 if `op1 < op2`.
+ * @return
+ *   -  0 if the magnitudes are equal  
+ *   -  1 if the magnitude of `op1` is greater than the magnitude of `op2`  
+ *   - -1 if the magnitude of `op1` is less than the magnitude of `op2`
+ *
+ * @note `op1` and `op2` may overlap arbitrarily.
  */
 APAC_API int apn_cmp(
     const apn_seg_t* op1,
@@ -800,33 +937,30 @@ APAC_API int apn_cmp(
 );
 
 /**
- * @brief Divide an arbitrary-precision number by another, producing quotient and remainder.
+ * @ingroup apn_api
+ * @brief Divide one arbitrary-precision number by another, producing quotient and remainder.
  *
- * Computes the quotient and remainder of `dividend / divisor`.
+ * Computes:
+ *   dividend = quotient * divisor + remainder
  *
- * @pre `quotient` must have length = (size_divd - size_dvsr + 1).
- * @pre `remainder` must have length = size_dvsr.
+ * with:
+ *   0 <= remainder < divisor
  *
- * @param[out] quotient
- *     Array receiving the quotient.
+ * @param[out] quotient  Output array receiving the quotient
+ *                       (length = size_divd - size_dvsr + 1)
+ * @param[out] remainder Output array receiving the remainder
+ *                       (length = size_dvsr)
+ * @param[in]  dividend  Dividend operand (length = size_divd)
+ * @param[in]  divisor   Divisor operand (length = size_dvsr)
+ * @param[in]  size_divd Number of limbs in dividend
+ * @param[in]  size_dvsr Number of limbs in divisor
  *
- * @param[out] remainder
- *     Array receiving the remainder.
+ * @return APAC_SUCCESS on success, or an error code on failure.
  *
- * @param[in] dividend
- *     Dividend array (length = size_divd).
- *
- * @param[in] divisor
- *     Divisor array (length = size_dvsr).
- *
- * @param[in] size_divd
- *     Number of segments in dividend.
- *
- * @param[in] size_dvsr
- *     Number of segments in divisor.
- *
- * @return apac_err
- *     Error code indicating success or failure.
+ * @pre size_divd >= size_dvsr
+ * @pre The `dividend` and `divisor` arrays must not overlap.
+ * @pre The `quotient` array must not overlap with any input or with `remainder`.
+ * @pre The `remainder` array may overlap with `dividend` but must not overlap with `divisor`.
  */
 APAC_API apac_err apn_div(
     apn_seg_t* quotient,
@@ -838,26 +972,23 @@ APAC_API apac_err apn_div(
 );
 
 /**
- * @brief Divide an arbitrary-precision number by a single-segment divisor.
+ * @ingroup apn_api
+ * @brief Divide an arbitrary-precision number by a single-limb divisor.
  *
- * Computes quotient and remainder of `dividend / divisor64`.
+ * Computes:
+ *   dividend = quotient * divisor + remainder
  *
- * @pre `quotient` must have length = size_divd.
+ * where `remainder` is returned as the function result and:
+ *   0 <= remainder < divisor
  *
- * @param[out] quotient
- *     Array receiving the quotient.
+ * @param[out] quotient Output array receiving the quotient (length = size_divd)
+ * @param[in]  dividend Dividend operand (length = size_divd)
+ * @param[in]  divisor  Single-limb divisor
+ * @param[in]  size_divd Number of limbs in dividend
  *
- * @param[in] dividend
- *     Dividend array (length = size_divd).
+ * @return Single-limb remainder of the division.
  *
- * @param[in] divisor64
- *     Single-segment divisor.
- *
- * @param[in] size_divd
- *     Number of segments in dividend.
- *
- * @return apn_seg_t
- *     Single-segment remainder.
+ * @pre The `quotient` array must not overlap with `dividend`.
  */
 APAC_API apn_seg_t apn_div_one(
     apn_seg_t* quotient,
@@ -867,25 +998,25 @@ APAC_API apn_seg_t apn_div_one(
 );
 
 /**
- * @brief Right-shift an arbitrary-precision number by a number of bits.
+ * @ingroup apn_api
+ * @brief Right-shift an arbitrary-precision number by a small number of bits.
  *
- * Performs a carry-propagating right shift of `op1` by `bit_cnt` bits and stores
- * the result in `result`.
+ * Computes:
+ *   result = op1 >> bit_cnt
  *
- * @param[out] result
- *     Array receiving the shifted value (length = size).
+ * The shift is performed across all limbs with carry propagation from most to
+ * least significant limb.
  *
- * @param[in] op1
- *     Input number to shift.
+ * @param[out] result Output array receiving the shifted value (length = size)
+ * @param[in]  op1    Input operand to shift (length = size)
+ * @param[in]  size   Number of limbs in op1
+ * @param[in]  bit_cnt Number of bits to shift right (must be < APN_SEG_BITS)
  *
- * @param[in] size
- *     Number of segments in `op1`.
+ * @return Bits shifted out from the least significant limb.
  *
- * @param[in] bit_cnt
- *     Number of bits to shift right.
- *
- * @return apn_seg_t
- *     Bits shifted out from the least significant end.
+ * @pre bit_cnt < APN_SEG_BITS
+ * @pre If the arrays overlap, the start of `result` must not be less than the
+ *      start of `op1` (i.e., `result >= op1`).
  */
 APAC_API apn_seg_t apn_rshift(
     apn_seg_t* result,
@@ -895,25 +1026,25 @@ APAC_API apn_seg_t apn_rshift(
 );
 
 /**
- * @brief Left-shift an arbitrary-precision number by a number of bits.
+ * @ingroup apn_api
+ * @brief Left-shift an arbitrary-precision number by a small number of bits.
  *
- * Performs a carry-propagating left shift of `op1` by `bit_cnt` bits and stores
- * the result in `result`.
+ * Computes:
+ *   result = op1 << bit_cnt
  *
- * @param[out] result
- *     Array receiving the shifted value (length = size).
+ * The shift is performed across all limbs with carry propagation from least to
+ * most significant limb.
  *
- * @param[in] op1
- *     Input number to shift.
+ * @param[out] result Output array receiving the shifted value (length = size)
+ * @param[in]  op1    Input operand to shift (length = size)
+ * @param[in]  size   Number of limbs in op1
+ * @param[in]  bit_cnt Number of bits to shift left (must be < APN_SEG_BITS)
  *
- * @param[in] size
- *     Number of segments in `op1`.
+ * @return Bits shifted out from the most significant limb.
  *
- * @param[in] bit_cnt
- *     Number of bits to shift left.
- *
- * @return apn_seg_t
- *     Bits shifted out from the most significant end.
+ * @pre bit_cnt < APN_SEG_BITS
+ * @pre If the arrays overlap, the start of `result` must not be greater than the
+ *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API apn_seg_t apn_lshift(
     apn_seg_t* result,
@@ -923,29 +1054,51 @@ APAC_API apn_seg_t apn_lshift(
 );
 
 /**
- * @brief Check if an arbitrary-precision number is zero.
+ * @ingroup apn_api
+ * @brief Check whether an arbitrary-precision number is zero.
  *
- * Checks whether all `size` segments of `op1` are zero.
+ * Computes whether all limbs of the input are zero:
  *
- * @param[in] op1
- *     Number to check.
+ *   return (op1 == 0)
  *
- * @param[in] size
- *     Number of segments in `op1`.
+ * @param[in] op1  Input operand (length = size)
+ * @param[in] size Number of limbs in op1
  *
- * @return int
- *     0 if `op1` is zero, 1 otherwise.
+ * @return
+ *   - 0 if the value is exactly zero  
+ *   - 1 if the value is non-zero
+ *
+ * @note `op1` may overlap arbitrarily with any other array since no writes occur.
  */
 APAC_API int apn_is_zero(
     const apn_seg_t* op1,
     apn_size_t size
 );
 
+/**
+ * @ingroup apn_api
+ * @brief Compute the effective size of an arbitrary-precision number.
+ *
+ * Returns the number of most-significant limbs excluding leading zero limbs.
+ * In other words, it finds the largest index `k` such that:
+ *
+ *   op1[k-1] != 0
+ *
+ * and returns `k`. If all limbs are zero, the function returns 0.
+ *
+ * @param[in] op1  Input operand (length = size)
+ * @param[in] size Maximum number of limbs to examine
+ *
+ * @return Number of significant limbs (0 <= return value <= size).
+ *
+ * @note `op1` may overlap arbitrarily with any other array since no writes occur.
+ */
 APAC_API apn_size_t apn_clamp(
     const apn_seg_t* op1,
     apn_size_t size
 );
 
+/** @} */ /* end of apn_api */
 
 /****************************************************************************************************/
 /*********************************          APZ FUNCTIONS         ***********************************/
