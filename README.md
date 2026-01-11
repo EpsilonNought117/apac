@@ -78,3 +78,48 @@ All options can be enabled or disabled during the CMake configuration step
 The following x86-64 microarchitectures contain assembly code especially optimized for them
 
   - AMD Zen 4
+
+## Performance Comparison (vs GMP 6.3.0)
+
+> **Note on benchmarking:**  
+> These results were obtained by comparing **libapac** against **GMP 6.3.0** x86 
+> fat-binary built from source, running on an **AMD Ryzen 7 8845HS (Zen 4)**, with
+> benchmark code compiled using **GCC 14.2 at `-O2`** optimization level.
+
+<table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: none;">
+  <tr>
+    <td style="border: none;">
+      <img src="docs/images/cmp_div_3d.png" width="420"/>
+    </td>
+    <td style="border: none;">
+      <img src="docs/images/cmp_mul_3d.png" width="420"/>
+    </td>
+  </tr>
+  <tr>
+    <td style="border: none;">
+      <img src="docs/images/cmp_mul_n.png" width="420"/>
+    </td>
+    <td style="border: none;">
+      <img src="docs/images/cmp_sqr.png" width="420"/>
+    </td>
+  </tr>
+</table>
+
+## Example Usage
+
+Before using any libapac routines, the library must be initialized to perform
+CPU feature detection and set up optimized dispatch tables.
+
+```c
+#include "apac.h"
+
+int main(void)
+{
+    /* Initialize (CPU detection, memory allocation functions etc.,) */
+    apacInit();
+
+    /* Library is now ready for use */
+
+    return 0;
+}
+```
