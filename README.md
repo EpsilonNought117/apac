@@ -78,6 +78,7 @@ All options can be enabled or disabled during the CMake configuration step
 The following x86-64 microarchitectures contain assembly code especially optimized for them
 
   - AMD Zen 4
+  - AMD Zen 5
 
 ## Performance Comparison (vs GMP 6.3.0)
 

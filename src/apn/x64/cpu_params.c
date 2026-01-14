@@ -59,10 +59,10 @@ void zen4_set_params(void)
 
 void zen5_set_params(void)
 {
-	curr_cpu.karatsuba_mul_balanced_threshold   = (apn_size_t)(30);
-	curr_cpu.karatsuba_sqr_threshold            = (apn_size_t)(52);
-	curr_cpu.karatsuba_mul_unbalanced_threshold = (apn_size_t)(50);
-	curr_cpu.dnc_div_threshold                  = (apn_size_t)(36);
+	curr_cpu.karatsuba_mul_balanced_threshold	= (apn_size_t)(26);
+	curr_cpu.karatsuba_sqr_threshold			= (apn_size_t)(45);
+	curr_cpu.karatsuba_mul_unbalanced_threshold = (apn_size_t)(44);
+	curr_cpu.dnc_div_threshold					= (apn_size_t)(34);
 
 	curr_cpu.apn_add_n_ptr			= add_n_zen4;
 	curr_cpu.apn_sub_n_ptr			= sub_n_zen4;
