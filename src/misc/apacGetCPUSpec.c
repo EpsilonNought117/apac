@@ -8,7 +8,9 @@ apac_cpu_params curr_cpu = { 0 };
 	defined(__x86_64) || defined(__x86_64__) ||	\
 	defined(__amd64)  || defined(__amd64__)
 
+extern void zen3_set_params(void);
 extern void zen4_set_params(void);
+extern void zen5_set_params(void);
 extern void generic_x64_set_params(void);
 
 #if defined(_MSC_VER)
@@ -67,7 +69,7 @@ void apacGetCPUSpec(void)
 		switch (family)
 		{
 		case 0x1A:   // Zen 5
-			zen4_set_params();
+			zen5_set_params();
 			break;
 
 		case 0x19:   // Zen 3 / Zen 4
@@ -84,7 +86,7 @@ void apacGetCPUSpec(void)
 			else
 			{
 				// Zen 3 / Zen 3+
-				generic_x64_set_params();
+				zen3_set_params();
 			}
 			break;
 
