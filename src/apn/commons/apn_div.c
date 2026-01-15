@@ -37,6 +37,11 @@ apac_err apn_div(
 
     uint32_t dvsr_shift_val = 0;
 
+    if (size_dvsr == 1)
+    {
+        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd);
+        return APAC_OK;
+    }
     if (size_divd == size_dvsr)
     {
         int cmp_res = apn_cmp(dividend, divisor, size_divd);
@@ -56,11 +61,6 @@ apac_err apn_div(
             goto full_division;
         }
 
-        return APAC_OK;
-    }
-    if (size_dvsr == 1)
-    {
-        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd);
         return APAC_OK;
     }
 
