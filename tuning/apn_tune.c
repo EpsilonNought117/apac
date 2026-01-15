@@ -634,19 +634,23 @@ int main(int argc, char** argv)
 
     printf("curr_cpu.karatsuba_mul_balanced_threshold   = "
         "(apn_size_t)(%" PRI_APN_SIZE ");\n",
-        mul_balanced_thresh);
+        mul_balanced_thresh
+    );
 
     printf("curr_cpu.karatsuba_sqr_threshold            = "
         "(apn_size_t)(%" PRI_APN_SIZE ");\n",
-        sqr_thresh);
+        sqr_thresh
+    );
 
     printf("curr_cpu.karatsuba_mul_unbalanced_threshold = "
         "(apn_size_t)(%" PRI_APN_SIZE ");\n",
-        mul_unbalanced_thresh);
+        mul_unbalanced_thresh
+    );
 
     printf("curr_cpu.dnc_div_threshold                  = "
         "(apn_size_t)(%" PRI_APN_SIZE ");\n",
-        div_thresh);
+        div_thresh
+    );
 
     return EXIT_SUCCESS;
 }
