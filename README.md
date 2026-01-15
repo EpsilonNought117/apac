@@ -1,7 +1,7 @@
 ﻿# libapac
 
 **libapac** is a free and open-source, high-performance C library for
-arbitrary-precision integer arithmetic and related computations.
+arbitrary-precision integer arithmetic and computation.
 
 ## Build Requirements
 
