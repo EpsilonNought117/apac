@@ -77,6 +77,7 @@ All options can be enabled or disabled during the CMake configuration step
 
 The following x86-64 microarchitectures contain assembly code especially optimized for them
 
+  - AMD Zen 3/3+
   - AMD Zen 4
   - AMD Zen 5
 
@@ -124,3 +125,5 @@ int main(void)
     return 0;
 }
 ```
+
+> **Note**: The library is currently WIP
