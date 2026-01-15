@@ -595,6 +595,8 @@ int main(int argc, char** argv)
         core_id,
         (unsigned long long)seed);
 
+    printf("\nAttempting to disable turbo boost ...\n");
+
     /* Disable turbo boost (or prompt user on unsupported platforms) */
     disable_turbo_boost();
 
@@ -622,6 +624,8 @@ int main(int argc, char** argv)
 
     apn_size_t div_thresh =
         get_dnc_div_threshold();
+
+    printf("\nRestoring turbo boost (if disabled via apn_tune) ... \n");
 
     /* Restore original turbo boost state */
     restore_turbo_boost();

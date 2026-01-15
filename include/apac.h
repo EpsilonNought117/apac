@@ -24,8 +24,11 @@
 
     #if defined(_MSC_VER)
 
-        #define WIN32_LEAN_AND_MEAN
-        #include <Windows.h> // for win32 threads
+        #if (_MSC_VER >= 1939)
+            #include <threads.h>
+        #else 
+            #error "Minimum MSVC version 19.39 needed for C11 Threads on Windows!"
+        #endif
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
