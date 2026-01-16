@@ -126,4 +126,79 @@ int main(void)
 }
 ```
 
+## Testing and Tuning
+
+libapac includes dedicated utilities for correctness testing and performance tuning on particular micro-architectures.
+
+### Correctness Testing (apn_tests)
+
+The apn_tests program validates the correctness of arbitrary-precision
+operations across a wide range of operand sizes and edge cases.
+
+- Covers addition, subtraction, multiplication, division, and squaring
+- Compares results against known-correct reference implementations
+- Intended to be run after changes to core arithmetic or assembly routines
+
+By default, the test suite is built automatically.
+To disable it during configuration:
+
+    cmake -DBUILD_APN_TESTS=OFF
+
+After building, the test executable can be run directly from the build directory:
+
+    ./apn_tests <seed>
+
+Where:
+
+- `<seed>` is a hexadecimal PRNG seed used to deterministically generate test vectors
+
+Example:
+
+    ./apn_tests C0FFEE
+
+### Algorithm Threshold Tuning (apn_tune)
+
+The apn_tune utility benchmarks different algorithmic variants (e.g. basecase,
+Karatsuba, Toom-Cook, FFT-based routines) to determine optimal size thresholds
+for the target CPU.
+
+- Automatically measures performance across operand sizes
+- Generates architecture-specific tuning data
+- Intended to be run once per microarchitecture or system configuration
+
+This tool is also built by default.
+To disable it during configuration:
+
+    cmake -DBUILD_APN_TUNE=OFF
+
+Running the tuner:
+
+    ./apn_tune <core> <seed>
+
+Where:
+
+- `<core>` is the logical CPU core index to which the tuning process will be pinned
+- `<seed>` is a hexadecimal PRNG seed used to generate benchmark operands
+
+Example:
+
+    ./apn_tune 4 C0FFEEC0DE
+
+#### Turbo Boost Handling
+
+On **Windows**, `apn_tune` automatically disables CPU turbo boost using OS APIs
+for the duration of the tuning run, and restores it upon normal program exit.
+This ensures stable and reproducible timing results.
+
+> **Warning:** Terminating `apn_tune` prematurely (e.g. via forced termination)
+> may prevent turbo boost from being re-enabled. In such cases, the user will have to manually turn or turbo boost 
+or run the tuning utility again and let is terminate by itself.
+
+On **non-Windows platforms**, turbo boost control is not performed by libapac.
+Users must manually disable frequency scaling or turbo features if required
+to obtain stable benchmark results.
+
+Note: Tuning results are CPU-specific. For best performance, run apn_tune
+on the same machine where libapac will be deployed.
+
 > **Note**: The library is currently WIP

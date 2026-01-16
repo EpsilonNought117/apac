@@ -1107,9 +1107,9 @@ APAC_API apn_size_t apn_clamp(
 /*********************************          APZ FUNCTIONS         ***********************************/
 /****************************************************************************************************/
 
-#define APZ_POS         (signed int)1
-#define APZ_NEG         (signed int)-1
-#define APZ_ZERO        (signed int)0
+#define APZ_POS         (int8_t)1
+#define APZ_NEG         (int8_t)-1
+#define APZ_ZERO        (int8_t)0
 
 #define APZ_MAX_SIZE    ((apn_size_t)1 << 50)
 
@@ -1117,7 +1117,7 @@ typedef struct
 {
     apn_seg_t* data;
     apn_size_t max_size, used_size;
-    signed int is_neg;
+    int8_t is_neg;
 
 } apz_t;
 
