@@ -201,4 +201,51 @@ to obtain stable benchmark results.
 Note: Tuning results are CPU-specific. For best performance, run apn_tune
 on the same machine where libapac will be deployed.
 
+## Programming Examples
+
+Small example programs are provided which demonstrate basic usage of the
+arbitrary-precision integer API.
+
+> **Note:** Example programs are built by default. To disable building all
+> examples during configuration, set:
+>
+>     cmake -DBUILD_EXAMPLES=OFF
+
+### Factorial Example
+
+The factorial example computes `n!` using arbitrary-precision integers and
+serves as a minimal reference for iterative multi-precision computation.
+
+Running the factorial example:
+
+    ./factorial <n>
+
+Where:
+
+- `<n>` must be greater than 0 and less than 1,000,000
+
+Example:
+
+    ./factorial 1000
+
+### Fibonacci Example
+
+The Fibonacci example computes the `n`-th Fibonacci number using
+arbitrary-precision arithmetic.
+
+Running the Fibonacci example:
+
+    ./fibonacci <n>
+
+Where:
+
+- `<n>` must be greater than 2 and less than `2^22`
+
+Example:
+
+    ./fibonacci 100000
+
+Note: These examples are intended for demonstration purposes and correctness
+validation, not for algorithmic benchmarking or threshold tuning.
+
 > **Note**: The library is currently WIP
