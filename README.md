@@ -159,7 +159,7 @@ Example:
 ### Algorithm Threshold Tuning (apn_tune)
 
 The apn_tune utility benchmarks different algorithmic variants (e.g. basecase,
-Karatsuba, Toom-Cook, FFT-based routines) to determine optimal size thresholds
+Karatsuba) to determine optimal size thresholds
 for the target CPU.
 
 - Automatically measures performance across operand sizes
