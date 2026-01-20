@@ -28,9 +28,10 @@ uint64_t cpu_timer(void)
 #elif (defined(__GNUC__) || defined(__clang__)) && \
       (defined(__aarch64__) || defined(__arm64__))
 
-    __isb();
-    uint64_t cnt = __arm_rsr64("cntvct_el0");
-    uint64_t frq = __arm_rsr64("cntfrq_el0");
+    __asm__ volatile("isb" ::: "memory");
+    uint64_t cnt, frq;
+    __asm__ volatile("mrs %0, cntvct_el0" : "=r"(cnt));
+    __asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frq));
     return (cnt * 1000000000ULL) / frq;
 
 #else
@@ -40,7 +41,7 @@ uint64_t cpu_timer(void)
 
 uint64_t os_timer(void)
 {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 
     static uint64_t freq = 0;
     LARGE_INTEGER t;
@@ -57,7 +58,7 @@ uint64_t os_timer(void)
     return (uint64_t)((t.QuadPart * 1000000000ULL) / freq);
 
 #elif (defined(__linux__)  || defined(__linux) || \
-       defined(__unix__)   || defined(__unix))
+       defined(__unix__)   || defined(__unix) || defined(_WIN32))
 
     struct timespec ts;
 
@@ -127,7 +128,7 @@ void set_to_random(apn_seg_t* op1, apn_size_t size)
 
 int pin_curr_thread_to_core(uint32_t core_id)
 {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
@@ -149,8 +150,8 @@ int pin_curr_thread_to_core(uint32_t core_id)
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(core_id, &cpuset);
-    pthread_t thread = pthread_self();
-    return (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset) == 0) ? 0 : -1;
+    pid_t tid = gettid();
+    return sched_setaffinity(tid, sizeof(cpu_set_t), &cpuset) == 0 ? 0 : -1;
 
 #else
 
@@ -160,7 +161,7 @@ int pin_curr_thread_to_core(uint32_t core_id)
 }
 
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 
     static GUID* CurrentScheme;
     static DWORD CurrentMode;
@@ -169,7 +170,7 @@ int pin_curr_thread_to_core(uint32_t core_id)
 
 void disable_turbo_boost(void)
 {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 
     PowerGetActiveScheme(NULL, &CurrentScheme);
 
@@ -208,7 +209,7 @@ void disable_turbo_boost(void)
 
 void restore_turbo_boost(void)
 {
-#if defined(_WIN32) && (defined(_M_X64) || defined(_M_AMD64))
+#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, CurrentMode);
 

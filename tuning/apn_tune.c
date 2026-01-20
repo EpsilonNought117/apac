@@ -519,7 +519,7 @@ static apn_size_t get_dnc_div_threshold(void)
 
 static void cpu_rest_ms(unsigned ms)
 {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
     Sleep(ms);
 #else
     struct timespec ts;

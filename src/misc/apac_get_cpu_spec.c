@@ -146,5 +146,23 @@ void apac_get_cpu_spec(void)
 	}
 }
 
+#elif defined(_M_ARM64) || defined(__aarch64__) || defined(__arm64__)
+	extern void generic_arm64_set_params(void);
 
+	void apacGetCPUSpec(void) {
+		int hasASIMD = 0;
+		#if defined(_WIN32) || defined(__APPLE__)
+			int hasASIMD = 1;
+		#elif defined(__linux__)
+			uint64_t hwcap = getauxval(AT_HWCAP);
+			hasASIMD = hwcap & HWCAP_ASIMD;
+		#endif
+
+		if(hasASIMD) {
+			generic_arm64_set_params();
+		} else {
+			fprintf(stderr, "No ASIMD support!");
+			exit(EXIT_FAILURE);
+		}
+	}
 #endif
