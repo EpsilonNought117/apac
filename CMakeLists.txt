@@ -35,7 +35,6 @@ if (WIN32)
     elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         message(STATUS "Compiler: GCC (MINGW)")
         enable_language(ASM_MASM)
-        # set(CMAKE_ASM_MASM_COMPILER "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
 
         find_program(MASM_COMPILER
             NAMES ml64.exe
