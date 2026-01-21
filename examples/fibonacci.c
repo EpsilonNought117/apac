@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     APAC_ALWAYS_ASSERT(N >= 2);
     APAC_ALWAYS_ASSERT(N <= (1ULL << 22));
 
-    apacInit();
+    apac_init();
 
     /* ------------------------------------------------------------
      * Limb count estimate (original, correct formula)

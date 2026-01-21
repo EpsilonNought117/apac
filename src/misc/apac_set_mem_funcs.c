@@ -4,7 +4,7 @@ void* (*apac_malloc)(size_t) = NULL;
 void* (*apac_realloc)(void*, size_t) = NULL;
 void (*apac_free)(void*) = NULL;
 
-void apacSetMemFuncs(
+void apac_set_mem_funcs(
     void* (*ptr1)(size_t),
     void* (*ptr2)(void*, size_t),
     void (*ptr3)(void*)

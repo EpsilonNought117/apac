@@ -1816,7 +1816,7 @@ static void check_apn_div(void)
 
 int main(int argc, char** argv)
 {
-    apacInit();
+    apac_init();
 
     uint64_t seed = 0xC0FFEE; /* default seed */
 

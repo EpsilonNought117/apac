@@ -92,9 +92,9 @@ set(apac_c_sources
 
     # MISCELLANEOUS
 
-    "src/misc/apacSetMemFuncs.c"
-    "src/misc/apacGetCPUSpec.c"
-    "src/misc/apacInit.c"
+    "src/misc/apac_set_mem_funcs.c"
+    "src/misc/apac_get_cpu_spec.c"
+    "src/misc/apac_init.c"
 
     # APN PUBLIC API
 

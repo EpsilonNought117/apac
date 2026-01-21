@@ -531,7 +531,7 @@ static void cpu_rest_ms(unsigned ms)
 
 int main(int argc, char** argv)
 {
-    apacInit();
+    apac_init();
 
     /* ------------------------------------------------------------
        Parse command-line arguments

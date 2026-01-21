@@ -118,7 +118,7 @@ CPU feature detection and set up optimized dispatch tables.
 int main(void)
 {
     /* Initialize (CPU detection, memory allocation functions etc.,) */
-    apacInit();
+    apac_init();
 
     /* Library is now ready for use */
 

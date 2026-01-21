@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     APAC_ALWAYS_ASSERT(N >= 1);
     APAC_ALWAYS_ASSERT(N <= 1000 * 1000);
 
-    apacInit();
+    apac_init();
 
     /* ------------------------------------------------------------
     * Stirling-based upper bound for N! limb count

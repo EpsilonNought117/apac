@@ -38,7 +38,7 @@ extern void generic_x64_set_params(void);
     #error "Unsupported Compiler!"
 #endif
 
-void apacGetCPUSpec(void)
+void apac_get_cpu_spec(void)
 {
 	int cpuInfo[4] = { 0 };
 

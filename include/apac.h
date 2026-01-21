@@ -311,7 +311,7 @@ typedef enum
  * - CPU feature detection
  * - Selection of optimized arithmetic kernels
  *
- * Most users should only call ::apacInit() before using any arithmetic
+ * Most users should only call ::apac_init() before using any arithmetic
  * functions. Advanced users may inspect or modify ::curr_cpu to experiment
  * with algorithm thresholds or kernel selection.
  *
@@ -327,7 +327,7 @@ typedef enum
  * @brief Function pointer used by libapac for memory allocation.
  *
  * By default, this points to the system `malloc()` implementation, but can be
- * overridden via ::apacSetMemFuncs().
+ * overridden via ::apac_set_mem_funcs().
  */
 APAC_API extern void* (*apac_malloc)(size_t);
 
@@ -336,7 +336,7 @@ APAC_API extern void* (*apac_malloc)(size_t);
  * @brief Function pointer used by libapac for memory reallocation.
  *
  * By default, this points to the system `realloc()` implementation, but can be
- * overridden via ::apacSetMemFuncs().
+ * overridden via ::apac_set_mem_funcs().
  */
 APAC_API extern void* (*apac_realloc)(void*, size_t);
 
@@ -345,7 +345,7 @@ APAC_API extern void* (*apac_realloc)(void*, size_t);
  * @brief Function pointer used by libapac for freeing memory.
  *
  * By default, this points to the system `free()` implementation, but can be
- * overridden via ::apacSetMemFuncs().
+ * overridden via ::apac_set_mem_funcs().
  */
 APAC_API extern void (*apac_free)(void*);
 
@@ -360,10 +360,10 @@ APAC_API extern void (*apac_free)(void*);
  * @param[in] ptr2 Function used for reallocation (realloc-like)
  * @param[in] ptr3 Function used for deallocation (free-like)
  *
- * @note This function should be called before ::apacInit() and before any
+ * @note This function should be called before ::apac_init() and before any
  *       other libapac API functions are used.
  */
-APAC_API void apacSetMemFuncs(
+APAC_API void apac_set_mem_funcs(
     void* (*ptr1)(size_t),
     void* (*ptr2)(void*, size_t),
     void (*ptr3)(void*)
@@ -381,10 +381,10 @@ APAC_API void apacSetMemFuncs(
  * tables to use the most appropriate implementations available for the
  * current microarchitecture.
  *
- * @note This function is automatically called by ::apacInit().
+ * @note This function is automatically called by ::apac_init().
  *       It is exposed primarily for testing and benchmarking purposes.
  */
-APAC_API void apacGetCPUSpec(void);
+APAC_API void apac_get_cpu_spec(void);
 
 /**
  * @ingroup apac_runtime
@@ -398,7 +398,7 @@ APAC_API void apacGetCPUSpec(void);
  *
  * This function must be called before using any arithmetic routines in libapac.
  */
-APAC_API void apacInit(void);
+APAC_API void apac_init(void);
 
 /* ============================================================================
  * CPU dispatch parameters
@@ -492,7 +492,7 @@ typedef struct apac_cpu_params
  * This global structure contains the currently selected algorithm thresholds
  * and kernel function pointers used by libapac.
  *
- * It is initialized by ::apacInit() based on detected CPU features.
+ * It is initialized by ::apac_init() based on detected CPU features.
  *
  * Advanced users may modify this structure to perform controlled experiments,
  * benchmarking, or algorithm research.
