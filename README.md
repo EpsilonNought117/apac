@@ -133,11 +133,8 @@ libapac includes dedicated utilities for correctness testing and performance tun
 ### Correctness Testing (apn_tests)
 
 The apn_tests program validates the correctness of arbitrary-precision
-operations across a wide range of operand sizes and edge cases.
-
-- Covers addition, subtraction, multiplication, division, and squaring
-- Compares results against known-correct reference implementations
-- Intended to be run after changes to core arithmetic or assembly routines
+operations across a wide range of operand sizes and edge cases. It is 
+intended to be run after changes to core arithmetic or assembly routines.
 
 By default, the test suite is built automatically.
 To disable it during configuration:
@@ -161,10 +158,6 @@ Example:
 The apn_tune utility benchmarks different algorithmic variants (e.g. basecase,
 Karatsuba) to determine optimal size thresholds
 for the target CPU.
-
-- Automatically measures performance across operand sizes
-- Generates architecture-specific tuning data
-- Intended to be run once per microarchitecture or system configuration
 
 This tool is also built by default.
 To disable it during configuration:
