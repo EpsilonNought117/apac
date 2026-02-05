@@ -482,23 +482,6 @@ typedef struct apac_cpu_params
 
 } apac_cpu_params;
 
-/**
- * @ingroup apac_runtime
- * @brief Active CPU dispatch configuration.
- *
- * This global structure contains the currently selected algorithm thresholds
- * and kernel function pointers used by libapac.
- *
- * It is initialized by ::apac_init() based on detected CPU features.
- *
- * Advanced users may modify this structure to perform controlled experiments,
- * benchmarking, or algorithm research.
- *
- * @warning Modifying this structure incorrectly can lead to crashes or
- *          incorrect arithmetic results.
- */
-extern apac_cpu_params curr_cpu;
-
 /** @} */ /* end of apac_runtime */
 
 /****************************************************************************************************/

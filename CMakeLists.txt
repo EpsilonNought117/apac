@@ -98,31 +98,31 @@ set(apac_c_sources
 
     # APN PUBLIC API
 
-    "src/apn/commons/apn_add.c"
-    "src/apn/commons/apn_sub.c"
-    "src/apn/commons/apn_negate.c"
-    "src/apn/commons/apn_mul.c"
-    "src/apn/commons/apn_set.c"
-    "src/apn/commons/apn_cpy.c"
-    "src/apn/commons/apn_sqr.c"
-    "src/apn/commons/apn_cmp.c"
-    "src/apn/commons/apn_addmul_one.c"
-    "src/apn/commons/apn_submul_one.c"
-    "src/apn/commons/apn_shift.c"
-    "src/apn/commons/apn_is_zero.c"
-    "src/apn/commons/apn_clamp.c"
-    "src/apn/commons/apn_div.c"
-    "src/apn/commons/apn_div_one.c"
+    "src/apn/commons/c_src/apn_add.c"
+    "src/apn/commons/c_src/apn_sub.c"
+    "src/apn/commons/c_src/apn_negate.c"
+    "src/apn/commons/c_src/apn_mul.c"
+    "src/apn/commons/c_src/apn_set.c"
+    "src/apn/commons/c_src/apn_cpy.c"
+    "src/apn/commons/c_src/apn_sqr.c"
+    "src/apn/commons/c_src/apn_cmp.c"
+    "src/apn/commons/c_src/apn_addmul_one.c"
+    "src/apn/commons/c_src/apn_submul_one.c"
+    "src/apn/commons/c_src/apn_shift.c"
+    "src/apn/commons/c_src/apn_is_zero.c"
+    "src/apn/commons/c_src/apn_clamp.c"
+    "src/apn/commons/c_src/apn_div.c"
+    "src/apn/commons/c_src/apn_div_one.c"
 
     # APN HIDDEN FUNCS
 
-    "src/apn/commons/basecase_div.c"
-    "src/apn/commons/dnc_div_rem.c"
-    "src/apn/commons/basecase_mul.c"
-    "src/apn/commons/karatsuba_mul.c"
-    "src/apn/commons/basecase_sqr.c"
-    "src/apn/commons/karatsuba_sqr.c"
-    "src/apn/commons/div_helpers.c"
+    "src/apn/commons/c_src/basecase_div.c"
+    "src/apn/commons/c_src/dnc_div_rem.c"
+    "src/apn/commons/c_src/basecase_mul.c"
+    "src/apn/commons/c_src/karatsuba_mul.c"
+    "src/apn/commons/c_src/basecase_sqr.c"
+    "src/apn/commons/c_src/karatsuba_sqr.c"
+    "src/apn/commons/c_src/div_helpers.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
@@ -130,43 +130,43 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
     # Common C sources (always used on x64)
     set(x64_c_sources
-        "src/apn/x64/set.c"
-        "src/apn/x64/cmp.c"
-        "src/apn/x64/cpy.c"
-        "src/apn/x64/is_zero.c"
-        "src/apn/x64/cpu_params.c"
+        "src/apn/x64/c_src/set.c"
+        "src/apn/x64/c_src/cmp.c"
+        "src/apn/x64/c_src/cpy.c"
+        "src/apn/x64/c_src/is_zero.c"
+        "src/apn/x64/c_src/cpu_params.c"
     )
 
     # ABI-specific assembly sources
     if (WIN32)
         message(STATUS "Using MS-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/ms_abi/add_n.asm"
-            "src/apn/x64/ms_abi/add_one.asm"
-            "src/apn/x64/ms_abi/mul_bc.asm"
-            "src/apn/x64/ms_abi/addmul_one.asm"
-            "src/apn/x64/ms_abi/submul_one.asm"
-            "src/apn/x64/ms_abi/sqr_bc.asm"
-            "src/apn/x64/ms_abi/sub_n.asm"
-            "src/apn/x64/ms_abi/sub_one.asm"
-            "src/apn/x64/ms_abi/neg.asm"
-            "src/apn/x64/ms_abi/lshift_lt64.asm"
-            "src/apn/x64/ms_abi/rshift_lt64.asm"
+            "src/apn/x64/asm_src/ms_abi/add_n.asm"
+            "src/apn/x64/asm_src/ms_abi/add_one.asm"
+            "src/apn/x64/asm_src/ms_abi/mul_bc.asm"
+            "src/apn/x64/asm_src/ms_abi/addmul_one.asm"
+            "src/apn/x64/asm_src/ms_abi/submul_one.asm"
+            "src/apn/x64/asm_src/ms_abi/sqr_bc.asm"
+            "src/apn/x64/asm_src/ms_abi/sub_n.asm"
+            "src/apn/x64/asm_src/ms_abi/sub_one.asm"
+            "src/apn/x64/asm_src/ms_abi/neg.asm"
+            "src/apn/x64/asm_src/ms_abi/lshift_lt64.asm"
+            "src/apn/x64/asm_src/ms_abi/rshift_lt64.asm"
         )
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/sysv_abi/add_n.s"
-            "src/apn/x64/sysv_abi/add_one.s"
-            "src/apn/x64/sysv_abi/mul_bc.s"
-            "src/apn/x64/sysv_abi/addmul_one.s"
-            "src/apn/x64/sysv_abi/submul_one.s"
-            "src/apn/x64/sysv_abi/sqr_bc.s"
-            "src/apn/x64/sysv_abi/sub_n.s"
-            "src/apn/x64/sysv_abi/sub_one.s"
-            "src/apn/x64/sysv_abi/neg.s"
-            "src/apn/x64/sysv_abi/lshift_lt64.s"
-            "src/apn/x64/sysv_abi/rshift_lt64.s"
+            "src/apn/x64/asm_src/sysv_abi/add_n.s"
+            "src/apn/x64/asm_src/sysv_abi/add_one.s"
+            "src/apn/x64/asm_src/sysv_abi/mul_bc.s"
+            "src/apn/x64/asm_src/sysv_abi/addmul_one.s"
+            "src/apn/x64/asm_src/sysv_abi/submul_one.s"
+            "src/apn/x64/asm_src/sysv_abi/sqr_bc.s"
+            "src/apn/x64/asm_src/sysv_abi/sub_n.s"
+            "src/apn/x64/asm_src/sysv_abi/sub_one.s"
+            "src/apn/x64/asm_src/sysv_abi/neg.s"
+            "src/apn/x64/asm_src/sysv_abi/lshift_lt64.s"
+            "src/apn/x64/asm_src/sysv_abi/rshift_lt64.s"
         )
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
@@ -184,11 +184,11 @@ endif()
 
 set(hidden_headers
     # COMMONS
-    "src/apn/commons/hidden_mul.h"
-    "src/apn/commons/hidden_sqr.h"
-    "src/apn/commons/hidden_div.h"
-    "src/apn/commons/hidden_helpers.h"
-    "src/apn/commons/apn_thresholds.h"
+    "src/apn/commons/c_headers/hidden_sqr.h"
+    "src/apn/commons/c_headers/hidden_mul.h"
+    "src/apn/commons/c_headers/hidden_div.h"
+    "src/apn/commons/c_headers/hidden_helpers.h"
+    "src/apn/commons/c_headers/apn_thresholds.h"
 )
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
@@ -234,8 +234,8 @@ if (BUILD_APN_TESTS)
     message(STATUS "Building apn_tests")
 
     add_executable(apn_tests
-        tests/apn_tests.c
-        utilities/apac_utilities.c
+        "tests/apn_tests.c"
+        "utilities/apac_utilities.c"
     )
 
     target_link_libraries(apn_tests PRIVATE ${apac_target})
@@ -254,8 +254,8 @@ if (BUILD_APN_TUNE)
     message(STATUS "Building apn_tune")
 
     add_executable(apn_tune
-        tuning/apn_tune.c
-        utilities/apac_utilities.c
+        "tuning/apn_tune.c"
+        "utilities/apac_utilities.c"
     )
 
     target_link_libraries(apn_tune PRIVATE ${apac_target})

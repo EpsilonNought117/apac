@@ -2,15 +2,9 @@
 
 uint64_t cpu_timer(void)
 {
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
-
-    _mm_lfence();
-    uint64_t t = __rdtsc();
-    _mm_lfence();
-    return t;
-
-#elif (defined(__GNUC__) || defined(__clang__)) && \
-      (defined(__x86_64__) || defined(__amd64__))
+#if (defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))) || \
+    ((defined(__GNUC__) || defined(__clang__)) && \
+    (defined(__x86_64__) || defined(__amd64__) || defined(__x86_64) || defined(__amd64)))
 
     _mm_lfence();
     uint64_t t = __rdtsc();
