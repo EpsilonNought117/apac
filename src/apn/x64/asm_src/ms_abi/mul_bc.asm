@@ -73,10 +73,10 @@ inner_loop_unrolled:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i*8]
+    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
     adcx    rsi, r11
-    adox    rdi, QWORD PTR [rbp + i*8 + 8]
-    mov     QWORD PTR [rbp + i*8], rsi
+    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+    mov     QWORD PTR [rbp + i * 8], rsi
     mov     r11, rdi
 
 ENDM
@@ -111,10 +111,10 @@ rem&outer&:
 
 i = 0
 WHILE i LT outer
-    mulx    rdi, rsi, QWORD PTR [rbx + i*8]
+    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
     adcx    rsi, r11
-    adox    rdi, QWORD PTR [rbp + i*8 + 8]
-    mov     QWORD PTR [rbp + i*8], rsi
+    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+    mov     QWORD PTR [rbp + i * 8], rsi
     mov     r11, rdi
             
 i = i + 1
@@ -127,7 +127,7 @@ ENDM
 outer_loop_end:
 
     adc     r11, 0
-    mov     QWORD PTR [rbp + r13*8], r11
+    mov     QWORD PTR [rbp + r13 * 8], r11
     
     add     r8,  8
     sub     rbx, rax
