@@ -39,8 +39,8 @@ if (WIN32)
         file(GLOB_RECURSE MASM_CANDIDATES "$ENV{ProgramFiles}/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/*/bin/Hostx64/x64/ml64.exe"
 )
         if(MASM_CANDIDATES)
-            list(GET MASM_CANDIDATES 0 MASM_COMPILER)
-            message(STATUS "Found MASM at ${MASM_COMPILER}")
+            list(GET MASM_CANDIDATES 0 CMAKE_ASM_MASM_COMPILER)
+            message(STATUS "Found MASM at ${CMAKE_ASM_MASM_COMPILER}")
         else()
             message(FATAL_ERROR "MASM compiler (ml64.exe) not found. Please install Visual Studio with Desktop development for C++")
         endif()
@@ -258,9 +258,9 @@ if (MSVC)
     target_compile_options(${apac_target} PRIVATE $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>)
 else()
     # For GCC/Clang, use -ffile-prefix-map to strip the build path
-    target_compile_options(${apac_target} PRIVATE 
-        -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
-    )
+    #target_compile_options(${apac_target} PRIVATE 
+    #    -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
+    #)
 endif()
 
 # --- APN TESTS -----------------------------------------------------------------
