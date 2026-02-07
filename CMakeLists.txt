@@ -36,15 +36,11 @@ if (WIN32)
         message(STATUS "Compiler: GCC (MINGW)")
         enable_language(ASM_MASM)
 
-        find_program(MASM_COMPILER
-            NAMES ml64.exe
-            HINTS
-                "$ENV{ProgramFiles}/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC"
-        )
-
-        if(MASM_COMPILER)
+        file(GLOB_RECURSE MASM_CANDIDATES "$ENV{ProgramFiles}/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/*/bin/Hostx64/x64/ml64.exe"
+)
+        if(MASM_CANDIDATES)
+            list(GET MASM_CANDIDATES 0 MASM_COMPILER)
             message(STATUS "Found MASM at ${MASM_COMPILER}")
-            set(CMAKE_ASM_MASM_COMPILER "${MASM_COMPILER}")
         else()
             message(FATAL_ERROR "MASM compiler (ml64.exe) not found. Please install Visual Studio with Desktop development for C++")
         endif()
