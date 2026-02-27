@@ -7,10 +7,10 @@
 
     # Function Arguments
     #
-    # rdi -> result (apn_seg_t*)
-    # rsi -> op1 (const apn_seg_t*)
-    # rdx -> size (apn_size_t)
-    # rcx -> bit_cnt (apn_seg_t)
+    # rdi -> result (ap_seg_t*)
+    # rsi -> op1 (const ap_seg_t*)
+    # rdx -> size (ap_size_t)
+    # rcx -> bit_cnt (ap_seg_t)
     
     # The wrapper calling this will assert that (bit_cnt < 64 && bit_cnt > 0)
     # also asserts that size >= 1

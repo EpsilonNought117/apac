@@ -7,9 +7,9 @@
     
     #   Function Arguments
     #
-    #   rdi -> result       (apn_seg_t*)
-    #   rsi -> op1          (const apn_seg_t*)
-    #   rdx -> size         (apn_size_t)
+    #   rdi -> result       (ap_seg_t*)
+    #   rsi -> op1          (const ap_seg_t*)
+    #   rdx -> size         (ap_size_t)
 
 .intel_syntax noprefix
 .text

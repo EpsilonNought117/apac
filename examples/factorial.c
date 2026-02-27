@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    apn_seg_t N = (apn_seg_t)tmp;
+    ap_seg_t N = (ap_seg_t)tmp;
 
     /* ------------------------------------------------------------
      * Factorial invariants
@@ -49,22 +49,22 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
     * Stirling-based upper bound for N! limb count
     * ------------------------------------------------------------ */
-    apn_size_t max_limbs = 0;
+    ap_size_t max_limbs = 0;
 
     double n = (double)N;
 
     double bits = n * log2(n)- (n * LOG2E) + (0.5 * log2(2.0 * PI * n));
 
     /* Round up bits → limbs, then pad */
-    max_limbs = (apn_size_t)ceil(bits / APN_SEG_BITS);
+    max_limbs = (ap_size_t)ceil(bits / APN_SEG_BITS);
 
-    apn_seg_t* src = apac_malloc((max_limbs + 2) * sizeof(apn_seg_t));
-    apn_seg_t* dst = apac_malloc((max_limbs + 2) * sizeof(apn_seg_t));
+    ap_seg_t* src = apac_malloc((max_limbs + 2) * sizeof(ap_seg_t));
+    ap_seg_t* dst = apac_malloc((max_limbs + 2) * sizeof(ap_seg_t));
 
     APAC_ALWAYS_ASSERT(src != NULL);
     APAC_ALWAYS_ASSERT(dst != NULL);
 
-    apn_size_t curr_limbs = 1;
+    ap_size_t curr_limbs = 1;
 
     /* src = 1 */
     apn_set(dst, max_limbs + 2, 0);
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
     * Factorial loop (FIXED)
     * ------------------------------------------------------------ */
-    for (apn_seg_t k = 2; k <= N; k++)
+    for (ap_seg_t k = 2; k <= N; k++)
     {
         apn_addmul_one(dst, src, curr_limbs, k);
         curr_limbs = apn_clamp(dst, curr_limbs + 1);
@@ -97,9 +97,9 @@ int main(int argc, char** argv)
 
     fprintf(fp, "%" PRI_APN_SEGU "! (in hexadecimal) = \n", N);
 
-    apn_size_t count = 0;
+    ap_size_t count = 0;
 
-    for (apn_size_t i = curr_limbs - 1; i < curr_limbs; i--)
+    for (ap_size_t i = curr_limbs - 1; i < curr_limbs; i--)
     {
         fprintf(fp, "%016" PRI_APN_SEGX, src[i]);
         count++;

@@ -2,11 +2,11 @@
 #include "../c_headers/hidden_div.h"
 #include "../c_headers/hidden_helpers.h"
 
-apn_seg_t apn_div_one(
-    apn_seg_t* quotient,    // must be (size_divd) length
-    const apn_seg_t* dividend,
-    apn_seg_t divisor,
-    apn_size_t size_divd
+ap_seg_t apn_div_one(
+    ap_seg_t* quotient,    // must be (size_divd) length
+    const ap_seg_t* dividend,
+    ap_seg_t divisor,
+    ap_size_t size_divd
 )
 {
     APAC_ASSERT(quotient != NULL);
@@ -15,7 +15,7 @@ apn_seg_t apn_div_one(
     APAC_NO_OVERLAP(quotient, size_divd, dividend, size_divd);
     APAC_ASSERT(divisor != 0);
 
-    apn_seg_t rmdr = 0;
+    ap_seg_t rmdr = 0;
     uint32_t shift_val = 0;
 
     if (!(divisor & APN_SEG_HIGH_BIT))
@@ -27,12 +27,12 @@ apn_seg_t apn_div_one(
         rmdr = dividend[size_divd - 1] >> (APN_SEG_BITS - shift_val);
     }
 
-    apn_seg_t dvsr_recip = recip_word64_2by1(divisor);
-    apn_seg_t temp_val = 0;
+    ap_seg_t dvsr_recip = recip_word64_2by1(divisor);
+    ap_seg_t temp_val = 0;
 
-    for (apn_size_t j = size_divd - 1; j >= 1; j--)
+    for (ap_size_t j = size_divd - 1; j >= 1; j--)
     {
-        apn_seg_t valid_shift = (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_SEG_BITS - shift_val));
+        ap_seg_t valid_shift = (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_SEG_BITS - shift_val));
 
         temp_val = (shift_val) ? valid_shift : dividend[j];
         quotient[j] = udiv64_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
@@ -43,7 +43,7 @@ apn_seg_t apn_div_one(
 
     if (shift_val)
     {
-        rmdr >>= (apn_size_t)shift_val;
+        rmdr >>= (ap_size_t)shift_val;
     }
 
     return rmdr;

@@ -14,13 +14,13 @@
 __attribute__((target("avx2")))
 #endif
 int cmp_avx2_4unroll(
-	const apn_seg_t* op1,
-	const apn_seg_t* op2,
-	apn_size_t size
+	const ap_seg_t* op1,
+	const ap_seg_t* op2,
+	ap_size_t size
 )
 {
-	apn_size_t remainder = size % 16;
-	apn_size_t blocks = size - remainder;
+	ap_size_t remainder = size % 16;
+	ap_size_t blocks = size - remainder;
 
 	while (remainder)
 	{
@@ -104,13 +104,13 @@ int cmp_avx2_4unroll(
 __attribute__((target("sse2")))
 #endif
 int cmp_sse2_4unroll(
-	const apn_seg_t* op1,
-	const apn_seg_t* op2,
-	apn_size_t size
+	const ap_seg_t* op1,
+	const ap_seg_t* op2,
+	ap_size_t size
 )
 {
-	apn_size_t remainder = size % 8;
-	apn_size_t blocks = size - remainder;
+	ap_size_t remainder = size % 8;
+	ap_size_t blocks = size - remainder;
 
 	while (remainder)
 	{

@@ -4,12 +4,12 @@
 __attribute__((target("avx512f,bmi2")))
 #endif
 int is_zero_avx512f_4unroll(
-    const apn_seg_t* op1,
-    apn_size_t size
+    const ap_seg_t* op1,
+    ap_size_t size
 )
 {
-    apn_size_t blocks = size - (size % 32);
-    apn_size_t counter = 0;
+    ap_size_t blocks = size - (size % 32);
+    ap_size_t counter = 0;
     __m512i zero_reg = _mm512_setzero_si512();
 
     while (counter < blocks)
@@ -46,8 +46,8 @@ int is_zero_avx512f_4unroll(
         counter += 32;
     }
 
-    apn_size_t remaining = size - counter;
-    apn_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
+    ap_size_t remaining = size - counter;
+    ap_size_t limb_mask = _bzhi_u64(~0ULL, remaining);
 
     __m512i a0 = _mm512_or_si512(
         _mm512_maskz_loadu_epi64((limb_mask), &op1[counter]),
@@ -82,12 +82,12 @@ int is_zero_avx512f_4unroll(
 __attribute__((target("avx2")))
 #endif
 int is_zero_avx2_4unroll(
-    const apn_seg_t* op1,
-    apn_size_t size
+    const ap_seg_t* op1,
+    ap_size_t size
 )
 {
-    apn_size_t blocks = size - (size % 16);
-    apn_size_t counter = 0;
+    ap_size_t blocks = size - (size % 16);
+    ap_size_t counter = 0;
     __m256i zero_reg = _mm256_setzero_si256();
 
     while (counter < blocks)
@@ -139,12 +139,12 @@ int is_zero_avx2_4unroll(
 __attribute__((target("sse2")))
 #endif
 int is_zero_sse2_4unroll(
-    const apn_seg_t* op1,
-    apn_size_t size
+    const ap_seg_t* op1,
+    ap_size_t size
 )
 {
-    apn_size_t blocks = size - (size % 8);
-    apn_size_t counter = 0;
+    ap_size_t blocks = size - (size % 8);
+    ap_size_t counter = 0;
     __m128i zero_reg = _mm_setzero_si128();
 
     while (counter < blocks)

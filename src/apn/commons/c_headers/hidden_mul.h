@@ -11,11 +11,11 @@
  * 5) In-place, O(1) space requirement
  */
 void apn_basecase_mul(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size1,
-    apn_size_t size2
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size1,
+    ap_size_t size2
 );
 
 /*
@@ -25,11 +25,11 @@ void apn_basecase_mul(
  * 4) O(n^1.585) time complexity
  */
 void apn_karatsuba_mul_balanced(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size,
-    apn_seg_t* temp
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size,
+    ap_seg_t* temp
 );
 
 /*
@@ -40,12 +40,12 @@ void apn_karatsuba_mul_balanced(
  * 5) size1 must be greater than or equal to size2
  */
 void apn_karatsuba_mul_unbalanced(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size1,
-    apn_size_t size2,
-    apn_seg_t* temp
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size1,
+    ap_size_t size2,
+    ap_seg_t* temp
 );
 
 #endif

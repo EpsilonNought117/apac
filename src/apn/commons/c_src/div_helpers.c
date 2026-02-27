@@ -10,7 +10,7 @@
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-apn_seg_t recip_word64_2by1(apn_seg_t d)
+ap_seg_t recip_word64_2by1(ap_seg_t d)
 {
     /* Preconditions from the paper */
     APAC_ASSERT(d & APN_SEG_HIGH_BIT);
@@ -52,17 +52,17 @@ apn_seg_t recip_word64_2by1(apn_seg_t d)
         1038,1036,1034,1032,1030,1028,1026,1024
     };
 
-    apn_seg_t d0 = d & 1;
-    apn_seg_t d9 = d >> 55;
-    apn_seg_t d40 = (d >> 24) + 1;
-    apn_seg_t d63 = (d >> 1) + d0;
+    ap_seg_t d0 = d & 1;
+    ap_seg_t d9 = d >> 55;
+    ap_seg_t d40 = (d >> 24) + 1;
+    ap_seg_t d63 = (d >> 1) + d0;
 
-    apn_seg_t v0 = (apn_seg_t)D9_LUT[d9 - 256];
-    apn_seg_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
-    apn_seg_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
-    apn_seg_t e = (v2 >> 1) * d0 - v2 * d63;
+    ap_seg_t v0 = (ap_seg_t)D9_LUT[d9 - 256];
+    ap_seg_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
+    ap_seg_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
+    ap_seg_t e = (v2 >> 1) * d0 - v2 * d63;
 
-    apn_seg_t v3, v4;
+    ap_seg_t v3, v4;
     uint64_t low64, high64;
     uint8_t carry;
 
@@ -77,7 +77,7 @@ apn_seg_t recip_word64_2by1(apn_seg_t d)
 
 #elif defined(__GNUC__) || defined(__clang__)
 
-    v3 = (apn_seg_t)((((__uint128_t)v2 << 31) +
+    v3 = (ap_seg_t)((((__uint128_t)v2 << 31) +
         (((__uint128_t)e * v2) >> 65)));
 
     __uint128_t prod = (__uint128_t)v3 * d;
@@ -104,12 +104,12 @@ apn_seg_t recip_word64_2by1(apn_seg_t d)
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-apn_seg_t recip_word64_3by2(apn_seg_t d1, apn_seg_t d0)
+ap_seg_t recip_word64_3by2(ap_seg_t d1, ap_seg_t d0)
 {
     /* Step 1: v = RECIPROCAL_WORD(d1) */
-    apn_seg_t v = recip_word64_2by1(d1);
+    ap_seg_t v = recip_word64_2by1(d1);
 
-    apn_seg_t p;
+    ap_seg_t p;
 
     /* Step 2-3: p = (d1 * v + d0) mod 2^64 */
     p = v * d1;
@@ -117,14 +117,14 @@ apn_seg_t recip_word64_3by2(apn_seg_t d1, apn_seg_t d0)
 
     /* Step 4-9 */
     {
-        apn_seg_t c = (p < d0);
-        apn_seg_t d = c & (p >= d1);
+        ap_seg_t c = (p < d0);
+        ap_seg_t d = c & (p >= d1);
 
         v -= c + d;
         p -= d1 * (c + d);
     }
 
-    apn_seg_t t0, t1;
+    ap_seg_t t0, t1;
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
@@ -134,8 +134,8 @@ apn_seg_t recip_word64_3by2(apn_seg_t d1, apn_seg_t d0)
 #elif defined(__GNUC__) || defined(__clang__)
 
     __uint128_t prod = (__uint128_t)v * d0;
-    t0 = (apn_seg_t)prod;
-    t1 = (apn_seg_t)(prod >> 64);
+    t0 = (ap_seg_t)prod;
+    t1 = (ap_seg_t)(prod >> 64);
 
 #else
     #error "Unsupported compiler"
@@ -146,8 +146,8 @@ apn_seg_t recip_word64_3by2(apn_seg_t d1, apn_seg_t d0)
 
     /* Step 12-15 */
     {
-        apn_seg_t c = (p < t1);
-        apn_seg_t d = c & ((p > d1) | ((p == d1) & (t0 >= d0)));
+        ap_seg_t c = (p < t1);
+        ap_seg_t d = c & ((p > d1) | ((p == d1) & (t0 >= d0)));
 
         v -= c + d;
     }
@@ -166,19 +166,19 @@ apn_seg_t recip_word64_3by2(apn_seg_t d1, apn_seg_t d0)
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-apn_seg_t udiv64_2by1(
-    apn_seg_t u1,
-    apn_seg_t u0,
-    apn_seg_t d,
-    apn_seg_t v,
-    apn_seg_t* r
+ap_seg_t udiv64_2by1(
+    ap_seg_t u1,
+    ap_seg_t u0,
+    ap_seg_t d,
+    ap_seg_t v,
+    ap_seg_t* r
 )
 {
     /* Preconditions from the paper */
     APAC_ASSERT(u1 < d);
     APAC_ASSERT(d & APN_SEG_HIGH_BIT);
 
-    apn_seg_t q0, q1;
+    ap_seg_t q0, q1;
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
@@ -200,8 +200,8 @@ apn_seg_t udiv64_2by1(
     /* Step 2 */
     q += ((__uint128_t)u1 << APN_SEG_BITS) | u0;
 
-    q1 = (apn_seg_t)(q >> APN_SEG_BITS);
-    q0 = (apn_seg_t)q;
+    q1 = (ap_seg_t)(q >> APN_SEG_BITS);
+    q0 = (ap_seg_t)q;
 
 #else
     #error "Unsupported compiler"
@@ -215,14 +215,14 @@ apn_seg_t udiv64_2by1(
 
     /* Step 5-7: first correction */
     {
-        apn_seg_t m = (*r > q0);
+        ap_seg_t m = (*r > q0);
         q1 -= m;
         *r += d * m;
     }
 
     /* Step 8-10: second correction */
     {
-        apn_seg_t m = (*r >= d);
+        ap_seg_t m = (*r >= d);
         q1 += m;
         *r -= d * m;
     }
@@ -240,13 +240,13 @@ apn_seg_t udiv64_2by1(
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-apn_seg_t udiv64_3by2_quot(
-    apn_seg_t u2,
-    apn_seg_t u1,
-    apn_seg_t u0,
-    apn_seg_t d1,
-    apn_seg_t d0,
-    apn_seg_t v   /* reciprocal */
+ap_seg_t udiv64_3by2_quot(
+    ap_seg_t u2,
+    ap_seg_t u1,
+    ap_seg_t u0,
+    ap_seg_t d1,
+    ap_seg_t d0,
+    ap_seg_t v   /* reciprocal */
 )
 {
     /* Preconditions from the paper */
@@ -255,9 +255,9 @@ apn_seg_t udiv64_3by2_quot(
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
 
-    apn_seg_t q0, q1;
-    apn_seg_t r0, r1;
-    apn_seg_t t0, t1;
+    ap_seg_t q0, q1;
+    ap_seg_t r0, r1;
+    ap_seg_t t0, t1;
     uint8_t c;
 
     /* Step 1: q = v * u2 */
@@ -303,7 +303,7 @@ apn_seg_t udiv64_3by2_quot(
     __uint128_t q;
     __uint128_t r;
     __uint128_t d;
-    apn_seg_t q1, q0;
+    ap_seg_t q1, q0;
 
     /* Step 1: q = v * u2 */
     q = (__uint128_t)v * u2;
@@ -311,11 +311,11 @@ apn_seg_t udiv64_3by2_quot(
     /* Step 2: q += (u2,u1) */
     q += ((__uint128_t)u2 << APN_SEG_BITS) | u1;
 
-    q1 = (apn_seg_t)(q >> APN_SEG_BITS);
-    q0 = (apn_seg_t)q;
+    q1 = (ap_seg_t)(q >> APN_SEG_BITS);
+    q0 = (ap_seg_t)q;
 
     /* Step 3 */
-    apn_seg_t r1 = u1 - q1 * d1;
+    ap_seg_t r1 = u1 - q1 * d1;
 
     /* Step 4 */
     __uint128_t t = (__uint128_t)d0 * q1;
@@ -329,7 +329,7 @@ apn_seg_t udiv64_3by2_quot(
     q1++;
 
     /* Steps 7-9 */
-    if ((apn_seg_t)(r >> APN_SEG_BITS) >= q0)
+    if ((ap_seg_t)(r >> APN_SEG_BITS) >= q0)
     {
         q1--;
         r += d;

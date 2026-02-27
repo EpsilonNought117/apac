@@ -99,8 +99,8 @@
 
 #endif
 
-typedef uint64_t            apn_seg_t;
-typedef size_t              apn_size_t;
+typedef uint64_t            ap_seg_t;
+typedef size_t              ap_size_t;
 
 #define PRI_APN_PTR         "p"
 #define PRI_APN_SIZE        "zu"
@@ -424,61 +424,61 @@ APAC_API void apac_init(void);
 typedef struct apac_cpu_params
 {
     /** Threshold for switching to balanced Karatsuba multiplication. */
-    apn_size_t karatsuba_mul_balanced_threshold;
+    ap_size_t karatsuba_mul_balanced_threshold;
 
     /** Threshold for switching to unbalanced Karatsuba multiplication. */
-    apn_size_t karatsuba_mul_unbalanced_threshold;
+    ap_size_t karatsuba_mul_unbalanced_threshold;
 
     /** Threshold for switching to Karatsuba squaring. */
-    apn_size_t karatsuba_sqr_threshold;
+    ap_size_t karatsuba_sqr_threshold;
 
     /** Threshold for recursive divide-and-conquer division. */
-    apn_size_t dnc_div_threshold;
+    ap_size_t dnc_div_threshold;
 
     /** Pointer to equal-size addition kernel. */
-    apn_seg_t (*apn_add_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
+    ap_seg_t (*apn_add_n_ptr)(ap_seg_t*, const ap_seg_t*, const ap_seg_t*, ap_size_t);
 
     /** Pointer to equal-size subtraction kernel. */
-    apn_seg_t (*apn_sub_n_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t);
+    ap_seg_t (*apn_sub_n_ptr)(ap_seg_t*, const ap_seg_t*, const ap_seg_t*, ap_size_t);
 
     /** Pointer to add-single-limb kernel. */
-    apn_seg_t (*apn_add_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    ap_seg_t (*apn_add_one_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to subtract-single-limb kernel. */
-    apn_seg_t (*apn_sub_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    ap_seg_t (*apn_sub_one_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to fused multiply-add by single limb kernel. */
-    apn_seg_t (*apn_addmul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    ap_seg_t (*apn_addmul_one_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to fused multiply-sub by single limb kernel. */
-    apn_seg_t (*apn_submul_one_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    ap_seg_t (*apn_submul_one_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to left-shift-by-<64-bits kernel. */
-    apn_seg_t (*apn_lshift_lt64_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    ap_seg_t (*apn_lshift_lt64_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to right-shift-by-<64-bits kernel. */
-    apn_seg_t (*apn_rshift_lt64_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t, apn_seg_t);
+    ap_seg_t (*apn_rshift_lt64_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to basecase multiplication kernel. */
-    void (*apn_mul_bc_ptr)(apn_seg_t*, const apn_seg_t*, const apn_seg_t*, apn_size_t, apn_size_t);
+    void (*apn_mul_bc_ptr)(ap_seg_t*, const ap_seg_t*, const ap_seg_t*, ap_size_t, ap_size_t);
 
     /** Pointer to basecase squaring kernel. */
-    void (*apn_sqr_bc_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+    void (*apn_sqr_bc_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t);
 
     /** Pointer to negation kernel. */
-    void (*apn_neg_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+    void (*apn_neg_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t);
 
     /** Pointer to copy kernel. */
-    void (*apn_cpy_ptr)(apn_seg_t*, const apn_seg_t*, apn_size_t);
+    void (*apn_cpy_ptr)(ap_seg_t*, const ap_seg_t*, ap_size_t);
 
     /** Pointer to set/fill kernel. */
-    void (*apn_set_ptr)(apn_seg_t*, apn_size_t, apn_seg_t);
+    void (*apn_set_ptr)(ap_seg_t*, ap_size_t, ap_seg_t);
 
     /** Pointer to comparison kernel. */
-    int (*apn_cmp_ptr)(const apn_seg_t*, const apn_seg_t*, apn_size_t);
+    int (*apn_cmp_ptr)(const ap_seg_t*, const ap_seg_t*, ap_size_t);
 
     /** Pointer to zero-test kernel. */
-    int (*apn_is_zero_ptr)(const apn_seg_t*, apn_size_t);
+    int (*apn_is_zero_ptr)(const ap_seg_t*, ap_size_t);
 
 } apac_cpu_params;
 
@@ -492,7 +492,7 @@ typedef struct apac_cpu_params
  * @defgroup apn_api APN Low-Level Segment Arithmetic
  * @brief Low-level arbitrary-precision integer operations on limb arrays.
  *
- * These functions operate directly on arrays of limbs (`apn_seg_t`) and do not
+ * These functions operate directly on arrays of limbs (`ap_seg_t`) and do not
  * perform any memory allocation or resizing.
  *
  * @par Common Requirements
@@ -512,10 +512,10 @@ typedef struct apac_cpu_params
  * - `void` — No return value and no runtime memory allocation is performed.
  * - `apac_err` — Operation may fail (e.g. division or internally allocated
  *   temporaries); return value indicates success or error condition.
- * - `apn_seg_t` — Function returns a computed single-limb value such as
+ * - `ap_seg_t` — Function returns a computed single-limb value such as
  *   carry-out or borrow-out.
  * - `int` — Pure comparison result with no allocation or arithmetic side effects.
- * - `apn_size_t` — Returns a computed size value (currently only `apn_clamp`).
+ * - `ap_size_t` — Returns a computed size value (currently only `apn_clamp`).
  *
  * @{
  */
@@ -539,11 +539,11 @@ typedef struct apac_cpu_params
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
-APAC_API apn_seg_t apn_add_n(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size
+APAC_API ap_seg_t apn_add_n(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size
 );
 
 /**
@@ -565,11 +565,11 @@ APAC_API apn_seg_t apn_add_n(
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of `op1` (i.e., `result <= op1`).
  */
-APAC_API apn_seg_t apn_add_one(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size,
-    apn_seg_t val
+APAC_API ap_seg_t apn_add_one(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size,
+    ap_seg_t val
 );
 
 /**
@@ -594,12 +594,12 @@ APAC_API apn_seg_t apn_add_one(
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
-APAC_API apn_seg_t apn_add(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size1,
-    apn_size_t size2
+APAC_API ap_seg_t apn_add(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size1,
+    ap_size_t size2
 );
 
 /**
@@ -626,11 +626,11 @@ APAC_API apn_seg_t apn_add(
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
-APAC_API apn_seg_t apn_sub_n(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size
+APAC_API ap_seg_t apn_sub_n(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size
 );
 
 /**
@@ -657,11 +657,11 @@ APAC_API apn_seg_t apn_sub_n(
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of `op1` (i.e., `result <= op1`).
  */
-APAC_API apn_seg_t apn_sub_one(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size,
-    apn_seg_t val
+APAC_API ap_seg_t apn_sub_one(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size,
+    ap_seg_t val
 );
 
 /**
@@ -691,12 +691,12 @@ APAC_API apn_seg_t apn_sub_one(
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of either operand (i.e., `result <= op1` and `result <= op2`).
  */
-APAC_API apn_seg_t apn_sub(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size1,
-    apn_size_t size2
+APAC_API ap_seg_t apn_sub(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size1,
+    ap_size_t size2
 );
 
 /**
@@ -716,9 +716,9 @@ APAC_API apn_seg_t apn_sub(
  *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API void apn_cpy(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size
 );
 
 /**
@@ -739,9 +739,9 @@ APAC_API void apn_cpy(
  *      start of `op1` (i.e., `result <= op1`).
  */
 APAC_API void apn_neg(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size
 );
 
 /**
@@ -764,10 +764,10 @@ APAC_API void apn_neg(
  * @note `op1` and `op2` may overlap arbitrarily.
  */
 APAC_API apac_err apn_mul_n(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size
 );
 
 /**
@@ -791,11 +791,11 @@ APAC_API apac_err apn_mul_n(
  * @note `op1` and `op2` may overlap arbitrarily.
  */
 APAC_API apac_err apn_mul(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size1,
-    apn_size_t size2
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size1,
+    ap_size_t size2
 );
 
 /**
@@ -818,11 +818,11 @@ APAC_API apac_err apn_mul(
  * @pre If the arrays overlap, the start of `result` must be strictly less than
  *      the start of `op1` (i.e., `result < op1`).
  */
-APAC_API apn_seg_t apn_addmul_one(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size,
-    apn_seg_t val
+APAC_API ap_seg_t apn_addmul_one(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size,
+    ap_seg_t val
 );
 
 /**
@@ -845,11 +845,11 @@ APAC_API apn_seg_t apn_addmul_one(
  * @pre If the arrays overlap, the start of `result` must be strictly less than
  *      the start of `op1` (i.e., `result < op1`).
  */
-APAC_API apn_seg_t apn_submul_one(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size,
-    apn_seg_t val
+APAC_API ap_seg_t apn_submul_one(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size,
+    ap_seg_t val
 );
 
 /**
@@ -870,9 +870,9 @@ APAC_API apn_seg_t apn_submul_one(
  * @pre The `result` array must not overlap with `op1`.
  */
 APAC_API apac_err apn_sqr(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size
 );
 
 /**
@@ -887,9 +887,9 @@ APAC_API apac_err apn_sqr(
  * @param[in]  val    Value assigned to each limb
  */
 APAC_API void apn_set(
-    apn_seg_t* result,
-    apn_size_t size,
-    apn_seg_t val
+    ap_seg_t* result,
+    ap_size_t size,
+    ap_seg_t val
 );
 
 /**
@@ -914,9 +914,9 @@ APAC_API void apn_set(
  * @note `op1` and `op2` may overlap arbitrarily.
  */
 APAC_API int apn_cmp(
-    const apn_seg_t* op1,
-    const apn_seg_t* op2,
-    apn_size_t size
+    const ap_seg_t* op1,
+    const ap_seg_t* op2,
+    ap_size_t size
 );
 
 /**
@@ -946,12 +946,12 @@ APAC_API int apn_cmp(
  * @pre The `remainder` array may overlap with `dividend` but must not overlap with `divisor`.
  */
 APAC_API apac_err apn_div(
-    apn_seg_t* quotient,
-    apn_seg_t* remainder,
-    const apn_seg_t* dividend,
-    const apn_seg_t* divisor,
-    apn_size_t size_divd,
-    apn_size_t size_dvsr
+    ap_seg_t* quotient,
+    ap_seg_t* remainder,
+    const ap_seg_t* dividend,
+    const ap_seg_t* divisor,
+    ap_size_t size_divd,
+    ap_size_t size_dvsr
 );
 
 /**
@@ -973,11 +973,11 @@ APAC_API apac_err apn_div(
  *
  * @pre The `quotient` array must not overlap with `dividend`.
  */
-APAC_API apn_seg_t apn_div_one(
-    apn_seg_t* quotient,
-    const apn_seg_t* dividend,
-    apn_seg_t divisor,
-    apn_size_t size_divd
+APAC_API ap_seg_t apn_div_one(
+    ap_seg_t* quotient,
+    const ap_seg_t* dividend,
+    ap_seg_t divisor,
+    ap_size_t size_divd
 );
 
 /**
@@ -1001,11 +1001,11 @@ APAC_API apn_seg_t apn_div_one(
  * @pre If the arrays overlap, the start of `result` must not be less than the
  *      start of `op1` (i.e., `result >= op1`).
  */
-APAC_API apn_seg_t apn_rshift(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size,
-    apn_seg_t bit_cnt
+APAC_API ap_seg_t apn_rshift(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size,
+    ap_seg_t bit_cnt
 );
 
 /**
@@ -1029,11 +1029,11 @@ APAC_API apn_seg_t apn_rshift(
  * @pre If the arrays overlap, the start of `result` must not be greater than the
  *      start of `op1` (i.e., `result <= op1`).
  */
-APAC_API apn_seg_t apn_lshift(
-    apn_seg_t* result,
-    const apn_seg_t* op1,
-    apn_size_t size,
-    apn_seg_t bit_cnt
+APAC_API ap_seg_t apn_lshift(
+    ap_seg_t* result,
+    const ap_seg_t* op1,
+    ap_size_t size,
+    ap_seg_t bit_cnt
 );
 
 /**
@@ -1054,8 +1054,8 @@ APAC_API apn_seg_t apn_lshift(
  * @note `op1` may overlap arbitrarily with any other array since no writes occur.
  */
 APAC_API int apn_is_zero(
-    const apn_seg_t* op1,
-    apn_size_t size
+    const ap_seg_t* op1,
+    ap_size_t size
 );
 
 /**
@@ -1076,9 +1076,9 @@ APAC_API int apn_is_zero(
  *
  * @note `op1` may overlap arbitrarily with any other array since no writes occur.
  */
-APAC_API apn_size_t apn_clamp(
-    const apn_seg_t* op1,
-    apn_size_t size
+APAC_API ap_size_t apn_clamp(
+    const ap_seg_t* op1,
+    ap_size_t size
 );
 
 /** @} */ /* end of apn_api */
@@ -1091,12 +1091,12 @@ APAC_API apn_size_t apn_clamp(
 #define APZ_NEG         ((int8_t)-1)
 #define APZ_ZERO        ((int8_t)0)
 
-#define APZ_MAX_SIZE    ((apn_size_t)1 << 50)
+#define APZ_MAX_SIZE    ((ap_size_t)1 << 50)
 
 typedef struct
 {
-    apn_seg_t* data;
-    apn_size_t max_, used_segs;
+    ap_seg_t* data;
+    ap_size_t max_, used_segs;
     int8_t is_neg;
 
 } apz_t;
@@ -1111,7 +1111,7 @@ typedef enum
 
 APAC_API apac_err apz_init(
     apz_t* op,
-    apn_size_t size
+    ap_size_t size
 );
 
 APAC_API apac_err apz_free(
@@ -1120,12 +1120,12 @@ APAC_API apac_err apz_free(
 
 APAC_API apac_err apz_resize(
     apz_t* op,
-    apn_size_t new_size
+    ap_size_t new_size
 );
 
 APAC_API apac_err apz_set(
     apz_t* op,
-    apn_seg_t val
+    ap_seg_t val
 );
 
 #endif

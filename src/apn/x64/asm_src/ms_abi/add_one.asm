@@ -11,10 +11,10 @@ ADD_N_ONE SEGMENT ALIGN(64) 'CODE'
 
     ;   Function Arguments
     ;
-    ;   rcx -> result       (apn_seg_t*)   
-    ;   rdx -> op1          (const apn_seg_t*)
-    ;   r8  -> size         (apn_size_t)
-    ;   r9  -> val          (apn_seg_t)
+    ;   rcx -> result       (ap_seg_t*)   
+    ;   rdx -> op1          (const ap_seg_t*)
+    ;   r8  -> size         (ap_size_t)
+    ;   r9  -> val          (ap_seg_t)
 
 add_one_zen4 PROC FRAME
 .endprolog

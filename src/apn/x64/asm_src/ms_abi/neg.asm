@@ -11,9 +11,9 @@ NEG_N SEGMENT ALIGN(64) 'CODE'
 
     ;   Function Arguments
     ;
-    ;   rcx -> result       (apn_seg_t*)   
-    ;   rdx -> op1          (const apn_seg_t*)
-    ;   r8  -> size         (apn_size_t)
+    ;   rcx -> result       (ap_seg_t*)   
+    ;   rdx -> op1          (const ap_seg_t*)
+    ;   r8  -> size         (ap_size_t)
 
 ; Negations (2's Complement) procedure tuned for
 ; AMD's Zen4 Microarchitecture with 4x unroll

@@ -7,11 +7,11 @@
 
     #   Function Arguments
     #
-    #   rdi -> result           (apn_seg_t*)
-    #   rsi -> op1              (const apn_seg_t*)
-    #   rdx -> op2              (const apn_seg_t*)
-    #   rcx -> size1            (apn_size_t)
-    #   r8  -> size2            (apn_size_t)
+    #   rdi -> result           (ap_seg_t*)
+    #   rsi -> op1              (const ap_seg_t*)
+    #   rdx -> op2              (const ap_seg_t*)
+    #   rcx -> size1            (ap_size_t)
+    #   r8  -> size2            (ap_size_t)
 
     #   ASSUMPTION
     #   (size1 >= size2)

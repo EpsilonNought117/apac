@@ -3,8 +3,8 @@
 extern apac_cpu_params curr_cpu;
 
 int apn_is_zero(
-	const apn_seg_t* op1,
-	apn_size_t size
+	const ap_seg_t* op1,
+	ap_size_t size
 )
 {
 	APAC_ASSERT(op1 != NULL);

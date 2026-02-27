@@ -1,8 +1,8 @@
 #include "../../../../include/apac.h"
 
-apn_size_t apn_clamp(
-	const apn_seg_t* op1,
-	apn_size_t size
+ap_size_t apn_clamp(
+	const ap_seg_t* op1,
+	ap_size_t size
 )
 {
 	APAC_ASSERT(op1 != NULL);

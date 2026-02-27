@@ -5,9 +5,9 @@
 #   O---------------------------------------------------------------------------O
     #   Function Arguments
     #
-    #   rdi -> result       (apn_seg_t*)
-    #   rsi -> op1          (const apn_seg_t*)
-    #   rdx -> size         (apn_size_t)
+    #   rdi -> result       (ap_seg_t*)
+    #   rsi -> op1          (const ap_seg_t*)
+    #   rdx -> size         (ap_size_t)
 
 .intel_syntax noprefix
 .text
@@ -44,7 +44,7 @@ sqr_bc_zen4:
     jz      .Lzen4_pass2
 
     mov     r8,  r13
-    shl     r8,  3          # curr_size * sizeof(apn_seg_t)
+    shl     r8,  3          # curr_size * sizeof(ap_seg_t)
     add     rdi, 8
 
 .Lzen4_pass1_outer_loop_start:

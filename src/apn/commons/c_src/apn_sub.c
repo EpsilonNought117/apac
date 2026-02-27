@@ -2,11 +2,11 @@
 
 extern apac_cpu_params curr_cpu;
 
-apn_seg_t apn_sub_n(
-	apn_seg_t* result, 
-	const apn_seg_t* op1, 
-	const apn_seg_t* op2, 
-	apn_size_t size
+ap_seg_t apn_sub_n(
+	ap_seg_t* result, 
+	const ap_seg_t* op1, 
+	const ap_seg_t* op2, 
+	ap_size_t size
 )
 {
 	APAC_ASSERT(size != 0);
@@ -17,16 +17,16 @@ apn_seg_t apn_sub_n(
 	APAC_PARTIAL_OVERLAP_BELOW(result, size, op2, size);
 	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 
-	apn_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
+	ap_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
 	return borrow;
 }
 
-apn_seg_t apn_sub(
-	apn_seg_t* result, 
-	const apn_seg_t* op1, 
-	const apn_seg_t* op2, 
-	apn_size_t size1, 
-	apn_size_t size2
+ap_seg_t apn_sub(
+	ap_seg_t* result, 
+	const ap_seg_t* op1, 
+	const ap_seg_t* op2, 
+	ap_size_t size1, 
+	ap_size_t size2
 )
 {
 	APAC_ASSERT(size2 != 0);
@@ -39,7 +39,7 @@ apn_seg_t apn_sub(
 	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
-	apn_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size2);
+	ap_seg_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size2);
 
 	if (size1 == size2)
 		return borrow;
@@ -48,11 +48,11 @@ apn_seg_t apn_sub(
 	return borrow;
 }
 
-apn_seg_t apn_sub_one(
-	apn_seg_t* result, 
-	const apn_seg_t* op1, 
-	apn_size_t size, 
-	apn_seg_t val
+ap_seg_t apn_sub_one(
+	ap_seg_t* result, 
+	const ap_seg_t* op1, 
+	ap_size_t size, 
+	ap_seg_t val
 )
 {
 	APAC_ASSERT(size != 0);
@@ -61,6 +61,6 @@ apn_seg_t apn_sub_one(
 	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
 	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
-	apn_seg_t borrow = curr_cpu.apn_sub_one_ptr(result, op1, size, val);
+	ap_seg_t borrow = curr_cpu.apn_sub_one_ptr(result, op1, size, val);
 	return borrow;
 }

@@ -39,12 +39,12 @@ int main(int argc, char** argv)
     if (tmp > (unsigned long long)APN_SEG_MAX)
     {
         fprintf(stderr,
-            "Error: input too large for apn_seg_t (max %" PRI_APN_SEGU ")\n",
-            (apn_seg_t)APN_SEG_MAX);
+            "Error: input too large for ap_seg_t (max %" PRI_APN_SEGU ")\n",
+            (ap_seg_t)APN_SEG_MAX);
         return EXIT_FAILURE;
     }
 
-    apn_seg_t N = (apn_seg_t)tmp;
+    ap_seg_t N = (ap_seg_t)tmp;
 
     /* ------------------------------------------------------------
      * Fibonacci index must be >= 2 and < 2 ^ 20
@@ -57,15 +57,15 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
      * Limb count estimate (original, correct formula)
      * ------------------------------------------------------------ */
-    apn_size_t max_limbs = (apn_size_t)((((double)N * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
+    ap_size_t max_limbs = (ap_size_t)((((double)N * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
 
     /* ------------------------------------------------------------
      * Allocate rolling Fibonacci buffers
      * ------------------------------------------------------------ */
-    apn_seg_t* fib[2] = { 0 };
+    ap_seg_t* fib[2] = { 0 };
 
-    fib[0] = apac_malloc(max_limbs * sizeof(apn_seg_t));
-    fib[1] = apac_malloc(max_limbs * sizeof(apn_seg_t));
+    fib[0] = apac_malloc(max_limbs * sizeof(ap_seg_t));
+    fib[1] = apac_malloc(max_limbs * sizeof(ap_seg_t));
 
     APAC_ALWAYS_ASSERT(fib[0] != NULL);
     APAC_ALWAYS_ASSERT(fib[1] != NULL);
@@ -77,20 +77,20 @@ int main(int argc, char** argv)
     fib[0][0] = 1;
     fib[1][0] = 1;
 
-    apn_size_t size_prev = 1;
-    apn_size_t size_curr = 1;
+    ap_size_t size_prev = 1;
+    ap_size_t size_curr = 1;
 
     /* ------------------------------------------------------------
      * Fibonacci loop: F(n) = F(n-1) + F(n-2)
      * ------------------------------------------------------------ */
-    for (apn_seg_t i = 2; i <= N; i++)
+    for (ap_seg_t i = 2; i <= N; i++)
     {
-        apn_size_t curr_size = (apn_size_t)((((double)i * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
+        ap_size_t curr_size = (ap_size_t)((((double)i * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
         apn_add_n(fib[i & 1], fib[0], fib[1], curr_size);
     }
 
-    apn_size_t answer = N & 1;
-    apn_size_t nlimbs = apn_clamp(fib[answer], max_limbs);
+    ap_size_t answer = N & 1;
+    ap_size_t nlimbs = apn_clamp(fib[answer], max_limbs);
 
     /* ------------------------------------------------------------
      * Output file
@@ -107,9 +107,9 @@ int main(int argc, char** argv)
     }
 
     fprintf(fp, "F(%" PRI_APN_SEGU ") = 0x", N);
-    apn_size_t count = 0;
+    ap_size_t count = 0;
 
-    for (apn_size_t i = nlimbs - 1; i < nlimbs; i--)
+    for (ap_size_t i = nlimbs - 1; i < nlimbs; i--)
     {    
         fprintf(fp, "%016" PRI_APN_SEGX, fib[answer][i]);
         count++;

@@ -31,21 +31,21 @@
 *
 */
 
-#define TEST_SIZE_MAX ((apn_size_t)512)
+#define TEST_SIZE_MAX ((ap_size_t)512)
 
 static void check_apn_set(void)
 {
     TEST_START("apn_set");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
 
     printf("TEST-1: Comparison against memset\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         uint64_t val = 0;
         do
@@ -57,10 +57,10 @@ static void check_apn_set(void)
         uint8_t  val1 = (uint8_t)(val & 0xFF);
         uint64_t val2 = val1 * 0x0101010101010101ULL;
 
-        memset(op1, val1, sizeof(apn_seg_t) * i);
+        memset(op1, val1, sizeof(ap_seg_t) * i);
         apn_set(op2, i, val2);
 
-        int cmp_res = memcmp(op1, op2, sizeof(apn_seg_t) * i);
+        int cmp_res = memcmp(op1, op2, sizeof(ap_seg_t) * i);
 
         APAC_ALWAYS_ASSERT(cmp_res == 0);
     }
@@ -75,8 +75,8 @@ static void check_apn_cpy(void)
 {
     TEST_START("apn_cpy");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -85,12 +85,12 @@ static void check_apn_cpy(void)
 
     apn_set(op1, TEST_SIZE_MAX, 0ULL);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         apn_cpy(op2, op1, i);
 
-        int cmp_res = memcmp(op1, op2, i * sizeof(apn_seg_t));
+        int cmp_res = memcmp(op1, op2, i * sizeof(ap_seg_t));
 
         APAC_ALWAYS_ASSERT(cmp_res == 0);
 
@@ -107,15 +107,15 @@ static void check_apn_cmp(void)
 {
     TEST_START("apn_cmp");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
 
     printf("TEST-1: Equality test\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         uint64_t val = 0;
         do
@@ -134,13 +134,13 @@ static void check_apn_cmp(void)
 
     printf("TEST-2: Single segment difference test\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         apn_cpy(op2, op1, i);
 
         /* Pick a random position */
-        apn_size_t pos = random_sfc64() % i;
+        ap_size_t pos = random_sfc64() % i;
 
         /* Base value at that position */
         uint64_t base = op1[pos];
@@ -184,7 +184,7 @@ static void check_apn_is_zero(void)
 {
     TEST_START("apn_is_zero");
 
-    apn_seg_t* op = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op != NULL);
 
@@ -192,7 +192,7 @@ static void check_apn_is_zero(void)
 
     printf("TEST-1: All-zero input\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         int res = apn_is_zero(op, i);
 
@@ -201,9 +201,9 @@ static void check_apn_is_zero(void)
 
     printf("TEST-2: Single non-zero segment\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        apn_size_t pos = random_sfc64() % i;
+        ap_size_t pos = random_sfc64() % i;
 
         uint64_t val = 0;
         do { val = random_sfc64(); } while (val == 0);
@@ -226,8 +226,8 @@ static void check_apn_add_one(void)
 {
     TEST_START("apn_add_one");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -238,9 +238,9 @@ static void check_apn_add_one(void)
 	apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
 	apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
-	for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+	for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
 	{
-		apn_seg_t carry_out = apn_add_one(op2, op1, i, 1);
+		ap_seg_t carry_out = apn_add_one(op2, op1, i, 1);
 
         APAC_ALWAYS_ASSERT(carry_out == 1);
 
@@ -254,7 +254,7 @@ static void check_apn_add_one(void)
 
 	apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
-	for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+	for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
 	{
         uint64_t val = 0;
         do
@@ -264,7 +264,7 @@ static void check_apn_add_one(void)
         while (val == 0);
 
 		set_to_random(op1, i);
-		apn_seg_t carry_out = apn_add_one(op2, op1, i, 0);
+		ap_seg_t carry_out = apn_add_one(op2, op1, i, 0);
 
         APAC_ALWAYS_ASSERT(carry_out == 0);
 
@@ -279,7 +279,7 @@ static void check_apn_add_one(void)
     apn_set(op1, TEST_SIZE_MAX, 0ULL);
     apn_set(op2, TEST_SIZE_MAX, 0ULL);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -290,7 +290,7 @@ static void check_apn_add_one(void)
         }
         while (val == 0);
 
-        apn_seg_t carry_out = apn_add_one(op2, op1, i, val);
+        ap_seg_t carry_out = apn_add_one(op2, op1, i, val);
 
         int cmp_res = apn_cmp(op2, op1, i);
 
@@ -307,12 +307,12 @@ static void check_apn_add_n(void)
 {
     TEST_START("apn_add_n");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op4 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op5 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op6 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op4 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op5 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op6 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -325,11 +325,11 @@ static void check_apn_add_n(void)
 
     printf("TEST-1: Adding identity element\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
-        apn_seg_t carry = apn_add_n(op3, op1, op2, i);
+        ap_seg_t carry = apn_add_n(op3, op1, op2, i);
         int cmp_res = apn_cmp(op3, op1, i);
 
         APAC_ALWAYS_ASSERT(cmp_res == 0);
@@ -343,9 +343,9 @@ static void check_apn_add_n(void)
     apn_set(op2, TEST_SIZE_MAX, APN_SEG_MAX);
     op2[0] = APN_SEG_MAX - 1;
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        apn_seg_t carry = apn_add_n(op3, op1, op1, i);
+        ap_seg_t carry = apn_add_n(op3, op1, op1, i);
         int cmp_res = apn_cmp(op3, op2, i);
 
         APAC_ALWAYS_ASSERT(carry == 1);
@@ -355,12 +355,12 @@ static void check_apn_add_n(void)
 
     printf("TEST-3: Monotonicity Test\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
 
-        apn_seg_t carry = apn_add_n(op3, op1, op2, i);
+        ap_seg_t carry = apn_add_n(op3, op1, op2, i);
 
         int cmp3_1 = apn_cmp(op3, op1, i);
         int cmp3_2 = apn_cmp(op3, op2, i);
@@ -374,7 +374,7 @@ static void check_apn_add_n(void)
 
     printf("TEST-4: Commutativity Test\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
@@ -389,13 +389,13 @@ static void check_apn_add_n(void)
 
     printf("TEST-5: Associativity Test\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
         set_to_random(op3, i);
 
-        apn_seg_t carry0 = 0, carry1 = 0;
+        ap_seg_t carry0 = 0, carry1 = 0;
 
         /* (a + b) + c */
         carry0 += apn_add_n(op4, op1, op2, i);
@@ -426,10 +426,10 @@ static void check_apn_add(void)
 {
     TEST_START("apn_add");
 
-    apn_seg_t* a = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* b = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* r1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* t1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* a = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* b = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* r1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* t1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(a != NULL);
     APAC_ALWAYS_ASSERT(b != NULL);
@@ -441,13 +441,13 @@ static void check_apn_add(void)
     /* b = 0 for entire test */
     apn_set(b, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (apn_size_t j = 1; j <= i; j++)
+        for (ap_size_t j = 1; j <= i; j++)
         {
             set_to_random(a, i);
 
-            apn_seg_t carry = apn_add(r1, a, b, i, j);
+            ap_seg_t carry = apn_add(r1, a, b, i, j);
             int cmp = apn_cmp(r1, a, i);
 
             APAC_ALWAYS_ASSERT(carry == 0);
@@ -458,13 +458,13 @@ static void check_apn_add(void)
 
     printf("TEST-2: Correctness vs apn_add_n()\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(a, i);
         set_to_random(b, i);
 
-        apn_seg_t carry1 = apn_add(r1, a, b, i, i);
-        apn_seg_t carry2 = apn_add_n(t1, a, b, i);
+        ap_seg_t carry1 = apn_add(r1, a, b, i, i);
+        ap_seg_t carry2 = apn_add_n(t1, a, b, i);
 
         int cmp = apn_cmp(r1, t1, i);
 
@@ -478,9 +478,9 @@ static void check_apn_add(void)
     apn_set(a, TEST_SIZE_MAX, APN_SEG_MAX);
     apn_set(b, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (apn_size_t j = 1; j <= i; j++)
+        for (ap_size_t j = 1; j <= i; j++)
         {
             apn_set(t1, j, APN_SEG_MAX);
             t1[0] = APN_SEG_MAX - 1;
@@ -490,7 +490,7 @@ static void check_apn_add(void)
                 apn_set(t1 + j, i - j, 0);
             }
             
-            apn_seg_t carry = apn_add(r1, a, b, i, j);
+            ap_seg_t carry = apn_add(r1, a, b, i, j);
             int cmp_res = apn_cmp(r1, t1, i);
 
             APAC_ALWAYS_ASSERT(carry == 1);
@@ -511,9 +511,9 @@ static void check_apn_neg(void)
 {
     TEST_START("apn_neg");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -521,7 +521,7 @@ static void check_apn_neg(void)
 
     printf("TEST-1: a + (-a) == 0 with carry\n");
 
-    for (apn_size_t size = 1; size <= TEST_SIZE_MAX; size++)
+    for (ap_size_t size = 1; size <= TEST_SIZE_MAX; size++)
     {
         /* Randomize operand */
         set_to_random(op1, size);
@@ -529,7 +529,7 @@ static void check_apn_neg(void)
         /* op2 = -op1 */
         apn_neg(op2, op1, size);
 
-        apn_seg_t carry = apn_add_n(op3, op1, op2, size);
+        ap_seg_t carry = apn_add_n(op3, op1, op2, size);
 
         APAC_ALWAYS_ASSERT(carry == 1);
 
@@ -549,9 +549,9 @@ static void check_apn_sub_one(void)
 {
     TEST_START("apn_sub_one");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -564,9 +564,9 @@ static void check_apn_sub_one(void)
     apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
     apn_set(op3, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        apn_seg_t borrow_out = apn_sub_one(op2, op1, i, 1ULL);
+        ap_seg_t borrow_out = apn_sub_one(op2, op1, i, 1ULL);
 
         APAC_ALWAYS_ASSERT(borrow_out == 1);
 
@@ -580,10 +580,10 @@ static void check_apn_sub_one(void)
 
     apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
-        apn_seg_t borrow_out = apn_sub_one(op2, op1, i, 0ULL);
+        ap_seg_t borrow_out = apn_sub_one(op2, op1, i, 0ULL);
 
         APAC_ALWAYS_ASSERT(borrow_out == 0);
 
@@ -598,7 +598,7 @@ static void check_apn_sub_one(void)
     apn_set(op1, TEST_SIZE_MAX, 0ULL);
     apn_set(op2, TEST_SIZE_MAX, 0ULL);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -610,7 +610,7 @@ static void check_apn_sub_one(void)
         }
         while (val == 0);
 
-        apn_seg_t borrow_out = apn_sub_one(op2, op1, i, val);
+        ap_seg_t borrow_out = apn_sub_one(op2, op1, i, val);
         int cmp_res = apn_cmp(op2, op1, i);
 
         int expected = borrow_out ? 1 : -1;
@@ -629,10 +629,10 @@ static void check_apn_sub_n(void)
 {
     TEST_START("apn_sub_n");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op4 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op4 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -643,11 +643,11 @@ static void check_apn_sub_n(void)
     
     apn_set(op2, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
-        apn_seg_t carry = apn_sub_n(op3, op1, op2, i);
+        ap_seg_t carry = apn_sub_n(op3, op1, op2, i);
 
         int cmp_res = apn_cmp(op3, op1, i);
 
@@ -664,9 +664,9 @@ static void check_apn_sub_n(void)
 
     apn_set(op4, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        apn_seg_t carry = apn_sub_n(op3, op2, op1, i);
+        ap_seg_t carry = apn_sub_n(op3, op2, op1, i);
 
         int is_max = apn_cmp(op4, op3, i);  // should be equal
 
@@ -677,12 +677,12 @@ static void check_apn_sub_n(void)
 
     printf("TEST-3: Self subtraction (a - a = 0)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
         /* op3 = op1 - op1 */
-        apn_seg_t borrow = apn_sub_n(op3, op1, op1, i);
+        ap_seg_t borrow = apn_sub_n(op3, op1, op1, i);
 
         int is_zero = apn_is_zero(op3, i);
 
@@ -693,12 +693,12 @@ static void check_apn_sub_n(void)
 
     printf("TEST-4: Borrow invariant (borrow == a < b)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
 
-        apn_seg_t borrow = apn_sub_n(op3, op1, op2, i);
+        ap_seg_t borrow = apn_sub_n(op3, op1, op2, i);
 
         int cmp = apn_cmp(op1, op2, i);
 
@@ -717,10 +717,10 @@ static void check_apn_sub(void)
 {
     TEST_START("apn_sub");
 
-    apn_seg_t* a = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* b = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* r = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* t = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* a = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* b = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* r = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* t = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(a != NULL);
     APAC_ALWAYS_ASSERT(b != NULL);
@@ -731,13 +731,13 @@ static void check_apn_sub(void)
 
     apn_set(b, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (apn_size_t j = 1; j <= i; j++)
+        for (ap_size_t j = 1; j <= i; j++)
         {
             set_to_random(a, i);
 
-            apn_seg_t borrow = apn_sub(r, a, b, i, j);
+            ap_seg_t borrow = apn_sub(r, a, b, i, j);
             int cmp = apn_cmp(r, a, i);
 
             APAC_ALWAYS_ASSERT(borrow == 0);
@@ -748,9 +748,9 @@ static void check_apn_sub(void)
 
     printf("TEST-2: Borrow invariant (borrow == a < b)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (apn_size_t j = 1; j <= i; j++)
+        for (ap_size_t j = 1; j <= i; j++)
         {
             set_to_random(a, i);
 
@@ -758,7 +758,7 @@ static void check_apn_sub(void)
             apn_set(b, i, 0);
             set_to_random(b, j);
 
-            apn_seg_t borrow = apn_sub(r, a, b, i, j);
+            ap_seg_t borrow = apn_sub(r, a, b, i, j);
 
             int cmp = apn_cmp(a, b, i);
 
@@ -773,9 +773,9 @@ static void check_apn_sub(void)
     apn_set(b, TEST_SIZE_MAX, 0);
     b[0] = 1;
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        apn_seg_t borrow = apn_sub(r, a, b, i, 1);
+        ap_seg_t borrow = apn_sub(r, a, b, i, 1);
         int is_max = apn_cmp(r, t, i);
 
         APAC_ALWAYS_ASSERT(borrow == 1);
@@ -785,11 +785,11 @@ static void check_apn_sub(void)
 
     printf("TEST-4: Self subtraction (a - a = 0)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(a, i);
 
-        apn_seg_t borrow = apn_sub(r, a, a, i, i);
+        ap_seg_t borrow = apn_sub(r, a, a, i, i);
         int is_zero = apn_is_zero(r, i);
 
         APAC_ALWAYS_ASSERT(borrow == 0);
@@ -809,9 +809,9 @@ static void check_apn_addmul_one(void)
 {
     TEST_START("apn_addmul_one");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -821,14 +821,14 @@ static void check_apn_addmul_one(void)
 
     apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         apn_set(op2, i + 1, 0);
         apn_set(op3, i + 1, APN_SEG_MAX);
         op3[i] = APN_SEG_MAX - 1;
         op3[0] = 1;
 
-        apn_seg_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
+        ap_seg_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
 
         APAC_ALWAYS_ASSERT(carry == 0);
 
@@ -839,15 +839,15 @@ static void check_apn_addmul_one(void)
 
     printf("TEST-2: Identity Test (k = 1)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i + 1);
         apn_cpy(op3, op2, i + 1);
 
-        apn_seg_t carry_ref = apn_add(op3, op3, op1, i + 1, i);
+        ap_seg_t carry_ref = apn_add(op3, op3, op1, i + 1, i);
 
-        apn_seg_t carry = apn_addmul_one(op2, op1, i, 1);
+        ap_seg_t carry = apn_addmul_one(op2, op1, i, 1);
 
         APAC_ALWAYS_ASSERT(carry == carry_ref);
 
@@ -858,13 +858,13 @@ static void check_apn_addmul_one(void)
 
     printf("TEST-3: Multiplication with zero (k = 0)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i + 1);
         apn_cpy(op3, op2, i + 1);
 
-        apn_seg_t carry = apn_addmul_one(op2, op1, i, 0);
+        ap_seg_t carry = apn_addmul_one(op2, op1, i, 0);
 
         int cmp_res = apn_cmp(op2, op3, i + 1);
 
@@ -877,7 +877,7 @@ static void check_apn_addmul_one(void)
 
     apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         apn_set(op2, i + 1, APN_SEG_MAX);
         apn_set(op3, i + 1, APN_SEG_MAX);
@@ -885,7 +885,7 @@ static void check_apn_addmul_one(void)
         op3[0] = 0;
         op3[i] = APN_SEG_MAX - 1;
 
-        apn_seg_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
+        ap_seg_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
 
         APAC_ALWAYS_ASSERT(carry == 1);
 
@@ -896,7 +896,7 @@ static void check_apn_addmul_one(void)
 
     printf("TEST-5: Monotonicity (op2 + op1 * k >= op2)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -911,7 +911,7 @@ static void check_apn_addmul_one(void)
         set_to_random(op2, i + 1);
         apn_cpy(op3, op2, i + 1);
 
-        apn_seg_t carry = apn_addmul_one(op2, op1, i, val);
+        ap_seg_t carry = apn_addmul_one(op2, op1, i, val);
 
         int is_op1_zero = apn_is_zero(op1, i);
         int cmp_res = apn_cmp(op2, op3, i + 1);
@@ -931,9 +931,9 @@ static void check_apn_submul_one(void)
 {
     TEST_START("apn_submul_one");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -945,12 +945,12 @@ static void check_apn_submul_one(void)
     apn_set(op3, TEST_SIZE_MAX + 1, 0);
     op3[0] = APN_SEG_MAX;
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         op3[i] = 1;
         apn_set(op2, i + 1, 0);
 
-        apn_seg_t borrow = apn_submul_one(op2, op1, i, APN_SEG_MAX);
+        ap_seg_t borrow = apn_submul_one(op2, op1, i, APN_SEG_MAX);
         int cmp_res = apn_cmp(op3, op2, i + 1);
 
         APAC_ALWAYS_ASSERT(borrow == 1);
@@ -962,7 +962,7 @@ static void check_apn_submul_one(void)
 
     printf("TEST-2: Test against apn_addmul_one()\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op3, i + 1);
@@ -975,8 +975,8 @@ static void check_apn_submul_one(void)
 
         } while (val == 0);
 
-        apn_seg_t carry1 = apn_addmul_one(op2, op1, i, val);
-        apn_seg_t carry2 = apn_submul_one(op2, op1, i, val);
+        ap_seg_t carry1 = apn_addmul_one(op2, op1, i, val);
+        ap_seg_t carry2 = apn_submul_one(op2, op1, i, val);
 
         int cmp_res = apn_cmp(op2, op3, i + 1);
     
@@ -987,17 +987,17 @@ static void check_apn_submul_one(void)
 
     printf("TEST-3: Multiply with 1 (op2 -= op1)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i + 1);
         apn_cpy(op3, op2, i + 1);
 
         /* Reference: op3 = op3 - op1 */
-        apn_seg_t borrow_ref = apn_sub(op3, op3, op1, i + 1, i);
+        ap_seg_t borrow_ref = apn_sub(op3, op3, op1, i + 1, i);
 
         /* Under test */
-        apn_seg_t borrow = apn_submul_one(op2, op1, i, 1);
+        ap_seg_t borrow = apn_submul_one(op2, op1, i, 1);
 
         APAC_ALWAYS_ASSERT(borrow == borrow_ref);
 
@@ -1008,13 +1008,13 @@ static void check_apn_submul_one(void)
 
     printf("TEST-4: Multiply with 0 (no-op)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i + 1);
         apn_cpy(op3, op2, i + 1);
 
-        apn_seg_t borrow = apn_submul_one(op2, op1, i, 0);
+        ap_seg_t borrow = apn_submul_one(op2, op1, i, 0);
 
         APAC_ALWAYS_ASSERT(borrow == 0);
 
@@ -1025,7 +1025,7 @@ static void check_apn_submul_one(void)
 
     printf("TEST-5: Monotonicity (op2 - op1 * k <= op2)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -1039,7 +1039,7 @@ static void check_apn_submul_one(void)
         set_to_random(op2, i + 1);
         apn_cpy(op3, op2, i + 1);
 
-        apn_seg_t borrow = apn_submul_one(op2, op1, i, val);
+        ap_seg_t borrow = apn_submul_one(op2, op1, i, val);
 
         int is_op1_zero = apn_is_zero(op1, i);
         int cmp = apn_cmp(op2, op3, i + 1);
@@ -1059,9 +1059,9 @@ static void check_apn_lshift(void)
 {
     TEST_START("apn_lshift");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1071,13 +1071,13 @@ static void check_apn_lshift(void)
 
     apn_set(op1, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
         {
             apn_set(op2, i + 1, 0);
 
-            apn_seg_t carry = apn_lshift(op2, op1, i, sh);
+            ap_seg_t carry = apn_lshift(op2, op1, i, sh);
             int cmp_res = apn_cmp(op2, op1, i);
 
             APAC_ALWAYS_ASSERT(carry == 0);
@@ -1088,16 +1088,16 @@ static void check_apn_lshift(void)
 
     printf("TEST-2: Shift random values\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
         {
             set_to_random(op1, i);
             apn_set(op2, i + 1, 0);
 
-            apn_seg_t carry = apn_lshift(op2, op1, i, sh);
+            ap_seg_t carry = apn_lshift(op2, op1, i, sh);
 
-            apn_seg_t expected_carry = (op1[i - 1] >> (APN_SEG_BITS - sh));
+            ap_seg_t expected_carry = (op1[i - 1] >> (APN_SEG_BITS - sh));
 
             APAC_ALWAYS_ASSERT(carry == expected_carry);
         }
@@ -1105,7 +1105,7 @@ static void check_apn_lshift(void)
 
     printf("TEST-3: Test against apn_addmul_one()\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
         {
@@ -1134,9 +1134,9 @@ static void check_apn_rshift(void)
 {
     TEST_START("apn_rshift");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1144,7 +1144,7 @@ static void check_apn_rshift(void)
 
     printf("TEST-1: Shift out random values (1..63 bits)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -1153,9 +1153,9 @@ static void check_apn_rshift(void)
             apn_cpy(op3, op1, i);
             apn_set(op2, i, 0);
 
-            apn_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
+            ap_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
 
-            apn_seg_t expected_shift_out = op3[0] << (APN_SEG_BITS - sh);
+            ap_seg_t expected_shift_out = op3[0] << (APN_SEG_BITS - sh);
 
             APAC_ALWAYS_ASSERT(shift_out_right == expected_shift_out);
         }
@@ -1165,13 +1165,13 @@ static void check_apn_rshift(void)
 
     apn_set(op1, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
         {
             apn_set(op2, i, 0);
 
-            apn_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
+            ap_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
             int cmp_res = apn_cmp(op2, op1, i);
 
             APAC_ALWAYS_ASSERT(shift_out_right == 0);
@@ -1182,7 +1182,7 @@ static void check_apn_rshift(void)
 
     printf("TEST-3: Round-trip rshift + lshift + restore\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -1193,7 +1193,7 @@ static void check_apn_rshift(void)
 
             /* Step 1: right shift */
             apn_set(op2, i, 0);
-            apn_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
+            ap_seg_t shift_out_right = apn_rshift(op2, op1, i, sh);
 
             /* Step 2: left shift back */
             apn_lshift(op2, op2, i, sh);
@@ -1218,11 +1218,11 @@ static void check_apn_mul_n(void)
 {
     TEST_START("apn_mul_n");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));
-    apn_seg_t* op4 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));
-    apn_seg_t* op5 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));
+    ap_seg_t* op4 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));
+    ap_seg_t* op5 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1232,7 +1232,7 @@ static void check_apn_mul_n(void)
 
     printf("TEST-1: Compare against apn_addmul_one()\n");
 
-    for (apn_size_t i = 1; i <= (apn_size_t)64; i++)
+    for (ap_size_t i = 1; i <= (ap_size_t)64; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
@@ -1249,9 +1249,9 @@ static void check_apn_mul_n(void)
             abort();
         }
 
-        for (apn_size_t k = 0; k < i; k++)
+        for (ap_size_t k = 0; k < i; k++)
         {
-            apn_seg_t carry = apn_addmul_one(&op4[k], op1, i, op2[k]);
+            ap_seg_t carry = apn_addmul_one(&op4[k], op1, i, op2[k]);
         }
 
         int cmp_res = apn_cmp(op3, op4, i * 2);
@@ -1264,7 +1264,7 @@ static void check_apn_mul_n(void)
     apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
     apn_set(op2, TEST_SIZE_MAX, APN_SEG_MAX);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         apn_set(op4, i * 2, 0);
 
@@ -1292,7 +1292,7 @@ static void check_apn_mul_n(void)
     apn_set(op2, TEST_SIZE_MAX, 0);
     op2[0] = 1;
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         apn_set(op3, i * 2, 0);
@@ -1314,7 +1314,7 @@ static void check_apn_mul_n(void)
 
     apn_set(op2, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         apn_set(op3, i * 2, 0);
@@ -1334,7 +1334,7 @@ static void check_apn_mul_n(void)
 
     printf("TEST-5: Commutativity (a * b == b * a)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
@@ -1363,7 +1363,7 @@ static void check_apn_mul_n(void)
 
     printf("TEST-6: Monotonicity\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
@@ -1406,9 +1406,9 @@ static void check_apn_sqr(void)
 {
     TEST_START("apn_sqr");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1419,7 +1419,7 @@ static void check_apn_sqr(void)
     apn_set(op1, TEST_SIZE_MAX, 0);
     apn_set(op3, TEST_SIZE_MAX * 2, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         apn_set(op2, i * 2, 0);
 
@@ -1438,7 +1438,7 @@ static void check_apn_sqr(void)
 
     printf("TEST-2: Random values vs apn_mul_n()\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -1475,10 +1475,10 @@ static void check_apn_mul(void)
 {
     TEST_START("apn_mul");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op3 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));
-    apn_seg_t* op4 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op3 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));
+    ap_seg_t* op4 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1487,9 +1487,9 @@ static void check_apn_mul(void)
 
     printf("TEST-1: Compare against apn_addmul_one()\n");
 
-    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
+    for (ap_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
     {
-        for (apn_size_t size2 = 1; size2 <= size1; size2++)
+        for (ap_size_t size2 = 1; size2 <= size1; size2++)
         {
             set_to_random(op1, size1);
             set_to_random(op2, size2);
@@ -1507,9 +1507,9 @@ static void check_apn_mul(void)
             }
 
             // O(n * n) code, might be slow
-            for (apn_size_t k = 0; k < size2; k++)
+            for (ap_size_t k = 0; k < size2; k++)
             {
-                apn_seg_t carry = apn_addmul_one(&op4[k], op1, size1, op2[k]);
+                ap_seg_t carry = apn_addmul_one(&op4[k], op1, size1, op2[k]);
             }
 
             int cmp_res = apn_cmp(op3, op4, size1 + size2);
@@ -1522,9 +1522,9 @@ static void check_apn_mul(void)
 
     apn_set(op2, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
+    for (ap_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
     {
-        for (apn_size_t size2 = 1; size2 <= size1; size2++)
+        for (ap_size_t size2 = 1; size2 <= size1; size2++)
         {
             set_to_random(op1, size1);
             apn_set(op3, size1 + size2, 0);
@@ -1548,9 +1548,9 @@ static void check_apn_mul(void)
     apn_set(op2, TEST_SIZE_MAX, 0);
     op2[0] = 1;
 
-    for (apn_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
+    for (ap_size_t size1 = 1; size1 <= (TEST_SIZE_MAX); size1++)
     {
-        for (apn_size_t size2 = 1; size2 <= size1; size2++)
+        for (ap_size_t size2 = 1; size2 <= size1; size2++)
         {
             set_to_random(op1, size1);
             apn_set(op3, size1 + size2, 0);
@@ -1571,7 +1571,7 @@ static void check_apn_mul(void)
 
     printf("TEST-4: Random balanced multiplication vs apn_mul_n\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
         set_to_random(op2, i);
@@ -1610,10 +1610,10 @@ static void check_apn_div_one(void)
 {
     TEST_START("apn_div_one");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));
-    apn_seg_t* q1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
-    apn_seg_t* q2 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));
+    ap_seg_t* q1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
+    ap_seg_t* q2 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1622,7 +1622,7 @@ static void check_apn_div_one(void)
 
     printf("TEST-1: Division by powers of two vs apn_rshift (2^1 .. 2^63)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
@@ -1632,15 +1632,15 @@ static void check_apn_div_one(void)
             apn_set(q2, i, 0);
 
             /* Reference: right shift */
-            apn_seg_t shift_out_right = apn_rshift(q2, op1, i, sh);
+            ap_seg_t shift_out_right = apn_rshift(q2, op1, i, sh);
 
             /* Test: divide by 2^sh */
-            apn_seg_t divisor = ((apn_seg_t)1 << sh);
-            apn_seg_t rem = apn_div_one(q1, op1, divisor, i);
+            ap_seg_t divisor = ((ap_seg_t)1 << sh);
+            ap_seg_t rem = apn_div_one(q1, op1, divisor, i);
 
             int cmp_q = apn_cmp(q1, q2, i);
 
-            apn_seg_t expected_rem =
+            ap_seg_t expected_rem =
                 shift_out_right >> (APN_SEG_BITS - sh);
 
             APAC_ALWAYS_ASSERT(cmp_q == 0);
@@ -1654,11 +1654,11 @@ static void check_apn_div_one(void)
     apn_set(op2, TEST_SIZE_MAX + 1, 0);
     apn_set(op1, TEST_SIZE_MAX, 0);
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         set_to_random(op1, i);
 
-        apn_seg_t divisor = 0;
+        ap_seg_t divisor = 0;
         do
         {
             divisor = random_sfc64();
@@ -1667,10 +1667,10 @@ static void check_apn_div_one(void)
         apn_set(q1, i, 0);
         apn_set(op2, i + 1, 0);
 
-        apn_seg_t rem = apn_div_one(q1, op1, divisor, i);
+        ap_seg_t rem = apn_div_one(q1, op1, divisor, i);
 
         op2[0] += rem;
-        apn_seg_t carry1 = apn_addmul_one(op2, q1, i, divisor);
+        ap_seg_t carry1 = apn_addmul_one(op2, q1, i, divisor);
 
         int cmp_res = apn_cmp(op1, op2, i);
 
@@ -1693,11 +1693,11 @@ static void check_apn_div(void)
 {
     TEST_START("apn_div");
 
-    apn_seg_t* op1 = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);        /* divisor: i */
-    apn_seg_t* op2 = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));  /* dividend: i + j */
-    apn_seg_t* quot = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX + 1));  /* quotient: j + 1 */
-    apn_seg_t* rmdr = apac_malloc(sizeof(apn_seg_t) * TEST_SIZE_MAX);        /* remainder: i */
-    apn_seg_t* temp = apac_malloc(sizeof(apn_seg_t) * (TEST_SIZE_MAX * 2));  /* temp: i + j */
+    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);        /* divisor: i */
+    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));  /* dividend: i + j */
+    ap_seg_t* quot = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX + 1));  /* quotient: j + 1 */
+    ap_seg_t* rmdr = apac_malloc(sizeof(ap_seg_t) * TEST_SIZE_MAX);        /* remainder: i */
+    ap_seg_t* temp = apac_malloc(sizeof(ap_seg_t) * (TEST_SIZE_MAX * 2));  /* temp: i + j */
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -1707,9 +1707,9 @@ static void check_apn_div(void)
 
     printf("TEST-1: apn_div identity (dividend = quot * divisor + remainder)\n");
 
-    for (apn_size_t i = 1; i <= TEST_SIZE_MAX; i++)
+    for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (apn_size_t j = 1; j <= TEST_SIZE_MAX; j++)
+        for (ap_size_t j = 1; j <= TEST_SIZE_MAX; j++)
         {
             /* divisor (size i), ensure top limb non-zero */
             do {
@@ -1740,10 +1740,10 @@ static void check_apn_div(void)
             }
 
             /* decide multiplication order (quotient size is always j + 1) */
-            apn_seg_t* mul_a;
-            apn_seg_t* mul_b;
-            apn_size_t mul_asz;
-            apn_size_t mul_bsz;
+            ap_seg_t* mul_a;
+            ap_seg_t* mul_b;
+            ap_size_t mul_asz;
+            ap_size_t mul_bsz;
 
             if ((j + 1) >= i)
             {
@@ -1776,7 +1776,7 @@ static void check_apn_div(void)
             }
 
             /* temp += rmdr */
-            apn_seg_t carry = apn_add(
+            ap_seg_t carry = apn_add(
                 temp,
                 temp,
                 rmdr,
