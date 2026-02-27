@@ -267,10 +267,10 @@ typedef enum
 
 #else
 
-    #define APAC_ASSERT(expr)                                   do { } while (0)
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { } while (0)
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { } while (0)
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { } while (0)
+    #define APAC_ASSERT(expr)                                   do { /* nothing */ } while (0)
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
 
 #endif
 
@@ -1087,16 +1087,16 @@ APAC_API apn_size_t apn_clamp(
 /*********************************          APZ FUNCTIONS         ***********************************/
 /****************************************************************************************************/
 
-#define APZ_POS         (int8_t)1
-#define APZ_NEG         (int8_t)-1
-#define APZ_ZERO        (int8_t)0
+#define APZ_POS         ((int8_t)1)
+#define APZ_NEG         ((int8_t)-1)
+#define APZ_ZERO        ((int8_t)0)
 
 #define APZ_MAX_SIZE    ((apn_size_t)1 << 50)
 
 typedef struct
 {
     apn_seg_t* data;
-    apn_size_t max_size, used_size;
+    apn_size_t max_, used_segs;
     int8_t is_neg;
 
 } apz_t;
