@@ -10,10 +10,10 @@
 #define DNC_DIV_UNBALANCED_WS_SIZE(size)    DNC_DIV_BALANCED_WS_SIZE(size)
 
 apac_err apn_div(
-    ap_seg_t* quotient,        // must be (size_divd - size_dvsr + 1) length
-    ap_seg_t* remainder,       // must be size_dvsr length
-    const ap_seg_t* dividend,
-    const ap_seg_t* divisor,
+    ap_dig_t* quotient,        // must be (size_divd - size_dvsr + 1) length
+    ap_dig_t* remainder,       // must be size_dvsr length
+    const ap_dig_t* dividend,
+    const ap_dig_t* divisor,
     ap_size_t size_divd,
     ap_size_t size_dvsr
 )
@@ -70,7 +70,7 @@ full_division:
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm
-    ap_seg_t* temp_space = apac_malloc((size_dvsr + size_divd + 1) * sizeof(ap_seg_t));
+    ap_dig_t* temp_space = apac_malloc((size_dvsr + size_divd + 1) * sizeof(ap_dig_t));
 
     if (!temp_space)
     {
@@ -78,8 +78,8 @@ full_division:
         return APAC_OOM;
     }
 
-    ap_seg_t* temp_dvsr = temp_space;
-    ap_seg_t* temp_divd = temp_space + size_dvsr;
+    ap_dig_t* temp_dvsr = temp_space;
+    ap_dig_t* temp_divd = temp_space + size_dvsr;
 
     apn_cpy(temp_dvsr, divisor, size_dvsr);
     apn_cpy(temp_divd, dividend, size_divd);
@@ -90,14 +90,14 @@ full_division:
         CLZ64(temp_dvsr[size_dvsr - 1], dvsr_shift_val);
         APAC_ASSERT(dvsr_shift_val != (APN_SEG_BITS));
 
-        ap_seg_t out_val = apn_lshift(temp_dvsr, temp_dvsr, size_dvsr, (ap_seg_t)dvsr_shift_val);
+        ap_dig_t out_val = apn_lshift(temp_dvsr, temp_dvsr, size_dvsr, (ap_dig_t)dvsr_shift_val);
         APAC_ASSERT(out_val == 0);
 
         // if this step results in no shift-out val, then top segment of dividend stays zero
-        temp_divd[size_divd] = apn_lshift(temp_divd, temp_divd, size_divd, (ap_seg_t)dvsr_shift_val);
+        temp_divd[size_divd] = apn_lshift(temp_divd, temp_divd, size_divd, (ap_dig_t)dvsr_shift_val);
     }
 
-    ap_seg_t outval = 0;
+    ap_dig_t outval = 0;
     
     if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {
@@ -106,7 +106,7 @@ full_division:
     else if (size_dvsr >= (size_divd + 1 - size_dvsr))
     {
         ap_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
-        ap_seg_t* temp_ws = apac_malloc(sizeof(ap_seg_t) * ws_size);
+        ap_dig_t* temp_ws = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
         if (!temp_ws)
         {
@@ -123,7 +123,7 @@ full_division:
     else
     {
         ap_size_t ws_size = DNC_DIV_UNBALANCED_WS_SIZE(size_dvsr);
-        ap_seg_t* temp_ws = apac_malloc(sizeof(ap_seg_t) * ws_size);
+        ap_dig_t* temp_ws = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
         if (!temp_ws)
         {
@@ -140,7 +140,7 @@ full_division:
 
     if (dvsr_shift_val)
     {
-        ap_seg_t shift_down = apn_rshift(temp_divd, temp_divd, size_rmdr, (ap_seg_t)dvsr_shift_val);
+        ap_dig_t shift_down = apn_rshift(temp_divd, temp_divd, size_rmdr, (ap_dig_t)dvsr_shift_val);
         APAC_ASSERT(shift_down == 0);
     }
 

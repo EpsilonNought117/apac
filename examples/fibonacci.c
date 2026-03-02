@@ -39,12 +39,12 @@ int main(int argc, char** argv)
     if (tmp > (unsigned long long)APN_SEG_MAX)
     {
         fprintf(stderr,
-            "Error: input too large for ap_seg_t (max %" PRI_APN_SEGU ")\n",
-            (ap_seg_t)APN_SEG_MAX);
+            "Error: input too large for ap_dig_t (max %" PRI_APN_SEGU ")\n",
+            (ap_dig_t)APN_SEG_MAX);
         return EXIT_FAILURE;
     }
 
-    ap_seg_t N = (ap_seg_t)tmp;
+    ap_dig_t N = (ap_dig_t)tmp;
 
     /* ------------------------------------------------------------
      * Fibonacci index must be >= 2 and < 2 ^ 20
@@ -62,10 +62,10 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
      * Allocate rolling Fibonacci buffers
      * ------------------------------------------------------------ */
-    ap_seg_t* fib[2] = { 0 };
+    ap_dig_t* fib[2] = { 0 };
 
-    fib[0] = apac_malloc(max_limbs * sizeof(ap_seg_t));
-    fib[1] = apac_malloc(max_limbs * sizeof(ap_seg_t));
+    fib[0] = apac_malloc(max_limbs * sizeof(ap_dig_t));
+    fib[1] = apac_malloc(max_limbs * sizeof(ap_dig_t));
 
     APAC_ALWAYS_ASSERT(fib[0] != NULL);
     APAC_ALWAYS_ASSERT(fib[1] != NULL);
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
      * Fibonacci loop: F(n) = F(n-1) + F(n-2)
      * ------------------------------------------------------------ */
-    for (ap_seg_t i = 2; i <= N; i++)
+    for (ap_dig_t i = 2; i <= N; i++)
     {
         ap_size_t curr_size = (ap_size_t)((((double)i * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
         apn_add_n(fib[i & 1], fib[0], fib[1], curr_size);

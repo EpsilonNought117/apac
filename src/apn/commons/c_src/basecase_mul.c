@@ -3,9 +3,9 @@
 extern apac_cpu_params curr_cpu;
 
 void apn_basecase_mul(
-	ap_seg_t* result, 
-	const ap_seg_t* op1, 
-	const ap_seg_t* op2,
+	ap_dig_t* result, 
+	const ap_dig_t* op1, 
+	const ap_dig_t* op2,
 	ap_size_t size1, 
 	ap_size_t size2
 )

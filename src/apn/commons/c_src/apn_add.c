@@ -2,10 +2,10 @@
 
 extern apac_cpu_params curr_cpu;
 
-ap_seg_t apn_add_n(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
-	const ap_seg_t* op2,
+ap_dig_t apn_add_n(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	const ap_dig_t* op2,
 	ap_size_t size
 )
 {
@@ -17,14 +17,14 @@ ap_seg_t apn_add_n(
 	APAC_PARTIAL_OVERLAP_BELOW(result, size, op2, size);
 	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
 
-	ap_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size);
+	ap_dig_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size);
 	return carry;
 }
 
-ap_seg_t apn_add(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
-	const ap_seg_t* op2,
+ap_dig_t apn_add(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	const ap_dig_t* op2,
 	ap_size_t size1,
 	ap_size_t size2
 )
@@ -39,7 +39,7 @@ ap_seg_t apn_add(
 	APAC_ASSERT(curr_cpu.apn_add_n_ptr != NULL);
 	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
 
-	ap_seg_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
+	ap_dig_t carry = curr_cpu.apn_add_n_ptr(result, op1, op2, size2);
 
 	if (size1 == size2)
 		return carry;
@@ -48,11 +48,11 @@ ap_seg_t apn_add(
 	return carry;
 }
 
-ap_seg_t apn_add_one(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
+ap_dig_t apn_add_one(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
 	ap_size_t size,
-	ap_seg_t val
+	ap_dig_t val
 )
 {
 	APAC_ASSERT(size != 0);
@@ -61,6 +61,6 @@ ap_seg_t apn_add_one(
 	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
 	APAC_ASSERT(curr_cpu.apn_add_one_ptr != NULL);
 	
-	ap_seg_t carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);
+	ap_dig_t carry = curr_cpu.apn_add_one_ptr(result, op1, size, val);
 	return carry;
 }

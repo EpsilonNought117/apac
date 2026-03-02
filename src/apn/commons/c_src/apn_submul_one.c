@@ -2,11 +2,11 @@
 
 extern apac_cpu_params curr_cpu;
 
-ap_seg_t apn_submul_one(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
+ap_dig_t apn_submul_one(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
 	ap_size_t size,
-	ap_seg_t val
+	ap_dig_t val
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -15,6 +15,6 @@ ap_seg_t apn_submul_one(
 	APAC_PARTIAL_OVERLAP_BELOW(result, size + 1, op1, size);
 	APAC_ASSERT(curr_cpu.apn_submul_one_ptr != NULL);
 
-	ap_seg_t out_val = curr_cpu.apn_submul_one_ptr(result, op1, size, val);
+	ap_dig_t out_val = curr_cpu.apn_submul_one_ptr(result, op1, size, val);
 	return out_val;
 }

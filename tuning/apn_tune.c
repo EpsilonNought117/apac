@@ -27,9 +27,9 @@ static ap_size_t get_karatsuba_mul_balanced_threshold(void)
 
     const double IMPROVE_PCT = 0.05;   /* 5% improvement required */
 
-    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * size_end);
-    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * size_end);
-    ap_seg_t* res = apac_malloc(sizeof(ap_seg_t) * (2 * size_end));
+    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
+    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * size_end);
+    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(op2 != NULL);
@@ -128,8 +128,8 @@ static ap_size_t get_karatsuba_sqr_threshold(void)
 
     const double IMPROVE_PCT = 0.05;   /* 5% improvement required */
 
-    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * size_end);
-    ap_seg_t* res = apac_malloc(sizeof(ap_seg_t) * (2 * size_end));
+    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
+    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(res != NULL);
@@ -227,9 +227,9 @@ static ap_size_t get_karatsuba_mul_unbalanced_threshold(void)
     const double IMPROVE_PCT = 0.05;   /* reset only if >=5% better */
     const double TIE_PCT = 0.05;   /* within 5% counts as tie */
 
-    ap_seg_t* op1 = apac_malloc(sizeof(ap_seg_t) * size_end);
-    ap_seg_t* op2 = apac_malloc(sizeof(ap_seg_t) * size_end);
-    ap_seg_t* res = apac_malloc(sizeof(ap_seg_t) * (2 * size_end));
+    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
+    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * size_end);
+    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(op2 != NULL);
@@ -371,10 +371,10 @@ static ap_size_t get_dnc_div_threshold(void)
     const double IMPROVE_PCT = 0.05;
     const double TIE_PCT = 0.05;
 
-    ap_seg_t* dividend = apac_malloc(sizeof(ap_seg_t) * (size_end * 2));
-    ap_seg_t* divisor = apac_malloc(sizeof(ap_seg_t) * size_end);
-    ap_seg_t* quot = apac_malloc(sizeof(ap_seg_t) * (size_end * 2));
-    ap_seg_t* rem = apac_malloc(sizeof(ap_seg_t) * size_end);
+    ap_dig_t* dividend = apac_malloc(sizeof(ap_dig_t) * (size_end * 2));
+    ap_dig_t* divisor = apac_malloc(sizeof(ap_dig_t) * size_end);
+    ap_dig_t* quot = apac_malloc(sizeof(ap_dig_t) * (size_end * 2));
+    ap_dig_t* rem = apac_malloc(sizeof(ap_dig_t) * size_end);
 
     APN_TUNE_ASSERT(dividend != NULL);
     APN_TUNE_ASSERT(divisor != NULL);

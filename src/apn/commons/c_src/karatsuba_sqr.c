@@ -2,10 +2,10 @@
 #include "../c_headers/apn_thresholds.h"
 
 void apn_karatsuba_sqr(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
+	ap_dig_t* result,
+	const ap_dig_t* op1,
 	ap_size_t size,
-	ap_seg_t* temp
+	ap_dig_t* temp
 )
 {
 	/*
@@ -25,7 +25,7 @@ void apn_karatsuba_sqr(
 	ap_size_t lower = (size + 1) >> 1;
 	ap_size_t upper = size >> 1;
 
-	ap_seg_t carry = apn_sub(temp, op1, op1 + lower, lower, upper);
+	ap_dig_t carry = apn_sub(temp, op1, op1 + lower, lower, upper);
 	if (carry) { apn_neg(temp, temp, lower); }
 
 	// first recursive call
@@ -40,7 +40,7 @@ void apn_karatsuba_sqr(
 	apn_karatsuba_sqr(result + 2 * lower, op1 + lower, upper, temp + 2 * lower);
 
 	// (c0 + c1)
-	ap_seg_t val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
+	ap_dig_t val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
 	temp[4 * lower] += val;
 	
 	// c2 = (c0 + c1 - (|c0 - c1|)^2)

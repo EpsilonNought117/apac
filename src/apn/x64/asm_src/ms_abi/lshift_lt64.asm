@@ -12,10 +12,10 @@ LEFT_SHIFT_LT64 SEGMENT ALIGN(64) 'CODE'
 
     ;   Function Arguments
     ;
-    ;   rcx -> result       (ap_seg_t*)   
-    ;   rdx -> op1          (const ap_seg_t*)
+    ;   rcx -> result       (ap_dig_t*)   
+    ;   rdx -> op1          (const ap_dig_t*)
     ;   r8  -> size         (ap_size_t)
-    ;   r9  -> bit_cnt      (ap_seg_t)
+    ;   r9  -> bit_cnt      (ap_dig_t)
 
     ; The wrapper calling this will assert that (bit_cnt < 64 && bit_cnt > 0)
     ; also asserts that size >= 1

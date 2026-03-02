@@ -111,7 +111,7 @@ void random_sfc64_seed(uint64_t seed)
 		random_sfc64();
 }
 
-void set_to_random(ap_seg_t* op1, ap_size_t size)
+void set_to_random(ap_dig_t* op1, ap_size_t size)
 {
 	for (ap_size_t i = 0; i < size; i++)
 	{

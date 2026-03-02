@@ -3,8 +3,8 @@
 extern apac_cpu_params curr_cpu;
 
 void apn_neg(
-    ap_seg_t* result, 
-    const ap_seg_t* op1, 
+    ap_dig_t* result, 
+    const ap_dig_t* op1, 
     ap_size_t size
 )
 {

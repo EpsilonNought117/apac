@@ -4,7 +4,7 @@
 __attribute__((target("avx512f,bmi2")))
 #endif
 int is_zero_avx512f_4unroll(
-    const ap_seg_t* op1,
+    const ap_dig_t* op1,
     ap_size_t size
 )
 {
@@ -82,7 +82,7 @@ int is_zero_avx512f_4unroll(
 __attribute__((target("avx2")))
 #endif
 int is_zero_avx2_4unroll(
-    const ap_seg_t* op1,
+    const ap_dig_t* op1,
     ap_size_t size
 )
 {
@@ -139,7 +139,7 @@ int is_zero_avx2_4unroll(
 __attribute__((target("sse2")))
 #endif
 int is_zero_sse2_4unroll(
-    const ap_seg_t* op1,
+    const ap_dig_t* op1,
     ap_size_t size
 )
 {

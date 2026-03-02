@@ -4,9 +4,9 @@
 __attribute__((target("avx512f,bmi2")))
 #endif
 void set_avx512f_4unroll(
-	ap_seg_t* result,
+	ap_dig_t* result,
 	ap_size_t size,
-	ap_seg_t val
+	ap_dig_t val
 )
 {
 	__m512i my_val = _mm512_set1_epi64(val);
@@ -38,9 +38,9 @@ void set_avx512f_4unroll(
 __attribute__((target("avx")))
 #endif
 void set_avx_4unroll(
-	ap_seg_t* result,
+	ap_dig_t* result,
 	ap_size_t size,
-	ap_seg_t val
+	ap_dig_t val
 )
 {
 	__m256i my_val = _mm256_set1_epi64x(val);
@@ -71,9 +71,9 @@ void set_avx_4unroll(
 __attribute__((target("sse2")))
 #endif
 void set_sse2_4unroll(
-	ap_seg_t* result,
+	ap_dig_t* result,
 	ap_size_t size,
-	ap_seg_t val
+	ap_dig_t val
 )
 {
 	__m128i my_val = _mm_set1_epi64x(val);

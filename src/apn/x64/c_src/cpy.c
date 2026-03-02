@@ -4,8 +4,8 @@
 __attribute__((target("avx512f,bmi2")))
 #endif
 void cpy_avx512f_4unroll(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
+	ap_dig_t* result,
+	const ap_dig_t* op1,
 	ap_size_t size
 )
 {
@@ -56,8 +56,8 @@ void cpy_avx512f_4unroll(
 __attribute__((target("avx")))
 #endif
 void cpy_avx_4unroll(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
+	ap_dig_t* result,
+	const ap_dig_t* op1,
 	ap_size_t size
 )
 {
@@ -97,8 +97,8 @@ void cpy_avx_4unroll(
 __attribute__((target("sse2")))
 #endif
 void cpy_sse2_4unroll(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
+	ap_dig_t* result,
+	const ap_dig_t* op1,
 	ap_size_t size
 )
 {

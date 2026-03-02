@@ -9,11 +9,11 @@
 */
 
 void apn_karatsuba_mul_balanced(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
-	const ap_seg_t* op2,
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	const ap_dig_t* op2,
 	ap_size_t size,
-	ap_seg_t* temp
+	ap_dig_t* temp
 )
 {
 	APAC_ASSERT(temp != NULL);
@@ -43,7 +43,7 @@ void apn_karatsuba_mul_balanced(
 
 	// carry1 = carryA
 
-	ap_seg_t carry1 = apn_sub(temp, op1, op1 + lower, lower, upper);
+	ap_dig_t carry1 = apn_sub(temp, op1, op1 + lower, lower, upper);
 	if (carry1) { apn_neg(temp, temp, lower); }
 
 	// b0 = op2[0 : (lower - 1)]
@@ -52,7 +52,7 @@ void apn_karatsuba_mul_balanced(
 
 	// carry2 = carryB
 	// rest is same
-	ap_seg_t carry2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
+	ap_dig_t carry2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
 	if (carry2) { apn_neg(temp + lower, temp + lower, lower); }
 
 	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
@@ -71,7 +71,7 @@ void apn_karatsuba_mul_balanced(
 	apn_karatsuba_mul_balanced(result + 2 * lower, op1 + lower, op2 + lower, upper, temp + 2 * lower);
 
 	// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)]
-	ap_seg_t val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
+	ap_dig_t val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
 	temp[4 * lower] += val; // propagate carry
 
 	if (carry1 == carry2) // if both signs are same
@@ -92,12 +92,12 @@ void apn_karatsuba_mul_balanced(
 }
 
 void apn_karatsuba_mul_unbalanced(
-	ap_seg_t* result,
-	const ap_seg_t* op1,
-	const ap_seg_t* op2,
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	const ap_dig_t* op2,
 	ap_size_t size1,
 	ap_size_t size2,
-	ap_seg_t* temp
+	ap_dig_t* temp
 )
 {
 	APAC_ASSERT(temp != NULL);
@@ -119,10 +119,10 @@ void apn_karatsuba_mul_unbalanced(
 	ap_size_t upperA = size1 - lowerA;
 	ap_size_t upperB = size2 - lowerA;
 
-	ap_seg_t carry1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
+	ap_dig_t carry1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
 	if (carry1) { apn_neg(temp, temp, lowerA); }
 
-	ap_seg_t carry2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
+	ap_dig_t carry2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
 	if (carry2) { apn_neg(temp + lowerA, temp + lowerA, lowerA); }
 
 	// Always Balanced Multiplication
@@ -137,7 +137,7 @@ void apn_karatsuba_mul_unbalanced(
 	// Always Unbalanced Multiplication
 	apn_karatsuba_mul_unbalanced(result + lowerA * 2, op1 + lowerA, op2 + lowerA, upperA, upperB, temp + lowerA * 2);
 
-	ap_seg_t val = apn_add(temp + 2 * lowerA, result, result + 2 * lowerA, 2 * lowerA, upperA + upperB);
+	ap_dig_t val = apn_add(temp + 2 * lowerA, result, result + 2 * lowerA, 2 * lowerA, upperA + upperB);
 	temp[4 * lowerA] += val;
 
 	if (carry1 == carry2)

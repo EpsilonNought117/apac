@@ -9,9 +9,9 @@
 #define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2) (((size1) + 16) * 2)
 
 apac_err apn_mul_n(
-	ap_seg_t* result, 
-	const ap_seg_t* op1, 
-	const ap_seg_t* op2, 
+	ap_dig_t* result, 
+	const ap_dig_t* op1, 
+	const ap_dig_t* op2, 
 	ap_size_t size
 )
 {
@@ -34,7 +34,7 @@ apac_err apn_mul_n(
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		ap_size_t ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
-		ap_seg_t* workspace = apac_malloc(sizeof(ap_seg_t) * ws_size);
+		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
 		if (!workspace)
 		{
@@ -52,9 +52,9 @@ apac_err apn_mul_n(
 }
 
 apac_err apn_mul(
-	ap_seg_t* result, 
-	const ap_seg_t* op1, 
-	const ap_seg_t* op2, 
+	ap_dig_t* result, 
+	const ap_dig_t* op1, 
+	const ap_dig_t* op2, 
 	ap_size_t size1, 
 	ap_size_t size2
 )
@@ -72,7 +72,7 @@ apac_err apn_mul(
 
 	if (size2 == 1)
 	{
-		ap_seg_t carry = apn_addmul_one(result, op1, size1, op2[0]);
+		ap_dig_t carry = apn_addmul_one(result, op1, size1, op2[0]);
 		APAC_ASSERT(carry == 0);
 	}
 	else if (size1 == size2)
@@ -89,7 +89,7 @@ apac_err apn_mul(
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		ap_size_t ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
-		ap_seg_t* workspace = apac_malloc(sizeof(ap_seg_t) * ws_size);
+		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
 		if (!workspace)
 		{

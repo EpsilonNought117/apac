@@ -1,10 +1,10 @@
 #include "../c_headers/hidden_div.h"
 #include "../c_headers/hidden_helpers.h"
 
-ap_seg_t apn_basecase_div(
-    ap_seg_t* quotient,
-    ap_seg_t* dividend,
-    const ap_seg_t* divisor,
+ap_dig_t apn_basecase_div(
+    ap_dig_t* quotient,
+    ap_dig_t* dividend,
+    const ap_dig_t* divisor,
     ap_size_t size_divd,
     ap_size_t size_dvsr
 )
@@ -15,7 +15,7 @@ ap_seg_t apn_basecase_div(
     
     ap_size_t m = size_divd - size_dvsr;
     ap_size_t n = size_dvsr;
-    ap_seg_t q_msd = 0ULL;
+    ap_dig_t q_msd = 0ULL;
 
     int cmp_res = apn_cmp(dividend + m, divisor, n);
     
@@ -25,13 +25,13 @@ ap_seg_t apn_basecase_div(
         q_msd = 1ULL;
     }
 
-    ap_seg_t dvsr1 = divisor[n - 1];
-    ap_seg_t dvsr0 = divisor[n - 2];
-    ap_seg_t dvsr_recip = recip_word64_3by2(dvsr1, dvsr0);
+    ap_dig_t dvsr1 = divisor[n - 1];
+    ap_dig_t dvsr0 = divisor[n - 2];
+    ap_dig_t dvsr_recip = recip_word64_3by2(dvsr1, dvsr0);
 
     for (ap_size_t j = m - 1; j < m; j--)
     {
-        ap_seg_t sel_quot = udiv64_3by2_quot(
+        ap_dig_t sel_quot = udiv64_3by2_quot(
                                 dividend[n + j],
                                 dividend[n + j - 1],
                                 dividend[n + j - 2],
@@ -39,12 +39,12 @@ ap_seg_t apn_basecase_div(
                                 dvsr0,
                                 dvsr_recip
                             );
-        ap_seg_t borrow_out = apn_submul_one(dividend + j, divisor, n, sel_quot);
+        ap_dig_t borrow_out = apn_submul_one(dividend + j, divisor, n, sel_quot);
 
         if (borrow_out)
         {
             sel_quot--;
-            ap_seg_t carry_out = apn_add(dividend + j, dividend + j, divisor, size_divd - j, n);
+            ap_dig_t carry_out = apn_add(dividend + j, dividend + j, divisor, size_divd - j, n);
             dividend[n + j] += carry_out;
         }
     

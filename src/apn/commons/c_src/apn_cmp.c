@@ -3,8 +3,8 @@
 extern apac_cpu_params curr_cpu;
 
 int apn_cmp(
-	const ap_seg_t* op1,
-	const ap_seg_t* op2,
+	const ap_dig_t* op1,
+	const ap_dig_t* op2,
 	ap_size_t size
 )
 {

@@ -11,8 +11,8 @@ SQR_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 	;   Function Arguments
     ;
-    ;   rcx -> result       (ap_seg_t*)   
-    ;   rdx -> op1          (const ap_seg_t*)
+    ;   rcx -> result       (ap_dig_t*)   
+    ;   rdx -> op1          (const ap_dig_t*)
     ;   r8  -> size         (ap_size_t)
 
 ;   -------------------------
@@ -46,7 +46,7 @@ start_of_func:
     jz      pass2
 
     mov     r10, r11
-    shl     r10, 3          ; curr_size * sizeof(ap_seg_t)
+    shl     r10, 3          ; curr_size * sizeof(ap_dig_t)
     add     rbp, 8
 
 outer_loop_pass1:

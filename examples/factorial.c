@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    ap_seg_t N = (ap_seg_t)tmp;
+    ap_dig_t N = (ap_dig_t)tmp;
 
     /* ------------------------------------------------------------
      * Factorial invariants
@@ -58,8 +58,8 @@ int main(int argc, char** argv)
     /* Round up bits → limbs, then pad */
     max_limbs = (ap_size_t)ceil(bits / APN_SEG_BITS);
 
-    ap_seg_t* src = apac_malloc((max_limbs + 2) * sizeof(ap_seg_t));
-    ap_seg_t* dst = apac_malloc((max_limbs + 2) * sizeof(ap_seg_t));
+    ap_dig_t* src = apac_malloc((max_limbs + 2) * sizeof(ap_dig_t));
+    ap_dig_t* dst = apac_malloc((max_limbs + 2) * sizeof(ap_dig_t));
 
     APAC_ALWAYS_ASSERT(src != NULL);
     APAC_ALWAYS_ASSERT(dst != NULL);
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
     * Factorial loop (FIXED)
     * ------------------------------------------------------------ */
-    for (ap_seg_t k = 2; k <= N; k++)
+    for (ap_dig_t k = 2; k <= N; k++)
     {
         apn_addmul_one(dst, src, curr_limbs, k);
         curr_limbs = apn_clamp(dst, curr_limbs + 1);
