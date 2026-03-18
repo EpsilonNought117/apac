@@ -96,8 +96,6 @@ full_division:
         // if this step results in no shift-out val, then top segment of dividend stays zero
         temp_divd[size_divd] = apn_lshift(temp_divd, temp_divd, size_divd, (ap_dig_t)dvsr_shift_val);
     }
-
-    ap_dig_t outval = 0;
     
     if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {

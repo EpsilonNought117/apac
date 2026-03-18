@@ -13,8 +13,8 @@ ap_dig_t apn_sub_n(
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
-	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
-	APAC_PARTIAL_OVERLAP_BELOW(result, size, op2, size);
+	APAC_PARTIAL_OVERLAP_ABOVE(result, size, op1, size);
+	APAC_PARTIAL_OVERLAP_ABOVE(result, size, op2, size);
 	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 
 	ap_dig_t borrow = curr_cpu.apn_sub_n_ptr(result, op1, op2, size);
@@ -34,8 +34,8 @@ ap_dig_t apn_sub(
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(op2 != NULL);
-	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op1, size1);
-	APAC_PARTIAL_OVERLAP_BELOW(result, size1, op2, size2);
+	APAC_PARTIAL_OVERLAP_ABOVE(result, size1, op1, size1);
+	APAC_PARTIAL_OVERLAP_ABOVE(result, size1, op2, size2);
 	APAC_ASSERT(curr_cpu.apn_sub_n_ptr != NULL);
 	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
@@ -58,7 +58,7 @@ ap_dig_t apn_sub_one(
 	APAC_ASSERT(size != 0);
 	APAC_ASSERT(op1 != NULL);
 	APAC_ASSERT(result != NULL);
-	APAC_PARTIAL_OVERLAP_BELOW(result, size, op1, size);
+	APAC_PARTIAL_OVERLAP_ABOVE(result, size, op1, size);
 	APAC_ASSERT(curr_cpu.apn_sub_one_ptr != NULL);
 
 	ap_dig_t borrow = curr_cpu.apn_sub_one_ptr(result, op1, size, val);
