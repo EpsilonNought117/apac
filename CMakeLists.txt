@@ -218,10 +218,20 @@ target_compile_definitions(${apac_target} PRIVATE
 
 # --- STRIP PATHS FROM __FILE__ -------------------------------------------------
 
-if (MSVC)
-    target_compile_options(${apac_target} PRIVATE $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>)
+if (MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # MSVC (cl.exe)
+    target_compile_options(${apac_target} PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>
+    )
+
+elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND MSVC)
+    # clang-cl (Clang with MSVC style args)
+    target_compile_options(${apac_target} PRIVATE
+        /clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
+    )
+
 else()
-    # For GCC/Clang, use -ffile-prefix-map to strip the build path
+    # GCC / Clang (GNU-style)
     target_compile_options(${apac_target} PRIVATE 
         -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
     )
