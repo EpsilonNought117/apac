@@ -1,6 +1,6 @@
 #include "../../../../include/apac.h"
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx512f,bmi2")))
 #endif
 void cpy_avx512f_4unroll(
@@ -52,7 +52,7 @@ void cpy_avx512f_4unroll(
 	return;
 }
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx")))
 #endif
 void cpy_avx_4unroll(
@@ -93,7 +93,7 @@ void cpy_avx_4unroll(
 	}
 }
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("sse2")))
 #endif
 void cpy_sse2_4unroll(

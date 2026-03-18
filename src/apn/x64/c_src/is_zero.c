@@ -1,6 +1,6 @@
 #include "../../../../include/apac.h"
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx512f,bmi2")))
 #endif
 int is_zero_avx512f_4unroll(
@@ -78,7 +78,7 @@ int is_zero_avx512f_4unroll(
     return (result ? 1 : 0);
 }
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2")))
 #endif
 int is_zero_avx2_4unroll(
@@ -135,7 +135,7 @@ int is_zero_avx2_4unroll(
     return 0;
 }
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("sse2")))
 #endif
 int is_zero_sse2_4unroll(

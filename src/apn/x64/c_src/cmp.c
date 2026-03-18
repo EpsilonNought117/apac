@@ -10,7 +10,7 @@
 	Check if need for AVX512 variant arises and if so, add it.
 */
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2")))
 #endif
 int cmp_avx2_4unroll(
@@ -100,7 +100,7 @@ int cmp_avx2_4unroll(
 	return 0;
 }
 
-#if defined(__GNUC__)
+#if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("sse2")))
 #endif
 int cmp_sse2_4unroll(
