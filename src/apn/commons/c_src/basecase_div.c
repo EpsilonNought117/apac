@@ -11,7 +11,7 @@ ap_dig_t apn_basecase_div(
 {
     APAC_ASSERT(size_dvsr >= 2);
     APAC_ASSERT(size_divd > size_dvsr);
-    APAC_ASSERT((divisor[size_dvsr - 1] & (APN_SEG_HIGH_BIT)));
+    APAC_ASSERT((divisor[size_dvsr - 1] & (APN_DIG_HIGH_BIT)));
     
     ap_size_t m = size_divd - size_dvsr;
     ap_size_t n = size_dvsr;
@@ -19,7 +19,7 @@ ap_dig_t apn_basecase_div(
 
     int cmp_res = apn_cmp(dividend + m, divisor, n);
     
-    if (cmp_res != -1)  // dividend >= (divisor * B ^ m) where B is (2 ^ (APN_SEG_BITS))
+    if (cmp_res != -1)  // dividend >= (divisor * B ^ m) where B is (2 ^ (APN_DIG_BITS))
     {
         apn_sub_n(dividend + m, dividend + m, divisor, n);
         q_msd = 1ULL;
@@ -27,11 +27,11 @@ ap_dig_t apn_basecase_div(
 
     ap_dig_t dvsr1 = divisor[n - 1];
     ap_dig_t dvsr0 = divisor[n - 2];
-    ap_dig_t dvsr_recip = recip_word64_3by2(dvsr1, dvsr0);
+    ap_dig_t dvsr_recip = recip_word_3by2(dvsr1, dvsr0);
 
     for (ap_size_t j = m - 1; j < m; j--)
     {
-        ap_dig_t sel_quot = udiv64_3by2_quot(
+        ap_dig_t sel_quot = udiv_3by2_quot(
                                 dividend[n + j],
                                 dividend[n + j - 1],
                                 dividend[n + j - 2],

@@ -10,10 +10,10 @@
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t recip_word64_2by1(ap_dig_t d)
+ap_dig_t recip_word_2by1(ap_dig_t d)
 {
     /* Preconditions from the paper */
-    APAC_ASSERT(d & APN_SEG_HIGH_BIT);
+    APAC_ASSERT(d & APN_DIG_HIGH_BIT);
 
     /* LUT for ((2^19) - 3*(2^8)) / d9 */
     static const uint32_t D9_LUT[256] =
@@ -104,10 +104,10 @@ ap_dig_t recip_word64_2by1(ap_dig_t d)
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t recip_word64_3by2(ap_dig_t d1, ap_dig_t d0)
+ap_dig_t recip_word_3by2(ap_dig_t d1, ap_dig_t d0)
 {
     /* Step 1: v = RECIPROCAL_WORD(d1) */
-    ap_dig_t v = recip_word64_2by1(d1);
+    ap_dig_t v = recip_word_2by1(d1);
 
     ap_dig_t p;
 
@@ -166,7 +166,7 @@ ap_dig_t recip_word64_3by2(ap_dig_t d1, ap_dig_t d0)
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t udiv64_2by1(
+ap_dig_t udiv_2by1(
     ap_dig_t u1,
     ap_dig_t u0,
     ap_dig_t d,
@@ -176,7 +176,7 @@ ap_dig_t udiv64_2by1(
 {
     /* Preconditions from the paper */
     APAC_ASSERT(u1 < d);
-    APAC_ASSERT(d & APN_SEG_HIGH_BIT);
+    APAC_ASSERT(d & APN_DIG_HIGH_BIT);
 
     ap_dig_t q0, q1;
 
@@ -198,9 +198,9 @@ ap_dig_t udiv64_2by1(
     q = (__uint128_t)v * u1;
 
     /* Step 2 */
-    q += ((__uint128_t)u1 << APN_SEG_BITS) | u0;
+    q += ((__uint128_t)u1 << APN_DIG_BITS) | u0;
 
-    q1 = (ap_dig_t)(q >> APN_SEG_BITS);
+    q1 = (ap_dig_t)(q >> APN_DIG_BITS);
     q0 = (ap_dig_t)q;
 
 #else
@@ -240,7 +240,7 @@ ap_dig_t udiv64_2by1(
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t udiv64_3by2_quot(
+ap_dig_t udiv_3by2_quot(
     ap_dig_t u2,
     ap_dig_t u1,
     ap_dig_t u0,
@@ -250,7 +250,7 @@ ap_dig_t udiv64_3by2_quot(
 )
 {
     /* Preconditions from the paper */
-    APAC_ASSERT(d1 & APN_SEG_HIGH_BIT);
+    APAC_ASSERT(d1 & APN_DIG_HIGH_BIT);
     APAC_ASSERT((d1 > u2) || (d1 == u2 && d0 > u1));
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
@@ -309,9 +309,9 @@ ap_dig_t udiv64_3by2_quot(
     q = (__uint128_t)v * u2;
 
     /* Step 2: q += (u2,u1) */
-    q += ((__uint128_t)u2 << APN_SEG_BITS) | u1;
+    q += ((__uint128_t)u2 << APN_DIG_BITS) | u1;
 
-    q1 = (ap_dig_t)(q >> APN_SEG_BITS);
+    q1 = (ap_dig_t)(q >> APN_DIG_BITS);
     q0 = (ap_dig_t)q;
 
     /* Step 3 */
@@ -321,15 +321,15 @@ ap_dig_t udiv64_3by2_quot(
     __uint128_t t = (__uint128_t)d0 * q1;
 
     /* Step 5 */
-    d = ((__uint128_t)d1 << APN_SEG_BITS) | d0;
-    r = ((__uint128_t)r1 << APN_SEG_BITS) | u0;
+    d = ((__uint128_t)d1 << APN_DIG_BITS) | d0;
+    r = ((__uint128_t)r1 << APN_DIG_BITS) | u0;
     r = r - t - d;
 
     /* Step 6 */
     q1++;
 
     /* Steps 7-9 */
-    if ((ap_dig_t)(r >> APN_SEG_BITS) >= q0)
+    if ((ap_dig_t)(r >> APN_DIG_BITS) >= q0)
     {
         q1--;
         r += d;

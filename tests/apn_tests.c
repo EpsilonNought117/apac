@@ -235,7 +235,7 @@ static void check_apn_add_one(void)
 	/* TEST-1: Carry Propagation */
 	printf("TEST-1: Full Carry propagation\n");
 
-	apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+	apn_set(op1, TEST_SIZE_MAX, APN_DIG_MAX);
 	apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
 
 	for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
@@ -339,9 +339,9 @@ static void check_apn_add_n(void)
 
     printf("TEST-2: Carry Out Test\n");
 
-    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
-    apn_set(op2, TEST_SIZE_MAX, APN_SEG_MAX);
-    op2[0] = APN_SEG_MAX - 1;
+    apn_set(op1, TEST_SIZE_MAX, APN_DIG_MAX);
+    apn_set(op2, TEST_SIZE_MAX, APN_DIG_MAX);
+    op2[0] = APN_DIG_MAX - 1;
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
@@ -475,15 +475,15 @@ static void check_apn_add(void)
 
     printf("TEST-3: Full carry-out (all-ones operands)\n");
 
-    apn_set(a, TEST_SIZE_MAX, APN_SEG_MAX);
-    apn_set(b, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(a, TEST_SIZE_MAX, APN_DIG_MAX);
+    apn_set(b, TEST_SIZE_MAX, APN_DIG_MAX);
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         for (ap_size_t j = 1; j <= i; j++)
         {
-            apn_set(t1, j, APN_SEG_MAX);
-            t1[0] = APN_SEG_MAX - 1;
+            apn_set(t1, j, APN_DIG_MAX);
+            t1[0] = APN_DIG_MAX - 1;
 
             if (i > j)
             {
@@ -562,7 +562,7 @@ static void check_apn_sub_one(void)
 
     apn_set(op1, TEST_SIZE_MAX, 0x00ULL);
     apn_set(op2, TEST_SIZE_MAX, 0x00ULL);
-    apn_set(op3, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op3, TEST_SIZE_MAX, APN_DIG_MAX);
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
@@ -662,7 +662,7 @@ static void check_apn_sub_n(void)
     apn_set(op1, TEST_SIZE_MAX, 0);
     op1[0] = 1;
 
-    apn_set(op4, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op4, TEST_SIZE_MAX, APN_DIG_MAX);
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
@@ -768,7 +768,7 @@ static void check_apn_sub(void)
 
     printf("TEST-3: Full borrow propagation (0 - 1)\n");
 
-    apn_set(t, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(t, TEST_SIZE_MAX, APN_DIG_MAX);
     apn_set(a, TEST_SIZE_MAX, 0);
     apn_set(b, TEST_SIZE_MAX, 0);
     b[0] = 1;
@@ -817,18 +817,18 @@ static void check_apn_addmul_one(void)
     APAC_ALWAYS_ASSERT(op2 != NULL);
     APAC_ALWAYS_ASSERT(op3 != NULL);
 
-    printf("TEST-1: Max Value * APN_SEG_MAX (full carry chain)\n");
+    printf("TEST-1: Max Value * APN_DIG_MAX (full carry chain)\n");
 
-    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op1, TEST_SIZE_MAX, APN_DIG_MAX);
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         apn_set(op2, i + 1, 0);
-        apn_set(op3, i + 1, APN_SEG_MAX);
-        op3[i] = APN_SEG_MAX - 1;
+        apn_set(op3, i + 1, APN_DIG_MAX);
+        op3[i] = APN_DIG_MAX - 1;
         op3[0] = 1;
 
-        ap_dig_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
+        ap_dig_t carry = apn_addmul_one(op2, op1, i, APN_DIG_MAX);
 
         APAC_ALWAYS_ASSERT(carry == 0);
 
@@ -873,19 +873,19 @@ static void check_apn_addmul_one(void)
         APAC_ALWAYS_ASSERT(cmp_res == 0);
     }
 
-    printf("TEST-4: Max Value * APN_SEG_MAX with non-zero destination\n");
+    printf("TEST-4: Max Value * APN_DIG_MAX with non-zero destination\n");
 
-    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op1, TEST_SIZE_MAX, APN_DIG_MAX);
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        apn_set(op2, i + 1, APN_SEG_MAX);
-        apn_set(op3, i + 1, APN_SEG_MAX);
+        apn_set(op2, i + 1, APN_DIG_MAX);
+        apn_set(op3, i + 1, APN_DIG_MAX);
 
         op3[0] = 0;
-        op3[i] = APN_SEG_MAX - 1;
+        op3[i] = APN_DIG_MAX - 1;
 
-        ap_dig_t carry = apn_addmul_one(op2, op1, i, APN_SEG_MAX);
+        ap_dig_t carry = apn_addmul_one(op2, op1, i, APN_DIG_MAX);
 
         APAC_ALWAYS_ASSERT(carry == 1);
 
@@ -939,18 +939,18 @@ static void check_apn_submul_one(void)
     APAC_ALWAYS_ASSERT(op2 != NULL);
     APAC_ALWAYS_ASSERT(op3 != NULL);
 
-    printf("TEST-1: Max Value * APN_SEG_MAX subtracted from zero (full carry chain)\n");
+    printf("TEST-1: Max Value * APN_DIG_MAX subtracted from zero (full carry chain)\n");
 
-    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op1, TEST_SIZE_MAX, APN_DIG_MAX);
     apn_set(op3, TEST_SIZE_MAX + 1, 0);
-    op3[0] = APN_SEG_MAX;
+    op3[0] = APN_DIG_MAX;
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         op3[i] = 1;
         apn_set(op2, i + 1, 0);
 
-        ap_dig_t borrow = apn_submul_one(op2, op1, i, APN_SEG_MAX);
+        ap_dig_t borrow = apn_submul_one(op2, op1, i, APN_DIG_MAX);
         int cmp_res = apn_cmp(op3, op2, i + 1);
 
         APAC_ALWAYS_ASSERT(borrow == 1);
@@ -1073,7 +1073,7 @@ static void check_apn_lshift(void)
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        for (uint32_t sh = 1; sh <= APN_DIG_BITS - 1; sh++)
         {
             apn_set(op2, i + 1, 0);
 
@@ -1090,14 +1090,14 @@ static void check_apn_lshift(void)
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        for (uint32_t sh = 1; sh <= APN_DIG_BITS - 1; sh++)
         {
             set_to_random(op1, i);
             apn_set(op2, i + 1, 0);
 
             ap_dig_t carry = apn_lshift(op2, op1, i, sh);
 
-            ap_dig_t expected_carry = (op1[i - 1] >> (APN_SEG_BITS - sh));
+            ap_dig_t expected_carry = (op1[i - 1] >> (APN_DIG_BITS - sh));
 
             APAC_ALWAYS_ASSERT(carry == expected_carry);
         }
@@ -1107,7 +1107,7 @@ static void check_apn_lshift(void)
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        for (uint32_t sh = 1; sh <= APN_DIG_BITS - 1; sh++)
         {
             set_to_random(op1, i);
             apn_set(op2, i + 1, 0);
@@ -1148,14 +1148,14 @@ static void check_apn_rshift(void)
     {
         set_to_random(op1, i);
 
-        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        for (uint32_t sh = 1; sh <= APN_DIG_BITS - 1; sh++)
         {
             apn_cpy(op3, op1, i);
             apn_set(op2, i, 0);
 
             ap_dig_t shift_out_right = apn_rshift(op2, op1, i, sh);
 
-            ap_dig_t expected_shift_out = op3[0] << (APN_SEG_BITS - sh);
+            ap_dig_t expected_shift_out = op3[0] << (APN_DIG_BITS - sh);
 
             APAC_ALWAYS_ASSERT(shift_out_right == expected_shift_out);
         }
@@ -1167,7 +1167,7 @@ static void check_apn_rshift(void)
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
-        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        for (uint32_t sh = 1; sh <= APN_DIG_BITS - 1; sh++)
         {
             apn_set(op2, i, 0);
 
@@ -1186,7 +1186,7 @@ static void check_apn_rshift(void)
     {
         set_to_random(op1, i);
 
-        for (uint32_t sh = 1; sh <= APN_SEG_BITS - 1; sh++)
+        for (uint32_t sh = 1; sh <= APN_DIG_BITS - 1; sh++)
         {
             /* Preserve original */
             apn_cpy(op3, op1, i);
@@ -1199,7 +1199,7 @@ static void check_apn_rshift(void)
             apn_lshift(op2, op2, i, sh);
 
             /* Step 3: restore shifted-out bits into LSW */
-            op2[0] |= shift_out_right >> (APN_SEG_BITS - sh);
+            op2[0] |= shift_out_right >> (APN_DIG_BITS - sh);
 
             int cmp_res = apn_cmp(op2, op3, i);
 
@@ -1261,8 +1261,8 @@ static void check_apn_mul_n(void)
 
     printf("TEST-2: Max value multiplied by itself\n");
 
-    apn_set(op1, TEST_SIZE_MAX, APN_SEG_MAX);
-    apn_set(op2, TEST_SIZE_MAX, APN_SEG_MAX);
+    apn_set(op1, TEST_SIZE_MAX, APN_DIG_MAX);
+    apn_set(op2, TEST_SIZE_MAX, APN_DIG_MAX);
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
@@ -1271,8 +1271,8 @@ static void check_apn_mul_n(void)
         // set value to which to compare
         apn_set(op3, i, 0);
         op3[0] = 1;
-        apn_set(op3 + i, i, APN_SEG_MAX);
-        op3[i] = APN_SEG_MAX - 1;
+        apn_set(op3 + i, i, APN_DIG_MAX);
+        op3[i] = APN_DIG_MAX - 1;
 
         apac_err err_out = apn_mul_n(op4, op1, op2, i);
 
@@ -1641,7 +1641,7 @@ static void check_apn_div_one(void)
             int cmp_q = apn_cmp(q1, q2, i);
 
             ap_dig_t expected_rem =
-                shift_out_right >> (APN_SEG_BITS - sh);
+                shift_out_right >> (APN_DIG_BITS - sh);
 
             APAC_ALWAYS_ASSERT(cmp_q == 0);
 

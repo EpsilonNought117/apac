@@ -103,11 +103,12 @@ typedef size_t              ap_size_t;
 #define PRI_APN_PTR         "p"
 #define PRI_APN_SIZE        "zu"
 #define APN_SIZE_MAX        SIZE_MAX
-#define APN_SEG_MAX         UINT64_MAX
-#define PRI_APN_SEGU        PRIu64
-#define PRI_APN_SEGX        PRIx64
-#define APN_SEG_BITS        64U
-#define APN_SEG_HIGH_BIT    (1ULL << 63)
+#define APN_DIG_MAX         UINT64_MAX
+#define PRI_APN_DIGU        PRIu64
+#define PRI_APN_DIGX        PRIx64
+
+#define APN_DIG_BITS        64U
+#define APN_DIG_HIGH_BIT    (1ULL << 63)
 
 /****************************************************************************************************/
 /*********************************      ERROR HANDLING MACROS      **********************************/
@@ -409,7 +410,7 @@ APAC_API ap_size_t apn_clamp(
 typedef struct
 {
     ap_dig_t* data;
-    ap_size_t max_, used_segs;
+    ap_size_t max, used;
     int8_t is_neg;
 
 } apz_t;

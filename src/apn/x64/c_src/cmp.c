@@ -1,5 +1,5 @@
 #include "../../../../include/apac.h"
-#include "../../commons/c_headers/hidden_helpers.h" // for CLZ64
+#include "../../commons/c_headers/hidden_helpers.h" // for CLZ
 
 /*
 	Key Idea is to check for equality. 
@@ -87,7 +87,7 @@ int cmp_avx2_4unroll(
 			x0 = ~x0;
 
 			uint32_t num_lz = 0;
-			CLZ64(x0, num_lz);
+			CLZ(x0, num_lz);
 			APAC_ASSERT((num_lz < 16) && (num_lz >= 0));
 
 			return (op1[size - num_lz - 1] > op2[size - num_lz - 1] ? 1 : -1);
@@ -177,7 +177,7 @@ int cmp_sse2_4unroll(
 			b0 = ~b0;
 
 			uint32_t num_lz = 0;
-			CLZ64(b0, num_lz);
+			CLZ(b0, num_lz);
 			APAC_ASSERT((num_lz < 8) && (num_lz >= 0));
 
 			return (op1[size - num_lz - 1] > op2[size - num_lz - 1] ? 1 : -1);

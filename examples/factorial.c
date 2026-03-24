@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     double bits = n * log2(n)- (n * LOG2E) + (0.5 * log2(2.0 * PI * n));
 
     /* Round up bits → limbs, then pad */
-    max_limbs = (ap_size_t)ceil(bits / APN_SEG_BITS);
+    max_limbs = (ap_size_t)ceil(bits / APN_DIG_BITS);
 
     ap_dig_t* src = apac_malloc((max_limbs + 2) * sizeof(ap_dig_t));
     ap_dig_t* dst = apac_malloc((max_limbs + 2) * sizeof(ap_dig_t));
@@ -86,7 +86,7 @@ int main(int argc, char** argv)
      * Output file
      * ------------------------------------------------------------ */
     char fname[64];
-    snprintf(fname, sizeof(fname), "factorial_%" PRI_APN_SEGU ".txt", N);
+    snprintf(fname, sizeof(fname), "factorial_%" PRI_APN_DIGU ".txt", N);
 
     FILE* fp = fopen(fname, "w");
     if (!fp)
@@ -95,20 +95,20 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    fprintf(fp, "%" PRI_APN_SEGU "! (in hexadecimal) = \n", N);
+    fprintf(fp, "%" PRI_APN_DIGU "! (in hexadecimal) = \n", N);
 
     ap_size_t count = 0;
 
     for (ap_size_t i = curr_limbs - 1; i < curr_limbs; i--)
     {
-        fprintf(fp, "%016" PRI_APN_SEGX, src[i]);
+        fprintf(fp, "%016" PRI_APN_DIGX, src[i]);
         count++;
 
         if ((count & 7) == 0)
             fputc('\n', fp);
     }
 
-    printf("Computed %" PRI_APN_SEGU "!\n", N);
+    printf("Computed %" PRI_APN_DIGU "!\n", N);
     printf("Limbs used : %" PRI_APN_SIZE "\n", curr_limbs);
     printf("Output     : %s\n", fname);
 

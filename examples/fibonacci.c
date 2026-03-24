@@ -36,11 +36,11 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    if (tmp > (unsigned long long)APN_SEG_MAX)
+    if (tmp > (unsigned long long)APN_DIG_MAX)
     {
         fprintf(stderr,
-            "Error: input too large for ap_dig_t (max %" PRI_APN_SEGU ")\n",
-            (ap_dig_t)APN_SEG_MAX);
+            "Error: input too large for ap_dig_t (max %" PRI_APN_DIGU ")\n",
+            (ap_dig_t)APN_DIG_MAX);
         return EXIT_FAILURE;
     }
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     /* ------------------------------------------------------------
      * Limb count estimate (original, correct formula)
      * ------------------------------------------------------------ */
-    ap_size_t max_limbs = (ap_size_t)((((double)N * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
+    ap_size_t max_limbs = (ap_size_t)((((double)N * LOG_2_PHI - LOG_2_SQRT5) / APN_DIG_BITS)) + 2;
 
     /* ------------------------------------------------------------
      * Allocate rolling Fibonacci buffers
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
      * ------------------------------------------------------------ */
     for (ap_dig_t i = 2; i <= N; i++)
     {
-        ap_size_t curr_size = (ap_size_t)((((double)i * LOG_2_PHI - LOG_2_SQRT5) / APN_SEG_BITS)) + 2;
+        ap_size_t curr_size = (ap_size_t)((((double)i * LOG_2_PHI - LOG_2_SQRT5) / APN_DIG_BITS)) + 2;
         apn_add_n(fib[i & 1], fib[0], fib[1], curr_size);
     }
 
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
      * ------------------------------------------------------------ */
     char fname[64];
     snprintf(fname, sizeof(fname),
-        "fibonacci_%" PRI_APN_SEGU ".txt", N);
+        "fibonacci_%" PRI_APN_DIGU ".txt", N);
 
     FILE* fp = fopen(fname, "w");
     if (!fp)
@@ -103,12 +103,12 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    fprintf(fp, "F(%" PRI_APN_SEGU ") = 0x", N);
+    fprintf(fp, "F(%" PRI_APN_DIGU ") = 0x", N);
     ap_size_t count = 0;
 
     for (ap_size_t i = nlimbs - 1; i < nlimbs; i--)
     {    
-        fprintf(fp, "%016" PRI_APN_SEGX, fib[answer][i]);
+        fprintf(fp, "%016" PRI_APN_DIGX, fib[answer][i]);
         count++;
 
         if ((count & 7) == 0)
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     fprintf(fp, "\n");
     fclose(fp);
 
-    printf("Computed F(%" PRI_APN_SEGU ")\n", N);
+    printf("Computed F(%" PRI_APN_DIGU ")\n", N);
     printf("Segments used: %" PRI_APN_SIZE "\n", nlimbs);
     printf("Output       : %s\n", fname);
 
