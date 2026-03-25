@@ -269,8 +269,8 @@ typedef struct apac_cpu_params
     ap_dig_t (*apn_addmul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
     ap_dig_t (*apn_submul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
 
-    ap_dig_t (*apn_lshift_lt64_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t (*apn_rshift_lt64_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t (*apn_lshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t (*apn_rshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
 
     void (*apn_mul_bc_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_size_t);
     void (*apn_sqr_bc_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
