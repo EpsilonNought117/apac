@@ -31,10 +31,12 @@
 
             #include <immintrin.h>
             #include <intrin.h>
+            #define APAC_X64_WIN
 
         #elif defined(_M_ARM64) || defined(_M_ARM64EC)
 
 			// TODO
+            #define APAC_ARM64_WIN
 
 		#else
 			#error "Unsupported Architecture on Windows and MSVC!"	
@@ -72,10 +74,12 @@
             #include <x86intrin.h>
             #include <cpuid.h>
             #include <immintrin.h>
+            #define APAC_X64_UNIX
         
         #elif defined(__aarch64__) || defined(__arm64__)
 
             #include <arm_acle.h>                
+            #define APAC_ARM64_UNIX
 
 		#else
 			#error "Unsupported Architecture on Linux/Unix/MacOS and GCC/Clang!"
@@ -97,18 +101,33 @@
     #error "Unknown Platform!"
 #endif
 
-typedef uint64_t            ap_dig_t;
-typedef size_t              ap_size_t;
+/****************************************************************************************************/
+/*********************************      ERROR HANDLING MACROS      **********************************/
+/****************************************************************************************************/
 
-#define PRI_APN_PTR         "p"
-#define PRI_APN_SIZE        "zu"
-#define APN_SIZE_MAX        SIZE_MAX
-#define APN_DIG_MAX         UINT64_MAX
-#define PRI_APN_DIGU        PRIu64
-#define PRI_APN_DIGX        PRIx64
 
-#define APN_DIG_BITS        64U
-#define APN_DIG_HIGH_BIT    (1ULL << 63)
+#if (defined(APAC_X64_WIN)      ||  \
+     defined(APAC_X64_UNIX)     ||  \
+     defined(APAC_ARM64_WIN)    ||  \
+     defined(APAC_ARM64_UNIX)       \
+    )
+
+    typedef uint64_t            ap_dig_t;
+    typedef size_t              ap_size_t;
+
+    #define PRI_APN_PTR         "p"
+    #define PRI_APN_SIZE        "zu"
+    #define APN_SIZE_MAX        SIZE_MAX
+    #define APN_DIG_MAX         UINT64_MAX
+    #define PRI_APN_DIGU        PRIu64
+    #define PRI_APN_DIGX        PRIx64
+
+    #define APN_DIG_BITS        64U
+    #define APN_DIG_HIGH_BIT    (1ULL << 63)
+
+#else
+    #error "Unknown Platform and CPU Architecture!"
+#endif
 
 /****************************************************************************************************/
 /*********************************      ERROR HANDLING MACROS      **********************************/
@@ -150,12 +169,28 @@ typedef enum
 
 
 /* ==========================================================================
- * Debug-only assertions
+ * Debug-only assertion
  * ========================================================================== */
 
 #ifndef APAC_DISABLE_ASSERT
-
     #define APAC_ASSERT(expr) APAC_ALWAYS_ASSERT(expr)
+#else
+    #define APAC_ASSERT(expr)   do { /* nothing */ } while (0)
+#endif
+
+/* ==========================================================================
+ * Debug-only overlap checks
+ * ========================================================================== */
+
+/*
+    These checks are only useful on platforms with flat address space per process.
+*/
+#if !defined(APAC_DISABLE_ASSERT)   &&  \
+    (defined(APAC_X64_WIN)          ||  \
+     defined(APAC_X64_UNIX)         ||  \
+     defined(APAC_ARM64_WIN)        ||  \
+     defined(APAC_ARM64_UNIX)           \
+    )
 
     #define APAC_NO_OVERLAP(op1, size1, op2, size2)                 \
             APAC_ALWAYS_ASSERT(                                     \
@@ -177,13 +212,11 @@ typedef enum
 
 #else
 
-    #define APAC_ASSERT(expr)                                   do { /* nothing */ } while (0)
     #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
     #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
 
 #endif
-
 
 /* ==========================================================================
  * Error logging
