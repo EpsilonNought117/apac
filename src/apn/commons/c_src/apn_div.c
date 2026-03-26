@@ -6,9 +6,6 @@
 // Balanced Divide and Conquer division scratch workspace
 #define DNC_DIV_BALANCED_WS_SIZE(size)      ((size) + 1)
 
-// Unbalanced Divide and Conquer division scratch workspace
-#define DNC_DIV_UNBALANCED_WS_SIZE(size)    DNC_DIV_BALANCED_WS_SIZE(size)
-
 apac_err apn_div(
     ap_dig_t* quotient,        // must be (size_divd - size_dvsr + 1) length
     ap_dig_t* remainder,       // must be size_dvsr length
@@ -120,7 +117,7 @@ full_division:
     }
     else
     {
-        ap_size_t ws_size = DNC_DIV_UNBALANCED_WS_SIZE(size_dvsr);
+        ap_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
         ap_dig_t* temp_ws = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
         if (!temp_ws)

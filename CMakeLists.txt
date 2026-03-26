@@ -117,7 +117,7 @@ set(apac_c_sources
     # APN HIDDEN FUNCS
 
     "src/apn/commons/c_src/basecase_div.c"
-    "src/apn/commons/c_src/dnc_div_rem.c"
+    "src/apn/commons/c_src/dnc_div.c"
     "src/apn/commons/c_src/basecase_mul.c"
     "src/apn/commons/c_src/karatsuba_mul.c"
     "src/apn/commons/c_src/basecase_sqr.c"

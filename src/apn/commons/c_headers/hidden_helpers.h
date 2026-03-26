@@ -3,7 +3,7 @@
 
 #include "../../../../include/apac.h"
 
-#if defined(_MSC_VER)
+#if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
 
 	#define CLZ(value, count)																	\
 			do																					\
@@ -19,7 +19,7 @@
 				(count) = _BitScanForward64(&idx, (value)) ? idx : (uint32_t)64;	\
 			} while (0)
 
-#elif defined(__GNUC__) || defined(__clang__)
+#elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
 	#define CLZ(value, count)															\
 			do																			\
@@ -34,7 +34,7 @@
 			} while(0)
 
 #else
-	#error "Unknown Compiler!"
+	#error "Unknown Compiler, OS Platform and CPU ISA!"
 #endif
 
 #endif

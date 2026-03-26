@@ -10,46 +10,50 @@
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t recip_word_2by1(ap_dig_t d)
+ap_dig_t apn_recip_word_2by1(
+    ap_dig_t d
+)
 {
     /* Preconditions from the paper */
     APAC_ASSERT(d & APN_DIG_HIGH_BIT);
 
+#if defined(APAC_64BIT_PLATFORM)
+
     /* LUT for ((2^19) - 3*(2^8)) / d9 */
-    static const uint32_t D9_LUT[256] =
+    static const uint16_t D9_LUT[256] =
     {
-        2045,2037,2029,2021,2013,2005,1998,1990,
-        1983,1975,1968,1960,1953,1946,1938,1931,
-        1924,1917,1910,1903,1896,1889,1883,1876,
-        1869,1863,1856,1849,1843,1836,1830,1824,
-        1817,1811,1805,1799,1792,1786,1780,1774,
-        1768,1762,1756,1750,1745,1739,1733,1727,
-        1722,1716,1710,1705,1699,1694,1688,1683,
-        1677,1672,1667,1661,1656,1651,1646,1641,
-        1636,1630,1625,1620,1615,1610,1605,1600,
-        1596,1591,1586,1581,1576,1572,1567,1562,
-        1558,1553,1548,1544,1539,1535,1530,1526,
-        1521,1517,1513,1508,1504,1500,1495,1491,
-        1487,1483,1478,1474,1470,1466,1462,1458,
-        1454,1450,1446,1442,1438,1434,1430,1426,
-        1422,1418,1414,1411,1407,1403,1399,1396,
-        1392,1388,1384,1381,1377,1374,1370,1366,
-        1363,1359,1356,1352,1349,1345,1342,1338,
-        1335,1332,1328,1325,1322,1318,1315,1312,
-        1308,1305,1302,1299,1295,1292,1289,1286,
-        1283,1280,1276,1273,1270,1267,1264,1261,
-        1258,1255,1252,1249,1246,1243,1240,1237,
-        1234,1231,1228,1226,1223,1220,1217,1214,
-        1211,1209,1206,1203,1200,1197,1195,1192,
-        1189,1187,1184,1181,1179,1176,1173,1171,
-        1168,1165,1163,1160,1158,1155,1153,1150,
-        1148,1145,1143,1140,1138,1135,1133,1130,
-        1128,1125,1123,1121,1118,1116,1113,1111,
-        1109,1106,1104,1102,1099,1097,1095,1092,
-        1090,1088,1086,1083,1081,1079,1077,1074,
-        1072,1070,1068,1066,1064,1061,1059,1057,
-        1055,1053,1051,1049,1047,1044,1042,1040,
-        1038,1036,1034,1032,1030,1028,1026,1024
+        2045, 2037, 2029, 2021, 2013, 2005, 1998, 1990,
+        1983, 1975, 1968, 1960, 1953, 1946, 1938, 1931,
+        1924, 1917, 1910, 1903, 1896, 1889, 1883, 1876,
+        1869, 1863, 1856, 1849, 1843, 1836, 1830, 1824,
+        1817, 1811, 1805, 1799, 1792, 1786, 1780, 1774,
+        1768, 1762, 1756, 1750, 1745, 1739, 1733, 1727,
+        1722, 1716, 1710, 1705, 1699, 1694, 1688, 1683,
+        1677, 1672, 1667, 1661, 1656, 1651, 1646, 1641,
+        1636, 1630, 1625, 1620, 1615, 1610, 1605, 1600,
+        1596, 1591, 1586, 1581, 1576, 1572, 1567, 1562,
+        1558, 1553, 1548, 1544, 1539, 1535, 1530, 1526,
+        1521, 1517, 1513, 1508, 1504, 1500, 1495, 1491,
+        1487, 1483, 1478, 1474, 1470, 1466, 1462, 1458,
+        1454, 1450, 1446, 1442, 1438, 1434, 1430, 1426,
+        1422, 1418, 1414, 1411, 1407, 1403, 1399, 1396,
+        1392, 1388, 1384, 1381, 1377, 1374, 1370, 1366,
+        1363, 1359, 1356, 1352, 1349, 1345, 1342, 1338,
+        1335, 1332, 1328, 1325, 1322, 1318, 1315, 1312,
+        1308, 1305, 1302, 1299, 1295, 1292, 1289, 1286,
+        1283, 1280, 1276, 1273, 1270, 1267, 1264, 1261,
+        1258, 1255, 1252, 1249, 1246, 1243, 1240, 1237,
+        1234, 1231, 1228, 1226, 1223, 1220, 1217, 1214,
+        1211, 1209, 1206, 1203, 1200, 1197, 1195, 1192,
+        1189, 1187, 1184, 1181, 1179, 1176, 1173, 1171,
+        1168, 1165, 1163, 1160, 1158, 1155, 1153, 1150,
+        1148, 1145, 1143, 1140, 1138, 1135, 1133, 1130,
+        1128, 1125, 1123, 1121, 1118, 1116, 1113, 1111,
+        1109, 1106, 1104, 1102, 1099, 1097, 1095, 1092,
+        1090, 1088, 1086, 1083, 1081, 1079, 1077, 1074,
+        1072, 1070, 1068, 1066, 1064, 1061, 1059, 1057,
+        1055, 1053, 1051, 1049, 1047, 1044, 1042, 1040,
+        1038, 1036, 1034, 1032, 1030, 1028, 1026, 1024
     };
 
     ap_dig_t d0 = d & 1;
@@ -62,37 +66,32 @@ ap_dig_t recip_word_2by1(ap_dig_t d)
     ap_dig_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
     ap_dig_t e = (v2 >> 1) * d0 - v2 * d63;
 
-    ap_dig_t v3, v4;
-    uint64_t low64, high64;
-    uint8_t carry;
+    #if defined(APAC_X64_WIN)
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
+        uint64_t high64 = __umulh(e, v2);
+        ap_dig_t v3 = (high64 >> 1) + (v2 << 31);
+        uint64_t low64 = _umul128(v3, d, &high64);
 
-    v3 = (__umulh(e, v2) >> 1) + (v2 << 31);
+    #elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
 
-    low64 = _umul128(v3, d, &high64);
-    carry = _addcarry_u64(0, d, low64, &low64);
+        ap_dig_t v3 = (v2 << 31) + (((__uint128_t)e * v2) >> 65);
+        __uint128_t prod = (__uint128_t)v3 * d;
+        
+        uint64_t low64 = (uint64_t)prod;
+        uint64_t high64 = (uint64_t)(prod >> 64);
 
-    v4 = v3 - (high64 + d + carry);
+    #else
+        #error "Unsupported Platform!"
+    #endif
 
-#elif defined(__GNUC__) || defined(__clang__)
-
-    v3 = (ap_dig_t)((((__uint128_t)v2 << 31) +
-        (((__uint128_t)e * v2) >> 65)));
-
-    __uint128_t prod = (__uint128_t)v3 * d;
-
-    low64 = (uint64_t)prod;
-    high64 = (uint64_t)(prod >> 64);
-    carry = ((low64 + d) < low64);
-
-    v4 = v3 - (high64 + d + carry);
+    uint8_t carry = (low64 + d) < low64;
+    ap_dig_t v4 = v3 - (high64 + d + carry);
+    
+    return v4;
 
 #else
-    #error "Unsupported compiler"
+    #error "Unsupported Platform!"
 #endif
-
-    return v4;
 }
 
 /**
@@ -104,10 +103,13 @@ ap_dig_t recip_word_2by1(ap_dig_t d)
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t recip_word_3by2(ap_dig_t d1, ap_dig_t d0)
+ap_dig_t apn_recip_word_3by2(
+    ap_dig_t d1, 
+    ap_dig_t d0
+)
 {
     /* Step 1: v = RECIPROCAL_WORD(d1) */
-    ap_dig_t v = recip_word_2by1(d1);
+    ap_dig_t v = apn_recip_word_2by1(d1);
 
     ap_dig_t p;
 
@@ -124,18 +126,18 @@ ap_dig_t recip_word_3by2(ap_dig_t d1, ap_dig_t d0)
         p -= d1 * (c + d);
     }
 
-    ap_dig_t t0, t1;
+#if defined(APAC_X64_WIN)
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
+    uint64_t t0, t1;
 
     /* Step 10: (t1,t0) = v * d0 */
     t0 = _umul128(v, d0, &t1);
 
-#elif defined(__GNUC__) || defined(__clang__)
+#elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
 
     __uint128_t prod = (__uint128_t)v * d0;
-    t0 = (ap_dig_t)prod;
-    t1 = (ap_dig_t)(prod >> 64);
+    uint64_t t0 = (uint64_t)prod;
+    uint64_t t1 = (uint64_t)(prod >> 64);
 
 #else
     #error "Unsupported compiler"
@@ -157,7 +159,7 @@ ap_dig_t recip_word_3by2(ap_dig_t d1, ap_dig_t d0)
 }
 
 /**
- * Algorithm 4: DIV2BY1
+ * Algorithm 4: UDIV2BY1
  *
  * Divide a 2-word numerator by a 1-word denominator using a precomputed
  * single-word reciprocal.
@@ -166,7 +168,7 @@ ap_dig_t recip_word_3by2(ap_dig_t d1, ap_dig_t d0)
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t udiv_2by1(
+ap_dig_t apn_udiv_2by1(
     ap_dig_t u1,
     ap_dig_t u0,
     ap_dig_t d,
@@ -178,19 +180,18 @@ ap_dig_t udiv_2by1(
     APAC_ASSERT(u1 < d);
     APAC_ASSERT(d & APN_DIG_HIGH_BIT);
 
-    ap_dig_t q0, q1;
+#if defined(APAC_X64_WIN)
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
+    uint64_t q0, q1;
 
     /* Step 1: <q1,q0> = v * u1 */
     q0 = _umul128(v, u1, &q1);
 
     /* Step 2: <q1,q0> += <u1,u0> */
-    uint8_t c = 0;
-    c = _addcarry_u64(c, q0, u0, &q0);
-    _addcarry_u64(c, q1, u1, &q1);
+    uint8_t c = _addcarry_u64(0, q0, u0, &q0);
+    c = _addcarry_u64(c, q1, u1, &q1);
 
-#elif defined(__GNUC__) || defined(__clang__)
+#elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
     __uint128_t q;
 
@@ -200,11 +201,11 @@ ap_dig_t udiv_2by1(
     /* Step 2 */
     q += ((__uint128_t)u1 << APN_DIG_BITS) | u0;
 
-    q1 = (ap_dig_t)(q >> APN_DIG_BITS);
-    q0 = (ap_dig_t)q;
+    uint64_t q1 = (ap_dig_t)(q >> APN_DIG_BITS);
+    uint64_t q0 = (ap_dig_t)q;
 
 #else
-    #error "Unsupported compiler"
+    #error "Unsupported Platform!"
 #endif
 
     /* Step 3 */
@@ -240,7 +241,7 @@ ap_dig_t udiv_2by1(
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t udiv_3by2_quot(
+ap_dig_t apn_udiv_3by2_quot(
     ap_dig_t u2,
     ap_dig_t u1,
     ap_dig_t u0,
@@ -253,11 +254,11 @@ ap_dig_t udiv_3by2_quot(
     APAC_ASSERT(d1 & APN_DIG_HIGH_BIT);
     APAC_ASSERT((d1 > u2) || (d1 == u2 && d0 > u1));
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))
+#if defined(APAC_X64_WIN)
 
-    ap_dig_t q0, q1;
-    ap_dig_t r0, r1;
-    ap_dig_t t0, t1;
+    uint64_t q0, q1;
+    uint64_t r0, r1;
+    uint64_t t0, t1;
     uint8_t c;
 
     /* Step 1: q = v * u2 */
@@ -265,7 +266,7 @@ ap_dig_t udiv_3by2_quot(
 
     /* Step 2: q += (u2,u1) */
     c = _addcarry_u64(0, q0, u1, &q0);
-    _addcarry_u64(c, q1, u2, &q1);
+    c = _addcarry_u64(c, q1, u2, &q1);
 
     /* Step 3: r1 = u1 - q1 * d1 (mod 2^64) */
     r1 = u1 - q1 * d1;
@@ -276,10 +277,10 @@ ap_dig_t udiv_3by2_quot(
     /* Step 5: r = (r1,u0) - (t1,t0) - (d1,d0) */
     c = _subborrow_u64(0, u0, t0, &r0);
     c = _subborrow_u64(c, r1, t1, &r1);
-    c = _subborrow_u64(c, r0, d0, &r0);
-    _subborrow_u64(c, r1, d1, &r1);
+    c = _subborrow_u64(0, r0, d0, &r0);
+    c = _subborrow_u64(c, r1, d1, &r1);
 
-    /* Step 6: q1++ */
+    /* Step 6 */
     q1++;
 
     /* Steps 7-9 */
@@ -287,7 +288,7 @@ ap_dig_t udiv_3by2_quot(
     {
         q1--;
         c = _addcarry_u64(0, r0, d0, &r0);
-        _addcarry_u64(c, r1, d1, &r1);
+        c = _addcarry_u64(c, r1, d1, &r1);
     }
 
     /* Steps 10-12 */
@@ -295,15 +296,15 @@ ap_dig_t udiv_3by2_quot(
     {
         q1++;
         c = _subborrow_u64(0, r0, d0, &r0);
-        _subborrow_u64(c, r1, d1, &r1);
+        c = _subborrow_u64(c, r1, d1, &r1);
     }
 
-#elif defined(__GNUC__) || defined(__clang__)
+#elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
 
     __uint128_t q;
     __uint128_t r;
     __uint128_t d;
-    ap_dig_t q1, q0;
+    uint64_t q1, q0;
 
     /* Step 1: q = v * u2 */
     q = (__uint128_t)v * u2;
@@ -311,11 +312,11 @@ ap_dig_t udiv_3by2_quot(
     /* Step 2: q += (u2,u1) */
     q += ((__uint128_t)u2 << APN_DIG_BITS) | u1;
 
-    q1 = (ap_dig_t)(q >> APN_DIG_BITS);
-    q0 = (ap_dig_t)q;
+    q1 = (uint64_t)(q >> APN_DIG_BITS);
+    q0 = (uint64_t)q;
 
     /* Step 3 */
-    ap_dig_t r1 = u1 - q1 * d1;
+    uint64_t r1 = u1 - q1 * d1;
 
     /* Step 4 */
     __uint128_t t = (__uint128_t)d0 * q1;
@@ -329,7 +330,7 @@ ap_dig_t udiv_3by2_quot(
     q1++;
 
     /* Steps 7-9 */
-    if ((ap_dig_t)(r >> APN_DIG_BITS) >= q0)
+    if ((uint64_t)(r >> APN_DIG_BITS) >= q0)
     {
         q1--;
         r += d;
@@ -346,5 +347,5 @@ ap_dig_t udiv_3by2_quot(
     #error "Unsupported compiler"
 #endif
 
-    return q1;
+    return (ap_dig_t)q1;
 }

@@ -4,35 +4,35 @@ apac_cpu_params curr_cpu = { 0 };
 
 // x64/AMD64 Version
 
-#if defined(_M_X64)   || defined(_M_AMD64)   ||	\
-	defined(__x86_64) || defined(__x86_64__) ||	\
-	defined(__amd64)  || defined(__amd64__)
+#if (defined(APAC_X64_WIN) || defined(APAC_X64_UNIX))
 
 extern void zen3_set_params(void);
 extern void zen4_set_params(void);
 extern void zen5_set_params(void);
 extern void generic_x64_set_params(void);
 
-#if defined(_MSC_VER)
+#if defined(APAC_X64_WIN)
 
 	#define CPUID(cpuInfo, Leaf)			__cpuid(cpuInfo, Leaf)
 	#define CPUIDEX(cpuInfo, Leaf, SubLeaf) __cpuidex(cpuInfo, Leaf, SubLeaf)
 
-#elif (defined(__GNUC__) || defined(__clang__))
+#elif defined(APAC_X64_UNIX)
 
-    #define CPUID(cpuInfo, leaf)        \
-        __cpuid((leaf),                 \
-                (cpuInfo)[0],           \
-                (cpuInfo)[1],           \
-                (cpuInfo)[2],           \
-                (cpuInfo)[3])
+    #define CPUID(cpuInfo, leaf)    \
+        __cpuid((leaf),             \
+                (cpuInfo)[0],       \
+                (cpuInfo)[1],       \
+                (cpuInfo)[2],       \
+                (cpuInfo)[3]		\
+			)
 
-    #define CPUIDEX(cpuInfo, leaf, subleaf)          \
-        __cpuid_count((leaf), (subleaf),             \
-                    (cpuInfo)[0],                    \
-                    (cpuInfo)[1],                    \
-                    (cpuInfo)[2],                    \
-                    (cpuInfo)[3])
+    #define CPUIDEX(cpuInfo, leaf, subleaf) \
+        __cpuid_count((leaf), (subleaf),    \
+                    (cpuInfo)[0],           \
+                    (cpuInfo)[1],           \
+                    (cpuInfo)[2],           \
+                    (cpuInfo)[3]			\
+				)
 
 #else
     #error "Unsupported Compiler!"
@@ -49,7 +49,7 @@ void apac_get_cpu_spec(void)
 		cpuInfo[1] == 0x68747541 &&		// 'Auth'
 		cpuInfo[3] == 0x69746E65 &&		// 'enti'
 		cpuInfo[2] == 0x444D4163		// 'cAMD'
-		)
+	)
 	{
 		CPUID(cpuInfo, 0x1);
 		int signature = cpuInfo[0];
@@ -105,7 +105,7 @@ void apac_get_cpu_spec(void)
 		cpuInfo[1] == 0x756E6547 &&		// 'Genu'
 		cpuInfo[3] == 0x49656E69 &&		// 'ineI'
 		cpuInfo[2] == 0x6C65746E		// 'ntel'
-		)
+	)
 	{
 		CPUID(cpuInfo, 0x1);
 		int signature = cpuInfo[0];
@@ -145,6 +145,5 @@ void apac_get_cpu_spec(void)
 		generic_x64_set_params();
 	}
 }
-
 
 #endif

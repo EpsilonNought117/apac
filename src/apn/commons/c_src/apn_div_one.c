@@ -27,7 +27,7 @@ ap_dig_t apn_div_one(
         rmdr = dividend[size_divd - 1] >> (APN_DIG_BITS - shift_val);
     }
 
-    ap_dig_t dvsr_recip = recip_word_2by1(divisor);
+    ap_dig_t dvsr_recip = apn_recip_word_2by1(divisor);
     ap_dig_t temp_val = 0;
 
     for (ap_size_t j = size_divd - 1; j >= 1; j--)
@@ -35,11 +35,11 @@ ap_dig_t apn_div_one(
         ap_dig_t valid_shift = (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_DIG_BITS - shift_val));
 
         temp_val = (shift_val) ? valid_shift : dividend[j];
-        quotient[j] = udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
+        quotient[j] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
     }
 
     temp_val = dividend[0] << shift_val;
-    quotient[0] = udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
+    quotient[0] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
 
     if (shift_val)
     {

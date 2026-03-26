@@ -27,11 +27,11 @@ ap_dig_t apn_basecase_div(
 
     ap_dig_t dvsr1 = divisor[n - 1];
     ap_dig_t dvsr0 = divisor[n - 2];
-    ap_dig_t dvsr_recip = recip_word_3by2(dvsr1, dvsr0);
+    ap_dig_t dvsr_recip = apn_recip_word_3by2(dvsr1, dvsr0);
 
     for (ap_size_t j = m - 1; j < m; j--)
     {
-        ap_dig_t sel_quot = udiv_3by2_quot(
+        ap_dig_t sel_quot = apn_udiv_3by2_quot(
                                 dividend[n + j],
                                 dividend[n + j - 1],
                                 dividend[n + j - 2],

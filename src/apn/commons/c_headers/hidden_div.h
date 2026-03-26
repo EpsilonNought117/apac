@@ -5,16 +5,16 @@
 
 /* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
 
-ap_dig_t recip_word_2by1(
+ap_dig_t apn_recip_word_2by1(
     ap_dig_t d
 );
 
-ap_dig_t recip_word_3by2(
+ap_dig_t apn_recip_word_3by2(
     ap_dig_t d1,
     ap_dig_t d0
 );
 
-ap_dig_t udiv_2by1(
+ap_dig_t apn_udiv_2by1(
     ap_dig_t u1,
     ap_dig_t u0,
     ap_dig_t d,
@@ -22,7 +22,7 @@ ap_dig_t udiv_2by1(
     ap_dig_t* r
 );
 
-ap_dig_t udiv_3by2_quot(
+ap_dig_t apn_udiv_3by2_quot(
     ap_dig_t u2,
     ap_dig_t u1,
     ap_dig_t u0,

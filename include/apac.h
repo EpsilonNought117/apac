@@ -112,6 +112,8 @@
      defined(APAC_ARM64_UNIX)       \
     )
 
+    #define APAC_64BIT_PLATFORM
+
     typedef uint64_t            ap_dig_t;
     typedef size_t              ap_size_t;
 
