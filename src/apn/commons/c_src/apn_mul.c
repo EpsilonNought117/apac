@@ -3,10 +3,7 @@
 #include "../c_headers/hidden_mul.h"
 
 // scratch workspace size of balanced karatsuba
-#define KARATSUBA_MUL_BALANCED_WS_SIZE(size) (((size) + 16) * 2)
-
-// scratch workspace size of unbalanced karatsuba
-#define KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2) (((size1) + 16) * 2)
+#define KARATSUBA_MUL_WS_SIZE(size) (((size) + 16) * 2)
 
 apac_err apn_mul_n(
 	ap_dig_t* result, 
@@ -25,7 +22,7 @@ apac_err apn_mul_n(
 	// zero out result before mul
 	apn_set(result, 2 * size, 0);
 
-	if (size < KARATSUBA_MUL_BALANCED_THRESHOLD)
+	if (size < KARATSUBA_MUL_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size, size);
 	}
@@ -33,7 +30,7 @@ apac_err apn_mul_n(
 	{
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
-		ap_size_t ws_size = KARATSUBA_MUL_BALANCED_WS_SIZE(size);
+		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size);
 		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
 		if (!workspace)
@@ -44,7 +41,7 @@ apac_err apn_mul_n(
 		
 		apn_set(workspace, ws_size, 0);
 
-		apn_karatsuba_mul_balanced(result, op1, op2, size, workspace);
+		apn_karatsuba_mul(result, op1, op2, size, workspace);
 		apac_free(workspace);	// free temporary workspace
 	}
 
@@ -80,27 +77,13 @@ apac_err apn_mul(
 		apac_err ret_val = apn_mul_n(result, op1, op2, size1);
 		return ret_val;
 	}
-	else if ((size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD) || size2 <= ((size1 + 1) >> 1))
+	else if (size1 < KARATSUBA_MUL_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size1, size2);
 	}
 	else
 	{
-		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
-
-		ap_size_t ws_size = KARATSUBA_MUL_UNBALANCED_WS_SIZE(size1, size2);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
-
-		if (!workspace)
-		{
-			APAC_LOG_ERR("Memory allocation failed in apn_mul!");
-			return APAC_OOM;
-		}
-
-		apn_set(workspace, ws_size, 0);
 		
-		apn_karatsuba_mul_unbalanced(result, op1, op2, size1, size2, workspace);
-		apac_free(workspace);	// free temporary workspace
 	}
 
 	return APAC_OK;

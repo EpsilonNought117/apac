@@ -19,6 +19,8 @@
 				(count) = _BitScanForward64(&idx, (value)) ? idx : (uint32_t)64;	\
 			} while (0)
 
+	#define ROTL(value, count)	do { value = _rotl64((value), (count)); } while (0)
+
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
 	#define CLZ(value, count)															\
@@ -32,6 +34,15 @@
 			{																			\
 				(count) = (value) ? (uint32_t)__builtin_ctzll((value)) : (uint32_t)64;	\
 			} while(0)
+
+	#define ROTL(value, count)									\
+	do															\
+	{															\
+		value = (												\
+			(((uint64_t)(value)) << ((count) & 63)) 	   	| 	\
+			(((uint64_t)(value)) >> (64 - ((count) & 63)))		\
+		);														\
+	} while (0)
 
 #else
 	#error "Unknown Compiler, OS Platform and CPU ISA!"

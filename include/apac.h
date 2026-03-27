@@ -257,8 +257,7 @@ APAC_API void apac_init(void);
 
 typedef struct apac_cpu_params
 {
-    ap_size_t karatsuba_mul_balanced_threshold;
-    ap_size_t karatsuba_mul_unbalanced_threshold;
+    ap_size_t karatsuba_mul_threshold;
     ap_size_t karatsuba_sqr_threshold;
     ap_size_t dnc_div_threshold;
 

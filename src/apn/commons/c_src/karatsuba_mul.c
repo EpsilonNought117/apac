@@ -8,7 +8,7 @@
 * 
 */
 
-void apn_karatsuba_mul_balanced(
+void apn_karatsuba_mul(
 	ap_dig_t* result,
 	const ap_dig_t* op1,
 	const ap_dig_t* op2,
@@ -18,7 +18,7 @@ void apn_karatsuba_mul_balanced(
 {
 	APAC_ASSERT(temp != NULL);
 
-	if (size < KARATSUBA_MUL_BALANCED_THRESHOLD)
+	if (size < KARATSUBA_MUL_THRESHOLD)
 	{
 		// for sizes below threshold
 		// use the basecase multiplication
@@ -88,68 +88,5 @@ void apn_karatsuba_mul_balanced(
 	// add c2 to the middle of result
 	apn_add_n(result + lower, result + lower, temp + 2 * lower, 2 * lower + 1);
 	apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
-	return;
-}
-
-void apn_karatsuba_mul_unbalanced(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t size1,
-	ap_size_t size2,
-	ap_dig_t* temp
-)
-{
-	APAC_ASSERT(temp != NULL);
-	APAC_ASSERT(size1 >= size2);
-
-	if ((size1 < KARATSUBA_MUL_UNBALANCED_THRESHOLD) || (size2 <= ((size1 + 1) >> 1)))
-	{
-		// Highly unbalanced values or values below threshold
-		// handled by basecase multiplication
-
-		apn_basecase_mul(result, op1, op2, size1, size2);
-		return;
-	}
-
-	// follows nearly the same logic as balanced karatsuba
-
-	ap_size_t lowerA = (size1 + 1) >> 1;
-	// lowerB is the same as lowerA
-	ap_size_t upperA = size1 - lowerA;
-	ap_size_t upperB = size2 - lowerA;
-
-	ap_dig_t carry1 = apn_sub(temp, op1, op1 + lowerA, lowerA, upperA);
-	if (carry1) { apn_neg(temp, temp, lowerA); }
-
-	ap_dig_t carry2 = apn_sub(temp + lowerA, op2, op2 + lowerA, lowerA, upperB);
-	if (carry2) { apn_neg(temp + lowerA, temp + lowerA, lowerA); }
-
-	// Always Balanced Multiplication
-	apn_karatsuba_mul_balanced(result, temp, temp + lowerA, lowerA, temp + 2 * lowerA);
-
-	apn_cpy(temp, result, lowerA * 2);
-	apn_set(result, lowerA * 2, 0);
-
-	// Always Balanced Multiplication
-	apn_karatsuba_mul_balanced(result, op1, op2, lowerA, temp + lowerA * 2);
-
-	// Always Unbalanced Multiplication
-	apn_karatsuba_mul_unbalanced(result + lowerA * 2, op1 + lowerA, op2 + lowerA, upperA, upperB, temp + lowerA * 2);
-
-	ap_dig_t val = apn_add(temp + 2 * lowerA, result, result + 2 * lowerA, 2 * lowerA, upperA + upperB);
-	temp[4 * lowerA] += val;
-
-	if (carry1 == carry2)
-	{
-		apn_sub(temp + 2 * lowerA, temp + 2 * lowerA, temp, 2 * lowerA + 1, 2 * lowerA);
-	}
-	else
-	{
-		apn_add(temp + 2 * lowerA, temp + 2 * lowerA, temp, 2 * lowerA + 1, 2 * lowerA);
-	}
-
-	apn_add_n(result + lowerA, result + lowerA, temp + 2 * lowerA, 2 * lowerA + 1);
-	apn_set(temp, 4 * lowerA + 1, 0);
 	return;
 }
