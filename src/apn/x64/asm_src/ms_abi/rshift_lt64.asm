@@ -5,7 +5,7 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-RIGHT_SHIFT_LT64 SEGMENT ALIGN(64) 'CODE'
+RSHIFT_LT64 SEGMENT ALIGN(64) 'CODE'
 
 	option casemap:none
 
@@ -135,5 +135,7 @@ end_of_func:
     ret
 
 rshift_lt64_x64 ENDP
+
+RSHIFT_LT64 ENDS
 
 END

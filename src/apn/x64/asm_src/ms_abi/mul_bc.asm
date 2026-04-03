@@ -225,4 +225,6 @@ end_of_func:
 
 mul_bc_x64 ENDP
 
+MUL_BASECASE ENDS
+
 END

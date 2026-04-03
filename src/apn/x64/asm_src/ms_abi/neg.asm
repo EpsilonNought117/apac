@@ -5,7 +5,7 @@
 ;   |                                                                           |
 ;   O---------------------------------------------------------------------------O
 
-NEG_N SEGMENT ALIGN(64) 'CODE'
+NEGATE SEGMENT ALIGN(64) 'CODE'
 
 	option casemap:none
 
@@ -97,5 +97,7 @@ end_of_func:
     ret
 
 neg_x64 ENDP
+
+NEGATE ENDS
 
 END

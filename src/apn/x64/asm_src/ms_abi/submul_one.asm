@@ -160,4 +160,6 @@ end_of_func:
 
 submul_one_x64 ENDP
 
+SUBMUL_ONE ENDS
+
 END

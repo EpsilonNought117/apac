@@ -173,4 +173,6 @@ end_of_func:
 
 addmul_one_x64 ENDP
 
+ADDMUL_ONE ENDS
+
 END

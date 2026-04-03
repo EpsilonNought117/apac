@@ -394,4 +394,6 @@ end_of_func:
 
 sqr_bc_x64 ENDP
 
+SQR_BASECASE ENDS
+
 END
