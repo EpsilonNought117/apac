@@ -23,12 +23,12 @@ ADD_SUB_LSHIFT_LT64 SEGMENT ALIGN(64) 'CODE'
     ; returns shift_out val +- carry/borrow
 
 ; ---------------------------------------------------------------------------
-; Macro: GEN_ADD_OR_SUB_LSHIFT_LT64_ZEN4
+; Macro: GEN_LSHIFT_LT64_ADD_OR_SUB_ZEN4
 ; ---------------------------------------------------------------------------
 
-GEN_ADD_OR_SUB_LSHIFT_LT64_ZEN4 MACRO OP, INSTR1, INSTR2
+GEN_LSHIFT_LT64_ADD_OR_SUB_ZEN4 MACRO OP, INSTR1, INSTR2
 
-OP&_lshift_lt64_zen4 PROC FRAME
+lshift_lt64_&OP&_zen4 PROC FRAME
 
     push    rdi
 .pushreg    rdi
@@ -121,17 +121,17 @@ end_of_func:
     pop     rdi
     ret
 
-OP&_lshift_lt64_zen4 ENDP
+lshift_lt64_&OP&_zen4 ENDP
 
 ENDM
 
 ; ---------------------------------------------------------------------------
-; Macro: GEN_ADD_OR_SUB_LSHIFT_LT64_X64
+; Macro: GEN_LSHIFT_LT64_ADD_OR_SUB_X64
 ; ---------------------------------------------------------------------------
 
-GEN_ADD_OR_SUB_LSHIFT_LT64_X64 MACRO OP, INSTR1, INSTR2
+GEN_LSHIFT_LT64_ADD_OR_SUB_X64 MACRO OP, INSTR1, INSTR2
 
-OP&_lshift_lt64_x64 PROC FRAME
+lshift_lt64_&OP&_x64 PROC FRAME
 
     push    rbx
 .pushreg    rbx
@@ -191,7 +191,7 @@ end_of_func:
     pop     rbx
     ret
 
-OP&_lshift_lt64_x64 ENDP
+lshift_lt64_&OP&_x64 ENDP
 
 ENDM
 
@@ -199,11 +199,11 @@ ENDM
 ; Instantiations
 ; ---------------------------------------------------------------------------
 
-GEN_ADD_OR_SUB_LSHIFT_LT64_ZEN4 add, add, adc
-GEN_ADD_OR_SUB_LSHIFT_LT64_ZEN4 sub, sub, sbb
+GEN_LSHIFT_LT64_ADD_OR_SUB_ZEN4 add, add, adc
+GEN_LSHIFT_LT64_ADD_OR_SUB_ZEN4 sub, sub, sbb
 
-GEN_ADD_OR_SUB_LSHIFT_LT64_X64  add, add, adc
-GEN_ADD_OR_SUB_LSHIFT_LT64_X64  sub, sub, sbb
+GEN_LSHIFT_LT64_ADD_OR_SUB_X64  add, add, adc
+GEN_LSHIFT_LT64_ADD_OR_SUB_X64  sub, sub, sbb
 
 ADD_SUB_LSHIFT_LT64 ENDS
 
