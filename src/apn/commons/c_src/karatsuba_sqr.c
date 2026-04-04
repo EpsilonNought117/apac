@@ -9,12 +9,13 @@ void apn_karatsuba_sqr(
 )
 {
 	/*
-		Read apn_karatsuba_mul_balanced code to understand this
+		Read apn_karatsuba_mul code to understand this
 		Essentially the same except op1 = op2
 		Avoids few O(n) ops compared to Karatsuba Balanced Multiplication
 	*/
 
 	APAC_ASSERT(temp != NULL);
+	APAC_ASSERT(KARATSUBA_SQR_THRESHOLD >= 2);
 
 	if (size < KARATSUBA_SQR_THRESHOLD)
 	{
@@ -25,28 +26,29 @@ void apn_karatsuba_sqr(
 	ap_size_t lower = (size + 1) >> 1;
 	ap_size_t upper = size >> 1;
 
-	ap_dig_t carry = apn_sub(temp, op1, op1 + lower, lower, upper);
+	ap_dig_t carry = apn_sub(temp, op1, &op1[lower], lower, upper);
 	if (carry) { apn_neg(temp, temp, lower); }
 
 	// first recursive call
-	apn_karatsuba_sqr(result, temp, lower, temp + lower);
+	apn_karatsuba_sqr(result, temp, lower, &temp[lower]);
 
 	apn_cpy(temp, result, 2 * lower);
 	apn_set(result, 2 * lower, 0);
 
 	// c0 = a0 ^ 2
-	apn_karatsuba_sqr(result, op1, lower, temp + 2 * lower);
+	apn_karatsuba_sqr(result, op1, lower, &temp[2 * lower]);
 	// c1 = a1 ^ 2
-	apn_karatsuba_sqr(result + 2 * lower, op1 + lower, upper, temp + 2 * lower);
+	apn_karatsuba_sqr(&result[2 * lower], &op1[lower], upper, &temp[2 * lower]);
 
 	// (c0 + c1)
-	ap_dig_t val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
+	ap_dig_t val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
 	temp[4 * lower] += val;
 	
 	// c2 = (c0 + c1 - (|c0 - c1|)^2)
-	apn_sub(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
+	apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower + 1, 2 * lower);
 
-	apn_add_n(result + lower, result + lower, temp + 2 * lower, 2 * lower + 1);
-	apn_set(temp, 4 * lower + 1, 0);			
+	apn_add_n(&result[lower], &result[lower], &temp[2 * lower], 2 * lower + 1);
+	apn_set(temp, 4 * lower + 1, 0);
+			
 	return;
 }
