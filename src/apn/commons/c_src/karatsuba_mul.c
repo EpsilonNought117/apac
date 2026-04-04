@@ -17,6 +17,7 @@ void apn_karatsuba_mul(
 )
 {
 	APAC_ASSERT(temp != NULL);
+	APAC_ASSERT(KARATSUBA_MUL_THRESHOLD >= 2);
 
 	if (size < KARATSUBA_MUL_THRESHOLD)
 	{
@@ -30,7 +31,7 @@ void apn_karatsuba_mul(
 	ap_size_t lower = (size + 1) >> 1;	// upper half of the operands
 	ap_size_t upper = size >> 1;		// lower half of the operands
 
-	// the lower half is at most 1 limb larger than upper half
+	// the lower half is at most 1 digit larger than upper half
 	// (size + 1) / 2 = ceil(size / 2)
 	// size / 2 = floor(size / 2)
 
@@ -43,7 +44,7 @@ void apn_karatsuba_mul(
 
 	// carry1 = carryA
 
-	ap_dig_t carry1 = apn_sub(temp, op1, op1 + lower, lower, upper);
+	ap_dig_t carry1 = apn_sub(temp, op1, &op1[lower], lower, upper);
 	if (carry1) { apn_neg(temp, temp, lower); }
 
 	// b0 = op2[0 : (lower - 1)]
@@ -52,41 +53,53 @@ void apn_karatsuba_mul(
 
 	// carry2 = carryB
 	// rest is same
-	ap_dig_t carry2 = apn_sub(temp + lower, op2, op2 + lower, lower, upper);
-	if (carry2) { apn_neg(temp + lower, temp + lower, lower); }
+	ap_dig_t carry2 = apn_sub(&temp[lower], op2, &op2[lower], lower, upper);
+	if (carry2) { apn_neg(&temp[lower], &temp[lower], lower); }
 
-	// result[lower : (3 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
-	apn_karatsuba_mul_balanced(result, temp, temp + lower, lower, temp + 2 * lower);
+	// result[0 : (2 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
+	apn_karatsuba_mul(result, temp, &temp[lower], lower, &temp[2 * lower]);
 
 	// we now have c2 in result 
 
-	// copy (2 * lower) count of limbs from result to temp
+	// copy c2 from result to temp
 	// clear out result for accumulating c0 and c1
 	apn_cpy(temp, result, 2 * lower);
 	apn_set(result, 2 * lower, 0);
 
 	// c0 = a0 * b0
-	apn_karatsuba_mul_balanced(result, op1, op2, lower, temp + 2 * lower);
+	apn_karatsuba_mul(result, op1, op2, lower, &temp[2 * lower]);
 	// c1 = a1 * b1
-	apn_karatsuba_mul_balanced(result + 2 * lower, op1 + lower, op2 + lower, upper, temp + 2 * lower);
+	apn_karatsuba_mul(&result[2 * lower], &op1[lower], &op2[lower], upper, &temp[2 * lower]);
 
 	// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)]
-	ap_dig_t val = apn_add(temp + 2 * lower, result, result + 2 * lower, 2 * lower, 2 * upper);
+	ap_dig_t val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
 	temp[4 * lower] += val; // propagate carry
 
 	if (carry1 == carry2) // if both signs are same
 	{
-		// do c2 = c0 + c1 - (|c0 - c1|)^2
-		apn_sub(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
+		// do c2 = c0 + c1 - c2
+		apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower + 1, 2 * lower);
 	}
-	else
+	else // otherwise if opposite signs
 	{
-		// do c2 = c0 + c1 + (|c0 - c1|)^2
-		apn_add(temp + 2 * lower, temp + 2 * lower, temp, 2 * lower + 1, 2 * lower);
+		// do c2 = c0 + c1 + c2
+		apn_add(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower + 1, 2 * lower);
 	}
 
+	/*
+		|------------- c --------------|
+		
+		|----- c0 -----| ------------------------> (a0 * b0)
+		|   2 * lower  |
+				|----- c2 -----| ------------------------> (a1 * b1) + (a0 * b0) - (|a0 - a1|) * (|b0 - b1|)
+				|   2 * lower  |
+						|----- c1 -----| ---------------------> (a1 * b1)
+						|   2 * upper  |
+	*/
+
 	// add c2 to the middle of result
-	apn_add_n(result + lower, result + lower, temp + 2 * lower, 2 * lower + 1);
+	apn_add_n(&result[lower], &result[lower], &temp[2 * lower], 2 * lower + 1);
 	apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
+	
 	return;
 }
