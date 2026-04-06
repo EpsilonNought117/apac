@@ -18,7 +18,7 @@ extern apac_cpu_params curr_cpu;
             APAC_ALWAYS_ASSERT((expr));         \
         } while (0)
 
-static ap_size_t get_karatsuba_mul_balanced_threshold(void)
+static ap_size_t get_karatsuba_mul_threshold(void)
 {
     const ap_size_t thresh_start = 10;
     const ap_size_t thresh_end = 50;
@@ -53,7 +53,7 @@ static ap_size_t get_karatsuba_mul_balanced_threshold(void)
         printf("Testing Karatsuba Balanced Mul Threshold %" PRI_APN_SIZE " ... ", thresh);
         fflush(stdout);
 
-        curr_cpu.karatsuba_mul_balanced_threshold = thresh;
+        curr_cpu.karatsuba_mul_threshold = thresh;
 
         double sum_mintimes = 0.0;
         ap_size_t size_count = 0;
@@ -110,7 +110,7 @@ static ap_size_t get_karatsuba_mul_balanced_threshold(void)
 
     fclose(fp);
 
-    curr_cpu.karatsuba_mul_balanced_threshold = best_thresh;
+    curr_cpu.karatsuba_mul_threshold = best_thresh;
 
     apac_free(op1);
     apac_free(op2);
@@ -213,150 +213,6 @@ static ap_size_t get_karatsuba_sqr_threshold(void)
 
     apac_free(op1);
     apac_free(res);
-
-    return best_thresh;
-}
-
-static ap_size_t get_karatsuba_mul_unbalanced_threshold(void)
-{
-    const ap_size_t thresh_start = 10;
-    const ap_size_t thresh_end = 70;
-    const ap_size_t size_start = 1;
-    const ap_size_t size_end = 256;
-
-    const double IMPROVE_PCT = 0.05;   /* reset only if >=5% better */
-    const double TIE_PCT = 0.05;   /* within 5% counts as tie */
-
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
-
-    APN_TUNE_ASSERT(op1 != NULL);
-    APN_TUNE_ASSERT(op2 != NULL);
-    APN_TUNE_ASSERT(res != NULL);
-
-    FILE* fp = fopen("karatsuba_mul_unbalanced_threshold.csv", "w");
-    if (!fp)
-    {
-        restore_turbo_boost();
-        APAC_LOG_ERR("Failed to open karatsuba_mul_unbalanced_threshold.csv");
-        abort();
-    }
-
-    fprintf(fp, "threshold,size1,size2,min_cycles\n");
-
-    const uint64_t range = size_end - size_start + 1;
-    const uint64_t pair_count = (range * (range + 1)) / 2;
-    const ap_size_t thresh_count = thresh_end - thresh_start + 1;
-
-    double* all_times = apac_malloc(sizeof(double) * thresh_count * pair_count);
-    uint64_t* score = apac_malloc(sizeof(uint64_t) * thresh_count);
-
-    APN_TUNE_ASSERT(all_times != NULL);
-    APN_TUNE_ASSERT(score != NULL);
-
-    for (ap_size_t ti = 0; ti < thresh_count; ti++)
-        score[ti] = 0;
-
-    /* ---------------- Collect timings ---------------- */
-
-    for (ap_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
-    {
-        const ap_size_t ti = thresh - thresh_start;
-
-        printf("Testing Karatsuba Unbalanced Mul Threshold %" PRI_APN_SIZE " ... ", thresh);
-        fflush(stdout);
-
-        curr_cpu.karatsuba_mul_unbalanced_threshold = thresh;
-
-        uint64_t pair_idx = 0;
-
-        for (ap_size_t size1 = size_start; size1 <= size_end; size1++)
-        {
-            set_to_random(op1, size1);
-
-            for (ap_size_t size2 = size_start; size2 <= size1; size2++)
-            {
-                set_to_random(op2, size2);
-
-                uint64_t best = UINT64_MAX;
-                uint64_t last_improve = os_timer();
-
-                for (;;)
-                {
-                    uint64_t t0 = cpu_timer();
-                    apn_mul(res, op1, op2, size1, size2);
-                    uint64_t t1 = cpu_timer();
-
-                    uint64_t dur = t1 - t0;
-
-                    if (best == UINT64_MAX ||
-                        dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
-                    {
-                        best = dur;
-                        last_improve = os_timer();
-                    }
-                    else if ((os_timer() - last_improve) >= MAX_RUNTIME_2)
-                    {
-                        break;
-                    }
-                }
-
-                fprintf(fp,
-                    "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n",
-                    thresh, size1, size2, best);
-
-                TIME_TWOSIZE(ti, pair_idx) = (double)best;
-                pair_idx++;
-            }
-        }
-
-        printf("Done\n");
-    }
-
-    /* ---------------- Dominance scoring ---------------- */
-
-    for (uint64_t pi = 0; pi < pair_count; pi++)
-    {
-        double best = TIME_TWOSIZE(0, pi);
-        for (ap_size_t ti = 1; ti < thresh_count; ti++)
-            if (TIME_TWOSIZE(ti, pi) < best)
-                best = TIME_TWOSIZE(ti, pi);
-
-        const double limit = best * (1.0 + TIE_PCT);
-
-        for (ap_size_t ti = 0; ti < thresh_count; ti++)
-            if (TIME_TWOSIZE(ti, pi) <= limit)
-                score[ti]++;
-    }
-
-    uint64_t best_score = score[0];
-    ap_size_t best_ti = 0;
-
-    for (ap_size_t ti = 1; ti < thresh_count; ti++)
-    {
-        if (score[ti] > best_score)
-        {
-            best_score = score[ti];
-            best_ti = ti;
-        }
-    }
-
-    ap_size_t best_thresh = thresh_start + best_ti;
-
-    printf("Best unbalanced mul threshold = %" PRI_APN_SIZE
-        " (wins %" PRIu64 " / %" PRIu64 " cases)\n",
-        best_thresh, best_score, pair_count);
-
-    fclose(fp);
-
-    curr_cpu.karatsuba_mul_unbalanced_threshold = best_thresh;
-
-    apac_free(op1);
-    apac_free(op2);
-    apac_free(res);
-    apac_free(all_times);
-    apac_free(score);
 
     return best_thresh;
 }
@@ -606,26 +462,17 @@ int main(int argc, char** argv)
        Run threshold sweeps (with CPU rest between them)
        ------------------------------------------------------------ */
 
-    ap_size_t mul_balanced_thresh =
-        get_karatsuba_mul_balanced_threshold();
+    ap_size_t mul_balanced_thresh = get_karatsuba_mul_threshold();
 
     printf("Resting CPU...\n");
     cpu_rest_ms(2000);
 
-    ap_size_t sqr_thresh =
-        get_karatsuba_sqr_threshold();
+    ap_size_t sqr_thresh = get_karatsuba_sqr_threshold();
 
     printf("Resting CPU...\n");
     cpu_rest_ms(2000);
 
-    ap_size_t mul_unbalanced_thresh =
-        get_karatsuba_mul_unbalanced_threshold();
-
-    printf("Resting CPU...\n");
-    cpu_rest_ms(2000);
-
-    ap_size_t div_thresh =
-        get_dnc_div_threshold();
+    ap_size_t div_thresh = get_dnc_div_threshold();
 
     printf("\nRestoring turbo boost (if disabled via apn_tune) ... \n");
 
@@ -638,22 +485,17 @@ int main(int argc, char** argv)
 
     printf("\nRecommended threshold values:\n");
 
-    printf("curr_cpu.karatsuba_mul_balanced_threshold   = "
+    printf("curr_cpu.karatsuba_mul_threshold   = "
         "(ap_size_t)(%" PRI_APN_SIZE ");\n",
         mul_balanced_thresh
     );
 
-    printf("curr_cpu.karatsuba_sqr_threshold            = "
+    printf("curr_cpu.karatsuba_sqr_threshold   = "
         "(ap_size_t)(%" PRI_APN_SIZE ");\n",
         sqr_thresh
     );
 
-    printf("curr_cpu.karatsuba_mul_unbalanced_threshold = "
-        "(ap_size_t)(%" PRI_APN_SIZE ");\n",
-        mul_unbalanced_thresh
-    );
-
-    printf("curr_cpu.dnc_div_threshold                  = "
+    printf("curr_cpu.dnc_div_threshold         = "
         "(ap_size_t)(%" PRI_APN_SIZE ");\n",
         div_thresh
     );

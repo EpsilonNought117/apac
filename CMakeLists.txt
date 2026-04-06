@@ -120,8 +120,10 @@ set(apac_c_sources
     "src/apn/commons/c_src/dnc_div.c"
     "src/apn/commons/c_src/basecase_mul.c"
     "src/apn/commons/c_src/karatsuba_mul.c"
+    "src/apn/commons/c_src/toomcook3_mul.c"
     "src/apn/commons/c_src/basecase_sqr.c"
     "src/apn/commons/c_src/karatsuba_sqr.c"
+    "src/apn/commons/c_src/toomcook3_sqr.c"
     "src/apn/commons/c_src/div_helpers.c"
 )
 
@@ -141,14 +143,13 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     if (WIN32)
         message(STATUS "Using MS-ABI x64 assembly sources")
         set(x64_asm_sources
-            "src/apn/x64/asm_src/ms_abi/add_n.asm"
-            "src/apn/x64/asm_src/ms_abi/add_one.asm"
+            "src/apn/x64/asm_src/ms_abi/add_sub_n.asm"
+            "src/apn/x64/asm_src/ms_abi/add_sub_one.asm"
+            "src/apn/x64/asm_src/ms_abi/add_sub_lshift_lt64.asm"
             "src/apn/x64/asm_src/ms_abi/mul_bc.asm"
             "src/apn/x64/asm_src/ms_abi/addmul_one.asm"
             "src/apn/x64/asm_src/ms_abi/submul_one.asm"
             "src/apn/x64/asm_src/ms_abi/sqr_bc.asm"
-            "src/apn/x64/asm_src/ms_abi/sub_n.asm"
-            "src/apn/x64/asm_src/ms_abi/sub_one.asm"
             "src/apn/x64/asm_src/ms_abi/neg.asm"
             "src/apn/x64/asm_src/ms_abi/lshift_lt64.asm"
             "src/apn/x64/asm_src/ms_abi/rshift_lt64.asm"
@@ -156,14 +157,17 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     elseif (APPLE OR UNIX)
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
+
+            # merge these
             "src/apn/x64/asm_src/sysv_abi/add_n.s"
             "src/apn/x64/asm_src/sysv_abi/add_one.s"
+            "src/apn/x64/asm_src/sysv_abi/sub_n.s"
+            "src/apn/x64/asm_src/sysv_abi/sub_one.s"
+
             "src/apn/x64/asm_src/sysv_abi/mul_bc.s"
             "src/apn/x64/asm_src/sysv_abi/addmul_one.s"
             "src/apn/x64/asm_src/sysv_abi/submul_one.s"
             "src/apn/x64/asm_src/sysv_abi/sqr_bc.s"
-            "src/apn/x64/asm_src/sysv_abi/sub_n.s"
-            "src/apn/x64/asm_src/sysv_abi/sub_one.s"
             "src/apn/x64/asm_src/sysv_abi/neg.s"
             "src/apn/x64/asm_src/sysv_abi/lshift_lt64.s"
             "src/apn/x64/asm_src/sysv_abi/rshift_lt64.s"

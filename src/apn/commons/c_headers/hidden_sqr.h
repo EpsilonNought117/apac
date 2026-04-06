@@ -30,4 +30,11 @@ void apn_karatsuba_sqr(
 	ap_dig_t* temp
 );
 
+void apn_toomcook3_sqr(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	ap_size_t size,
+	ap_dig_t* temp
+);
+
 #endif

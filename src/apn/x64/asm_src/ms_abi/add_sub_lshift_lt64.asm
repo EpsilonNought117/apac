@@ -111,7 +111,7 @@ rmdr_loop:
 after_loop:    
 
     shrx    rax, QWORD PTR [r8], rsi
-    INSTR2  rax, 0                        
+    adc     rax, 0                        
 
 end_of_func:
 
@@ -183,7 +183,7 @@ after_loop:
     shr     r10, cl
     bt      ax,  0
     mov     rax, r10
-    INSTR2  rax, 0
+    adc     rax, 0
 
 end_of_func:
 

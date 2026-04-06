@@ -2,8 +2,36 @@
 #include "../c_headers/apn_thresholds.h"
 #include "../c_headers/hidden_mul.h"
 
-// scratch workspace size of balanced karatsuba
-#define KARATSUBA_MUL_WS_SIZE(size) (((size) + 16) * 2)
+/**
+ * Scratch workspace size upper bound for karatsuba multiplication
+ * 
+ * The constant 8 here is the number of times the function recurses before hitting basecase.
+ * In reality you never recurse 8-times before you hit basecase multiplication,
+ * and you are way outside the size ranges for which karatsuba mul is fastest.
+ * 
+ * At each level, 4 * ((curr_size + 1) / 2) space is needed, with no 
+ * extra space for carries as a subtractive karatsuba variant is used.
+ * 
+ * The "infinite" geometric sum caps out at 2*n + 2*(log_2(n)), where we assume log_2(n)
+ * to be at most 8 before the range of karatsuba exhausts.
+ */
+#define KARATSUBA_MUL_WS_SIZE(size)	(((size) + 8) * 2)
+
+/**
+ * Scratch workspace size upper bound for toomcook3 multiplication
+ * 
+ * The constant 8 here is the number of times the function recurses before reaching karatsuba mul.
+ * The constant (2 * 3) is the extra space needed to account for uneven splits which can be
+ * 2 greater than top most split piece along with accounting for carry-outs.
+ * 
+ * As in the case of karatsuba, 8-levels of recursion is plenty safe.
+ * 
+ * At each level, 6 * (((curr_size + 2) / 3) + 1) scratch space is needed.
+ * 
+ * The "infinite" geometric sum caps out at 3*n + 18*(log_3(n)), so log_3(n) being assumed 
+ * to be 8 at max before the range of toom3 exhausts, results in a safe upper bound.
+ */
+#define TOOMCOOK3_MUL_WS_SIZE(size)	(((size) + 2 * 3 * 8) * 3)
 
 apac_err apn_mul_n(
 	ap_dig_t* result, 
@@ -26,7 +54,7 @@ apac_err apn_mul_n(
 	{
 		apn_basecase_mul(result, op1, op2, size, size);
 	}
-	else
+	else if (size < TOOMCOOK3_MUL_THRESHOLD)
 	{
 		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
@@ -43,6 +71,24 @@ apac_err apn_mul_n(
 
 		apn_karatsuba_mul(result, op1, op2, size, workspace);
 		apac_free(workspace);	// free temporary workspace
+	}
+	else
+	{
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+
+		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size);
+		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+	
+		if (!workspace)
+		{
+			APAC_LOG_ERR("Memory allocation failed in apn_mul_n!");
+			return APAC_OOM;
+		}
+
+		apn_set(workspace, ws_size, 0);
+
+		apn_toomcook3_mul(result, op1, op2, size, workspace);
+		apac_free(workspace);	// free temporary workspace		
 	}
 
 	return APAC_OK;

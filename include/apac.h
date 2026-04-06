@@ -185,7 +185,7 @@ typedef enum
  * ========================================================================== */
 
 /*
-    These checks are only useful on platforms with flat address space per process.
+    These checks are only useful on platforms with a flat address space per process.
 */
 #if !defined(APAC_DISABLE_ASSERT)   &&  \
     (defined(APAC_X64_WIN)          ||  \
@@ -194,23 +194,35 @@ typedef enum
      defined(APAC_ARM64_UNIX)           \
     )
 
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                 \
-            APAC_ALWAYS_ASSERT(                                     \
-                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2)) ||   \
-                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1))      \
-            )
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                         \
+        APAC_ALWAYS_ASSERT(                                                 \
+            ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||             \
+            ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
+        )
+
+    #define APAC_FULL_ALIAS_ONLY(op1, size1, op2, size2)                    \
+        APAC_ALWAYS_ASSERT(                                                 \
+            (                                                               \
+                (uintptr_t)(op1) == (uintptr_t)(op2) &&                     \
+                (uintptr_t)(op1) + (size1) == (uintptr_t)(op2) + (size2)    \
+            ) ||                                                            \
+            (                                                               \
+                ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||         \
+                ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)            \
+            )                                                               \
+        )
 
     #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)              \
-            APAC_ALWAYS_ASSERT(                                             \
-                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2 + size2)) ||   \
-                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1))              \
-            )
+        APAC_ALWAYS_ASSERT(                                                 \
+            ((uintptr_t)(op1) + (size1)) <= ((uintptr_t)(op2) + (size2)) || \
+            ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
+        )
 
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)              \
-            APAC_ALWAYS_ASSERT(                                             \
-                ((uintptr_t)(op2 + size2) <= (uintptr_t)(op1 + size1)) ||   \
-                ((uintptr_t)(op1 + size1) <= (uintptr_t)(op2))              \
-            )
+        APAC_ALWAYS_ASSERT(                                                 \
+            ((uintptr_t)(op2) + (size2)) <= ((uintptr_t)(op1) + (size1)) || \
+            ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2)                \
+        )
 
 #else
 
@@ -258,7 +270,11 @@ APAC_API void apac_init(void);
 typedef struct apac_cpu_params
 {
     ap_size_t karatsuba_mul_threshold;
+    ap_size_t toomcook3_mul_threshold;
+    
     ap_size_t karatsuba_sqr_threshold;
+    ap_size_t toomcook3_sqr_threshold;
+
     ap_size_t dnc_div_threshold;
 
     ap_dig_t (*apn_add_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
@@ -272,6 +288,9 @@ typedef struct apac_cpu_params
 
     ap_dig_t (*apn_lshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
     ap_dig_t (*apn_rshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+
+    ap_dig_t (*apn_lshift_add_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t (*apn_lshift_sub_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
 
     void (*apn_mul_bc_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_size_t);
     void (*apn_sqr_bc_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
@@ -417,6 +436,22 @@ APAC_API ap_dig_t apn_rshift(
 APAC_API ap_dig_t apn_lshift(
     ap_dig_t* result,
     const ap_dig_t* op1,
+    ap_size_t size,
+    ap_dig_t bit_cnt
+);
+
+APAC_API ap_dig_t apn_lshift_add(
+    ap_dig_t* result,
+    const ap_dig_t* op1,
+    const ap_dig_t* op2,
+    ap_size_t size,
+    ap_dig_t bit_cnt
+);
+
+APAC_API ap_dig_t apn_lshift_sub(
+    ap_dig_t* result,
+    const ap_dig_t* op1,
+    const ap_dig_t* op2,
     ap_size_t size,
     ap_dig_t bit_cnt
 );

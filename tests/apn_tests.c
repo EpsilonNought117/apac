@@ -1832,6 +1832,7 @@ int main(int argc, char** argv)
     check_apn_cpy();
     check_apn_cmp();
     check_apn_is_zero();
+    
     check_apn_add_one();
     check_apn_add_n();
     check_apn_add();
@@ -1839,14 +1840,16 @@ int main(int argc, char** argv)
     check_apn_sub_one();
     check_apn_sub_n();
     check_apn_sub();
+    
     check_apn_addmul_one();
     check_apn_submul_one();
     check_apn_lshift();
     check_apn_rshift();
+    check_apn_div_one();
+
     check_apn_mul_n();
     check_apn_sqr();
     check_apn_mul();
-    check_apn_div_one();
     check_apn_div();
 
     printf("\nALL TESTS PASSED!\n");
