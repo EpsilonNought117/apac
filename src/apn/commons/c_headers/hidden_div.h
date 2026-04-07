@@ -31,6 +31,8 @@ ap_dig_t apn_udiv_3by2_quot(
     ap_dig_t v
 );
 
+/* ----------------------------- DIVISION MAIN FUNCTIONS --------------------------------- */
+
 /*
 * 1) O(n * m) division
 * 2) Dividend should have size_divd number of segments
