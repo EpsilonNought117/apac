@@ -28,13 +28,12 @@ void apn_toomcook3_sqr(
     ap_size_t middle = lower;
     ap_size_t upper = size - 2 * lower;
 
-    
     const ap_dig_t* a0 = op1, * a1 = op1 + lower, * a2 = op1 + 2 * lower;
 
     ap_dig_t* a02 = &temp[0];
     temp[lower] = apn_add(a02, a0, a2, lower, upper);
 
-    ap_dig_t* a02_cpy = &temp[ 2 * (lower + 1)];
+    ap_dig_t* a02_cpy = &temp[2 * (lower + 1)];
     apn_cpy(a02_cpy, a02, lower + 1);
 
     /*
@@ -53,6 +52,8 @@ void apn_toomcook3_sqr(
 
     ap_dig_t borrow1 = apn_sub(a02_cpy, a02_cpy, a1, lower + 1, lower);
     if (borrow1) { apn_neg(a02_cpy, a02_cpy, lower + 1); }
+
+    
 
     return;
 }

@@ -484,7 +484,7 @@ typedef struct
 
 } apz_t;
 
-typedef enum
+typedef enum apac_str_base
 {
 
     BASE10 = 10,
