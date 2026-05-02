@@ -5,33 +5,31 @@
 /**
  * Scratch workspace size upper bound for karatsuba multiplication
  * 
- * The constant 8 here is the number of times the function recurses before hitting basecase.
- * In reality you never recurse 8-times before you hit basecase multiplication,
- * and you are way outside the size ranges for which karatsuba mul is fastest.
+ * The constant APN_DIG_BITS here is the number of times the function recurses before hitting 
+ * basecase. In reality you never recurse even 8 times before you hit basecase multiplication,
+ * and you are likely way outside the size ranges for which karatsuba mul is fastest.
  * 
  * At each level, 4 * ((curr_size + 1) / 2) space is needed, with no 
  * extra space for carries as a subtractive karatsuba variant is used.
  * 
  * The "infinite" geometric sum caps out at 2*n + 2*(log_2(n)), where we assume log_2(n)
- * to be at most 8 before the range of karatsuba exhausts.
+ * to be at most APN_DIG_BITS.
  */
-#define KARATSUBA_MUL_WS_SIZE(size)	(((size) + 8) * 2)
+#define KARATSUBA_MUL_WS_SIZE(size)	(((size) + APN_DIG_BITS) * 2)
 
 /**
  * Scratch workspace size upper bound for toomcook3 multiplication
  * 
- * The constant 8 here is the number of times the function recurses before reaching karatsuba mul.
+ * The constant APN_DIG_BITS here is the number of times the function recurses before reaching karatsuba mul.
  * The constant (2 * 3) is the extra space needed to account for uneven splits which can be
  * 2 greater than top most split piece along with accounting for carry-outs.
- * 
- * As in the case of karatsuba, 8-levels of recursion is plenty safe.
  * 
  * At each level, 6 * (((curr_size + 2) / 3) + 1) scratch space is needed.
  * 
  * The "infinite" geometric sum caps out at 3*n + 18*(log_3(n)), so log_3(n) being assumed 
- * to be 8 at max before the range of toom3 exhausts, results in a safe upper bound.
+ * to be APN_DIG_BITS at max before the range of toom3 exhausts, results in a safe upper bound.
  */
-#define TOOMCOOK3_MUL_WS_SIZE(size)	(((size) + 2 * 3 * 8) * 3)
+#define TOOMCOOK3_MUL_WS_SIZE(size)	(((size) + 2 * 3 * APN_DIG_BITS) * 3)
 
 apac_err apn_mul_n(
 	ap_dig_t* result, 
@@ -56,10 +54,10 @@ apac_err apn_mul_n(
 	}
 	else if (size < TOOMCOOK3_MUL_THRESHOLD)
 	{
-		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_ASSERT(scratch_alloc.custom_malloc != NULL && scratch_alloc.custom_free != NULL);
 
 		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+		ap_dig_t* workspace = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
 
 		if (!workspace)
 		{
@@ -70,14 +68,14 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_mul(result, op1, op2, size, workspace);
-		apac_free(workspace);	// free temporary workspace
+		scratch_alloc.custom_free(workspace, scratch_alloc.ctx);	// free temporary workspace
 	}
 	else
 	{
-		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_ASSERT(scratch_alloc.custom_malloc != NULL && scratch_alloc.custom_free != NULL);
 
 		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+		ap_dig_t* workspace = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
 	
 		if (!workspace)
 		{
@@ -88,7 +86,7 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_toomcook3_mul(result, op1, op2, size, workspace);
-		apac_free(workspace);	// free temporary workspace		
+		scratch_alloc.custom_free(workspace, scratch_alloc.ctx);	// free temporary workspace
 	}
 
 	return APAC_OK;

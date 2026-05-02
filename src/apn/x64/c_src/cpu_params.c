@@ -1,8 +1,6 @@
 #include "../../../../include/apac.h"
 #include "../x64_hidden_funcs.h"
 
-extern apac_cpu_params curr_cpu;
-
 // Tested on Ryzen 7 8845HS running at 3.8 GHz Base Clock
 void zen4_set_params(void)
 {

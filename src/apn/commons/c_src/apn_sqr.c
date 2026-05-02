@@ -24,10 +24,10 @@ apac_err apn_sqr(
 	else
 	{
 
-		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+		APAC_ASSERT(scratch_alloc.custom_malloc != NULL && scratch_alloc.custom_free != NULL);
 
 		ap_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+		ap_dig_t* workspace = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
 
 		if (!workspace)
 		{
@@ -38,7 +38,7 @@ apac_err apn_sqr(
 		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_sqr(result, op1, size, workspace);
-		apac_free(workspace);
+		scratch_alloc.custom_free(workspace, scratch_alloc.ctx);
 	}
 
 	return APAC_OK;

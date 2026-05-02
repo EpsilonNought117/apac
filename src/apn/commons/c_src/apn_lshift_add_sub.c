@@ -1,7 +1,5 @@
 #include "../../../../include/apac.h"
 
-extern apac_cpu_params curr_cpu;
-
 /*
     result = op1 + (op2 * (2^bit_cnt))
 */

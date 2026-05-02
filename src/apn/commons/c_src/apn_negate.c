@@ -1,7 +1,5 @@
 #include "../../../../include/apac.h"
 
-extern apac_cpu_params curr_cpu;
-
 void apn_neg(
     ap_dig_t* result, 
     const ap_dig_t* op1, 

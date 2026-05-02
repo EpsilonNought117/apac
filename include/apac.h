@@ -25,6 +25,8 @@
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
 
+    #define APAC_THREAD_LOCAL __declspec(thread)
+
     #if defined(_MSC_VER)
 
         #if defined(_M_X64) || defined(_M_AMD64)
@@ -68,6 +70,8 @@
         #include <sched.h>
         #include <pthread.h>
 
+        #define APAC_THREAD_LOCAL __thread
+
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
 
@@ -102,9 +106,8 @@
 #endif
 
 /****************************************************************************************************/
-/*********************************      ERROR HANDLING MACROS      **********************************/
+/*************************    PLATFORM SPECIFIC DEFINES AND TYPEDEFS    *****************************/
 /****************************************************************************************************/
-
 
 #if (defined(APAC_X64_WIN)      ||  \
      defined(APAC_X64_UNIX)     ||  \
@@ -116,6 +119,7 @@
 
     typedef uint64_t            ap_dig_t;
     typedef size_t              ap_size_t;
+    typedef int64_t             ap_sign_t;
 
     #define PRI_APN_PTR         "p"
     #define PRI_APN_SIZE        "zu"
@@ -246,25 +250,36 @@ typedef enum
  * Memory management hooks
  * ========================================================================== */
 
-APAC_API extern void* (*apac_malloc)(size_t);
-APAC_API extern void* (*apac_realloc)(void*, size_t);
-APAC_API extern void (*apac_free)(void*);
+typedef void* (*apac_malloc_t)(size_t new_size, void* ctx);
+typedef void* (*apac_realloc_t)(void* old_arr, size_t new_size, void* ctx);
+typedef void (*apac_free_t)(void* old_arr, void* ctx);
 
-APAC_API void apac_set_mem_funcs(
-    void* (*ptr1)(size_t),
-    void* (*ptr2)(void*, size_t),
-    void (*ptr3)(void*)
+typedef struct apac_alloc_t
+{
+    apac_malloc_t custom_malloc;
+    apac_realloc_t custom_realloc;
+    apac_free_t custom_free;
+    void* ctx;
+
+} apac_alloc_t;
+
+APAC_API apac_alloc_t apac_init_alloc(
+    apac_malloc_t malloc_ptr,
+    apac_realloc_t realloc_ptr,
+    apac_free_t free_ptr,
+    void* ctx_ptr
 );
+
+APAC_THREAD_LOCAL apac_alloc_t apac_scratch_alloc;
 
 /* ==========================================================================
  * CPU detection and initialization
  * ========================================================================== */
 
 APAC_API void apac_get_cpu_spec(void);
-APAC_API void apac_init(void);
 
 /* ==========================================================================
- * CPU dispatch parameters
+ * Runtime CPU dispatch
  * ========================================================================== */
 
 typedef struct apac_cpu_params
@@ -302,6 +317,8 @@ typedef struct apac_cpu_params
     int (*apn_is_zero_ptr)(const ap_dig_t*, ap_size_t);
 
 } apac_cpu_params;
+
+apac_cpu_params curr_cpu;
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
@@ -470,17 +487,18 @@ APAC_API ap_size_t apn_clamp(
 /*********************************          APZ FUNCTIONS         ***********************************/
 /****************************************************************************************************/
 
-#define APZ_POS         ((int8_t)1)
-#define APZ_NEG         ((int8_t)-1)
-#define APZ_ZERO        ((int8_t)0)
+#define APZ_POS         ((ap_sign_t)1)
+#define APZ_NEG         ((ap_sign_t)-1)
+#define APZ_ZERO        ((ap_sign_t)0)
 
 #define APZ_MAX_SIZE    ((ap_size_t)1 << 52)
 
-typedef struct
+typedef struct apz_t
 {
     ap_dig_t* data;
     ap_size_t max, used;
-    int8_t is_neg;
+    ap_sign_t is_neg;
+    apac_alloc_t allocater;
 
 } apz_t;
 
@@ -494,7 +512,8 @@ typedef enum apac_str_base
 
 APAC_API apac_err apz_init(
     apz_t* op,
-    ap_size_t size
+    ap_size_t size,
+    apac_alloc_t custom_allocator
 );
 
 APAC_API apac_err apz_free(

@@ -1,7 +1,5 @@
 #include "../../../../include/apac.h"
 
-extern apac_cpu_params curr_cpu;
-
 int apn_is_zero(
 	const ap_dig_t* op1,
 	ap_size_t size

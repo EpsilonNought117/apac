@@ -36,7 +36,7 @@ uint64_t os_timer(void)
 {
 #if defined(_WIN32)
 
-    static uint64_t freq = 0;
+    APAC_THREAD_LOCAL static uint64_t freq = 0;
     LARGE_INTEGER t;
 
     if (!freq)
@@ -89,7 +89,7 @@ uint64_t os_timer(void)
 #endif
 }
 
-static uint64_t prng_state[4] = { 0 };
+APAC_THREAD_LOCAL static uint64_t prng_state[4] = { 0 };
 
 uint64_t random_sfc64(void)
 {

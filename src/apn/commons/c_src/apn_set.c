@@ -1,7 +1,5 @@
 #include "../../../../include/apac.h"
 
-extern apac_cpu_params curr_cpu;
-
 void apn_set(
 	ap_dig_t* result, 
 	ap_size_t size, 

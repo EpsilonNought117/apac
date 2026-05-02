@@ -3,8 +3,6 @@
 
 #include "../../../../include/apac.h"
 
-extern apac_cpu_params curr_cpu;
-
 #define KARATSUBA_MUL_THRESHOLD (curr_cpu.karatsuba_mul_threshold)
 #define TOOMCOOK3_MUL_THRESHOLD (curr_cpu.toomcook3_mul_threshold)
 #define KARATSUBA_SQR_THRESHOLD	(curr_cpu.karatsuba_sqr_threshold)

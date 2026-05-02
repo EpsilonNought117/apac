@@ -1,7 +1,7 @@
 #include "../include/apac.h"
 #include "../utilities/apac_utilities.h"
 
-extern apac_cpu_params curr_cpu;
+
 
 #define MAX_RUNTIME_1 (uint64_t)10 * 1000 * 1000
 #define MAX_RUNTIME_2 (uint64_t)100 * 1000

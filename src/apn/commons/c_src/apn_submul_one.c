@@ -1,7 +1,5 @@
 #include "../../../../include/apac.h"
 
-extern apac_cpu_params curr_cpu;
-
 ap_dig_t apn_submul_one(
 	ap_dig_t* result,
 	const ap_dig_t* op1,

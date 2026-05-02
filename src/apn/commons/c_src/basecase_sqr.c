@@ -1,8 +1,6 @@
 #include "../../../../include/apac.h"
 #include "../c_headers/hidden_sqr.h"
 
-extern apac_cpu_params curr_cpu;
-
 void apn_basecase_sqr(
 	ap_dig_t* result,
 	const ap_dig_t* op1,
