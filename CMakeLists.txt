@@ -92,6 +92,7 @@ set(apac_c_sources
 
     # MISCELLANEOUS
 
+    "src/misc/apac_init.c"
     "src/misc/apac_init_alloc.c"
     "src/misc/apac_get_cpu_spec.c"
 

@@ -63,11 +63,11 @@ apac_err apn_div(
 
 full_division:
 
-    APAC_ASSERT(scratch_alloc.custom_malloc != NULL && scratch_alloc.custom_free != NULL);
+    APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm
-    ap_dig_t* temp_space = scratch_alloc.custom_malloc((size_dvsr + size_divd + 1) * sizeof(ap_dig_t), scratch_alloc.ctx);
+    ap_dig_t* temp_space = apac_allocator.custom_malloc((size_dvsr + size_divd + 1) * sizeof(ap_dig_t), apac_allocator.ctx);
 
     if (!temp_space)
     {
@@ -101,11 +101,11 @@ full_division:
     else if (size_dvsr >= (size_divd + 1 - size_dvsr))
     {
         ap_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
-        ap_dig_t* temp_ws = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
+        ap_dig_t* temp_ws = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
 
         if (!temp_ws)
         {
-            scratch_alloc.custom_free(temp_space, scratch_alloc.ctx);
+            apac_allocator.custom_free(temp_space, apac_allocator.ctx);
             APAC_LOG_ERR("Memory allocation failure for scratch workspace in apn_div_rem!");
             return APAC_OOM;
         }
@@ -113,16 +113,16 @@ full_division:
         apn_set(temp_ws, ws_size, 0);
 
         apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
-        scratch_alloc.custom_free(temp_ws, scratch_alloc.ctx);
+        apac_allocator.custom_free(temp_ws, apac_allocator.ctx);
     }
     else
     {
         ap_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
-        ap_dig_t* temp_ws = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
+        ap_dig_t* temp_ws = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
 
         if (!temp_ws)
         {
-            scratch_alloc.custom_free(temp_space, scratch_alloc.ctx);
+            apac_allocator.custom_free(temp_space, apac_allocator.ctx);
             APAC_LOG_ERR("Memory allocation failure for scratch workspace in apn_div_rem!");
             return APAC_OOM;
         }
@@ -130,7 +130,7 @@ full_division:
         apn_set(temp_ws, ws_size, 0);
 
         apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
-        scratch_alloc.custom_free(temp_ws, scratch_alloc.ctx);
+        apac_allocator.custom_free(temp_ws, apac_allocator.ctx);
     }
 
     if (dvsr_shift_val)
@@ -140,7 +140,7 @@ full_division:
     }
 
     apn_cpy(remainder, temp_divd, size_rmdr);
-    scratch_alloc.custom_free(temp_space, scratch_alloc.ctx);
+    apac_allocator.custom_free(temp_space, apac_allocator.ctx);
 
     return APAC_OK;
 }

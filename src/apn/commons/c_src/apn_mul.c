@@ -54,10 +54,10 @@ apac_err apn_mul_n(
 	}
 	else if (size < TOOMCOOK3_MUL_THRESHOLD)
 	{
-		APAC_ASSERT(scratch_alloc.custom_malloc != NULL && scratch_alloc.custom_free != NULL);
+		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
 		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size);
-		ap_dig_t* workspace = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
+		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
 
 		if (!workspace)
 		{
@@ -68,14 +68,14 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_mul(result, op1, op2, size, workspace);
-		scratch_alloc.custom_free(workspace, scratch_alloc.ctx);	// free temporary workspace
+		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
 	}
 	else
 	{
-		APAC_ASSERT(scratch_alloc.custom_malloc != NULL && scratch_alloc.custom_free != NULL);
+		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
 		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size);
-		ap_dig_t* workspace = scratch_alloc.custom_malloc(sizeof(ap_dig_t) * ws_size, scratch_alloc.ctx);
+		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
 	
 		if (!workspace)
 		{
@@ -86,7 +86,7 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_toomcook3_mul(result, op1, op2, size, workspace);
-		scratch_alloc.custom_free(workspace, scratch_alloc.ctx);	// free temporary workspace
+		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
 	}
 
 	return APAC_OK;

@@ -25,8 +25,6 @@
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
 
-    #define APAC_THREAD_LOCAL __declspec(thread)
-
     #if defined(_MSC_VER)
 
         #if defined(_M_X64) || defined(_M_AMD64)
@@ -69,8 +67,6 @@
         #include <time.h>
         #include <sched.h>
         #include <pthread.h>
-
-        #define APAC_THREAD_LOCAL __thread
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
@@ -263,20 +259,21 @@ typedef struct apac_alloc_t
 
 } apac_alloc_t;
 
-APAC_API apac_alloc_t apac_init_alloc(
+APAC_API void apac_init_allocator(  
     apac_malloc_t malloc_ptr,
     apac_realloc_t realloc_ptr,
     apac_free_t free_ptr,
     void* ctx_ptr
 );
 
-APAC_THREAD_LOCAL apac_alloc_t apac_scratch_alloc;
+apac_alloc_t apac_allocator;
 
 /* ==========================================================================
  * CPU detection and initialization
  * ========================================================================== */
 
 APAC_API void apac_get_cpu_spec(void);
+APAC_API void apac_init(void);
 
 /* ==========================================================================
  * Runtime CPU dispatch
@@ -498,7 +495,6 @@ typedef struct apz_t
     ap_dig_t* data;
     ap_size_t max, used;
     ap_sign_t is_neg;
-    apac_alloc_t allocater;
 
 } apz_t;
 
