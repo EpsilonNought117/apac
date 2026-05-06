@@ -1,4 +1,4 @@
-#include "../../../../include/apac.h"
+#include "../../headers/apac_internal.h"
 #include "../x64_hidden_funcs.h"
 
 // Tested on Ryzen 7 8845HS running at 3.8 GHz Base Clock

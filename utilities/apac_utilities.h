@@ -8,8 +8,8 @@
     #pragma comment(lib, "powrprof")
 #endif
 
-#define TEST_START(name) printf("\nTEST START: %s()\n", name)
-#define TEST_END(name) printf("TEST END: %s()\n", name);
+#define APAC_TEST_START(name) printf("\nTEST START: %s()\n", name)
+#define APAC_TEST_END(name) printf("TEST END: %s()\n", name);
 
 uint64_t cpu_timer(void);
 uint64_t os_timer(void);

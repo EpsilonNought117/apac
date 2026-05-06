@@ -1,15 +1,16 @@
 #ifndef APAC_H
 #define APAC_H
 
-/****************************************************************************************************/
-/***************************      REQUIRED C STANDARD LIBRARY HEADERS      **************************/
-/****************************************************************************************************/
-
 #if defined(__GNUC__)
     #define _GNU_SOURCE
 #endif
 
+/****************************************************************************************************/
+/***************************      REQUIRED C STANDARD LIBRARY HEADERS      **************************/
+/****************************************************************************************************/
+
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
@@ -102,12 +103,18 @@
     #endif
 
 #else
+
     #error "Unknown Platform!"
+
 #endif
 
 /****************************************************************************************************/
 /*************************    PLATFORM SPECIFIC DEFINES AND TYPEDEFS    *****************************/
 /****************************************************************************************************/
+
+/* ==========================================================================
+ * Typedefs and Related Macros
+ * ========================================================================== */
 
 #if (defined(APAC_X64_WIN)      ||  \
      defined(APAC_X64_UNIX)     ||  \
@@ -131,19 +138,23 @@
     #define APN_DIG_BITS        64U
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
 
+    #define APZ_POS         ((ap_sign_t)1)
+    #define APZ_NEG         ((ap_sign_t)-1)
+    #define APZ_ZERO        ((ap_sign_t)0)
+
+    #define APZ_MAX_SIZE    ((ap_size_t)1 << 52)
+
 #else
+
     #error "Unknown Platform and CPU Architecture!"
+
 #endif
 
-/****************************************************************************************************/
-/*********************************      ERROR HANDLING MACROS      **********************************/
-/****************************************************************************************************/
-
 /* ==========================================================================
- * Error codes
+ * Return Error Values Enum
  * ========================================================================== */
 
-typedef enum
+typedef enum apac_err
 {
     APAC_OK,
     APAC_OOM,
@@ -151,103 +162,12 @@ typedef enum
 
 } apac_err;
 
-
-/* ==========================================================================
- * Always-enabled assertion
- * ========================================================================== */
-
-#define APAC_ALWAYS_ASSERT(expr)                            \
-    do                                                      \
-    {                                                       \
-        if (!(expr))                                        \
-        {                                                   \
-            fprintf(                                        \
-                stderr,                                     \
-                "\n\nAPAC ASSERTION FAILED!\n"              \
-                "ASSERTION: %s\n"                           \
-                "FILE: %s\nLINE: %d\n",                     \
-                #expr, __FILE__, __LINE__                   \
-            );                                              \
-            fprintf(stderr, "EXITING ...\n\n");             \
-            exit(EXIT_FAILURE);                             \
-        }                                                   \
-    } while (0)
-
-
-/* ==========================================================================
- * Debug-only assertion
- * ========================================================================== */
-
-#ifndef APAC_DISABLE_ASSERT
-    #define APAC_ASSERT(expr) APAC_ALWAYS_ASSERT(expr)
-#else
-    #define APAC_ASSERT(expr)   do { /* nothing */ } while (0)
-#endif
-
-/* ==========================================================================
- * Debug-only overlap checks
- * ========================================================================== */
-
-/*
-    These checks are only useful on platforms with a flat address space per process.
-*/
-#if !defined(APAC_DISABLE_ASSERT)   &&  \
-    (defined(APAC_X64_WIN)          ||  \
-     defined(APAC_X64_UNIX)         ||  \
-     defined(APAC_ARM64_WIN)        ||  \
-     defined(APAC_ARM64_UNIX)           \
-    )
-
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                         \
-        APAC_ALWAYS_ASSERT(                                                 \
-            ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||             \
-            ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
-        )
-
-    #define APAC_FULL_ALIAS_ONLY(op1, size1, op2, size2)                    \
-        APAC_ALWAYS_ASSERT(                                                 \
-            (                                                               \
-                (uintptr_t)(op1) == (uintptr_t)(op2) &&                     \
-                (uintptr_t)(op1) + (size1) == (uintptr_t)(op2) + (size2)    \
-            ) ||                                                            \
-            (                                                               \
-                ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||         \
-                ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)            \
-            )                                                               \
-        )
-
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)              \
-        APAC_ALWAYS_ASSERT(                                                 \
-            ((uintptr_t)(op1) + (size1)) <= ((uintptr_t)(op2) + (size2)) || \
-            ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
-        )
-
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)              \
-        APAC_ALWAYS_ASSERT(                                                 \
-            ((uintptr_t)(op2) + (size2)) <= ((uintptr_t)(op1) + (size1)) || \
-            ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2)                \
-        )
-
-#else
-
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
-
-#endif
-
-/* ==========================================================================
- * Error logging
- * ========================================================================== */
-
-#define APAC_LOG_ERR(msg) fprintf(stderr, "APAC ERROR: %s\n", msg)
-
 /****************************************************************************************************/
 /*********************************         MISCELLANEOUS          ***********************************/
 /****************************************************************************************************/
 
 /* ==========================================================================
- * Memory management hooks
+ * Memory Allocation Function Pointers' Typedefs
  * ========================================================================== */
 
 typedef void* (*apac_malloc_t)(size_t new_size, void* ctx);
@@ -270,56 +190,13 @@ APAC_API void apac_init_allocator(
     void* ctx_ptr
 );
 
-apac_alloc_t apac_allocator;
-
 /* ==========================================================================
- * CPU detection and initialization
+ * CPU detection and Default Initialization Functions 
  * ========================================================================== */
 
 APAC_API void apac_get_cpu_spec(void);
+
 APAC_API void apac_init(void);
-
-/* ==========================================================================
- * Runtime CPU dispatch
- * ========================================================================== */
-
-typedef struct apac_cpu_params
-{
-    ap_size_t karatsuba_mul_threshold;
-    ap_size_t toomcook3_mul_threshold;
-    
-    ap_size_t karatsuba_sqr_threshold;
-    ap_size_t toomcook3_sqr_threshold;
-
-    ap_size_t dnc_div_threshold;
-
-    ap_dig_t (*apn_add_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
-    ap_dig_t (*apn_sub_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
-    ap_dig_t (*apn_add_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t (*apn_sub_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    void (*apn_neg_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
-
-    ap_dig_t (*apn_addmul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t (*apn_submul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-
-    ap_dig_t (*apn_lshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t (*apn_rshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-
-    ap_dig_t (*apn_lshift_add_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t (*apn_lshift_sub_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-
-    void (*apn_mul_bc_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_size_t);
-    void (*apn_sqr_bc_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
-
-    void (*apn_cpy_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
-    void (*apn_set_ptr)(ap_dig_t*, ap_size_t, ap_dig_t);
-
-    int (*apn_cmp_ptr)(const ap_dig_t*, const ap_dig_t*, ap_size_t);
-    int (*apn_is_zero_ptr)(const ap_dig_t*, ap_size_t);
-
-} apac_cpu_params;
-
-apac_cpu_params curr_cpu;
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
@@ -484,15 +361,15 @@ APAC_API ap_size_t apn_clamp(
     ap_size_t size
 );
 
+APAC_API void apn_set_to_random(
+    ap_dig_t* op1,
+    ap_size_t size1,
+    ap_dig_t seed_val
+);
+
 /****************************************************************************************************/
 /*********************************          APZ FUNCTIONS         ***********************************/
 /****************************************************************************************************/
-
-#define APZ_POS         ((ap_sign_t)1)
-#define APZ_NEG         ((ap_sign_t)-1)
-#define APZ_ZERO        ((ap_sign_t)0)
-
-#define APZ_MAX_SIZE    ((ap_size_t)1 << 52)
 
 typedef struct apz_t
 {
@@ -512,8 +389,7 @@ typedef enum apac_str_base
 
 APAC_API apac_err apz_init(
     apz_t* op,
-    ap_size_t size,
-    apac_alloc_t custom_allocator
+    ap_size_t size
 );
 
 APAC_API apac_err apz_free(

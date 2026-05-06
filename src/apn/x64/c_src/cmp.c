@@ -1,5 +1,4 @@
-#include "../../../../include/apac.h"
-#include "../../commons/c_headers/hidden_helpers.h" // for CLZ
+#include "../../../headers/apac_internal.h"
 
 /*
 	Key Idea is to check for equality. 

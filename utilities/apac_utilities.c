@@ -2,16 +2,14 @@
 
 uint64_t cpu_timer(void)
 {
-#if (defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64))) || \
-    ((defined(__GNUC__) || defined(__clang__)) && \
-    (defined(__x86_64__) || defined(__amd64__) || defined(__x86_64) || defined(__amd64)))
+#if (defined(APAC_X64_WIN) || defined(APAC_X64_UNIX))
 
     _mm_lfence();
     uint64_t t = __rdtsc();
     _mm_lfence();
     return t;
 
-#elif defined(_M_ARM64) && defined(_MSC_VER)
+#elif defined(APAC_ARM64_WIN)
 
     uint64_t cnt, frq;
     __isb(0xF);
@@ -19,8 +17,7 @@ uint64_t cpu_timer(void)
     frq = _ReadStatusReg(ARM64_CNTFRQ_EL0);
     return (cnt * 1000000000ULL) / frq;
 
-#elif (defined(__GNUC__) || defined(__clang__)) && \
-      (defined(__aarch64__) || defined(__arm64__))
+#elif defined(APAC_ARM64_UNIX)
 
     __isb();
     uint64_t cnt = __arm_rsr64("cntvct_el0");
@@ -28,7 +25,9 @@ uint64_t cpu_timer(void)
     return (cnt * 1000000000ULL) / frq;
 
 #else
-    #error "cpu_timer(): unsupported architecture or compiler"
+
+    #error "cpu_timer(): unsupported CPU Architecture, OS or Compiler!"
+
 #endif
 }
 
@@ -84,39 +83,9 @@ uint64_t os_timer(void)
 
 #else
 
-    #error "os_timer(): unsupported operating system"
+    #error "os_timer(): Unsupported Operating System!"
 
 #endif
-}
-
-APAC_THREAD_LOCAL static uint64_t prng_state[4] = { 0 };
-
-uint64_t random_sfc64(void)
-{
-	uint64_t out = prng_state[1] + prng_state[2] + prng_state[0];
-	prng_state[0]++;
-	prng_state[1] = prng_state[2] ^ (prng_state[2] >> 11);
-	prng_state[2] = prng_state[3] + (prng_state[3] << 3);
-	prng_state[3] = ROTL(prng_state[3], 24) + out;
-	return out;
-}
-
-void random_sfc64_seed(uint64_t seed)
-{
-	prng_state[0] = 1;
-	prng_state[1] = seed;
-	prng_state[2] = seed;
-	prng_state[3] = seed;
-	for (int i = 0; i < 16; i++)
-		random_sfc64();
-}
-
-void set_to_random(ap_dig_t* op1, ap_size_t size)
-{
-	for (ap_size_t i = 0; i < size; i++)
-	{
-		op1[i] = random_sfc64();
-	}
 }
 
 int pin_curr_thread_to_core(uint32_t core_id)

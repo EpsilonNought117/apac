@@ -1,4 +1,4 @@
-#include "../../include/apac.h"
+#include "../headers/apac_internal.h"
 
 // libc malloc wrapper
 inline void* apac_malloc(size_t new_size, void* ctx)
