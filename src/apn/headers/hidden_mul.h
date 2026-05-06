@@ -40,6 +40,8 @@ void apn_toomcook3_mul(
     ap_dig_t* temp
 );
 
+/*
+
 void apn_toomcook32_mul(
     ap_dig_t* result,
     const ap_dig_t* op1,
@@ -65,6 +67,8 @@ void apn_toomcook42_mul(
     ap_size_t size1,
     ap_size_t size2,
     ap_dig_t* temp
-);
+); 
+
+*/
 
 #endif

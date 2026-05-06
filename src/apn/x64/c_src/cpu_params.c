@@ -1,10 +1,11 @@
-#include "../../headers/apac_internal.h"
 #include "../x64_hidden_funcs.h"
 
 // Tested on Ryzen 7 8845HS running at 3.8 GHz Base Clock
 void zen4_set_params(void)
 {
 	curr_cpu.karatsuba_mul_threshold   	= (ap_size_t)(28);
+	curr_cpu.toomcook3_mul_threshold	= (ap_size_t)(120);
+	curr_cpu.toomcook3_sqr_threshold    = (ap_size_t)(100);
 	curr_cpu.karatsuba_sqr_threshold	= (ap_size_t)(52);
 	curr_cpu.dnc_div_threshold          = (ap_size_t)(36);
 

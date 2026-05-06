@@ -105,7 +105,7 @@
  * Global Custom Memory Allocator Struct
  * ========================================================================== */
 
-apac_alloc_t apac_allocator = { 0 };
+static apac_alloc_t apac_allocator = { 0 };
 
 /* ==========================================================================
  * Runtime CPU Detection and Low-Level Function Dispatch Struct
@@ -147,7 +147,7 @@ typedef struct apac_cpu_params
 
 } apac_cpu_params;
 
-apac_cpu_params curr_cpu = { 0 };
+static apac_cpu_params curr_cpu = { 0 };
 
 /* ==========================================================================
  * Algorithm Switching Threshold Macros

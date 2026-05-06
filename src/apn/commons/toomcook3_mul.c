@@ -103,7 +103,7 @@ void apn_toomcook3_mul(
         temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
     */
 
-    /* 3 out of 5 recursive mutliplications done (v2, v1 and vneg1) */
+    /* 3 out of 5 recursive multiplications done (v2, v1 and vneg1) */
 
     apn_toomcook3_mul(result, a0, b0, lower, &temp[6 * (lower + 1)]);
     apn_toomcook3_mul(&result[4 * lower], a2, b2, upper, &temp[6 * (lower + 1)]);
@@ -142,7 +142,8 @@ void apn_toomcook3_mul(
     }
 
     apn_div_one(v2, v2, 6, 2 * (lower + 1));
-    apn_sub(v2, v2, vinf, 2 * (lower + 1), 2 * upper);
+    temp1 = apn_lshift_sub(v2, v2, vinf, 2 * upper, 1);
+    temp1 = apn_sub_one(v2 + 2 * upper, v2 + 2 * upper, 2 * (lower - upper) + 1, temp1);
     ap_dig_t* t1 = v2;
     
     apn_rshift(v1_cpy, v1_cpy, 2 * lower + 1, 1);

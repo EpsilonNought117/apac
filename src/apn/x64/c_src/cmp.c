@@ -1,4 +1,3 @@
-#include "../../../headers/apac_internal.h"
 #include "../x64_hidden_funcs.h"
 
 /*
@@ -11,7 +10,7 @@
 */
 
 #if (defined(__GNUC__) || defined(__clang__))
-__attribute__((target("avx2")))
+	__attribute__((target("avx2")))
 #endif
 int cmp_avx2_4unroll(
 	const ap_dig_t* op1,
