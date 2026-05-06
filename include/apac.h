@@ -25,6 +25,8 @@
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
 
+    #define APAC_THREAD_LOCAL __declspec(thread)
+
     #if defined(_MSC_VER)
 
         #if defined(_M_X64) || defined(_M_AMD64)
@@ -67,6 +69,8 @@
         #include <time.h>
         #include <sched.h>
         #include <pthread.h>
+        
+        #define APAC_THREAD_LOCAL __thread
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)

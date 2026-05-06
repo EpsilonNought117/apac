@@ -97,7 +97,7 @@ uint64_t random_sfc64(void)
 	prng_state[0]++;
 	prng_state[1] = prng_state[2] ^ (prng_state[2] >> 11);
 	prng_state[2] = prng_state[3] + (prng_state[3] << 3);
-	prng_state[3] = ROTL64(prng_state[3], 24) + out;
+	prng_state[3] = ROTL(prng_state[3], 24) + out;
 	return out;
 }
 
