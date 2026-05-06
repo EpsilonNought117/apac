@@ -1,8 +1,7 @@
 #ifndef APN_HIDDEN_DIV
 #define APN_HIDDEN_DIV
 
-#include "../../include/apac.h"
-#include "apac_internal.h"
+#include "../../headers/apac_internal.h"
 
 /* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
 
@@ -32,7 +31,7 @@ ap_dig_t apn_udiv_3by2_quot(
     ap_dig_t v
 );
 
-/* ----------------------------- DIVISION MAIN FUNCTIONS --------------------------------- */
+/* ----------------------------- DIVISION-MAIN FUNCTIONS --------------------------------- */
 
 /*
 * 1) O(n * m) division

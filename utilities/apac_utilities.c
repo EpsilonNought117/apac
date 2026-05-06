@@ -130,25 +130,27 @@ int pin_curr_thread_to_core(uint32_t core_id)
 
 #endif
 
-void disable_turbo_boost(void)
+/**
+ * dfs = dynamic frequency scaling
+ */
+void apac_disable_dfs(void)
 {
 #if defined(_WIN32)
 
     PowerGetActiveScheme(NULL, &CurrentScheme);
-
     PowerReadACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, &CurrentMode);
-
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, PROCESSOR_PERF_BOOST_MODE_DISABLED);
-
     PowerSetActiveScheme(NULL, CurrentScheme);
 
 #else
 
-    fprintf(stderr, "\n");
-    fprintf(stderr, "WARNING: Turbo boost cannot be disabled on this platform.\n");
-    fprintf(stderr, "         Disable it manually for optimal, consistent, and accurate results.\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Continue anyway? (y/n): ");
+    fprintf(stderr,
+        "\n"
+        "WARNING: Dynamic Frequency Scaling (Turbo Boost) cannot be disabled on this platform.\n"
+        "         Disable it manually for optimal, consistent, and accurate results.\n"
+        "\n"
+        "Continue anyway? (y/n): "
+    );
     fflush(stderr);
 
     char buffer[16];
@@ -169,18 +171,17 @@ void disable_turbo_boost(void)
 #endif
 }
 
-void restore_turbo_boost(void)
+/**
+ * dfs = dynamic frequency scaling
+ */
+void apac_restore_dfs(void)
 {
 #if defined(_WIN32) && (defined(_M_X64) || defined(_M_AMD64))
 
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, CurrentMode);
-
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, PROCESSOR_PERF_BOOST_MODE_ENABLED);
-
     PowerSetActiveScheme(NULL, CurrentScheme);
-
     LocalFree(CurrentScheme);
-
     CurrentScheme = NULL;
 
 #else

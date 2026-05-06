@@ -1,8 +1,7 @@
 #ifndef APN_HIDDEN_MUL
 #define APN_HIDDEN_MUL
 
-#include "../../include/apac.h"
-#include "apac_internal.h"
+#include "../../headers/apac_internal.h"
 
 /*
  * 1) Calls multiplication routines written in assembly

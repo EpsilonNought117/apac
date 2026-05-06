@@ -1,8 +1,7 @@
 #ifndef APN_HIDDEN_SQR
 #define APN_HIDDEN_SQR
 
-#include "../../include/apac.h"
-#include "apac_internal.h"
+#include "../../headers/apac_internal.h"
 
 /*
  * 1) Calls squaring routines written in assembly

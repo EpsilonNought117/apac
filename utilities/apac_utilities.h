@@ -3,7 +3,7 @@
 
 #include "../include/apac.h"
 
-#if defined(_WIN32) && defined(_MSC_VER)
+#if (defined(_WIN32) && defined(_MSC_VER))
     #include <powrprof.h>
     #pragma comment(lib, "powrprof")
 #endif
@@ -14,13 +14,9 @@
 uint64_t cpu_timer(void);
 uint64_t os_timer(void);
 
-uint64_t random_sfc64(void);
-void random_sfc64_seed(uint64_t seed);
-void set_to_random(ap_dig_t* op1, ap_size_t size);
-
 int pin_curr_thread_to_core(uint32_t core_id);
 
-void disable_turbo_boost(void);
-void restore_turbo_boost(void);
+void apac_disable_dfs(void);
+void apac_restore_dfs(void);
 
 #endif

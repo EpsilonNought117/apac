@@ -98,33 +98,36 @@ set(apac_c_sources
 
     # APN PUBLIC API
 
-    "src/apn/commons/c_src/apn_add.c"
-    "src/apn/commons/c_src/apn_sub.c"
-    "src/apn/commons/c_src/apn_negate.c"
-    "src/apn/commons/c_src/apn_mul.c"
-    "src/apn/commons/c_src/apn_set.c"
-    "src/apn/commons/c_src/apn_cpy.c"
-    "src/apn/commons/c_src/apn_sqr.c"
-    "src/apn/commons/c_src/apn_cmp.c"
-    "src/apn/commons/c_src/apn_addmul_one.c"
-    "src/apn/commons/c_src/apn_submul_one.c"
-    "src/apn/commons/c_src/apn_shift.c"
-    "src/apn/commons/c_src/apn_is_zero.c"
-    "src/apn/commons/c_src/apn_clamp.c"
-    "src/apn/commons/c_src/apn_div.c"
-    "src/apn/commons/c_src/apn_div_one.c"
+    "src/apn/commons/apn_add.c"
+    "src/apn/commons/apn_sub.c"
+    "src/apn/commons/apn_negate.c"
+    "src/apn/commons/apn_mul.c"
+    "src/apn/commons/apn_set.c"
+    "src/apn/commons/apn_cpy.c"
+    "src/apn/commons/apn_sqr.c"
+    "src/apn/commons/apn_cmp.c"
+    "src/apn/commons/apn_addmul_one.c"
+    "src/apn/commons/apn_submul_one.c"
+    "src/apn/commons/apn_shift.c"
+    "src/apn/commons/apn_is_zero.c"
+    "src/apn/commons/apn_clamp.c"
+    "src/apn/commons/apn_div.c"
+    "src/apn/commons/apn_div_one.c"
+    "src/apn/commons/apn_set_to_random.c"
+    "src/apn/commons/apn_lshift_add_sub.c"
 
     # APN HIDDEN FUNCS
 
-    "src/apn/commons/c_src/basecase_div.c"
-    "src/apn/commons/c_src/dnc_div.c"
-    "src/apn/commons/c_src/basecase_mul.c"
-    "src/apn/commons/c_src/karatsuba_mul.c"
-    "src/apn/commons/c_src/toomcook3_mul.c"
-    "src/apn/commons/c_src/basecase_sqr.c"
-    "src/apn/commons/c_src/karatsuba_sqr.c"
-    "src/apn/commons/c_src/toomcook3_sqr.c"
-    "src/apn/commons/c_src/div_helpers.c"
+    "src/apn/commons/basecase_div.c"
+    "src/apn/commons/dnc_div.c"
+    "src/apn/commons/basecase_mul.c"
+    "src/apn/commons/karatsuba_mul.c"
+    "src/apn/commons/toomcook3_mul.c"
+    "src/apn/commons/basecase_sqr.c"
+    "src/apn/commons/karatsuba_sqr.c"
+    "src/apn/commons/toomcook3_sqr.c"
+    "src/apn/commons/div_helpers.c"
+    "src/apn/commons/toomcook32_mul.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
@@ -188,11 +191,11 @@ endif()
 
 set(hidden_headers
     # COMMONS
-    "src/apn/commons/c_headers/hidden_sqr.h"
-    "src/apn/commons/c_headers/hidden_mul.h"
-    "src/apn/commons/c_headers/hidden_div.h"
-    "src/apn/commons/c_headers/hidden_helpers.h"
-    "src/apn/commons/c_headers/apn_thresholds.h"
+    "src/apn/commons/headers/hidden_sqr.h"
+    "src/apn/commons/headers/hidden_mul.h"
+    "src/apn/commons/headers/hidden_div.h"
+    "src/apn/commons/headers/hidden_helpers.h"
+    "src/apn/commons/headers/apn_thresholds.h"
 )
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
@@ -301,7 +304,7 @@ if (BUILD_EXAMPLES)
             ${CMAKE_SOURCE_DIR}/include
         )
 
-        if (UNIX AND NOT APPLE)
+        if (UNIX)
             target_link_libraries(${exe} PRIVATE m)
         endif()
     endforeach()

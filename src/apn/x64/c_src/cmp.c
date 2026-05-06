@@ -1,8 +1,9 @@
 #include "../../../headers/apac_internal.h"
+#include "../x64_hidden_funcs.h"
 
 /*
 	Key Idea is to check for equality. 
-	If equality fails at any point, test only those limbs.
+	If equality fails at any point, test only those digits.
 */
 
 /*
