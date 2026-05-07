@@ -138,11 +138,9 @@
     #define APN_DIG_BITS        64U
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
 
-    #define APZ_POS         ((ap_sign_t)1)
-    #define APZ_NEG         ((ap_sign_t)-1)
-    #define APZ_ZERO        ((ap_sign_t)0)
-
-    #define APZ_MAX_SIZE    ((ap_size_t)1 << 52)
+    #define APN_POS             ((ap_sign_t)1)
+    #define APN_NEG             ((ap_sign_t)-1)
+    #define APN_ZERO            ((ap_sign_t)0)
 
 #else
 
@@ -161,6 +159,108 @@ typedef enum apac_err
     APAC_DIV_BY_ZERO
 
 } apac_err;
+
+typedef enum apac_str_base
+{
+
+    BASE10 = 10,
+    BASE16 = 16
+
+} apac_str_base;
+
+/****************************************************************************************************/
+/*********************************      ERROR HANDLING MACROS      **********************************/
+/****************************************************************************************************/
+
+/* ==========================================================================
+ * Always-Enabled Assertion
+ * ========================================================================== */
+
+#define APAC_ALWAYS_ASSERT(expr)                                \
+        do                                                      \
+        {                                                       \
+            if (!(expr))                                        \
+            {                                                   \
+                fprintf(                                        \
+                    stderr,                                     \
+                    "\n\nAPAC ASSERTION FAILED! \n"             \
+                    "ASSERTION: %s              \n"             \
+                    "FILE: %s\nLINE: %d         \n"             \
+                    "ABORTING ...             \n\n",            \
+                    #expr, __FILE__, __LINE__                   \
+                );                                              \
+                exit(EXIT_FAILURE);                             \
+            }                                                   \
+        } while (0)
+
+/* ==========================================================================
+ * Debug-Only Assertion
+ * ========================================================================== */
+
+#ifndef APAC_DISABLE_ASSERT
+    #define APAC_ASSERT(expr)   APAC_ALWAYS_ASSERT(expr)
+#else
+    #define APAC_ASSERT(expr)   do { /* nothing */ } while (0)
+#endif
+
+/* ==========================================================================
+ * Debug-Only Overlap Checks
+ * ========================================================================== */
+
+/*
+    These checks are only useful on platforms with a flat address space per process.
+*/
+#if !defined(APAC_DISABLE_ASSERT)   &&  \
+    (defined(APAC_X64_WIN)          ||  \
+     defined(APAC_X64_UNIX)         ||  \
+     defined(APAC_ARM64_WIN)        ||  \
+     defined(APAC_ARM64_UNIX)           \
+    )
+
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                             \
+            APAC_ALWAYS_ASSERT(                                                 \
+                ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||             \
+                ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
+            )
+
+    #define APAC_FULL_ALIAS_ONLY(op1, size1, op2, size2)                        \
+            APAC_ALWAYS_ASSERT(                                                 \
+                (                                                               \
+                    (uintptr_t)(op1) == (uintptr_t)(op2) &&                     \
+                    (uintptr_t)(op1) + (size1) == (uintptr_t)(op2) + (size2)    \
+                ) ||                                                            \
+                (                                                               \
+                    ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||         \
+                    ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)            \
+                )                                                               \
+            )
+
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                  \
+            APAC_ALWAYS_ASSERT(                                                 \
+                ((uintptr_t)(op1) + (size1)) <= ((uintptr_t)(op2) + (size2)) || \
+                ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
+            )
+
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                  \
+            APAC_ALWAYS_ASSERT(                                                 \
+                ((uintptr_t)(op2) + (size2)) <= ((uintptr_t)(op1) + (size1)) || \
+                ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2)                \
+            )
+
+#else
+
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
+    #define APAC_FULL_ALIAS_ONLY(op1, size1, op2, size2)        do { /* nothing */ } while (0)
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+
+#endif
+
+/* ==========================================================================
+ * Error Logging
+ * ========================================================================== */
+
+#define APAC_LOG_ERR(msg) fprintf(stderr, "APAC ERROR: %s\n", msg)
 
 /****************************************************************************************************/
 /*********************************         MISCELLANEOUS          ***********************************/
@@ -189,6 +289,64 @@ APAC_API void apac_init_allocator(
     apac_free_t free_ptr,
     void* ctx_ptr
 );
+
+/* ==========================================================================
+ * Global Custom Memory Allocator Struct
+ * ========================================================================== */
+
+extern apac_alloc_t apac_allocator;
+
+/* ==========================================================================
+ * Runtime CPU Detection and Low-Level Function Dispatch Struct
+ * ========================================================================== */
+
+typedef struct apac_cpu_params
+{
+    ap_size_t karatsuba_mul_threshold;
+    ap_size_t toomcook3_mul_threshold;
+
+    ap_size_t karatsuba_sqr_threshold;
+    ap_size_t toomcook3_sqr_threshold;
+
+    ap_size_t dnc_div_threshold;
+
+    ap_dig_t(*apn_add_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
+    ap_dig_t(*apn_sub_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
+    ap_dig_t(*apn_add_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t(*apn_sub_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    void (*apn_neg_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
+
+    ap_dig_t(*apn_addmul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t(*apn_submul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+
+    ap_dig_t(*apn_lshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t(*apn_rshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+
+    ap_dig_t(*apn_lshift_add_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    ap_dig_t(*apn_lshift_sub_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+
+    void (*apn_mul_bc_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_size_t);
+    void (*apn_sqr_bc_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
+
+    void (*apn_cpy_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
+    void (*apn_set_ptr)(ap_dig_t*, ap_size_t, ap_dig_t);
+
+    int (*apn_cmp_ptr)(const ap_dig_t*, const ap_dig_t*, ap_size_t);
+    int (*apn_is_zero_ptr)(const ap_dig_t*, ap_size_t);
+
+} apac_cpu_params;
+
+extern apac_cpu_params curr_cpu;
+
+/* ==========================================================================
+ * Algorithm Switching Threshold Macros
+ * ========================================================================== */
+
+#define KARATSUBA_MUL_THRESHOLD (curr_cpu.karatsuba_mul_threshold)
+#define TOOMCOOK3_MUL_THRESHOLD (curr_cpu.toomcook3_mul_threshold)
+#define KARATSUBA_SQR_THRESHOLD	(curr_cpu.karatsuba_sqr_threshold)
+#define TOOMCOOK3_SQR_THRESHOLD (curr_cpu.toomcook3_sqr_threshold)
+#define DNC_DIV_THRESHOLD	    (curr_cpu.dnc_div_threshold)
 
 /* ==========================================================================
  * CPU detection and Default Initialization Functions 
@@ -365,45 +523,6 @@ APAC_API void apn_set_to_random(
     ap_dig_t* op1,
     ap_size_t size1,
     ap_dig_t seed_val
-);
-
-/****************************************************************************************************/
-/*********************************          APZ FUNCTIONS         ***********************************/
-/****************************************************************************************************/
-
-typedef struct apz_t
-{
-    ap_dig_t* data;
-    ap_size_t max, used;
-    ap_sign_t is_neg;
-
-} apz_t;
-
-typedef enum apac_str_base
-{
-
-    BASE10 = 10,
-    BASE16 = 16
-
-} apac_str_base;
-
-APAC_API apac_err apz_init(
-    apz_t* op,
-    ap_size_t size
-);
-
-APAC_API apac_err apz_free(
-    apz_t* op
-);
-
-APAC_API apac_err apz_resize(
-    apz_t* op,
-    ap_size_t new_size
-);
-
-APAC_API apac_err apz_set(
-    apz_t* op,
-    ap_dig_t val
 );
 
 #endif

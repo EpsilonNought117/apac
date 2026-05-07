@@ -1,5 +1,7 @@
 #include "../headers/apac_internal.h"
 
+apac_cpu_params curr_cpu = { 0 };
+
 // x64/AMD64 Version
 
 #if (defined(APAC_X64_WIN) || defined(APAC_X64_UNIX))
