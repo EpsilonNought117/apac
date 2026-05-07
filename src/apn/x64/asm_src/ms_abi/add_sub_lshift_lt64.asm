@@ -91,7 +91,7 @@ before_rmdr_loop:
     setc    al
     test    r12, r12
     bt      ax,  0
-    jnz     after_loop
+    jz      after_loop
 
 rmdr_loop:
 
@@ -155,7 +155,7 @@ before_loop:
     setc    al
 
     dec     r9
-    jnz     after_loop
+    jz      after_loop
 
 main_loop:
 
