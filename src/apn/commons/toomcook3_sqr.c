@@ -24,7 +24,6 @@ void apn_toomcook3_sqr(
     }
 
     ap_size_t lower = (size + 2) / 3;
-    ap_size_t middle = lower;
     ap_size_t upper = size - 2 * lower;
 
     const ap_dig_t* a0 = op1, * a1 = op1 + lower, * a2 = op1 + 2 * lower;
@@ -79,7 +78,8 @@ void apn_toomcook3_sqr(
 
     temp[5 * lower + 4] = apn_lshift_add(&temp[4 * (lower + 1)], a0, a1, lower, 1);
     ap_dig_t temp1 = apn_lshift_add(&temp[4 * (lower + 1)], &temp[4 * (lower + 1)], a2, upper, 2);
-    temp[5 * lower + 4] += apn_add_one(&temp[4 * (lower + 1) + upper], &temp[4 * (lower + 1) + upper], lower - upper, temp1);
+    if (lower > upper) { temp1 = apn_add_one(&temp[4 * (lower + 1) + upper], &temp[4 * (lower + 1) + upper], lower - upper, temp1); }
+    temp[5 * lower + 4] += temp1;
 
     /*
                 |---------- v1 ---------|-------- vneg1 --------|- a0 + 2a1 + 4a2 -|
@@ -109,8 +109,8 @@ void apn_toomcook3_sqr(
     /* all 5 recursive squares done! */
     /* now to evaluate and interpolate */
 
-    APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) == (2 * lower + 1));
-    APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) == (2 * lower + 1));
+    APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) <= (2 * lower + 1));
+    APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) <= (2 * lower + 1));
 
     // store v1_cpy after v2
     ap_dig_t* v1_cpy = &temp[6 * (lower + 1)];
@@ -168,9 +168,9 @@ void apn_toomcook3_sqr(
 
     */
 
-    apn_add_n(&result[lower], &result[lower], c1, 2 * lower);
-    apn_add_n(&result[2 * lower], &result[2 * lower], c2, 2 * lower);
-    apn_add_n(&result[3 * lower], &result[3 * lower], c3, 2 * lower);
+    apn_add(&result[lower], &result[lower], c1, 3 * lower + 2 * upper, 2 * lower + 1);
+    apn_add(&result[2 * lower], &result[2 * lower], c2, 2 * (lower + upper), 2 * lower + 1);
+    apn_add(&result[3 * lower], &result[3 * lower], c3, lower + 2 * upper, 2 * lower + 1);
 
     apn_set(temp, 8 * (lower + 1), 0);
 

@@ -25,7 +25,6 @@ void apn_toomcook3_mul(
     }
 
     ap_size_t lower = (size + 2) / 3;
-    ap_size_t middle = lower;
     ap_size_t upper = size - 2 * lower;
 
     const ap_dig_t* a0 = op1, * a1 = op1 + lower, * a2 = op1 + 2 * lower;
@@ -83,13 +82,15 @@ void apn_toomcook3_mul(
         temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 |--- lower + 1 ----|--- lower + 1 ----|
     */
 
-    temp[5 * lower + 4] = apn_lshift_add(&temp[4 * (lower + 1)], a0, a1, lower, 1); // 
+    temp[5 * lower + 4] = apn_lshift_add(&temp[4 * (lower + 1)], a0, a1, lower, 1);
     ap_dig_t temp1 = apn_lshift_add(&temp[4 * (lower + 1)], &temp[4 * (lower + 1)], a2, upper, 2);
-    temp[5 * lower + 4] += apn_add_one(&temp[4 * (lower + 1) + upper], &temp[4 * (lower + 1) + upper], lower - upper, temp1);
+    if (lower > upper) { temp1 = apn_add_one(&temp[4 * (lower + 1) + upper], &temp[4 * (lower + 1) + upper], lower - upper, temp1); }
+    temp[5 * lower + 4] += temp1;
 
     temp[6 * lower + 5] = apn_lshift_add(&temp[5 * (lower + 1)], b0, b1, lower, 1);
     ap_dig_t temp2 = apn_lshift_add(&temp[5 * (lower + 1)], &temp[5 * (lower + 1)], b2, upper, 2);
-    temp[6 * lower + 5] += apn_add_one(&temp[5 * (lower + 1) + upper], &temp[5 * (lower + 1) + upper], lower - upper, temp2);
+    if (lower > upper) { temp2 = apn_add_one(&temp[5 * (lower + 1) + upper], &temp[5 * (lower + 1) + upper], lower - upper, temp2); }
+    temp[6 * lower + 5] += temp2;
     
     ap_dig_t* v2 = result;
     apn_toomcook3_mul(v2, &temp[4 * (lower + 1)], &temp[5 * (lower + 1)], lower + 1, &temp[6 * (lower + 1)]);
@@ -114,8 +115,8 @@ void apn_toomcook3_mul(
     /* all 5 recursive multiplication done! */
     /* now to evaluate and interpolate */
 
-    APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) == (2 * lower + 1));
-    APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) == (2 * lower + 1));
+    APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) <= (2 * lower + 1));
+    APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) <= (2 * lower + 1));
 
     // store v1_cpy after v2
     ap_dig_t* v1_cpy = &temp[6 * (lower + 1)];
@@ -143,7 +144,7 @@ void apn_toomcook3_mul(
 
     apn_div_one(v2, v2, 6, 2 * (lower + 1));
     temp1 = apn_lshift_sub(v2, v2, vinf, 2 * upper, 1);
-    temp1 = apn_sub_one(v2 + 2 * upper, v2 + 2 * upper, 2 * (lower - upper) + 1, temp1);
+    temp1 = apn_sub_one(v2 + 2 * upper, v2 + 2 * upper, 2 * (lower - upper) + 2, temp1);
     ap_dig_t* t1 = v2;
     
     apn_rshift(v1_cpy, v1_cpy, 2 * lower + 1, 1);
@@ -184,9 +185,9 @@ void apn_toomcook3_mul(
 
     */
 
-    apn_add_n(&result[lower], &result[lower], c1, 2 * lower);
-    apn_add_n(&result[2 * lower], &result[2 * lower], c2, 2 * lower);
-    apn_add_n(&result[3 * lower], &result[3 * lower], c3, 2 * lower);
+    apn_add(&result[lower], &result[lower], c1, 3 * lower + 2 * upper, 2 * lower + 1);
+    apn_add(&result[2 * lower], &result[2 * lower], c2, 2 * (lower + upper), 2 * lower + 1);
+    apn_add(&result[3 * lower], &result[3 * lower], c3, lower + 2 * upper, 2 * lower + 1);
 
     apn_set(temp, 8 * (lower + 1), 0);
     

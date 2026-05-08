@@ -40,13 +40,12 @@ void apn_karatsuba_sqr(
 	apn_karatsuba_sqr(&result[2 * lower], &op1[lower], upper, &temp[2 * lower]);
 
 	// (c0 + c1)
-	ap_dig_t val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
-	temp[4 * lower] += val;
+	temp[4 * lower] += apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
 	
 	// c2 = (c0 + c1 - (|c0 - c1|)^2)
 	apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower + 1, 2 * lower);
 
-	apn_add_n(&result[lower], &result[lower], &temp[2 * lower], 2 * lower + 1);
+	apn_add(&result[lower], &result[lower], &temp[2 * lower], 2 * lower + upper, 2 * lower + 1);
 	apn_set(temp, 4 * lower + 1, 0);
 			
 	return;

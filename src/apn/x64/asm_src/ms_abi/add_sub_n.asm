@@ -53,10 +53,12 @@ big_loop:
 
 i = 0
 WHILE i LT 4
+    
     mov     rax, QWORD PTR [rdx + i * 8]
     INSTR   rax, QWORD PTR [r8 + i * 8]
     mov     QWORD PTR [rcx + i * 8], rax
-    i = i + 1
+
+i = i + 1
 ENDM
 
     lea     rdx, [rdx + 32]
