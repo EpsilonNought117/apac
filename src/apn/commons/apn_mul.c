@@ -65,7 +65,7 @@ apac_err apn_mul_n(
 		
 		apn_set(workspace, ws_size, 0);
 
-		apn_karatsuba_mul(result, op1, op2, size, workspace);
+		apn_karatsuba_mul(result, op1, op2, size, size, workspace);
 		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
 	}
 	else
@@ -83,7 +83,7 @@ apac_err apn_mul_n(
 
 		apn_set(workspace, ws_size, 0);
 
-		apn_toomcook3_mul(result, op1, op2, size, workspace);
+		apn_toomcook3_mul(result, op1, op2, size, size, workspace);
 		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
 	}
 

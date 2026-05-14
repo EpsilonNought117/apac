@@ -35,7 +35,7 @@ if (WIN32)
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
         message(STATUS "Enabling MASM64 assembler")
         enable_language(ASM_MASM)
-
+        
     endif()
 
 elseif (APPLE)
@@ -127,7 +127,9 @@ set(apac_c_sources
     "src/apn/commons/karatsuba_sqr.c"
     "src/apn/commons/toomcook3_sqr.c"
     "src/apn/commons/div_helpers.c"
-    # "src/apn/commons/toomcook32_mul.c"
+    "src/apn/commons/toomcook32_mul.c"
+    "src/apn/commons/toomcook42_mul.c"
+    "src/apn/commons/mul_dispatcher.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------

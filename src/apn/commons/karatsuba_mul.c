@@ -11,24 +11,28 @@ void apn_karatsuba_mul(
 	ap_dig_t* result,
 	const ap_dig_t* op1,
 	const ap_dig_t* op2,
-	ap_size_t size,
+	ap_size_t size1,
+	ap_size_t size2,
 	ap_dig_t* temp
 )
 {
 	APAC_ASSERT(temp != NULL);
 	APAC_ASSERT(KARATSUBA_MUL_THRESHOLD >= 2);
 
-	if (size < KARATSUBA_MUL_THRESHOLD)
+	bool is_karatsuba_valid = (size2 > (size1 + 1) / 2) && (size1 >= KARATSUBA_MUL_THRESHOLD);
+
+	if (!is_karatsuba_valid)
 	{
 		// for sizes below threshold
 		// use the basecase multiplication
 
-		apn_basecase_mul(result, op1, op2, size, size);
+		apn_mul_dispatcher(result, op1, op2, size1, size2, temp);
 		return;
 	}
 
-	ap_size_t lower = (size + 1) >> 1;	// upper half of the operands
-	ap_size_t upper = size >> 1;		// lower half of the operands
+	ap_size_t lower = (size1 + 1) >> 1;	// lower half of the operands
+	ap_size_t upper_a = size1 - lower;  // upper half of operand 1
+	ap_size_t upper_b = size2 - lower;	// upper half of operand 2
 
 	// the lower half is at most 1 digit larger than upper half
 	// (size + 1) / 2 = ceil(size / 2)
@@ -43,7 +47,7 @@ void apn_karatsuba_mul(
 
 	// carry1 = carryA
 
-	ap_dig_t carry1 = apn_sub(temp, op1, &op1[lower], lower, upper);
+	ap_dig_t carry1 = apn_sub(temp, op1, &op1[lower], lower, upper_a);
 	if (carry1) { apn_neg(temp, temp, lower); }
 
 	// b0 = op2[0 : (lower - 1)]
@@ -52,11 +56,11 @@ void apn_karatsuba_mul(
 
 	// carry2 = carryB
 	// rest is same
-	ap_dig_t carry2 = apn_sub(&temp[lower], op2, &op2[lower], lower, upper);
+	ap_dig_t carry2 = apn_sub(&temp[lower], op2, &op2[lower], lower, upper_b);
 	if (carry2) { apn_neg(&temp[lower], &temp[lower], lower); }
 
 	// result[0 : (2 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
-	apn_karatsuba_mul(result, temp, &temp[lower], lower, &temp[2 * lower]);
+	apn_karatsuba_mul(result, temp, &temp[lower], lower, lower, &temp[2 * lower]);
 
 	// we now have c2 in result 
 
@@ -66,12 +70,12 @@ void apn_karatsuba_mul(
 	apn_set(result, 2 * lower, 0);
 
 	// c0 = a0 * b0
-	apn_karatsuba_mul(result, op1, op2, lower, &temp[2 * lower]);
+	apn_karatsuba_mul(result, op1, op2, lower, lower, &temp[2 * lower]);
 	// c1 = a1 * b1
-	apn_karatsuba_mul(&result[2 * lower], &op1[lower], &op2[lower], upper, &temp[2 * lower]);
+	apn_karatsuba_mul(&result[2 * lower], &op1[lower], &op2[lower], upper_a, upper_b, &temp[2 * lower]);
 
 	// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)] and then propagate any carry
-	temp[4 * lower] += apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
+	temp[4 * lower] += apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, upper_a + upper_b);
 	 
 	if (carry1 == carry2) // if both signs are same
 	{
@@ -95,9 +99,12 @@ void apn_karatsuba_mul(
 						|   2 * upper  |
 	*/
 
-	// add c2 to the middle of result
-	apn_add(&result[lower], &result[lower], &temp[2 * lower], 2 * lower + upper, 2 * lower + 1);
-	apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
+	ap_size_t temp_size1 = lower + upper_a + upper_b;
+	ap_size_t temp_size2 = temp_size1 > 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
 	
+	// add c2 to the middle of result
+	apn_add(&result[lower], &result[lower], &temp[2 * lower], temp_size1, temp_size2);
+	apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
+
 	return;
 }
