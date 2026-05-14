@@ -133,9 +133,7 @@ void apn_toomcook3_mul(
 
     temp[6 * lower + 5] += apn_addmul_one(v2, v0, 2 * lower, 3);
 
-    ap_dig_t is_vneg1_neg = (borrow1 != borrow2);
-
-    if (is_vneg1_neg)
+    if (borrow1 != borrow2)
     {
         temp[6 * lower + 5] += apn_lshift_sub(v2, v2, vneg1, 2 * lower + 1, 1);
         apn_sub_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);

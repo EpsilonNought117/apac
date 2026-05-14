@@ -13,7 +13,7 @@ void apn_mul_dispatcher(
     bool is_karatsuba_valid = (size2 > (size1 + 1) / 2) && (size1 >= KARATSUBA_MUL_THRESHOLD);
     bool is_toomcook3_valid = (size2 >= 2 * ((size1 + 2) / 3) + 2) && (size1 >= TOOMCOOK3_MUL_THRESHOLD);
 	bool is_toomcook32_valid = (size2 + 2 <= size1) && (size1 + 6 <= 3 * size2);
-	bool is_toomcook42_valid = 0;
+	bool is_toomcook42_valid = false;
 
     if (is_basecase_valid)
     {
