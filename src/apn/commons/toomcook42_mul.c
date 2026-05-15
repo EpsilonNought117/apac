@@ -123,7 +123,7 @@ void apn_toomcook42_mul(
         apn_toomcook3_mul(result, a_neg1, b_neg1, split + 1, split + 1, &temp[6 * (split + 1)]);
         apn_cpy(&temp[2 * (split + 1)], &result[0], 2 * (split + 1));
         apn_set(&result[0], 2 * (split + 1), 0);
-        ap_dig_t w_neg1 = &temp[2 * (split + 1)];
+        ap_dig_t* w_neg1 = &temp[2 * (split + 1)];
 
         apn_toomcook3_mul(result, a_pos2, b_pos2, split + 1, split + 1, &temp[6 * (split + 1)]);
         apn_cpy(&temp[4 * (split + 1)], &result[0], 2 * (split + 1));
