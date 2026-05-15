@@ -70,10 +70,7 @@ void apn_toomcook32_mul(
 
 		ap_dig_t* b_neg = &temp[split + 1];
 		ap_dig_t borrow2 = apn_sub(b_neg, b0, b1, split, b1_size);
-		if (borrow2)
-		{
-			apn_neg(b_neg, b_neg, split);
-		}
+		if (borrow2) { apn_neg(b_neg, b_neg, split); }
 
 		/*
 			lower = split
@@ -148,7 +145,7 @@ void apn_toomcook32_mul(
 		*/
 
 		ap_size_t temp_size1 = split + a2_size + b1_size;
-		ap_size_t temp_size2 = temp_size1 > 2 * split + 1 ? temp_size1 : 2 * split + 1;
+		ap_size_t temp_size2 = temp_size1 < 2 * split + 1 ? temp_size1 : 2 * split + 1;
 
 		apn_add(&result[split], &result[split], w1, 2 * split + a2_size + b1_size, 2 * split + 1);
 		apn_add(&result[2 * split], &result[2 * split], w2, split + a2_size + b1_size, temp_size2);

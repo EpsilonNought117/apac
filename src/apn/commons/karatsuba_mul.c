@@ -38,6 +38,10 @@ void apn_karatsuba_mul(
 		ap_size_t upper_a = size1 - lower;  // upper half of operand 1
 		ap_size_t upper_b = size2 - lower;	// upper half of operand 2
 
+		APAC_ASSERT(upper_a > 0 && upper_a <= lower);
+		APAC_ASSERT(upper_b > 0 && upper_b <= lower);
+		APAC_ASSERT(upper_a + upper_b >= lower);
+
 		// the lower half is at most 1 digit larger than upper half
 		// (size + 1) / 2 = ceil(size / 2)
 		// size / 2 = floor(size / 2)
@@ -104,7 +108,7 @@ void apn_karatsuba_mul(
 		*/
 
 		ap_size_t temp_size1 = lower + upper_a + upper_b;
-		ap_size_t temp_size2 = temp_size1 > 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
+		ap_size_t temp_size2 = temp_size1 < 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
 
 		// add c2 to the middle of result
 		apn_add(&result[lower], &result[lower], &temp[2 * lower], temp_size1, temp_size2);

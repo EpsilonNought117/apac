@@ -35,6 +35,10 @@ void apn_toomcook3_mul(
         ap_size_t upper_a = size1 - 2 * lower;
         ap_size_t upper_b = size2 - 2 * lower;
 
+        APAC_ASSERT(upper_a > 0 && upper_a <= lower);
+        APAC_ASSERT(upper_b > 0 && upper_b <= lower);
+        APAC_ASSERT(upper_a + upper_b >= lower);
+
         const ap_dig_t* a0 = op1, * a1 = op1 + lower, * a2 = op1 + 2 * lower;
         const ap_dig_t* b0 = op2, * b1 = op2 + lower, * b2 = op2 + 2 * lower;
 
@@ -121,7 +125,7 @@ void apn_toomcook3_mul(
         ap_dig_t* vinf = &result[4 * lower];
 
         /* all 5 recursive multiplication done! */
-        /* now to evaluate and interpolate */
+        /* now the interpolation step */
 
         APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) <= (2 * lower + 1));
         APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) <= (2 * lower + 1));
@@ -139,7 +143,7 @@ void apn_toomcook3_mul(
 
         if (borrow1 != borrow2)
         {
-            temp[6 * lower + 5] += apn_lshift_sub(v2, v2, vneg1, 2 * lower + 1, 1);
+            temp[6 * lower + 5] -= apn_lshift_sub(v2, v2, vneg1, 2 * lower + 1, 1);
             apn_sub_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
         }
         else
@@ -165,7 +169,7 @@ void apn_toomcook3_mul(
         ap_dig_t* c1 = v1;
 
         apn_sub(vneg1, t2, v0, 2 * (lower + 1), 2 * lower);
-        apn_sub(vneg1, vneg1, vinf, 2 * (lower + 1), upper_a, upper_b);
+        apn_sub(vneg1, vneg1, vinf, 2 * (lower + 1), upper_a + upper_b);
         ap_dig_t* c2 = vneg1;
 
         /*
@@ -192,7 +196,7 @@ void apn_toomcook3_mul(
         */
 
         ap_size_t temp_size1 = lower + upper_a + upper_b;
-        ap_size_t temp_size2 = temp_size1 > 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
+        ap_size_t temp_size2 = temp_size1 < 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
 
         apn_add(&result[lower], &result[lower], c1, 3 * lower + upper_a + upper_b, 2 * lower + 1);
         apn_add(&result[2 * lower], &result[2 * lower], c2, 2 * lower + upper_a + upper_b, 2 * lower + 1);
