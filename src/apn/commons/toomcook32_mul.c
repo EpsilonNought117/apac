@@ -12,7 +12,7 @@ void apn_toomcook32_mul(
 	APAC_ASSERT(temp != NULL);
 	APAC_ASSERT(size1 >= size2);
 
-	// Heuristic obtained from proof + trial-and-error
+	// Heuristic obtained from visual bounds and trial-&-error method
 	bool is_toomcook32_valid = (size2 + 2 <= size1) && (size1 + 6 <= 3 * size2);
 
 	if (size1 < KARATSUBA_MUL_THRESHOLD)
