@@ -1,5 +1,12 @@
 #include "../headers/hidden_mul.h"
 
+/*
+    This function will not dispatch to NTT, that is totally separate.
+ 
+    It will also not dispatch to apn_basecase_mul, as that is handled by
+    a simple if-else condition inside other multiplication functions
+    by themselves.
+*/
 void apn_mul_dispatcher(
     ap_dig_t* result,
     const ap_dig_t* op1,
@@ -9,17 +16,14 @@ void apn_mul_dispatcher(
     ap_dig_t* temp
 )
 {
-    bool is_basecase_valid = (size1 < KARATSUBA_MUL_THRESHOLD);
     bool is_karatsuba_valid = (size2 > (size1 + 1) / 2) && (size1 >= KARATSUBA_MUL_THRESHOLD);
     bool is_toomcook3_valid = (size2 >= 2 * ((size1 + 2) / 3) + 2) && (size1 >= TOOMCOOK3_MUL_THRESHOLD);
+
+    // Heuristics obtained from formal bounds and trial-&-error method
 	bool is_toomcook32_valid = (size2 + 2 <= size1) && (size1 + 6 <= 3 * size2);
 	bool is_toomcook42_valid = false;
-
-    if (is_basecase_valid)
-    {
-        apn_basecase_mul(result, op1, op2, size1, size2);
-    }
-    else if (is_toomcook32_valid)
+    
+    if (is_toomcook32_valid)
     {
         apn_toomcook32_mul(result, op1, op2, size1, size2, temp);
     }
@@ -33,7 +37,7 @@ void apn_mul_dispatcher(
     }
     else if (is_toomcook3_valid)
     {
-        apn_karatsuba_mul(result, op1, op2, size1, size2, temp);
+        apn_toomcook3_mul(result, op1, op2, size1, size2, temp);
     }
     else
     {

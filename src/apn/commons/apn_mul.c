@@ -13,7 +13,7 @@
  * The "infinite" geometric sum caps out at 2*n + 2*(log_2(n)), where we assume log_2(n)
  * to be at most APN_DIG_BITS.
  */
-#define KARATSUBA_MUL_WS_SIZE(size)	(((size) + APN_DIG_BITS) * 2)
+#define KARATSUBA_MUL_WS_SIZE(size1, size2)	(((size1) + APN_DIG_BITS) * 2)
 
 /**
  * Scratch workspace size upper bound for toomcook3 multiplication
@@ -27,7 +27,7 @@
  * The "infinite" geometric sum caps out at 3*n + 18*(log_3(n)), so log_3(n) being assumed 
  * to be APN_DIG_BITS at max before the range of toom3 exhausts, results in a safe upper bound.
  */
-#define TOOMCOOK3_MUL_WS_SIZE(size)	(((size) + 2 * 3 * APN_DIG_BITS) * 3)
+#define TOOMCOOK3_MUL_WS_SIZE(size1, size2)	(((size1) + 2 * 3 * APN_DIG_BITS) * 3)
 
 apac_err apn_mul_n(
 	ap_dig_t* result, 
@@ -54,7 +54,7 @@ apac_err apn_mul_n(
 	{
 		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
-		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size);
+		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size, size);
 		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
 
 		if (!workspace)
@@ -72,7 +72,7 @@ apac_err apn_mul_n(
 	{
 		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
-		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size);
+		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size, size);
 		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
 	
 		if (!workspace)
@@ -114,18 +114,27 @@ apac_err apn_mul(
 		ap_dig_t carry = apn_addmul_one(result, op1, size1, op2[0]);
 		APAC_ASSERT(carry == 0);
 	}
-	else if (size1 == size2)
-	{
-		apac_err ret_val = apn_mul_n(result, op1, op2, size1);
-		return ret_val;
-	}
 	else if (size1 < KARATSUBA_MUL_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size1, size2);
 	}
 	else
 	{
-		
+		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
+
+		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size1, size2);
+		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
+
+		if (!workspace)
+		{
+			APAC_LOG_ERR("Memory allocation failed in apn_mul_n!");
+			return APAC_OOM;
+		}
+
+		apn_set(workspace, ws_size, 0);
+
+		apn_mul_dispatcher(result, op1, op2, size1, size2, workspace);
+		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
 	}
 
 	return APAC_OK;

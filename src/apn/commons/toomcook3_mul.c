@@ -17,183 +17,189 @@ void apn_toomcook3_mul(
      * the top most partition of op1 and op2.
      * No other size after 4 has this problem.
      */
-    APAC_ASSERT(TOOMCOOK3_MUL_THRESHOLD > 4); 
+    APAC_ASSERT(TOOMCOOK3_MUL_THRESHOLD >= 5); 
     
-    bool is_toomcook3_valid = (size2 >= 2 * ((size1 + 2) / 3) + 2) && (size1 >= TOOMCOOK3_MUL_THRESHOLD);
+    bool is_toomcook3_valid = (size2 >= 2 * ((size1 + 2) / 3) + 2);
 
-    if (!is_toomcook3_valid)
+    if (size1 < TOOMCOOK3_MUL_THRESHOLD)
+    {
+        apn_karatsuba_mul(result, op1, op2, size1, size2, temp);
+    }
+    else if (!is_toomcook3_valid)
     {
         apn_mul_dispatcher(result, op1, op2, size1, size2, temp);
-        return;
-    }
-
-    ap_size_t lower = (size1 + 2) / 3;
-    ap_size_t upper_a = size1 - 2 * lower;
-    ap_size_t upper_b = size2 - 2 * lower;
-
-    const ap_dig_t* a0 = op1, * a1 = op1 + lower, * a2 = op1 + 2 * lower;
-    const ap_dig_t* b0 = op2, * b1 = op2 + lower, * b2 = op2 + 2 * lower;
-
-    ap_dig_t* a02 = &temp[0], * b02 = &temp[lower + 1];
-    
-    temp[lower] = apn_add(a02, a0, a2, lower, upper_a);
-    temp[2 * lower + 1] = apn_add(b02, b0, b2, lower, upper_b);
-
-    ap_dig_t* a02_cpy = &temp[2 * lower + 2];
-    ap_dig_t* b02_cpy = &temp[3 * lower + 3];
-
-    apn_cpy(a02_cpy, a02, lower + 1);
-    apn_cpy(b02_cpy, b02, lower + 1);
-
-    /*
-                |--- a02 ---|--- b02 ---|- a02_cpy -|- b02_cpy -|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 |
-    */
-
-    temp[lower] += apn_add_n(a02, a02, a1, lower);
-    temp[2 * lower + 1] += apn_add_n(b02, b02, b1, lower);
-
-    /*
-        v1 = (a02 + a1) * (b02 + b1)
-    */
-
-    ap_dig_t* v1 = result;
-    apn_toomcook3_mul(v1, a02, b02, lower + 1, lower + 1, &temp[4 * (lower + 1)]);
-
-    apn_cpy(temp, v1, 2 * (lower + 1));
-    v1 = temp;
-    apn_set(result, 2 * (lower + 1), (ap_dig_t)0);
-
-    ap_dig_t borrow1 = apn_sub(a02_cpy, a02_cpy, a1, lower + 1, lower);
-    if (borrow1) { apn_neg(a02_cpy, a02_cpy, lower + 1); }
-
-    ap_dig_t borrow2 = apn_sub(b02_cpy, b02_cpy, b1, lower + 1, lower);
-    if (borrow2) { apn_neg(b02_cpy, b02_cpy, lower + 1); }
-
-    /*
-        vneg1 = (|a02 - a1|) * (|b02 - b1|)
-    */
-
-    ap_dig_t* vneg1 = result;
-    apn_toomcook3_mul(result, a02_cpy, b02_cpy, lower + 1, lower + 1, &temp[4 * (lower + 1)]);
-
-    apn_cpy(&temp[2 * (lower + 1)], vneg1, 2 * (lower + 1));
-    vneg1 = &temp[2 * (lower + 1)];
-    apn_set(result, 2 * (lower + 1), 0);
-
-    /*
-                |---------- v1 ---------|-------- vneg1 --------|- a0 + 2a1 + 4a2 -|- b0 + 2b1 + 4b2 -|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 |--- lower + 1 ----|--- lower + 1 ----|
-    */
-
-    temp[5 * lower + 4] = apn_lshift_add(&temp[4 * (lower + 1)], a0, a1, lower, 1);
-    ap_dig_t temp1 = apn_lshift_add(&temp[4 * (lower + 1)], &temp[4 * (lower + 1)], a2, upper_a, 2);
-    if (lower > upper_a) { temp1 = apn_add_one(&temp[4 * (lower + 1) + upper_a], &temp[4 * (lower + 1) + upper_a], lower - upper_a, temp1); }
-    temp[5 * lower + 4] += temp1;
-
-    temp[6 * lower + 5] = apn_lshift_add(&temp[5 * (lower + 1)], b0, b1, lower, 1);
-    ap_dig_t temp2 = apn_lshift_add(&temp[5 * (lower + 1)], &temp[5 * (lower + 1)], b2, upper_b, 2);
-    if (lower > upper_b) { temp2 = apn_add_one(&temp[5 * (lower + 1) + upper_b], &temp[5 * (lower + 1) + upper_b], lower - upper_b, temp2); }
-    temp[6 * lower + 5] += temp2;
-    
-    ap_dig_t* v2 = result;
-    apn_toomcook3_mul(v2, &temp[4 * (lower + 1)], &temp[5 * (lower + 1)], lower + 1, lower + 1, &temp[6 * (lower + 1)]);
-
-    apn_cpy(&temp[4 * (lower + 1)], v2, 2 * (lower + 1));
-    v2 = &temp[4 * (lower + 1)];
-    apn_set(result, 2 * (lower + 1), 0);
-
-    /*
-                |---------- v1 ---------|-------- vneg1 --------|--------- v2 ----------|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
-    */
-
-    /* 3 out of 5 recursive multiplications done (v2, v1 and vneg1) */
-
-    apn_toomcook3_mul(result, a0, b0, lower, lower, &temp[6 * (lower + 1)]);
-    apn_toomcook3_mul(&result[4 * lower], a2, b2, upper_a, upper_b, &temp[6 * (lower + 1)]);
-
-    ap_dig_t* v0 = result;
-    ap_dig_t* vinf = &result[4 * lower];
-
-    /* all 5 recursive multiplication done! */
-    /* now to evaluate and interpolate */
-
-    APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) <= (2 * lower + 1));
-    APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) <= (2 * lower + 1));
-
-    // store v1_cpy after v2
-    ap_dig_t* v1_cpy = &temp[6 * (lower + 1)];
-    apn_cpy(v1_cpy, v1, 2 * lower + 1);
-
-    /*
-                |---------- v1 ---------|-------- vneg1 --------|--------- v2 ----------|------- v1_cpy --------|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
-    */
-
-    temp[6 * lower + 5] += apn_addmul_one(v2, v0, 2 * lower, 3);
-
-    if (borrow1 != borrow2)
-    {
-        temp[6 * lower + 5] += apn_lshift_sub(v2, v2, vneg1, 2 * lower + 1, 1);
-        apn_sub_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
     }
     else
     {
-        temp[6 * lower + 5] += apn_lshift_add(v2, v2, vneg1, 2 * lower + 1, 1);
-        apn_add_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
+        ap_size_t lower = (size1 + 2) / 3;
+        ap_size_t upper_a = size1 - 2 * lower;
+        ap_size_t upper_b = size2 - 2 * lower;
+
+        const ap_dig_t* a0 = op1, * a1 = op1 + lower, * a2 = op1 + 2 * lower;
+        const ap_dig_t* b0 = op2, * b1 = op2 + lower, * b2 = op2 + 2 * lower;
+
+        ap_dig_t* a02 = &temp[0], * b02 = &temp[lower + 1];
+
+        temp[lower] = apn_add(a02, a0, a2, lower, upper_a);
+        temp[2 * lower + 1] = apn_add(b02, b0, b2, lower, upper_b);
+
+        ap_dig_t* a02_cpy = &temp[2 * lower + 2];
+        ap_dig_t* b02_cpy = &temp[3 * lower + 3];
+
+        apn_cpy(a02_cpy, a02, lower + 1);
+        apn_cpy(b02_cpy, b02, lower + 1);
+
+        /*
+                    |--- a02 ---|--- b02 ---|- a02_cpy -|- b02_cpy -|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 |
+        */
+
+        temp[lower] += apn_add_n(a02, a02, a1, lower);
+        temp[2 * lower + 1] += apn_add_n(b02, b02, b1, lower);
+
+        /*
+            v1 = (a02 + a1) * (b02 + b1)
+        */
+
+        ap_dig_t* v1 = result;
+        apn_toomcook3_mul(v1, a02, b02, lower + 1, lower + 1, &temp[4 * (lower + 1)]);
+
+        apn_cpy(temp, v1, 2 * (lower + 1));
+        v1 = temp;
+        apn_set(result, 2 * (lower + 1), (ap_dig_t)0);
+
+        ap_dig_t borrow1 = apn_sub(a02_cpy, a02_cpy, a1, lower + 1, lower);
+        if (borrow1) { apn_neg(a02_cpy, a02_cpy, lower + 1); }
+
+        ap_dig_t borrow2 = apn_sub(b02_cpy, b02_cpy, b1, lower + 1, lower);
+        if (borrow2) { apn_neg(b02_cpy, b02_cpy, lower + 1); }
+
+        /*
+            vneg1 = (|a02 - a1|) * (|b02 - b1|)
+        */
+
+        ap_dig_t* vneg1 = result;
+        apn_toomcook3_mul(result, a02_cpy, b02_cpy, lower + 1, lower + 1, &temp[4 * (lower + 1)]);
+
+        apn_cpy(&temp[2 * (lower + 1)], vneg1, 2 * (lower + 1));
+        vneg1 = &temp[2 * (lower + 1)];
+        apn_set(result, 2 * (lower + 1), 0);
+
+        /*
+                    |---------- v1 ---------|-------- vneg1 --------|- a0 + 2a1 + 4a2 -|- b0 + 2b1 + 4b2 -|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 |--- lower + 1 ----|--- lower + 1 ----|
+        */
+
+        temp[5 * lower + 4] = apn_lshift_add(&temp[4 * (lower + 1)], a0, a1, lower, 1);
+        ap_dig_t temp1 = apn_lshift_add(&temp[4 * (lower + 1)], &temp[4 * (lower + 1)], a2, upper_a, 2);
+        if (lower > upper_a) { temp1 = apn_add_one(&temp[4 * (lower + 1) + upper_a], &temp[4 * (lower + 1) + upper_a], lower - upper_a, temp1); }
+        temp[5 * lower + 4] += temp1;
+
+        temp[6 * lower + 5] = apn_lshift_add(&temp[5 * (lower + 1)], b0, b1, lower, 1);
+        ap_dig_t temp2 = apn_lshift_add(&temp[5 * (lower + 1)], &temp[5 * (lower + 1)], b2, upper_b, 2);
+        if (lower > upper_b) { temp2 = apn_add_one(&temp[5 * (lower + 1) + upper_b], &temp[5 * (lower + 1) + upper_b], lower - upper_b, temp2); }
+        temp[6 * lower + 5] += temp2;
+
+        ap_dig_t* v2 = result;
+        apn_toomcook3_mul(v2, &temp[4 * (lower + 1)], &temp[5 * (lower + 1)], lower + 1, lower + 1, &temp[6 * (lower + 1)]);
+
+        apn_cpy(&temp[4 * (lower + 1)], v2, 2 * (lower + 1));
+        v2 = &temp[4 * (lower + 1)];
+        apn_set(result, 2 * (lower + 1), 0);
+
+        /*
+                    |---------- v1 ---------|-------- vneg1 --------|--------- v2 ----------|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
+        */
+
+        /* 3 out of 5 recursive multiplications done (v2, v1 and vneg1) */
+
+        apn_toomcook3_mul(result, a0, b0, lower, lower, &temp[6 * (lower + 1)]);
+        apn_toomcook3_mul(&result[4 * lower], a2, b2, upper_a, upper_b, &temp[6 * (lower + 1)]);
+
+        ap_dig_t* v0 = result;
+        ap_dig_t* vinf = &result[4 * lower];
+
+        /* all 5 recursive multiplication done! */
+        /* now to evaluate and interpolate */
+
+        APAC_ASSERT(apn_clamp(v1, 2 * (lower + 1)) <= (2 * lower + 1));
+        APAC_ASSERT(apn_clamp(vneg1, 2 * (lower + 1)) <= (2 * lower + 1));
+
+        // store v1_cpy after v2
+        ap_dig_t* v1_cpy = &temp[6 * (lower + 1)];
+        apn_cpy(v1_cpy, v1, 2 * lower + 1);
+
+        /*
+                    |---------- v1 ---------|-------- vneg1 --------|--------- v2 ----------|------- v1_cpy --------|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
+        */
+
+        temp[6 * lower + 5] += apn_addmul_one(v2, v0, 2 * lower, 3);
+
+        if (borrow1 != borrow2)
+        {
+            temp[6 * lower + 5] += apn_lshift_sub(v2, v2, vneg1, 2 * lower + 1, 1);
+            apn_sub_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
+        }
+        else
+        {
+            temp[6 * lower + 5] += apn_lshift_add(v2, v2, vneg1, 2 * lower + 1, 1);
+            apn_add_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
+        }
+
+        apn_div_one(v2, v2, 6, 2 * (lower + 1));
+        temp1 = apn_lshift_sub(v2, v2, vinf, upper_a + upper_b, 1);
+        temp1 = apn_sub_one(v2 + upper_a + upper_b, v2 + upper_a + upper_b, 2 * lower - upper_a - upper_b + 2, temp1);
+        ap_dig_t* t1 = v2;
+
+        apn_rshift(v1_cpy, v1_cpy, 2 * lower + 1, 1);
+        ap_dig_t* t2 = v1_cpy;
+
+        /*
+                    |---------- v1 ---------|-------- vneg1 --------|--------- t1 ----------|--------- t2 ----------|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
+        */
+
+        apn_sub_n(v1, v1, t1, 2 * (lower + 1));
+        ap_dig_t* c1 = v1;
+
+        apn_sub(vneg1, t2, v0, 2 * (lower + 1), 2 * lower);
+        apn_sub(vneg1, vneg1, vinf, 2 * (lower + 1), upper_a, upper_b);
+        ap_dig_t* c2 = vneg1;
+
+        /*
+                    |---------- c1 ---------|--------- c2 ----------|--------- t1 ----------|--------- t2 ----------|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
+        */
+
+        apn_sub_n(t1, t1, t2, 2 * (lower + 1));
+        ap_dig_t* c3 = t1;
+
+        /*
+                    |---------- c1 ---------|--------- c2 ----------|--------- c3 ----------|
+            temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
+        */
+
+        /*
+            | lower | lower | lower | lower |upper_a|upper_b|
+            |----- c0 ------|
+                    |----- c1 ------|
+                            |----- c2 ------|
+                                    |------- c3 -------|        <--- this one may extend a little beyond the first upper
+                                            |----- c4 ------|
+
+        */
+
+        ap_size_t temp_size1 = lower + upper_a + upper_b;
+        ap_size_t temp_size2 = temp_size1 > 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
+
+        apn_add(&result[lower], &result[lower], c1, 3 * lower + upper_a + upper_b, 2 * lower + 1);
+        apn_add(&result[2 * lower], &result[2 * lower], c2, 2 * lower + upper_a + upper_b, 2 * lower + 1);
+        apn_add(&result[3 * lower], &result[3 * lower], c3, lower + upper_a + upper_b, temp_size2);
+
+        apn_set(temp, 8 * (lower + 1), 0);
     }
 
-    apn_div_one(v2, v2, 6, 2 * (lower + 1));
-    temp1 = apn_lshift_sub(v2, v2, vinf, upper_a + upper_b, 1);
-    temp1 = apn_sub_one(v2 + upper_a + upper_b, v2 + upper_a + upper_b, 2 * lower - upper_a - upper_b + 2, temp1);
-    ap_dig_t* t1 = v2;
-    
-    apn_rshift(v1_cpy, v1_cpy, 2 * lower + 1, 1);
-    ap_dig_t* t2 = v1_cpy;
-
-    /*
-                |---------- v1 ---------|-------- vneg1 --------|--------- t1 ----------|--------- t2 ----------|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
-    */
-
-    apn_sub_n(v1, v1, t1, 2 * (lower + 1));
-    ap_dig_t* c1 = v1;
-
-    apn_sub(vneg1, t2, v0, 2 * (lower + 1), 2 * lower);
-    apn_sub(vneg1, vneg1, vinf, 2 * (lower + 1), upper_a, upper_b);
-    ap_dig_t* c2 = vneg1;
-
-    /*
-                |---------- c1 ---------|--------- c2 ----------|--------- t1 ----------|--------- t2 ----------|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
-    */
-
-    apn_sub_n(t1, t1, t2, 2 * (lower + 1));
-    ap_dig_t* c3 = t1;
-
-    /*
-                |---------- c1 ---------|--------- c2 ----------|--------- c3 ----------|
-        temp -->| lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 | lower + 1 |
-    */
-
-    /*
-        | lower | lower | lower | lower |upper_a|upper_b|
-        |----- c0 ------|
-                |----- c1 ------|
-                        |----- c2 ------|
-                                |------- c3 -------|        <--- this one may extend a little beyond the first upper
-                                        |----- c4 ------|
-
-    */
-
-    ap_size_t temp_size1 = lower + upper_a + upper_b;
-    ap_size_t temp_size2 = temp_size1 > 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
-
-    apn_add(&result[lower], &result[lower], c1, 3 * lower + upper_a + upper_b, 2 * lower + 1);
-    apn_add(&result[2 * lower], &result[2 * lower], c2, 2 * lower + upper_a + upper_b, 2 * lower + 1);
-    apn_add(&result[3 * lower], &result[3 * lower], c3, lower + upper_a + upper_b, temp_size2);
-
-    apn_set(temp, 8 * (lower + 1), 0);
     return;
 }
