@@ -12,15 +12,15 @@
 	#define CLZ(value, count)																	\
 			do																					\
 			{																					\
-				uint32_t idx = 0;																\
-				(count) = _BitScanReverse64(&idx, (value)) ? (uint32_t)63 - idx : (uint32_t)64;	\
+				unsigned long idx = 0;															\
+				(count) = _BitScanReverse64(&idx, (value)) ? (ap_dig_t)63 - idx : (ap_dig_t)64;	\
 			} while (0)
 
 	#define CTZ(value, count)														\
 			do																		\
 			{																		\
-				uint32_t idx = 0;													\
-				(count) = _BitScanForward64(&idx, (value)) ? idx : (uint32_t)64;	\
+				unsigned long idx = 0;												\
+				(count) = _BitScanForward64(&idx, (value)) ? idx : (ap_dig_t)64;	\
 			} while (0)
 
 	#define ROTL(value, count)	do { value = _rotl64((value), (count)); } while (0)
@@ -30,13 +30,13 @@
 	#define CLZ(value, count)															\
 			do																			\
 			{																			\
-				(count) = (value) ? (uint32_t)__builtin_clzll((value)) : (uint32_t)64;	\
+				(count) = (value) ? (ap_dig_t)__builtin_clzll((value)) : (ap_dig_t)64;	\
 			} while (0)
 
 	#define CTZ(value, count)															\
 			do																			\
 			{																			\
-				(count) = (value) ? (uint32_t)__builtin_ctzll((value)) : (uint32_t)64;	\
+				(count) = (value) ? (ap_dig_t)__builtin_ctzll((value)) : (ap_dig_t)64;	\
 			} while(0)
 
 	#define ROTL(value, count)									\

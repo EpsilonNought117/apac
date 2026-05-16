@@ -14,7 +14,7 @@ ap_dig_t apn_div_one(
     APAC_ASSERT(divisor != 0);
 
     ap_dig_t rmdr = 0;
-    uint32_t shift_val = 0;
+    ap_dig_t shift_val = 0;
 
     if (!(divisor & APN_DIG_HIGH_BIT))
     {

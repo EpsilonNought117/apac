@@ -29,7 +29,7 @@ apac_err apn_div(
     APAC_NO_OVERLAP(divisor, size_dvsr, remainder, size_rmdr);
     APAC_ASSERT(divisor[size_dvsr - 1] != 0);
 
-    uint32_t dvsr_shift_val = 0;
+    ap_dig_t dvsr_shift_val = 0;
 
     if (size_dvsr == 1)
     {
