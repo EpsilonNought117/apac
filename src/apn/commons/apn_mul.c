@@ -52,10 +52,10 @@ apac_err apn_mul_n(
 	}
 	else if (size < TOOMCOOK3_MUL_THRESHOLD)
 	{
-		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size, size);
-		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
+		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
 		if (!workspace)
 		{
@@ -66,14 +66,14 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_mul(result, op1, op2, size, size, workspace);
-		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
+		apac_free(workspace);	// free temporary workspace
 	}
 	else
 	{
-		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size, size);
-		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
+		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 	
 		if (!workspace)
 		{
@@ -84,7 +84,7 @@ apac_err apn_mul_n(
 		apn_set(workspace, ws_size, 0);
 
 		apn_toomcook3_mul(result, op1, op2, size, size, workspace);
-		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
+		apac_free(workspace);	// free temporary workspace
 	}
 
 	return APAC_OK;
@@ -120,10 +120,10 @@ apac_err apn_mul(
 	}
 	else
 	{
-		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
+		APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
 
 		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size1, size2);
-		ap_dig_t* workspace = apac_allocator.custom_malloc(sizeof(ap_dig_t) * ws_size, apac_allocator.ctx);
+		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
 		if (!workspace)
 		{
@@ -134,7 +134,7 @@ apac_err apn_mul(
 		apn_set(workspace, ws_size, 0);
 
 		apn_mul_dispatcher(result, op1, op2, size1, size2, workspace);
-		apac_allocator.custom_free(workspace, apac_allocator.ctx);	// free temporary workspace
+		apac_free(workspace);	// free temporary workspace
 	}
 
 	return APAC_OK;
