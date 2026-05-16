@@ -1,8 +1,13 @@
-#include "apac_utilities.h"
+#include "../../include/apac.h"
 
-uint64_t cpu_timer(void)
+#if defined(_WIN32) && defined(_MSC_VER)
+    #include <powrprof.h>
+    #pragma comment(lib, "powrprof")
+#endif
+
+uint64_t apac_cpu_timer(void)
 {
-#if (defined(APAC_X64_WIN) || defined(APAC_X64_UNIX))
+#if defined(APAC_X64_WIN) || defined(APAC_X64_UNIX)
 
     _mm_lfence();
     uint64_t t = __rdtsc();
@@ -25,13 +30,13 @@ uint64_t cpu_timer(void)
     return (cnt * 1000000000ULL) / frq;
 
 #else
-
-    #error "cpu_timer(): unsupported CPU Architecture, OS or Compiler!"
+    
+    return 0;
 
 #endif
 }
 
-uint64_t os_timer(void)
+uint64_t apac_os_timer(void)
 {
 #if defined(_WIN32)
 
@@ -83,12 +88,12 @@ uint64_t os_timer(void)
 
 #else
 
-    #error "os_timer(): Unsupported Operating System!"
+    return 0;
 
 #endif
 }
 
-int pin_curr_thread_to_core(uint32_t core_id)
+int apac_pin_thread_to_core(uint32_t core_id)
 {
 #if defined(_WIN32)
 
@@ -123,11 +128,9 @@ int pin_curr_thread_to_core(uint32_t core_id)
 }
 
 
-#if defined(_WIN32)
-
+#if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
     static GUID* CurrentScheme;
     static DWORD CurrentMode;
-
 #endif
 
 /**
@@ -147,7 +150,7 @@ void apac_disable_dfs(void)
     fprintf(stderr,
         "\n"
         "WARNING: Dynamic Frequency Scaling (Turbo Boost) cannot be disabled on this platform.\n"
-        "         Disable it manually for optimal, consistent, and accurate results.\n"
+        "         Disable it manually for optimal, consistent, and accurate results.          \n"
         "\n"
         "Continue anyway? (y/n): "
     );
@@ -176,7 +179,7 @@ void apac_disable_dfs(void)
  */
 void apac_restore_dfs(void)
 {
-#if defined(_WIN32) && (defined(_M_X64) || defined(_M_AMD64))
+#if defined(_WIN32)
 
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, CurrentMode);
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, PROCESSOR_PERF_BOOST_MODE_ENABLED);

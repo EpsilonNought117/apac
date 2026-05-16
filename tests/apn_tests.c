@@ -1,58 +1,28 @@
 #include "../include/apac.h"
-#include "../utilities/apac_utilities.h"
 
-/*
-    || ------------------------------------- INTEGRATION-TESTS ------------------------------------- ||
-*/
+#define TEST_SIZE_MAX ((ap_size_t)8192ULL)
 
-/*
-* ---- TESTING ORDER ----
-*
-*  1)  apn_set          - done
-*  2)  apn_cpy          - done
-*  3)  apn_cmp          - done
-*  4)  apn_is_zero      - done
-*  5)  apn_add_one      - done
-*  6)  apn_add_n        - done
-*  7)  apn_add          - done
-*  8)  apn_neg          - done
-*  9)  apn_sub_one      - done
-* 10)  apn_sub_n        - done
-* 11)  apn_sub          - done
-* 12)  apn_addmul_one   - done
-* 13)  apn_submul_one   - done
-* 14)  apn_lshift       - done
-* 15)  apn_rshift       - done
-* 16)  apn_mul_n        - done
-* 17)  apn_sqr          - done
-* 18)  apn_mul          - done
-* 19)  apn_div_one      - done
-* 20)  apn_div          - done
-*
-*/
-
-#define TEST_SIZE_MAX ((ap_size_t)512)
-
-static void check_apn_set(void)
+APAC_MT_FUNC_RETVAL check_apn_set(APAC_MT_FUNC_PARAM in)
 {
-    TEST_START("apn_set");
-
     ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
     ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
 
-    printf("TEST-1: Comparison against memset\n");
+    apn_seed_prng(0xC0FFEEULL);
+
+    printf("TEST-1: Comparison against memset");
 
     for (ap_size_t i = 1; i <= TEST_SIZE_MAX; i++)
     {
         uint64_t val = 0;
+
         do
         {
-            val = random_sfc64();
-        }
-        while (val == 0);
+            apn_set_random(&val, 1);
+
+        } while (val == 0);
 
         uint8_t  val1 = (uint8_t)(val & 0xFF);
         uint64_t val2 = val1 * 0x0101010101010101ULL;
@@ -67,8 +37,8 @@ static void check_apn_set(void)
 
     apac_free(op2);
     apac_free(op1);
-
-    TEST_END("apn_set");
+    
+    return 1;
 }
 
 static void check_apn_cpy(void)

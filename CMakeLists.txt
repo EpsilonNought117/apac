@@ -82,7 +82,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" OFF)
+option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" ON)
 option(BUILD_APN_TUNE "Build apn_tune threshold tuning program" OFF)
 option(BUILD_EXAMPLES "Build programming examples to demonstrate working of the library" OFF)
 
@@ -95,6 +95,11 @@ set(apac_c_sources
     "src/misc/apac_init.c"
     "src/misc/apac_init_alloc.c"
     "src/misc/apac_get_cpu_spec.c"
+    "src/misc/apac_utilities.c"
+
+    # THREADPOOL
+
+    "src/threadpool/threadpool.c"
 
     # APN PUBLIC API
 
@@ -189,15 +194,6 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 
 endif()
 
-# --- HIDDEN HEADERS ------------------------------------------------------------
-
-set(hidden_headers
-    # COMMONS
-    "src/apn/headers/hidden_sqr.h"
-    "src/apn/headers/hidden_mul.h"
-    "src/apn/headers/hidden_div.h"
-)
-
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
@@ -206,7 +202,7 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "AARCH64|aarch64")
 
 endif()
 
-set(apac_sources ${apac_c_sources} ${isa_sources} ${hidden_headers})
+set(apac_sources ${apac_c_sources} ${isa_sources})
 
 # Build Shared/Static Library
 if(BUILD_SHARED_LIB)
@@ -232,15 +228,15 @@ if (MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     )
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND MSVC)
-    # clang-cl (Clang with MSVC style args)
+    # clang-cl
     target_compile_options(${apac_target} PRIVATE
-        /clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
+        $<$<COMPILE_LANGUAGE:C>:/clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
     )
 
 else()
-    # GCC / Clang (GNU-style)
-    target_compile_options(${apac_target} PRIVATE 
-        -ffile-prefix-map=${CMAKE_SOURCE_DIR}/=
+    # GCC / Clang
+    target_compile_options(${apac_target} PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
     )
 endif()
 
@@ -252,7 +248,6 @@ if (BUILD_APN_TESTS)
 
     add_executable(apn_tests
         "tests/apn_tests.c"
-        "utilities/apac_utilities.c"
     )
 
     target_link_libraries(apn_tests PRIVATE ${apac_target})
@@ -272,7 +267,6 @@ if (BUILD_APN_TUNE)
 
     add_executable(apn_tune
         "tuning/apn_tune.c"
-        "utilities/apac_utilities.c"
     )
 
     target_link_libraries(apn_tune PRIVATE ${apac_target})
