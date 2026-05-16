@@ -5,21 +5,18 @@ apac_alloc_t apac_allocator = { 0 };
 // libc malloc wrapper
 static inline void* apac_malloc(size_t new_size, void* ctx)
 {
-    (void*)ctx;
     return malloc(new_size);
 }
 
 // libc realloc wrapper
 static inline void* apac_realloc(void* old_arr, size_t new_size, void* ctx)
 {
-    (void*)ctx;
     return realloc(old_arr, new_size);
 }
 
 // libc free wrapper
 static inline void apac_free(void* old_arr, void* ctx)
 {
-    (void*)ctx;
     return free(old_arr);
 }
 
