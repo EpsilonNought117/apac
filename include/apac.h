@@ -25,8 +25,10 @@
 
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
+    #include <process.h>
 
-    #define APAC_THREAD_LOCAL __declspec(thread)
+    #define APAC_THREAD_LOCAL     __declspec(thread)
+    typedef unsigned (WINAPI* apac_mt_func_t)(void*);
 
     #if defined(_MSC_VER)
 
@@ -71,7 +73,8 @@
         #include <sched.h>
         #include <pthread.h>
         
-        #define APAC_THREAD_LOCAL __thread
+        #define APAC_THREAD_LOCAL     __thread
+        typedef void* (*apac_mt_func_t)(void*);
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
@@ -126,7 +129,6 @@
 
     typedef uint64_t            ap_dig_t;
     typedef size_t              ap_size_t;
-    typedef int64_t             ap_sign_t;
 
     #define PRI_APN_PTR         "p"
     #define PRI_APN_SIZE        "zu"
@@ -138,9 +140,9 @@
     #define APN_DIG_BITS        64U
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
 
-    #define APN_POS             ((ap_sign_t)1)
-    #define APN_NEG             ((ap_sign_t)-1)
-    #define APN_ZERO            ((ap_sign_t)0)
+    #define APN_POS             (1)
+    #define APN_NEG             (-1)
+    #define APN_ZERO            (0)
 
 #else
 
@@ -267,32 +269,39 @@ typedef enum apac_str_base
 /****************************************************************************************************/
 
 /* ==========================================================================
- * Memory Allocation Function Pointers' Typedefs
+ * Utility Functions for Testing and Benchmarking
+ * ========================================================================== */
+
+uint64_t apac_cpu_timer(void);
+
+uint64_t apac_os_timer(void);
+
+int apac_pin_thread_to_core(uint32_t core_id);
+
+void apac_disable_dfs(void);
+
+void apac_restore_dfs(void);
+
+/* ==========================================================================
+ * Memory Allocation Functions and Global Allocator Struct
  * ========================================================================== */
 
 typedef void* (*apac_malloc_t)(size_t new_size, void* ctx);
 typedef void* (*apac_realloc_t)(void* old_arr, size_t new_size, void* ctx);
 typedef void (*apac_free_t)(void* old_arr, void* ctx);
 
-typedef struct apac_alloc_t
-{
-    apac_malloc_t custom_malloc;
-    apac_realloc_t custom_realloc;
-    apac_free_t custom_free;
-    void* ctx;
+typedef struct apac_alloc_t apac_alloc_t;
 
-} apac_alloc_t;
-
-APAC_API void apac_init_allocator(  
+APAC_API void apac_init_global_allocator(  
     apac_malloc_t malloc_ptr,
     apac_realloc_t realloc_ptr,
     apac_free_t free_ptr,
     void* ctx_ptr
 );
 
-/* ==========================================================================
- * Global Custom Memory Allocator Struct
- * ========================================================================== */
+APAC_API void* apac_malloc(size_t new_size);
+APAC_API void* apac_realloc(void* old_arr, size_t new_size);
+APAC_API void  apac_free(void* old_arr);
 
 extern apac_alloc_t apac_allocator;
 
@@ -355,6 +364,12 @@ extern apac_cpu_params curr_cpu;
 APAC_API void apac_get_cpu_spec(void);
 
 APAC_API void apac_init(void);
+
+/****************************************************************************************************/
+/*********************************      THREAD-POOL FUNCTIONS     ***********************************/
+/****************************************************************************************************/
+
+
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
@@ -519,10 +534,20 @@ APAC_API ap_size_t apn_clamp(
     ap_size_t size
 );
 
-APAC_API void apn_set_to_random(
+APAC_API void apn_seed_prng(
+    ap_dig_t seed
+);
+
+APAC_API void apn_set_random(
     ap_dig_t* op1,
-    ap_size_t size1,
-    ap_dig_t seed_val
+    ap_size_t size1
+);
+
+APAC_API void apn_print(
+    FILE* fp,
+    ap_dig_t* op1,
+    ap_size_t size,
+    apac_str_base base
 );
 
 #endif
