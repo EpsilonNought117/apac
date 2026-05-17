@@ -69,17 +69,19 @@
     #if defined(__GNUC__) || defined(__clang__)
 
         #include <unistd.h>
-        #include <time.h>
-        #include <sched.h>
-        #include <pthread.h>
-        
+
+        #if defined(_POSIX_THREADS) && (_POSIX_THREADS > 0)
+            #include <pthread.h>
+        #else
+            #error "PThreads are needed for working with libapac!"
+        #endif
+
         #define APAC_THREAD_LOCAL     __thread
         typedef void* (*apac_mt_func_t)(void*);
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
 
-            #include <x86intrin.h>
             #include <cpuid.h>
             #include <immintrin.h>
             #define APAC_X64_UNIX

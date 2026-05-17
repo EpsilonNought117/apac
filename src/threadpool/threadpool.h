@@ -14,7 +14,7 @@
 	#define APAC_THREAD_RETVAL      int
 
 #else
-
+	#error "Unknown Platform and CPU Architecture!"
 #endif
 
 #endif

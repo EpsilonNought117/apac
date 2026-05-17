@@ -1,4 +1,6 @@
 #include "../../include/apac.h"
+#include <time.h>
+#include <sched.h>
 
 #if defined(_WIN32) && defined(_MSC_VER)
     #include <powrprof.h>
