@@ -27,8 +27,10 @@
     #include <Windows.h>
     #include <process.h>
 
-    #define APAC_THREAD_LOCAL     __declspec(thread)
-    typedef unsigned (WINAPI* apac_mt_func_t)(void*);
+    #define APAC_THRD_LOCAL     __declspec(thread)
+    #define APAC_THRD_CALL      WINAPI
+    typedef unsigned            apac_thrd_ret_t;
+    typedef void*               apac_thrd_arg_t;          
 
     #if defined(_MSC_VER)
 
@@ -76,8 +78,10 @@
             #error "PThreads are needed for working with libapac!"
         #endif
 
-        #define APAC_THREAD_LOCAL     __thread
-        typedef void* (*apac_mt_func_t)(void*);
+        #define APAC_THRD_LOCAL __thread            /* GCC/Clang extension */
+        #define APAC_THRD_CALL                      /* nothing */
+        typedef void*           apac_thrd_ret_t;    
+        typedef void*           apac_thrd_arg_t;
 
         #if defined(__x86_64)   || defined(__amd64)   || \
             defined(__x86_64__) || defined(__amd64__)
@@ -129,9 +133,10 @@
 
     #define APAC_64BIT_PLATFORM
 
-    typedef uint64_t            ap_dig_t;
-    typedef size_t              ap_size_t;
-
+    typedef uint64_t                    ap_dig_t;
+    typedef size_t                     ap_size_t;
+    typedef struct apac_tpool_t     apac_tpool_t;
+    
     #define PRI_APN_PTR         "p"
     #define PRI_APN_SIZE        "zu"
     #define APN_SIZE_MAX        SIZE_MAX
@@ -158,10 +163,10 @@
 
 typedef enum apac_err
 {
-    APAC_OK,
-    APAC_OOM,
-    APAC_DIV_BY_ZERO
-
+    APAC_OK,            // All is well, for now
+    APAC_OOM,           // Your system ran out of memory
+    APAC_DIV_BY_ZERO    // You tried to divide by zero :(
+    
 } apac_err;
 
 typedef enum apac_str_base

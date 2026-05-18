@@ -1,4 +1,4 @@
-#include "../headers/apac_internal.h"
+#include "../../include/apac.h"
 
 apac_cpu_params curr_cpu = { 0 };
 

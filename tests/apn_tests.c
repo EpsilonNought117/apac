@@ -2,7 +2,8 @@
 
 #define TEST_SIZE_MAX ((ap_size_t)8192ULL)
 
-APAC_MT_FUNC_RETVAL check_apn_set(APAC_MT_FUNC_PARAM in)
+apac_thrd_ret_t APAC_THRD_CALL 
+check_apn_set(apac_thrd_arg_t in)
 {
     ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
     ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
@@ -1798,7 +1799,7 @@ int main(int argc, char** argv)
     printf("Using seed: 0x%" PRIX64 "\n", seed);
     random_sfc64_seed(seed);
 
-    check_apn_set();
+    check_apn_set(NULL);
     check_apn_cpy();
     check_apn_cmp();
     check_apn_is_zero();
