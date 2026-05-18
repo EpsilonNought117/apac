@@ -5,7 +5,7 @@
 #ifndef X64_HIDDEN_FUNCS
 #define X64_HIDDEN_FUNCS
 
-#include "../../headers/apac_internal.h"
+#include "../headers/apn.h"
 
 /* --------------------- ADD SINGLE-LIMB TO APN-ARR FUNCTIONS ------------------------- */
 

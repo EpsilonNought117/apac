@@ -1,7 +1,7 @@
 #ifndef APN_HIDDEN_DIV
 #define APN_HIDDEN_DIV
 
-#include "../../headers/apac_internal.h"
+#include "apn.h"
 
 /* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
 
