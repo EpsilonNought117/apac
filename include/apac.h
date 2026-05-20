@@ -70,6 +70,8 @@
     #if defined(__GNUC__) || defined(__clang__)
 
         #include <unistd.h>
+        #include <time.h>
+        #include <sched.h>
 
         #if defined(_POSIX_THREADS) && (_POSIX_THREADS > 0)
             #include <pthread.h>

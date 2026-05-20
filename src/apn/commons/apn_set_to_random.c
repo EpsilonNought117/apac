@@ -2,8 +2,8 @@
 
 #if defined(APAC_64BIT_PLATFORM)
 
-APAC_THREAD_LOCAL uint64_t prng_state[4] = { 0 };
-APAC_THREAD_LOCAL bool state_init = false;
+APAC_THRD_LOCAL uint64_t prng_state[4] = { 0 };
+APAC_THRD_LOCAL bool state_init = false;
 
 static inline uint64_t random_sfc64(void)
 {

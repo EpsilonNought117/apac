@@ -1,6 +1,4 @@
 #include "../../include/apac.h"
-#include <time.h>
-#include <sched.h>
 
 #if defined(_WIN32) && defined(_MSC_VER)
     #include <powrprof.h>
@@ -42,7 +40,7 @@ uint64_t apac_os_timer(void)
 {
 #if defined(_WIN32)
 
-    APAC_THREAD_LOCAL static uint64_t freq = 0;
+    APAC_THRD_LOCAL static uint64_t freq = 0;
     LARGE_INTEGER t;
 
     if (!freq)
