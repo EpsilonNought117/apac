@@ -1,7 +1,7 @@
 #ifndef APAC_INTERNAL_H
 #define APAC_INTERNAL_H
 
-#include "../../include/apac.h"
+#include "../../../include/apac.h"
 
 /****************************************************************************************************/
 /****************************         USEFUL FUNCTION-LIKE MACROS        ****************************/

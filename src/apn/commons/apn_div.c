@@ -66,11 +66,7 @@ full_division:
     // "hacker's delight" 2nd edition's multiprecision division algorithm
     ap_dig_t* temp_space = apac_malloc((size_dvsr + size_divd + 1) * sizeof(ap_dig_t));
 
-    if (!temp_space)
-    {
-        APAC_LOG_ERR("Memory allocation failure for temporary dividend and divisor in apn_div_rem!");
-        return APAC_OOM;
-    }
+    if (!temp_space) { return APAC_OOM; }
 
     ap_dig_t* temp_dvsr = temp_space;
     ap_dig_t* temp_divd = temp_space + size_dvsr;
@@ -103,7 +99,6 @@ full_division:
         if (!temp_ws)
         {
             apac_free(temp_space);
-            APAC_LOG_ERR("Memory allocation failure for scratch workspace in apn_div_rem!");
             return APAC_OOM;
         }
 
@@ -120,7 +115,6 @@ full_division:
         if (!temp_ws)
         {
             apac_free(temp_space);
-            APAC_LOG_ERR("Memory allocation failure for scratch workspace in apn_div_rem!");
             return APAC_OOM;
         }
 

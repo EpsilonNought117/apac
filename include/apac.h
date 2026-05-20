@@ -163,10 +163,17 @@
 
 typedef enum apac_err
 {
-    APAC_OK,            // All is well, for now
-    APAC_OOM,           // Your system ran out of memory
-    APAC_DIV_BY_ZERO    // You tried to divide by zero :(
-    
+    APAC_OK = 0,
+
+    // Memory
+    APAC_OOM,
+
+    // Arithmetic
+    APAC_DIV_BY_ZERO,
+
+    // Threading / Synchronization
+    APAC_THRD_ERR
+
 } apac_err;
 
 typedef enum apac_str_base
@@ -264,12 +271,6 @@ typedef enum apac_str_base
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
 
 #endif
-
-/* ==========================================================================
- * Error Logging
- * ========================================================================== */
-
-#define APAC_LOG_ERR(msg) fprintf(stderr, "APAC ERROR: %s\n", msg)
 
 /****************************************************************************************************/
 /*********************************         MISCELLANEOUS          ***********************************/

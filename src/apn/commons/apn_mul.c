@@ -57,11 +57,7 @@ apac_err apn_mul_n(
 		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size, size);
 		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
-		if (!workspace)
-		{
-			APAC_LOG_ERR("Memory allocation failed in apn_mul_n!");
-			return APAC_OOM;
-		}
+		if (!workspace) { return APAC_OOM; }
 		
 		apn_set(workspace, ws_size, 0);
 
@@ -75,11 +71,7 @@ apac_err apn_mul_n(
 		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size, size);
 		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 	
-		if (!workspace)
-		{
-			APAC_LOG_ERR("Memory allocation failed in apn_mul_n!");
-			return APAC_OOM;
-		}
+		if (!workspace) { return APAC_OOM; }
 
 		apn_set(workspace, ws_size, 0);
 
@@ -125,11 +117,7 @@ apac_err apn_mul(
 		ap_size_t ws_size = TOOMCOOK3_MUL_WS_SIZE(size1, size2);
 		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
 
-		if (!workspace)
-		{
-			APAC_LOG_ERR("Memory allocation failed in apn_mul_n!");
-			return APAC_OOM;
-		}
+		if (!workspace) { return APAC_OOM; }
 
 		apn_set(workspace, ws_size, 0);
 
