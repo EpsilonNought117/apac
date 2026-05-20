@@ -25,12 +25,11 @@
 
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
-    #include <process.h>
 
-    #define APAC_THRD_LOCAL     __declspec(thread)
-    #define APAC_THRD_CALL      WINAPI
-    typedef unsigned            apac_thrd_ret_t;
-    typedef void*               apac_thrd_arg_t;          
+    #define APAC_THRD_LOCAL __declspec(thread)
+    #define APAC_THRD_CALL  WINAPI
+    typedef DWORD           apac_thrd_ret_t;
+    typedef LPVOID          apac_thrd_arg_t;          
 
     #if defined(_MSC_VER)
 
