@@ -141,21 +141,21 @@
  * Always-Enabled Assertion
  * ========================================================================== */
 
-#define APAC_ALWAYS_ASSERT(expr)                                \
-        do                                                      \
-        {                                                       \
-            if (!(expr))                                        \
-            {                                                   \
-                fprintf(                                        \
-                    stderr,                                     \
-                    "\n\nAPAC ASSERTION FAILED! \n"             \
-                    "ASSERTION: %s              \n"             \
-                    "FILE: %s\nLINE: %d         \n"             \
-                    "ABORTING ...             \n\n",            \
-                    #expr, __FILE__, __LINE__                   \
-                );                                              \
-                exit(EXIT_FAILURE);                             \
-            }                                                   \
+#define APAC_ALWAYS_ASSERT(expr)                        \
+        do                                              \
+        {                                               \
+            if (!(expr))                                \
+            {                                           \
+                fprintf(                                \
+                    stderr,                             \
+                    "\n\nAPAC ASSERTION FAILED! \n"     \
+                    "ASSERTION: %s              \n"     \
+                    "FILE: %s\nLINE: %d         \n"     \
+                    "ABORTING ...             \n\n",    \
+                    #expr, __FILE__, __LINE__           \
+                );                                      \
+                abort();                                \
+            }                                           \
         } while (0)
 
 /* ==========================================================================
