@@ -572,6 +572,7 @@ APAC_API apac_err apn_div(
     const ap_dig_t* dividend,
     const ap_dig_t* divisor,
     ap_size_t size_divd,
+    ap_size_t size_divd_frac,
     ap_size_t size_dvsr
 );
 
@@ -579,7 +580,8 @@ APAC_API ap_dig_t apn_div_one(
     ap_dig_t* quotient,
     const ap_dig_t* dividend,
     ap_dig_t divisor,
-    ap_size_t size_divd
+    ap_size_t size_divd,
+    ap_size_t size_divd_frac
 );
 
 APAC_API ap_dig_t apn_rshift(

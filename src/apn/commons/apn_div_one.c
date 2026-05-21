@@ -1,10 +1,11 @@
 #include "../headers/hidden_div.h"
 
 ap_dig_t apn_div_one(
-    ap_dig_t* quotient,    // must be (size_divd) length
-    const ap_dig_t* dividend,
-    ap_dig_t divisor,
-    ap_size_t size_divd
+    ap_dig_t* quotient,         // must be (size_divd + size_divd_frac) length
+    const ap_dig_t* dividend,   // must be (size_divd) length
+    ap_dig_t divisor,           // a single word
+    ap_size_t size_divd,
+    ap_size_t size_divd_frac
 )
 {
     APAC_ASSERT(quotient != NULL);
@@ -33,11 +34,18 @@ ap_dig_t apn_div_one(
         ap_dig_t valid_shift = (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_DIG_BITS - shift_val));
 
         temp_val = (shift_val) ? valid_shift : dividend[j];
-        quotient[j] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
+        quotient[j + size_divd_frac] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
     }
 
     temp_val = dividend[0] << shift_val;
-    quotient[0] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
+    quotient[size_divd_frac] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
+
+    // now for the frac part of the loop
+    // nothing to shift and adjust here as it's all zeros
+    for (ap_size_t j = size_divd_frac - 1; j < size_divd_frac; j--)
+    {
+        quotient[j] = apn_udiv_2by1(rmdr, 0, divisor, dvsr_recip, &rmdr);
+    }
 
     if (shift_val)
     {

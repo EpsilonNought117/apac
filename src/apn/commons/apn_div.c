@@ -4,11 +4,12 @@
 #define DNC_DIV_BALANCED_WS_SIZE(size)      ((size) + 1)
 
 apac_err apn_div(
-    ap_dig_t* quotient,        // must be (size_divd - size_dvsr + 1) length
+    ap_dig_t* quotient,        // must be (size_divd + size_divd_frac - size_dvsr + 1) length
     ap_dig_t* remainder,       // must be size_dvsr length
     const ap_dig_t* dividend,
     const ap_dig_t* divisor,
     ap_size_t size_divd,
+    ap_size_t size_divd_frac,  // this size can be zero
     ap_size_t size_dvsr
 )
 {
@@ -33,7 +34,7 @@ apac_err apn_div(
 
     if (size_dvsr == 1)
     {
-        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd);
+        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd, size_divd_frac);
         return APAC_OK;
     }
     if (size_divd == size_dvsr)
@@ -64,17 +65,20 @@ full_division:
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm
-    ap_dig_t* temp_space = apac_malloc((size_dvsr + size_divd + 1) * sizeof(ap_dig_t));
+    ap_dig_t* temp_space = apac_malloc((size_dvsr + size_divd_frac + size_divd + 1) * sizeof(ap_dig_t));
 
     if (!temp_space) { return APAC_OOM; }
 
     ap_dig_t* temp_dvsr = temp_space;
     ap_dig_t* temp_divd = temp_space + size_dvsr;
-
-    apn_cpy(temp_dvsr, divisor, size_dvsr);
-    apn_cpy(temp_divd, dividend, size_divd);
-    temp_divd[size_divd] = 0ULL;
     
+    apn_cpy(temp_dvsr, divisor, size_dvsr);
+    if (size_divd_frac != 0) { apn_set(temp_divd, size_divd_frac, 0); } // must check
+    apn_cpy(&temp_divd[size_divd_frac], dividend, size_divd);
+    temp_divd[size_divd + size_divd_frac] = 0ULL;
+    
+    ap_size_t new_size_divd = size_divd + size_divd_frac + 1;
+
     if (!(temp_dvsr[size_dvsr - 1] & (APN_DIG_HIGH_BIT)))
     {
         CLZ(temp_dvsr[size_dvsr - 1], dvsr_shift_val);
@@ -84,14 +88,14 @@ full_division:
         APAC_ASSERT(out_val == 0);
 
         // if this step results in no shift-out val, then top segment of dividend stays zero
-        temp_divd[size_divd] = apn_lshift(temp_divd, temp_divd, size_divd, (ap_dig_t)dvsr_shift_val);
+        temp_divd[new_size_divd - 1] = apn_lshift(temp_divd, temp_divd, new_size_divd, (ap_dig_t)dvsr_shift_val);
     }
     
-    if ((size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
+    if ((new_size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {
-        apn_basecase_div(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr);
+        apn_basecase_div(quotient, temp_divd, temp_dvsr, new_size_divd, size_dvsr);
     }
-    else if (size_dvsr >= (size_divd + 1 - size_dvsr))
+    else if (size_dvsr >= (new_size_divd - size_dvsr))
     {
         ap_size_t ws_size = DNC_DIV_BALANCED_WS_SIZE(size_dvsr);
         ap_dig_t* temp_ws = apac_malloc(sizeof(ap_dig_t) * ws_size);
@@ -104,7 +108,7 @@ full_division:
 
         apn_set(temp_ws, ws_size, 0);
 
-        apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
+        apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, new_size_divd, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
     else
@@ -120,7 +124,7 @@ full_division:
 
         apn_set(temp_ws, ws_size, 0);
 
-        apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, size_divd + 1, size_dvsr, temp_ws);
+        apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, new_size_divd, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
 
