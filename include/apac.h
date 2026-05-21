@@ -6,13 +6,6 @@
 #endif
 
 /****************************************************************************************************/
-/***************************      REQUIRED C STANDARD LIBRARY HEADERS      **************************/
-/****************************************************************************************************/
-
-#include <stdio.h>
-#include <stdint.h>
-
-/****************************************************************************************************/
 /******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
 /****************************************************************************************************/
 
@@ -98,8 +91,8 @@
      defined(APAC_ARM64_UNIX)       \
     )
 
-    typedef uint64_t            ap_dig_t;
-    typedef size_t              ap_size_t;
+    typedef unsigned long long  ap_dig_t;
+    typedef unsigned long long  ap_size_t;
 
 #else
     #error "Unknown Platform and CPU Architecture!"
@@ -309,9 +302,8 @@ APAC_API void apn_set_random(
     ap_size_t size1
 );
 
-APAC_API void apn_print(
-    FILE* fp,
-    ap_dig_t* op1,
+APAC_API char* apn_print(
+    ap_dig_t* op1, /* this WILL get destroyed, so make a copy first */
     ap_size_t size,
     apac_str_base base
 );

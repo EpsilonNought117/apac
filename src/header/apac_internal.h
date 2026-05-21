@@ -13,6 +13,7 @@
 #include <limits.h>
 #include <memory.h>
 #include <inttypes.h>
+#include <stdint.h>
 
 /****************************************************************************************************/
 /***********************   COMPILER SPECIFIC HEADERS, TYPEDEFS AND MACROS    ************************/
