@@ -244,10 +244,10 @@ apac_tpool_worker(apac_thrd_arg_t pool_ptr)
         apac_mutex_unlock(&pool->lock);
     }
 
-    return APAC_OK;
+    return 0;
 }
 
-apac_err
+apac_thrd_err_t
 apac_tpool_init(
     apac_tpool_t* pool, 
     size_t thrd_count, 
@@ -260,7 +260,7 @@ apac_tpool_init(
     APAC_ASSERT(work_queue_size != 0);
     APAC_ASSERT(work_queue_size <= SIZE_MAX / sizeof(apac_work_t));
 
-    apac_err result = APAC_OK;
+    apac_thrd_err_t result = APAC_THRD_OK;
 
     pool->max_thrds         = thrd_count;
     pool->queue_curr_size   = 0;
@@ -283,14 +283,14 @@ apac_tpool_init(
     pool->workers = apac_malloc(sizeof(apac_thrd_t) * thrd_count);
     if (!pool->workers) 
     {
-        result = APAC_OOM;
+        result = APAC_THRD_OOM;
         goto fail_cleanup; 
     }
 
     pool->task_queue = apac_malloc(sizeof(apac_work_t) * pool->queue_max_size);
     if (!pool->task_queue) 
     {
-        result = APAC_OOM;
+        result = APAC_THRD_OOM;
         goto fail_cleanup; 
     }
     
@@ -306,7 +306,7 @@ apac_tpool_init(
 
         if (handle == NULL)
         {
-            result = APAC_THRD_ERR;
+            result = APAC_THRD_CREATE_FAIL;
             goto fail_cleanup;
         }
 
@@ -318,7 +318,7 @@ apac_tpool_init(
 
         if (handle != 0)
         {
-            result = APAC_THRD_ERR;
+            result = APAC_THRD_CREATE_FAIL;
             goto fail_cleanup;
         }
 #endif
@@ -362,7 +362,7 @@ fail_cleanup:
     return result;
 }
 
-apac_err
+apac_thrd_err_t
 apac_tpool_submit(
     apac_tpool_t* pool,
     apac_thrd_func_t func,
@@ -384,7 +384,7 @@ apac_tpool_submit(
     if (pool->shutdown)
     {
         apac_mutex_unlock(&pool->lock);
-        return APAC_POOL_SHUTDOWN;
+        return APAC_THRD_POOL_SHUT;
     }
 
     size_t queue_end = (pool->queue_head + pool->queue_curr_size) % pool->queue_max_size;
@@ -395,10 +395,10 @@ apac_tpool_submit(
     apac_cond_signal(&pool->queue_not_empty);
     apac_mutex_unlock(&pool->lock);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
-apac_err
+apac_thrd_err_t
 apac_tpool_wait(
     apac_tpool_t* pool
 )
@@ -413,10 +413,10 @@ apac_tpool_wait(
     }
 
     apac_mutex_unlock(&pool->lock);
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
-apac_err
+apac_thrd_err_t
 apac_tpool_destroy(
     apac_tpool_t* pool
 )
@@ -459,7 +459,7 @@ apac_tpool_destroy(
 
     apac_mutex_destroy(&pool->lock);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
 size_t
@@ -482,7 +482,7 @@ apac_tpool_get_max_thrd_count(
     return pool->max_thrds;
 }
 
-apac_err
+apac_thrd_err_t
 apac_tpool_set_size(
     apac_tpool_t* pool,
     size_t new_max_thrds,
@@ -497,7 +497,7 @@ apac_tpool_set_size(
     APAC_ASSERT(new_work_queue_size != 0);
     APAC_ASSERT(new_work_queue_size <= SIZE_MAX / sizeof(apac_work_t));
 
-    apac_err result = APAC_OK;
+    apac_thrd_err_t result = APAC_THRD_OK;
 
     apac_mutex_lock(&pool->lock);
 
@@ -506,7 +506,7 @@ apac_tpool_set_size(
         pool->active_thrds != 0)
     {
         apac_mutex_unlock(&pool->lock);
-        return APAC_THRD_ERR;
+        return APAC_THRD_BUSY;
     }
 
     // stop workers
@@ -538,7 +538,7 @@ apac_tpool_set_size(
 
     if (!new_workers)
     {
-        result = APAC_OOM;
+        result = APAC_THRD_OOM;
         goto fail;
     }
 
@@ -547,7 +547,7 @@ apac_tpool_set_size(
     if (!new_task_queue)
     {
         apac_free(new_workers);
-        result = APAC_OOM;
+        result = APAC_THRD_OOM;
         goto fail;
     }
 
@@ -585,7 +585,7 @@ apac_tpool_set_size(
 
         if (handle == NULL)
         {
-            result = APAC_THRD_ERR;
+            result = APAC_THRD_CREATE_FAIL;
             goto fail_partial_workers;
         }
 
@@ -602,14 +602,14 @@ apac_tpool_set_size(
 
         if (handle != 0)
         {
-            result = APAC_THRD_ERR;
+            result = APAC_THRD_CREATE_FAIL;
             goto fail_partial_workers;
         }
 
 #endif
     }
 
-    return APAC_OK;
+    return result;
 
 fail_partial_workers:
 
@@ -640,7 +640,7 @@ fail:
     return result;
 }
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_init(
     apac_wtgrp_t* wg
 )
@@ -652,10 +652,10 @@ apac_wtgrp_init(
     apac_mutex_init(&wg->lock);
     apac_cond_init(&wg->cond);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_destroy(
     apac_wtgrp_t* wg
 )
@@ -665,10 +665,10 @@ apac_wtgrp_destroy(
     apac_cond_destroy(&wg->cond);
     apac_mutex_destroy(&wg->lock);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_add(
     apac_wtgrp_t* wg,
     size_t delta
@@ -684,10 +684,10 @@ apac_wtgrp_add(
 
     apac_mutex_unlock(&wg->lock);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_done(
     apac_wtgrp_t* wg
 )
@@ -707,10 +707,10 @@ apac_wtgrp_done(
 
     apac_mutex_unlock(&wg->lock);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_wait(
     apac_wtgrp_t* wg
 )
@@ -726,5 +726,5 @@ apac_wtgrp_wait(
 
     apac_mutex_unlock(&wg->lock);
 
-    return APAC_OK;
+    return APAC_THRD_OK;
 }

@@ -1,7 +1,7 @@
 #ifndef APAC_THREADPOOL_H
 #define APAC_THREADPOOL_H
 
-#include "../../include/apac.h"
+#include "../header/apac_internal.h"
 
 #if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
 	
@@ -23,6 +23,20 @@
 	#error "Unknown Platform and CPU Architecture!"
 #endif
 
+// ALL IS GOOD
+#define APAC_THRD_OK			(apac_thrd_err_t)0
+// RAN OUT-OF-MEMORY
+#define APAC_THRD_OOM			(apac_thrd_err_t)1
+// FAILED TO CREATE THREAD HANDLE
+#define APAC_THRD_CREATE_FAIL	(apac_thrd_err_t)2
+// THREAD RESOURCE BUSY
+#define APAC_THRD_BUSY			(apac_thrd_err_t)3
+// THREADPOOL SHUTTING DOWN
+#define APAC_THRD_POOL_SHUT		(apac_thrd_err_t)4 
+
+typedef apac_thrd_ret_t	
+		(APAC_THRD_CALL* apac_thrd_func_t)(apac_thrd_arg_t);
+
 typedef struct apac_work_t
 {
 	apac_thrd_func_t func;
@@ -30,7 +44,7 @@ typedef struct apac_work_t
 
 } apac_work_t;
 
-struct apac_tpool_t
+typedef struct apac_tpool_t
 {
 	apac_mutex_t lock;
 	apac_cond_t queue_empty;		// signal if queue has no work
@@ -46,15 +60,17 @@ struct apac_tpool_t
 			queue_head;
 
 	bool shutdown;
-};
 
-struct apac_wtgrp_t
+} apac_tpool_t;
+
+typedef struct apac_wtgrp_t
 {
 	apac_mutex_t lock;
 	apac_cond_t  cond;
 
 	size_t count;
-};
+
+} apac_wtgrp_t;
 
 // ============================================================================
 // Mutex
@@ -128,6 +144,81 @@ apac_barrier_wait(
 apac_thrd_err_t
 apac_barrier_destroy(
 	apac_barrier_t* b
+);
+
+// ============================================================================
+// Thread Pool
+// ============================================================================
+
+apac_err
+apac_tpool_init(
+	apac_tpool_t* pool,
+	size_t thrd_count,
+	size_t work_queue_size
+);
+
+apac_err
+apac_tpool_destroy(
+	apac_tpool_t* pool
+);
+
+apac_err
+apac_tpool_submit(
+	apac_tpool_t* pool,
+	apac_thrd_func_t func,
+	apac_thrd_arg_t arg
+);
+
+apac_err
+apac_tpool_wait(
+	apac_tpool_t* pool
+);
+
+apac_err
+apac_tpool_set_size(
+	apac_tpool_t* pool,
+	size_t new_max_thrds,
+	size_t new_work_queue_size
+);
+
+size_t
+apac_tpool_get_queue_capacity(
+	apac_tpool_t* pool
+);
+
+size_t
+apac_tpool_get_max_thrd_count(
+	apac_tpool_t* pool
+);
+
+// ============================================================================
+// Wait Group
+// ============================================================================
+
+apac_err
+apac_wtgrp_init(
+	apac_wtgrp_t* wg
+);
+
+apac_err
+apac_wtgrp_destroy(
+	apac_wtgrp_t* wg
+);
+
+apac_err
+apac_wtgrp_add(
+	apac_wtgrp_t* wg,
+	size_t delta
+);
+
+apac_err
+apac_wtgrp_done(
+	apac_wtgrp_t* wg
+);
+
+apac_err
+apac_wtgrp_wait(
+	apac_wtgrp_t* wg
 );
 
 #endif
