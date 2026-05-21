@@ -137,7 +137,10 @@
     typedef uint64_t                    ap_dig_t;
     typedef size_t                     ap_size_t;
     typedef struct apac_tpool_t     apac_tpool_t;
-    
+    typedef struct apac_wtgrp_t     apac_wtgrp_t;
+    typedef apac_thrd_ret_t 
+            (APAC_THRD_CALL* apac_thrd_func_t)(apac_thrd_arg_t);
+
     #define PRI_APN_PTR         "p"
     #define PRI_APN_SIZE        "zu"
     #define APN_SIZE_MAX        SIZE_MAX
@@ -173,7 +176,10 @@ typedef enum apac_err
     APAC_DIV_BY_ZERO,
 
     // Threading / Synchronization
-    APAC_THRD_ERR
+    APAC_THRD_ERR,
+
+    // Returned by threadpool submit function when shutting down
+    APAC_POOL_SHUTDOWN
 
 } apac_err;
 
@@ -378,7 +384,80 @@ APAC_API void apac_init(void);
 /*********************************      THREAD-POOL FUNCTIONS     ***********************************/
 /****************************************************************************************************/
 
+// ============================================================================
+// Thread Pool
+// ============================================================================
 
+apac_err
+apac_tpool_init(
+    apac_tpool_t* pool,
+    size_t thrd_count,
+    size_t work_queue_size
+);
+
+apac_err
+apac_tpool_destroy(
+    apac_tpool_t* pool
+);
+
+apac_err
+apac_tpool_submit(
+    apac_tpool_t* pool,
+    apac_thrd_func_t func,
+    apac_thrd_arg_t arg
+);
+
+apac_err
+apac_tpool_wait(
+    apac_tpool_t* pool
+);
+
+apac_err
+apac_tpool_set_size(
+    apac_tpool_t* pool,
+    size_t new_max_thrds,
+    size_t new_work_queue_size
+);
+
+size_t
+apac_tpool_get_queue_capacity(
+    apac_tpool_t* pool
+);
+
+size_t
+apac_tpool_get_max_thrd_count(
+    apac_tpool_t* pool
+);
+
+// ============================================================================
+// Wait Group
+// ============================================================================
+
+apac_err
+apac_wtgrp_init(
+    apac_wtgrp_t* wg
+);
+
+apac_err
+apac_wtgrp_destroy(
+    apac_wtgrp_t* wg
+);
+
+apac_err
+apac_wtgrp_add(
+    apac_wtgrp_t* wg,
+    size_t delta
+);
+
+apac_err
+apac_wtgrp_done(
+    apac_wtgrp_t* wg
+);
+
+apac_err
+apac_wtgrp_wait(
+    apac_wtgrp_t* wg
+);
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/

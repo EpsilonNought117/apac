@@ -23,8 +23,6 @@
 	#error "Unknown Platform and CPU Architecture!"
 #endif
 
-typedef apac_thrd_ret_t (APAC_THRD_CALL *apac_thrd_func_t)(apac_thrd_arg_t);
-
 typedef struct apac_work_t
 {
 	apac_thrd_func_t func;
@@ -35,14 +33,101 @@ typedef struct apac_work_t
 struct apac_tpool_t
 {
 	apac_mutex_t lock;
-	apac_cond_t notify, wait, queue_full;
+	apac_cond_t queue_empty;		// signal if queue has no work
+	apac_cond_t	queue_not_empty;	// signal if queue is fully filled 
+	apac_cond_t queue_not_full;		// signal if queue has spot
 
 	apac_thrd_t* workers;
-	apac_work_t* task_queue; // circular buffer
+	apac_work_t* task_queue;		// circular FIFO buffer
 
-	size_t thrd_count, active_thrds;	// queue max size is 8 * thrd_count
-	size_t queue_curr_size, queue_max_size, queue_head;
+	size_t	max_thrds, active_thrds; 
+	size_t	queue_curr_size, 
+			queue_max_size, 
+			queue_head;
+
 	bool shutdown;
 };
+
+struct apac_wtgrp_t
+{
+	apac_mutex_t lock;
+	apac_cond_t  cond;
+
+	size_t count;
+};
+
+// ============================================================================
+// Mutex
+// ============================================================================
+
+apac_thrd_err_t
+apac_mutex_init(
+	apac_mutex_t* m
+);
+
+apac_thrd_err_t
+apac_mutex_lock(
+	apac_mutex_t* m
+);
+
+apac_thrd_err_t
+apac_mutex_unlock(
+	apac_mutex_t* m
+);
+
+apac_thrd_err_t
+apac_mutex_destroy(
+	apac_mutex_t* m
+);
+
+// ============================================================================
+// Condition Variable
+// ============================================================================
+
+apac_thrd_err_t
+apac_cond_init(
+	apac_cond_t* c
+);
+
+apac_thrd_err_t
+apac_cond_signal(
+	apac_cond_t* c
+);
+
+apac_thrd_err_t
+apac_cond_broadcast(
+	apac_cond_t* c
+);
+
+apac_thrd_err_t
+apac_cond_wait(
+	apac_cond_t* c,
+	apac_mutex_t* m
+);
+
+apac_thrd_err_t
+apac_cond_destroy(
+	apac_cond_t* c
+);
+
+// ============================================================================
+// Barrier
+// ============================================================================
+
+apac_thrd_err_t
+apac_barrier_init(
+	apac_barrier_t* b,
+	unsigned count
+);
+
+apac_thrd_err_t
+apac_barrier_wait(
+	apac_barrier_t* b
+);
+
+apac_thrd_err_t
+apac_barrier_destroy(
+	apac_barrier_t* b
+);
 
 #endif
