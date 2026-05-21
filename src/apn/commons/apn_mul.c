@@ -1,3 +1,4 @@
+#include "../../header/apac_internal.h"
 #include "../headers/hidden_mul.h"
 
 /**

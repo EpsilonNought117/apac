@@ -125,7 +125,7 @@ void apn_toomcook3_sqr(
     temp[6 * lower + 5] += apn_lshift_add(v2, v2, vneg1, 2 * lower + 1, 1);
     apn_add_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
 
-    apn_div_one(v2, v2, 6, 2 * (lower + 1));
+    apn_div_one(v2, v2, 6, 2 * (lower + 1), 0);
     temp1 = apn_lshift_sub(v2, v2, vinf, 2 * upper, 1);
     temp1 = apn_sub_one(v2 + 2 * upper, v2 + 2 * upper, 2 * (lower - upper) + 1, temp1);
     ap_dig_t* t1 = v2;

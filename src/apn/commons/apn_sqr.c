@@ -1,4 +1,5 @@
-#include "../headers/hidden_sqr.h"
+#include "../../header/apac_internal.h"
+#include "../headers//hidden_sqr.h"
 
 #define KARATSUBA_SQR_WS_SIZE(size)	(2 * (size + APN_DIG_BITS))
 #define TOOMCOOK3_SQR_WS_SIZE(size)	(((size) + 2 * 3 * APN_DIG_BITS) * 3)

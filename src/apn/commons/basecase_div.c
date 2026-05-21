@@ -1,3 +1,4 @@
+#include "../../header/apac_internal.h"
 #include "../headers/hidden_div.h"
 
 ap_dig_t apn_basecase_div(

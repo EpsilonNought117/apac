@@ -150,31 +150,31 @@ apac_barrier_destroy(
 // Thread Pool
 // ============================================================================
 
-apac_err
+apac_thrd_err_t
 apac_tpool_init(
 	apac_tpool_t* pool,
 	size_t thrd_count,
 	size_t work_queue_size
 );
 
-apac_err
+apac_thrd_err_t
 apac_tpool_destroy(
 	apac_tpool_t* pool
 );
 
-apac_err
+apac_thrd_err_t
 apac_tpool_submit(
 	apac_tpool_t* pool,
 	apac_thrd_func_t func,
 	apac_thrd_arg_t arg
 );
 
-apac_err
+apac_thrd_err_t
 apac_tpool_wait(
 	apac_tpool_t* pool
 );
 
-apac_err
+apac_thrd_err_t
 apac_tpool_set_size(
 	apac_tpool_t* pool,
 	size_t new_max_thrds,
@@ -195,28 +195,28 @@ apac_tpool_get_max_thrd_count(
 // Wait Group
 // ============================================================================
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_init(
 	apac_wtgrp_t* wg
 );
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_destroy(
 	apac_wtgrp_t* wg
 );
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_add(
 	apac_wtgrp_t* wg,
 	size_t delta
 );
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_done(
 	apac_wtgrp_t* wg
 );
 
-apac_err
+apac_thrd_err_t
 apac_wtgrp_wait(
 	apac_wtgrp_t* wg
 );

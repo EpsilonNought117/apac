@@ -260,6 +260,9 @@ apac_tpool_init(
     APAC_ASSERT(work_queue_size != 0);
     APAC_ASSERT(work_queue_size <= SIZE_MAX / sizeof(apac_work_t));
 
+    // keep this function scoped so in case of failure 
+    // at i, clear all threads from (i - 1)th to 0th
+    size_t i = 0; 
     apac_thrd_err_t result = APAC_THRD_OK;
 
     pool->max_thrds         = thrd_count;
@@ -294,10 +297,6 @@ apac_tpool_init(
         goto fail_cleanup; 
     }
     
-    // keep this function scoped so in case of failure 
-    // at i, clear all threads from (i - 1)th to 0th
-    size_t i = 0; 
-
     for (i = 0; i < thrd_count; i++)
     {
 #if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
@@ -497,6 +496,7 @@ apac_tpool_set_size(
     APAC_ASSERT(new_work_queue_size != 0);
     APAC_ASSERT(new_work_queue_size <= SIZE_MAX / sizeof(apac_work_t));
 
+    size_t i = 0;
     apac_thrd_err_t result = APAC_THRD_OK;
 
     apac_mutex_lock(&pool->lock);
@@ -566,9 +566,6 @@ apac_tpool_set_size(
 
     pool->active_thrds = 0;
     pool->shutdown = false;
-
-    // recreate workers
-    size_t i = 0;
 
     for (i = 0; i < new_max_thrds; i++)
     {

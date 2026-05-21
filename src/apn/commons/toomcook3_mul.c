@@ -152,7 +152,7 @@ void apn_toomcook3_mul(
             apn_add_n(v1_cpy, v1_cpy, vneg1, 2 * lower + 1);
         }
 
-        apn_div_one(v2, v2, 6, 2 * (lower + 1));
+        apn_div_one(v2, v2, 6, 2 * (lower + 1), 0);
         temp1 = apn_lshift_sub(v2, v2, vinf, upper_a + upper_b, 1);
         temp1 = apn_sub_one(v2 + upper_a + upper_b, v2 + upper_a + upper_b, 2 * lower - upper_a - upper_b + 2, temp1);
         ap_dig_t* t1 = v2;

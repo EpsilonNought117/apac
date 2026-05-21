@@ -174,7 +174,7 @@ void apn_toomcook42_mul(
             apn_add_n(w_pos1_cpy, w_pos1_cpy, w_neg1, 2 * split + 1);
         }
 
-        apn_div_one(w_pos2, w_pos2, 6, 2 * (split + 1));
+        apn_div_one(w_pos2, w_pos2, 6, 2 * (split + 1), 0);
         temp_val = apn_lshift_sub(w_pos2, w_pos2, winf, a3_size + b1_size, 1);
         temp_val = apn_sub_one(
             w_pos2 + b1_size + a3_size, 

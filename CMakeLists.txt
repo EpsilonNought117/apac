@@ -82,7 +82,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" ON)
+option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" OFF)
 option(BUILD_APN_TUNE "Build apn_tune threshold tuning program" OFF)
 option(BUILD_EXAMPLES "Build programming examples to demonstrate working of the library" OFF)
 
@@ -119,7 +119,6 @@ set(apac_c_sources
     "src/apn/commons/apn_div.c"
     "src/apn/commons/apn_div_one.c"
     "src/apn/commons/apn_set_to_random.c"
-    "src/apn/commons/apn_lshift_add_sub.c"
 
     # APN HIDDEN FUNCS
 
@@ -135,6 +134,7 @@ set(apac_c_sources
     "src/apn/commons/toomcook32_mul.c"
     "src/apn/commons/toomcook42_mul.c"
     "src/apn/commons/mul_dispatcher.c"
+    "src/apn/commons/lshift_add_sub.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------

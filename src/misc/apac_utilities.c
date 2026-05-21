@@ -1,4 +1,4 @@
-#include "../../include/apac.h"
+#include "../header/apac_internal.h"
 
 #if defined(_WIN32) && defined(_MSC_VER)
     #include <powrprof.h>

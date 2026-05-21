@@ -1,4 +1,4 @@
-#include "../headers/hidden_sqr.h"
+#include "../../header/apac_internal.h"
 
 void apn_basecase_sqr(
 	ap_dig_t* result,
