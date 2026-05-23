@@ -1,0 +1,164 @@
+#include "../src/header/apac_internal.h"
+
+#define TEST_SIZE_MAX ((ap_size_t)7000ULL)
+
+static void
+check_apn_sub_one(uint64_t iterations)
+{
+    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+
+    APAC_ALWAYS_ASSERT(op1 != NULL);
+    APAC_ALWAYS_ASSERT(op2 != NULL);
+    APAC_ALWAYS_ASSERT(op3 != NULL);
+
+    apn_set(op1, TEST_SIZE_MAX, 0);
+    apn_set(op2, TEST_SIZE_MAX, 0);
+    apn_set(op3, TEST_SIZE_MAX, 0);
+
+    while (iterations--)
+    {
+        ap_size_t size = 0;
+
+        do
+        {
+            apn_set_random(&size, 1);
+            size %= TEST_SIZE_MAX;
+
+        } while (size == 0);
+
+        /* TEST-1: 0 - 1 == max with borrow */
+
+        apn_set(op1, size, 0);
+        apn_set(op3, size, APN_DIG_MAX);
+
+        ap_dig_t borrow = apn_sub_one(
+            op2,
+            op1,
+            size,
+            1
+        );
+
+        int cmp_res = apn_cmp(op3, op2, size);
+
+        APAC_ALWAYS_ASSERT(borrow == 1);
+        APAC_ALWAYS_ASSERT(cmp_res == 0);
+
+        /* TEST-2: sub_one(..., 0) == no-op */
+
+        apn_set_random(op1, size);
+
+        borrow = apn_sub_one(
+            op2,
+            op1,
+            size,
+            0
+        );
+
+        cmp_res = apn_cmp(op2, op1, size);
+
+        APAC_ALWAYS_ASSERT(borrow == 0);
+        APAC_ALWAYS_ASSERT(cmp_res == 0);
+
+        /* TEST-3: monotonic decrease */
+
+        apn_set_random(op1, size);
+
+        ap_dig_t val = 0;
+
+        do
+        {
+            apn_set_random(&val, 1);
+
+        } while (val == 0);
+
+        borrow = apn_sub_one(
+            op2,
+            op1,
+            size,
+            val
+        );
+
+        cmp_res = apn_cmp(op2, op1, size);
+
+        int expected = borrow ? 1 : -1;
+
+        APAC_ALWAYS_ASSERT(cmp_res == expected);
+
+        /* TEST-4: subtract then add restores value */
+
+        apn_set_random(op1, size);
+
+        do
+        {
+            apn_set_random(&val, 1);
+
+        } while (val == 0);
+
+        borrow = apn_sub_one(
+            op2,
+            op1,
+            size,
+            val
+        );
+
+        ap_dig_t carry = apn_add_one(
+            op3,
+            op2,
+            size,
+            val
+        );
+
+        cmp_res = apn_cmp(op3, op1, size);
+
+        APAC_ALWAYS_ASSERT(borrow == carry);
+        APAC_ALWAYS_ASSERT(cmp_res == 0);
+
+        /* TEST-5: subtracting self low limb yields zero low limb */
+
+        apn_set_random(op1, size);
+
+        borrow = apn_sub_one(
+            op2,
+            op1,
+            size,
+            op1[0]
+        );
+
+        APAC_ALWAYS_ASSERT(op2[0] == 0);
+        APAC_ALWAYS_ASSERT(borrow <= 1);
+    }
+
+    apac_free(op3);
+    apac_free(op2);
+    apac_free(op1);
+}
+
+int
+main(void)
+{
+    apac_init();
+
+    char* prng_seed = getenv("PRNG_SEED");
+    char* iter = getenv("ITERATIONS");
+
+    uint64_t seed = 0xE1937B5AF42D81C6ULL;
+    uint64_t iterations = 1024ULL;
+
+    if (prng_seed != NULL)
+    {
+        seed = (uint64_t)strtoull(prng_seed, NULL, 0);
+    }
+
+    if (iter != NULL)
+    {
+        iterations = (uint64_t)strtoull(iter, NULL, 0);
+    }
+
+    apn_seed_prng(seed);
+
+    check_apn_sub_one(iterations);
+
+    return EXIT_SUCCESS;
+}

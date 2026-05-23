@@ -39,6 +39,13 @@ check_apn_sub(uint64_t iterations)
 
         } while (size2 == 0);
 
+        if (size2 > size1)
+        {
+            ap_size_t temp = size1;
+            size1 = size2;
+            size2 = temp;
+        }
+
         /* TEST-1: a - 0 == a */
 
         apn_set_random(a, size1);
