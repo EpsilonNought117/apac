@@ -28,7 +28,7 @@ static inline void* libc_realloc_wrapper(void* old_arr, size_t new_size, void* c
 static inline void libc_free_wrapper(void* old_arr, void* ctx)
 {
     (void)ctx;
-    return free(old_arr);
+    free(old_arr);
 }
 
 void apac_init_allocator(
@@ -59,17 +59,17 @@ void apac_init_allocator(
     }
 }
 
-inline void* apac_malloc(size_t in_size)
+void* apac_malloc(size_t in_size)
 {
     return apac_allocator.custom_malloc(in_size, apac_allocator.ctx);
 }
 
-inline void* apac_realloc(void* old_arr, size_t in_size)
+void* apac_realloc(void* old_arr, size_t in_size)
 {
     return apac_allocator.custom_realloc(old_arr, in_size, apac_allocator.ctx);
 }
 
-inline void apac_free(void* old_arr)
+void apac_free(void* old_arr)
 {
-    return apac_allocator.custom_free(old_arr, apac_allocator.ctx);
+    apac_allocator.custom_free(old_arr, apac_allocator.ctx);
 }
