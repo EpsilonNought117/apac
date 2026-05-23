@@ -82,7 +82,9 @@ check_apn_cmp(uint64_t iterations)
 
         pos %= size;
 
-        int mutate_op1 = rand() & 1;
+        ap_dig_t bit;
+        apn_set_random(&bit, 1);
+        int mutate_op1 = bit & 1;
 
         if (mutate_op1)
         {
