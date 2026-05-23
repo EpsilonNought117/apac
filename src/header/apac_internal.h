@@ -229,7 +229,14 @@
  * Global Allocator Struct
  * ========================================================================== */
 
-typedef struct apac_alloc_t apac_alloc_t;
+typedef struct apac_alloc_t
+{
+    apac_malloc_t custom_malloc;
+    apac_realloc_t custom_realloc;
+    apac_free_t custom_free;
+    void* ctx;
+
+} apac_alloc_t;
 
 extern apac_alloc_t apac_allocator;
 
