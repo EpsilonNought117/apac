@@ -8,7 +8,7 @@ struct apac_alloc_t
     void* ctx;
 };
 
-apac_alloc_t apac_allocator = { 0 };
+apac_alloc_t apac_allocator = { NULL };
 
 // libc malloc wrapper
 static inline void* libc_malloc_wrapper(size_t new_size, void* ctx)

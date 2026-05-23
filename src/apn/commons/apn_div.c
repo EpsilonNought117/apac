@@ -21,7 +21,7 @@ apac_err apn_div(
     APAC_ASSERT(size_dvsr != 0);
     APAC_ASSERT(size_divd >= size_dvsr);
 
-    ap_size_t size_quot = size_divd - size_dvsr + 1;
+    ap_size_t size_quot = size_divd + size_divd_frac - size_dvsr + 1;
     ap_size_t size_rmdr = size_dvsr;
 
     APAC_NO_OVERLAP(quotient, size_quot, remainder, size_rmdr);
@@ -62,7 +62,7 @@ apac_err apn_div(
 
 full_division:
 
-    APAC_ASSERT(apac_malloc != NULL && apac_free != NULL);
+    APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
     // unconditionally allocate extra segment, idea taken from the book
     // "hacker's delight" 2nd edition's multiprecision division algorithm
@@ -91,6 +91,8 @@ full_division:
         // if this step results in no shift-out val, then top segment of dividend stays zero
         temp_divd[new_size_divd - 1] = apn_lshift(temp_divd, temp_divd, new_size_divd, (ap_dig_t)dvsr_shift_val);
     }
+
+    // actual division below
     
     if ((new_size_divd - size_dvsr) < DNC_DIV_THRESHOLD)
     {
