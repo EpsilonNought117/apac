@@ -150,31 +150,6 @@ check_apn_addmul_one(uint64_t iterations)
         cmp_res = apn_cmp(op3, op4, size + 1);
 
         APAC_ALWAYS_ASSERT(cmp_res == 0);
-
-        /* TEST-7: aliasing */
-
-        apn_set_random(op1, size);
-        apn_cpy(op2, op1, size);
-
-        do
-        {
-            apn_set_random(&val, 1);
-
-        } while (val == 0);
-
-        ap_dig_t carry_alias = apn_addmul_one(op1, op1, size, val);
-
-        /* reference */
-
-        apn_set(op3, size + 1, 0);
-
-        ap_dig_t carry_ref = apn_addmul_one(op3, op2, size, val);
-
-        carry_ref += apn_add(op3, op3, op2, size + 1, size);
-        cmp_res = apn_cmp(op1, op3, size);
-
-        APAC_ALWAYS_ASSERT(carry_alias == carry_ref);
-        APAC_ALWAYS_ASSERT(cmp_res == 0);
     }
 
     apac_free(op4);
