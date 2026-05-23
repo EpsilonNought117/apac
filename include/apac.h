@@ -5,6 +5,8 @@
     #define _GNU_SOURCE
 #endif
 
+#include <stddef.h> // for size_t
+
 /****************************************************************************************************/
 /******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
 /****************************************************************************************************/
@@ -92,7 +94,7 @@
     )
 
     typedef unsigned long long  ap_dig_t;
-    typedef unsigned long long  ap_size_t;
+    typedef size_t              ap_size_t;
 
 #else
     #error "Unknown Platform and CPU Architecture!"
