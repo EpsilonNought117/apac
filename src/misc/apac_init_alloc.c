@@ -1,13 +1,5 @@
 #include "../header/apac_internal.h"
 
-struct apac_alloc_t
-{
-    apac_malloc_t custom_malloc;
-    apac_realloc_t custom_realloc;
-    apac_free_t custom_free;
-    void* ctx;
-};
-
 apac_alloc_t apac_allocator = { NULL };
 
 // libc malloc wrapper
