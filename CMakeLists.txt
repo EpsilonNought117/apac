@@ -9,6 +9,8 @@
 cmake_minimum_required(VERSION 3.12)
 project(libapac)
 
+enable_testing()
+
 # Requires a 64-bit Computer
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "Only 64-bit builds are supported.")
@@ -82,9 +84,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Option to build a shared lib instead of a static lib
 option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-option(BUILD_APN_TESTS "Build apn_tests program for testing correctness of routines" OFF)
+option(BUILD_APAC_TESTS "Build apn_tests program for testing correctness of routines" OFF)
 option(BUILD_APN_TUNE "Build apn_tune threshold tuning program" OFF)
-option(BUILD_EXAMPLES "Build programming examples to demonstrate working of the library" OFF)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -240,22 +241,59 @@ else()
     )
 endif()
 
-# --- APN TESTS -----------------------------------------------------------------
+# --- APAC TESTS ----------------------------------------------------------------
 
-if (BUILD_APN_TESTS)
+if (BUILD_APAC_TESTS)
 
-    message(STATUS "Building apn_tests")
+    message(STATUS "Building APAC tests")
 
-    add_executable(apn_tests
-        "tests/apn_tests.c"
+    set(APAC_TEST_SOURCES
+
+        "tests/test_apn_div.c"
+        "tests/test_apn_mul.c"
+        "tests/test_apn_mul_n.c"
+        "tests/test_apn_sqr.c"
+        "tests/test_apn_set.c"    
+        "tests/test_apn_cpy.c"
+        "tests/test_apn_cmp.c"
+        "tests/test_apn_is_zero.c"
+        "tests/test_apn_add_one.c"
+        "tests/test_apn_add_n.c"
+        "tests/test_apn_add.c"
+        "tests/test_apn_neg.c"
+        "tests/test_apn_sub_one.c"
+        "tests/test_apn_sub_n.c"
+        "tests/test_apn_sub.c"
+        "tests/test_apn_addmul_one.c"
+        "tests/test_apn_submul_one.c"
+        "tests/test_apn_div_one.c"
+        "tests/test_apn_lshift.c"
+        "tests/test_apn_rshift.c"
     )
 
-    target_link_libraries(apn_tests PRIVATE ${apac_target})
+    foreach(test_src ${APAC_TEST_SOURCES})
 
-    target_include_directories(apn_tests PRIVATE
-        ${CMAKE_SOURCE_DIR}/include     # for apac.h
-        ${CMAKE_SOURCE_DIR}/utilities   # for apac_utilities.h
-    )
+        get_filename_component(test_name ${test_src} NAME_WE)
+
+        add_executable(${test_name}
+            ${test_src}
+        )
+
+        target_link_libraries(${test_name} PRIVATE
+            ${apac_target}
+        )
+
+        target_include_directories(${test_name} PRIVATE
+            ${PROJECT_SOURCE_DIR}/include
+            ${PROJECT_SOURCE_DIR}/src/header
+        )
+
+        add_test(
+            NAME ${test_name}
+            COMMAND ${test_name}
+        )
+
+    endforeach()
 
 endif()
 
@@ -272,35 +310,8 @@ if (BUILD_APN_TUNE)
     target_link_libraries(apn_tune PRIVATE ${apac_target})
 
     target_include_directories(apn_tune PRIVATE
-        ${CMAKE_SOURCE_DIR}/include     # for apac.h
-        ${CMAKE_SOURCE_DIR}/utilities   # for apac_utilities.h
+        ${CMAKE_SOURCE_DIR}/include
+
     )
-
-endif()
-
-# --- EXAMPLES -----------------------------------------------------------------
-
-if (BUILD_EXAMPLES)
-
-    message(STATUS "Building examples")
-
-    set(APAC_EXAMPLES
-        factorial
-        fibonacci
-    )
-
-    foreach(exe IN LISTS APAC_EXAMPLES)
-        add_executable(${exe} examples/${exe}.c)
-
-        target_link_libraries(${exe} PRIVATE ${apac_target})
-
-        target_include_directories(${exe} PRIVATE
-            ${CMAKE_SOURCE_DIR}/include
-        )
-
-        if (UNIX)
-            target_link_libraries(${exe} PRIVATE m)
-        endif()
-    endforeach()
 
 endif()

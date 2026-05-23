@@ -71,7 +71,7 @@ full_division:
     if (!temp_space) { return APAC_OOM; }
 
     ap_dig_t* temp_dvsr = temp_space;
-    ap_dig_t* temp_divd = temp_space + size_dvsr;
+    ap_dig_t* temp_divd = &temp_space[size_dvsr];
     
     apn_cpy(temp_dvsr, divisor, size_dvsr);
     if (size_divd_frac != 0) { apn_set(temp_divd, size_divd_frac, 0); } // must check
@@ -89,7 +89,7 @@ full_division:
         APAC_ASSERT(out_val == 0);
 
         // if this step results in no shift-out val, then top segment of dividend stays zero
-        temp_divd[new_size_divd - 1] = apn_lshift(temp_divd, temp_divd, new_size_divd, (ap_dig_t)dvsr_shift_val);
+        temp_divd[new_size_divd - 1] = apn_lshift(temp_divd, temp_divd, new_size_divd - 1, (ap_dig_t)dvsr_shift_val);
     }
 
     // actual division below

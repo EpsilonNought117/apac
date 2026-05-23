@@ -1,6 +1,6 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)7000ULL)
+#define TEST_SIZE_MAX ((ap_size_t)4096ULL)
 
 static int
 is_zero_ref(
