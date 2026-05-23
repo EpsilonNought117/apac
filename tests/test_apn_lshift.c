@@ -1,4 +1,3 @@
-#include "../include/apac.h"
 #include "../src/header/apac_internal.h"
 
 #define TEST_SIZE_MAX ((ap_size_t)7000ULL)
