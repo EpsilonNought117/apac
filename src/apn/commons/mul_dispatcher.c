@@ -16,12 +16,10 @@ void apn_mul_dispatcher(
     ap_dig_t* temp
 )
 {
+    bool is_toomcook32_valid = (size2 <= 2 * ((size1 + 2) / 3)) && (size2 >= ((size1 + 2) / 3) + 2);
+    bool is_toomcook42_valid = (size2 <= 2 * ((size1 + 3) / 4)) && (size2 >= ((size1 + 3) / 4) + 3);
     bool is_karatsuba_valid = (size2 > (size1 + 1) / 2) && (size1 >= KARATSUBA_MUL_THRESHOLD);
     bool is_toomcook3_valid = (size2 >= 2 * ((size1 + 2) / 3) + 2) && (size1 >= TOOMCOOK3_MUL_THRESHOLD);
-
-    // Heuristics obtained from visual bounds and trial-&-error method
-	bool is_toomcook32_valid = (size2 + 2 <= size1) && (size1 + 6 <= 3 * size2);
-	bool is_toomcook42_valid = (2 * size1 >= 3 * size2 + 4) && (size1 <= 4 * size2 - 12);
     
     if (is_toomcook32_valid)
     {
@@ -31,13 +29,13 @@ void apn_mul_dispatcher(
     {
         apn_toomcook42_mul(result, op1, op2, size1, size2, temp);
     }
-    else if (is_karatsuba_valid)
-    {
-        apn_karatsuba_mul(result, op1, op2, size1, size2, temp);
-    }
     else if (is_toomcook3_valid)
     {
         apn_toomcook3_mul(result, op1, op2, size1, size2, temp);
+    }
+    else if (is_karatsuba_valid)
+    {
+        apn_karatsuba_mul(result, op1, op2, size1, size2, temp);
     }
     else
     {

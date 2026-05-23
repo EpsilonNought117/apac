@@ -83,17 +83,17 @@ void apn_karatsuba_mul(
 		apn_karatsuba_mul(&result[2 * lower], &op1[lower], &op2[lower], upper_a, upper_b, &temp[2 * lower]);
 
 		// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)] and then propagate any carry
-		temp[4 * lower] += apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, upper_a + upper_b);
+		ap_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, upper_a + upper_b);
 
 		if (carry1 == carry2) // if both signs are same
 		{
 			// do c2 = c0 + c1 - c2
-			apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower + 1, 2 * lower);
+			temp_val -= apn_sub_n(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower);
 		}
 		else // otherwise if opposite signs
 		{
 			// do c2 = c0 + c1 + c2
-			apn_add(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower + 1, 2 * lower);
+			temp_val += apn_add_n(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower);
 		}
 
 		/*
@@ -107,12 +107,13 @@ void apn_karatsuba_mul(
 							|   2 * upper  |
 		*/
 
-		ap_size_t temp_size1 = lower + upper_a + upper_b;
-		ap_size_t temp_size2 = temp_size1 < 2 * lower + 1 ? temp_size1 : 2 * lower + 1;
-
 		// add c2 to the middle of result
-		apn_add(&result[lower], &result[lower], &temp[2 * lower], temp_size1, temp_size2);
-		apn_set(temp, 4 * lower + 1, 0);	// clear workspace for any further calls
+		apn_add(&result[lower], &result[lower], &temp[2 * lower], lower + upper_a + upper_b, 2 * lower);
+		if (upper_a + upper_b > lower)
+		{
+			apn_add_one(&result[3 * lower], &result[3 * lower], upper_a + upper_b - lower, temp_val);
+		}
+		apn_set(temp, 4 * lower, 0);	// clear workspace for any further calls
 	}
 
 	return;
