@@ -1,297 +1,517 @@
 #include "../src/header/apac_internal.h"
 
-extern apac_cpu_params curr_cpu;
+#define MAX_RUNTIME_1 ((uint64_t)10 * 1000 * 1000)
+#define MAX_RUNTIME_2 ((uint64_t)100 * 1000)
 
-#define MAX_RUNTIME_1 (uint64_t)10 * 1000 * 1000
-#define MAX_RUNTIME_2 (uint64_t)100 * 1000
+/*
+ * Small step size is important because recursive crossover
+ * regions can shift sharply across only a few limbs.
+ */
+#define SIZE_STEP_SIZE ((ap_size_t)2)
 
-/* Step size for operand size iterations across all sweeps */
-#define SIZE_STEP_SIZE (ap_size_t)10
+/*
+ * We use minimum observed timings because system noise
+ * almost always increases runtime rather than decreases it.
+ *
+ * Small improve threshold avoids premature convergence.
+ */
+#define IMPROVE_PCT (0.002)
+
+/*
+ * First threshold within FLATLINE_PCT of global optimum
+ * is selected.
+ */
+#define FLATLINE_PCT (0.003)
 
 #define APN_TUNE_ASSERT(expr)           \
-        do                              \
+    do                                  \
+    {                                   \
+        if (!(expr))                    \
         {                               \
-            if (!(expr))                \
-            {                           \
-                apac_restore_dfs();     \
-            }                           \
-            APAC_ALWAYS_ASSERT((expr)); \
-        } while (0)
+            apac_restore_dfs();         \
+        }                               \
+        APAC_ALWAYS_ASSERT((expr));     \
+    } while (0)
 
-static void get_karatsuba_mul_threshold(void)
+static uint64_t benchmark_mul(
+    ap_dig_t* res,
+    ap_dig_t* op1,
+    ap_dig_t* op2,
+    ap_size_t size)
+{
+    uint64_t best = UINT64_MAX;
+    uint64_t last_improve = apac_os_timer();
+
+    for (;;)
+    {
+        uint64_t t0 = apac_cpu_timer();
+
+        apn_mul_n(res, op1, op2, size);
+
+        uint64_t t1 = apac_cpu_timer();
+
+        uint64_t dur = t1 - t0;
+
+        if (best == UINT64_MAX ||
+            dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
+        {
+            best = dur;
+            last_improve = apac_os_timer();
+        }
+        else if ((apac_os_timer() - last_improve) >= MAX_RUNTIME_1)
+        {
+            break;
+        }
+    }
+
+    return best;
+}
+
+static uint64_t benchmark_sqr(
+    ap_dig_t* res,
+    ap_dig_t* op1,
+    ap_size_t size)
+{
+    uint64_t best = UINT64_MAX;
+    uint64_t last_improve = apac_os_timer();
+
+    for (;;)
+    {
+        uint64_t t0 = apac_cpu_timer();
+
+        apn_sqr(res, op1, size);
+
+        uint64_t t1 = apac_cpu_timer();
+
+        uint64_t dur = t1 - t0;
+
+        if (best == UINT64_MAX ||
+            dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
+        {
+            best = dur;
+            last_improve = apac_os_timer();
+        }
+        else if ((apac_os_timer() - last_improve) >= MAX_RUNTIME_1)
+        {
+            break;
+        }
+    }
+
+    return best;
+}
+
+static ap_size_t choose_flatline_threshold(
+    double* avg_times,
+    ap_size_t thresh_start,
+    ap_size_t thresh_end)
+{
+    double best = avg_times[0];
+
+    for (ap_size_t i = 1;
+         i <= (thresh_end - thresh_start);
+         i++)
+    {
+        if (avg_times[i] < best)
+        {
+            best = avg_times[i];
+        }
+    }
+
+    for (ap_size_t i = 0;
+         i <= (thresh_end - thresh_start);
+         i++)
+    {
+        if (avg_times[i] <= best * (1.0 + FLATLINE_PCT))
+        {
+            return thresh_start + i;
+        }
+    }
+
+    return thresh_end;
+}
+
+static ap_size_t get_karatsuba_mul_threshold(void)
 {
     const ap_size_t thresh_start = 10;
-    const ap_size_t thresh_end = 60;
+    const ap_size_t thresh_end = 80;
+
     const ap_size_t size_start = 1;
-    const ap_size_t size_end = 400;
+    const ap_size_t size_end = 256;
 
-    const double IMPROVE_PCT = 0.05;   /* 5% improvement required */
+    double avg_times[
+        (thresh_end - thresh_start) + 1];
 
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
+    ap_dig_t* op1 =
+        apac_malloc(sizeof(ap_dig_t) * size_end);
+
+    ap_dig_t* op2 =
+        apac_malloc(sizeof(ap_dig_t) * size_end);
+
+    ap_dig_t* res =
+        apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(op2 != NULL);
     APN_TUNE_ASSERT(res != NULL);
 
-    FILE* fp = fopen("karatsuba_mul_balanced_threshold.csv", "w");
+    FILE* fp =
+        fopen("karatsuba_mul_threshold.csv", "w");
+
     APN_TUNE_ASSERT(fp != NULL);
 
-    fprintf(fp, "threshold,size,min_cycles\n");
+    fprintf(fp,
+        "threshold,size,min_cycles\n");
 
     TOOMCOOK3_MUL_THRESHOLD = APN_DIG_MAX;
 
-    for (ap_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
+    for (ap_size_t thresh = thresh_start;
+         thresh <= thresh_end;
+         thresh++)
     {
-        printf("Testing Karatsuba Balanced Mul Threshold %" PRI_APN_SIZE " ... \n", thresh);
+        printf(
+            "Testing Karatsuba Mul Threshold %" PRI_APN_SIZE "... ",
+            thresh);
+
         fflush(stdout);
 
         KARATSUBA_MUL_THRESHOLD = thresh;
 
-        for (ap_size_t size = size_start; size <= size_end; size += SIZE_STEP_SIZE)
+        double total = 0.0;
+        uint64_t count = 0;
+
+        for (ap_size_t size = size_start;
+             size <= size_end;
+             size += SIZE_STEP_SIZE)
         {
             apn_set_random(op1, size);
             apn_set_random(op2, size);
 
-            uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_os_timer();
+            uint64_t best =
+                benchmark_mul(res, op1, op2, size);
 
-            for (;;)
-            {
-                uint64_t t0 = apac_cpu_timer();
-                apn_mul_n(res, op1, op2, size);
-                uint64_t t1 = apac_cpu_timer();
+            fprintf(fp,
+                "%" PRI_APN_SIZE
+                ",%" PRI_APN_SIZE
+                ",%" PRIu64 "\n",
+                thresh,
+                size,
+                best);
 
-                uint64_t dur = t1 - t0;
-
-                if (best == UINT64_MAX || dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
-                {
-                    best = dur;
-                    last_improve = apac_os_timer();
-                }
-                else
-                {
-                    uint64_t now = apac_os_timer();
-                    if ((now - last_improve) >= MAX_RUNTIME_1)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            fprintf(fp, "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n", thresh, size, best);
+            total += (double)best;
+            count++;
         }
+
+        avg_times[thresh - thresh_start] =
+            total / (double)count;
+
+        printf(
+            "avg = %.3f\n",
+            avg_times[thresh - thresh_start]);
     }
 
     fclose(fp);
+
+    ap_size_t best_thresh =
+        choose_flatline_threshold(
+            avg_times,
+            thresh_start,
+            thresh_end);
+
+    printf(
+        "\nSelected Karatsuba Mul Threshold = %" PRI_APN_SIZE "\n",
+        best_thresh);
+
     apac_free(op1);
     apac_free(op2);
     apac_free(res);
+
+    KARATSUBA_MUL_THRESHOLD = best_thresh;
+
+    return best_thresh;
 }
 
-static void get_karatsuba_sqr_threshold(void)
+static ap_size_t get_karatsuba_sqr_threshold(void)
 {
     const ap_size_t thresh_start = 10;
-    const ap_size_t thresh_end = 80;
+    const ap_size_t thresh_end = 100;
+
     const ap_size_t size_start = 1;
-    const ap_size_t size_end = 400;
+    const ap_size_t size_end = 256;
 
-    const double IMPROVE_PCT = 0.05;
+    double avg_times[
+        (thresh_end - thresh_start) + 1];
 
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
+    ap_dig_t* op1 =
+        apac_malloc(sizeof(ap_dig_t) * size_end);
+
+    ap_dig_t* res =
+        apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(res != NULL);
 
-    FILE* fp = fopen("karatsuba_sqr_threshold.csv", "w");
+    FILE* fp =
+        fopen("karatsuba_sqr_threshold.csv", "w");
+
     APN_TUNE_ASSERT(fp != NULL);
 
-    fprintf(fp, "threshold,size,min_cycles\n");
+    fprintf(fp,
+        "threshold,size,min_cycles\n");
 
     TOOMCOOK3_SQR_THRESHOLD = APN_DIG_MAX;
 
-    for (ap_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
+    for (ap_size_t thresh = thresh_start;
+         thresh <= thresh_end;
+         thresh++)
     {
-        printf("Testing Karatsuba Sqr Threshold %" PRI_APN_SIZE " ... \n", thresh);
+        printf(
+            "Testing Karatsuba Sqr Threshold %" PRI_APN_SIZE "... ",
+            thresh);
+
         fflush(stdout);
 
         KARATSUBA_SQR_THRESHOLD = thresh;
 
-        for (ap_size_t size = size_start; size <= size_end; size += SIZE_STEP_SIZE)
+        double total = 0.0;
+        uint64_t count = 0;
+
+        for (ap_size_t size = size_start;
+             size <= size_end;
+             size += SIZE_STEP_SIZE)
         {
             apn_set_random(op1, size);
 
-            uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_os_timer();
+            uint64_t best =
+                benchmark_sqr(res, op1, size);
 
-            for (;;)
-            {
-                uint64_t t0 = apac_cpu_timer();
-                apn_sqr(res, op1, size);
-                uint64_t t1 = apac_cpu_timer();
+            fprintf(fp,
+                "%" PRI_APN_SIZE
+                ",%" PRI_APN_SIZE
+                ",%" PRIu64 "\n",
+                thresh,
+                size,
+                best);
 
-                uint64_t dur = t1 - t0;
-
-                if (best == UINT64_MAX || dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
-                {
-                    best = dur;
-                    last_improve = apac_os_timer();
-                }
-                else
-                {
-                    uint64_t now = apac_os_timer();
-                    if ((now - last_improve) >= MAX_RUNTIME_1)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            fprintf(fp, "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n", thresh, size, best);
+            total += (double)best;
+            count++;
         }
+
+        avg_times[thresh - thresh_start] =
+            total / (double)count;
+
+        printf(
+            "avg = %.3f\n",
+            avg_times[thresh - thresh_start]);
     }
 
     fclose(fp);
+
+    ap_size_t best_thresh =
+        choose_flatline_threshold(
+            avg_times,
+            thresh_start,
+            thresh_end);
+
+    printf(
+        "\nSelected Karatsuba Sqr Threshold = %" PRI_APN_SIZE "\n",
+        best_thresh);
+
     apac_free(op1);
     apac_free(res);
+
+    KARATSUBA_SQR_THRESHOLD = best_thresh;
+
+    return best_thresh;
 }
 
-static void get_toomcook3_mul_threshold(void)
+static ap_size_t get_toomcook3_mul_threshold(void)
 {
-    const ap_size_t thresh_start = 150;
-    const ap_size_t thresh_end = 280;
+    const ap_size_t thresh_start = 100;
+    const ap_size_t thresh_end = 256;
+
     const ap_size_t size_start = 1;
     const ap_size_t size_end = 512;
 
-    const double IMPROVE_PCT = 0.05;
+    double avg_times[
+        (thresh_end - thresh_start) + 1];
 
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
+    ap_dig_t* op1 =
+        apac_malloc(sizeof(ap_dig_t) * size_end);
+
+    ap_dig_t* op2 =
+        apac_malloc(sizeof(ap_dig_t) * size_end);
+
+    ap_dig_t* res =
+        apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(op2 != NULL);
     APN_TUNE_ASSERT(res != NULL);
 
-    FILE* fp = fopen("toomcook3_mul_balanced_threshold.csv", "w");
+    FILE* fp =
+        fopen("toomcook3_mul_threshold.csv", "w");
+
     APN_TUNE_ASSERT(fp != NULL);
 
-    fprintf(fp, "threshold,size,min_cycles\n");
+    fprintf(fp,
+        "threshold,size,min_cycles\n");
 
-    for (ap_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
+    for (ap_size_t thresh = thresh_start;
+         thresh <= thresh_end;
+         thresh++)
     {
-        printf("Testing Toom-Cook3 Balanced Mul Threshold %" PRI_APN_SIZE " ... \n", thresh);
+        printf(
+            "Testing ToomCook3 Mul Threshold %" PRI_APN_SIZE "... ",
+            thresh);
+
         fflush(stdout);
 
         TOOMCOOK3_MUL_THRESHOLD = thresh;
 
-        for (ap_size_t size = size_start; size <= size_end; size += SIZE_STEP_SIZE)
+        double total = 0.0;
+        uint64_t count = 0;
+
+        for (ap_size_t size = size_start;
+             size <= size_end;
+             size += SIZE_STEP_SIZE)
         {
             apn_set_random(op1, size);
             apn_set_random(op2, size);
 
-            uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_os_timer();
+            uint64_t best =
+                benchmark_mul(res, op1, op2, size);
 
-            for (;;)
-            {
-                uint64_t t0 = apac_cpu_timer();
-                apn_mul_n(res, op1, op2, size);
-                uint64_t t1 = apac_cpu_timer();
+            fprintf(fp,
+                "%" PRI_APN_SIZE
+                ",%" PRI_APN_SIZE
+                ",%" PRIu64 "\n",
+                thresh,
+                size,
+                best);
 
-                uint64_t dur = t1 - t0;
-
-                if (best == UINT64_MAX || dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
-                {
-                    best = dur;
-                    last_improve = apac_os_timer();
-                }
-                else
-                {
-                    uint64_t now = apac_os_timer();
-                    if ((now - last_improve) >= MAX_RUNTIME_1)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            fprintf(fp, "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n", thresh, size, best);
+            total += (double)best;
+            count++;
         }
+
+        avg_times[thresh - thresh_start] =
+            total / (double)count;
+
+        printf(
+            "avg = %.3f\n",
+            avg_times[thresh - thresh_start]);
     }
 
     fclose(fp);
+
+    ap_size_t best_thresh =
+        choose_flatline_threshold(
+            avg_times,
+            thresh_start,
+            thresh_end);
+
+    printf(
+        "\nSelected ToomCook3 Mul Threshold = %" PRI_APN_SIZE "\n",
+        best_thresh);
+
     apac_free(op1);
     apac_free(op2);
     apac_free(res);
+
+    TOOMCOOK3_MUL_THRESHOLD = best_thresh;
+
+    return best_thresh;
 }
 
-static void get_toomcook3_sqr_threshold(void)
+static ap_size_t get_toomcook3_sqr_threshold(void)
 {
-    const ap_size_t thresh_start = 150;
+    const ap_size_t thresh_start = 120;
     const ap_size_t thresh_end = 300;
+
     const ap_size_t size_start = 1;
     const ap_size_t size_end = 512;
 
-    const double IMPROVE_PCT = 0.05;
+    double avg_times[
+        (thresh_end - thresh_start) + 1];
 
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * size_end);
-    ap_dig_t* res = apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
+    ap_dig_t* op1 =
+        apac_malloc(sizeof(ap_dig_t) * size_end);
+
+    ap_dig_t* res =
+        apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(res != NULL);
 
-    FILE* fp = fopen("toomcook3_sqr_threshold.csv", "w");
+    FILE* fp =
+        fopen("toomcook3_sqr_threshold.csv", "w");
+
     APN_TUNE_ASSERT(fp != NULL);
 
-    fprintf(fp, "threshold,size,min_cycles\n");
+    fprintf(fp,
+        "threshold,size,min_cycles\n");
 
-    for (ap_size_t thresh = thresh_start; thresh <= thresh_end; thresh++)
+    for (ap_size_t thresh = thresh_start;
+         thresh <= thresh_end;
+         thresh++)
     {
-        printf("Testing Toom-Cook3 Sqr Threshold %" PRI_APN_SIZE " ... \n", thresh);
+        printf(
+            "Testing ToomCook3 Sqr Threshold %" PRI_APN_SIZE "... ",
+            thresh);
+
         fflush(stdout);
 
         TOOMCOOK3_SQR_THRESHOLD = thresh;
 
-        for (ap_size_t size = size_start; size <= size_end; size += SIZE_STEP_SIZE)
+        double total = 0.0;
+        uint64_t count = 0;
+
+        for (ap_size_t size = size_start;
+             size <= size_end;
+             size += SIZE_STEP_SIZE)
         {
             apn_set_random(op1, size);
 
-            uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_os_timer();
+            uint64_t best =
+                benchmark_sqr(res, op1, size);
 
-            for (;;)
-            {
-                uint64_t t0 = apac_cpu_timer();
-                apn_sqr(res, op1, size);
-                uint64_t t1 = apac_cpu_timer();
+            fprintf(fp,
+                "%" PRI_APN_SIZE
+                ",%" PRI_APN_SIZE
+                ",%" PRIu64 "\n",
+                thresh,
+                size,
+                best);
 
-                uint64_t dur = t1 - t0;
-
-                if (best == UINT64_MAX || dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
-                {
-                    best = dur;
-                    last_improve = apac_os_timer();
-                }
-                else
-                {
-                    uint64_t now = apac_os_timer();
-                    if ((now - last_improve) >= MAX_RUNTIME_1)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            fprintf(fp, "%" PRI_APN_SIZE ",%" PRI_APN_SIZE ",%" PRIu64 "\n", thresh, size, best);
+            total += (double)best;
+            count++;
         }
+
+        avg_times[thresh - thresh_start] =
+            total / (double)count;
+
+        printf(
+            "avg = %.3f\n",
+            avg_times[thresh - thresh_start]);
     }
 
     fclose(fp);
+
+    ap_size_t best_thresh =
+        choose_flatline_threshold(
+            avg_times,
+            thresh_start,
+            thresh_end);
+
+    printf(
+        "\nSelected ToomCook3 Sqr Threshold = %" PRI_APN_SIZE "\n",
+        best_thresh);
+
     apac_free(op1);
     apac_free(res);
+
+    TOOMCOOK3_SQR_THRESHOLD = best_thresh;
+
+    return best_thresh;
 }
 
 static void get_dnc_div_threshold(void)
@@ -300,8 +520,6 @@ static void get_dnc_div_threshold(void)
     const ap_size_t thresh_end = 80;
     const ap_size_t size_start = 1;
     const ap_size_t size_end = 384;
-
-    const double IMPROVE_PCT = 0.05;
 
     ap_dig_t* dividend = apac_malloc(sizeof(ap_dig_t) * (size_end * 2));
     ap_dig_t* divisor = apac_malloc(sizeof(ap_dig_t) * size_end);

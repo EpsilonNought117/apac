@@ -3,11 +3,11 @@
 // Tested on Ryzen 7 8845HS running at 3.8 GHz Base Clock
 void zen4_set_params(void)
 {
-	curr_cpu.karatsuba_mul_threshold   	= (ap_size_t)(28);
-	curr_cpu.toomcook3_mul_threshold	= (ap_size_t)(120);
-	curr_cpu.toomcook3_sqr_threshold    = (ap_size_t)(100);
-	curr_cpu.karatsuba_sqr_threshold	= (ap_size_t)(52);
-	curr_cpu.dnc_div_threshold          = (ap_size_t)(36);
+	KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(30);
+	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(52);
+	TOOMCOOK3_MUL_THRESHOLD  = (ap_size_t)(181);
+	TOOMCOOK3_SQR_THRESHOLD  = (ap_size_t)(256);
+	DNC_DIV_THRESHOLD        = (ap_size_t)(32);
 
 	curr_cpu.apn_add_n_ptr			= add_n_zen4;
 	curr_cpu.apn_sub_n_ptr			= sub_n_zen4;
@@ -34,11 +34,11 @@ void zen4_set_params(void)
 void generic_x64_set_params(void)
 {
 	/* random cut-off thresholds */
-	curr_cpu.karatsuba_mul_threshold	= (ap_size_t)(20);
-	curr_cpu.karatsuba_sqr_threshold    = (ap_size_t)(40);
-	curr_cpu.toomcook3_mul_threshold    = (ap_size_t)(100);
-	curr_cpu.toomcook3_sqr_threshold    = (ap_size_t)(110);
-	curr_cpu.dnc_div_threshold          = (ap_size_t)(50);
+	KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(20);
+	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(30);
+	TOOMCOOK3_MUL_THRESHOLD  = (ap_size_t)(40);
+	TOOMCOOK3_SQR_THRESHOLD  = (ap_size_t)(50);
+	DNC_DIV_THRESHOLD        = (ap_size_t)(30);
 
 	curr_cpu.apn_add_n_ptr          = add_n_x64;
 	curr_cpu.apn_sub_n_ptr          = sub_n_x64;
