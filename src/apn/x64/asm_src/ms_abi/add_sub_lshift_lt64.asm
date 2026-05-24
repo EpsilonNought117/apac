@@ -166,7 +166,7 @@ main_loop:
 
     add     al,  -1
     INSTR2  r12, r11
-    mov     QWORD PTR [rbx], r12
+    mov     QWORD PTR [rbx + 8], r12
     setc    al
 
     add     rdx, 8
