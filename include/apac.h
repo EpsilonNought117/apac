@@ -94,7 +94,7 @@
     )
 
     typedef unsigned long long  ap_dig_t;
-    typedef size_t              ap_size_t;
+    typedef unsigned long long  ap_size_t;
 
 #else
     #error "Unknown Platform and CPU Architecture!"
