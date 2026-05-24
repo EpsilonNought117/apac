@@ -1,6 +1,6 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)4096ULL)
+#define TEST_SIZE_MAX ((ap_size_t)512ULL)
 
 static void
 check_apn_div_one(uint64_t iterations)

@@ -261,11 +261,7 @@ void apac_restore_dfs(void);
 typedef struct apac_cpu_params
 {
     ap_size_t karatsuba_mul_threshold;
-    ap_size_t toomcook3_mul_threshold;
-
     ap_size_t karatsuba_sqr_threshold;
-    ap_size_t toomcook3_sqr_threshold;
-
     ap_size_t dnc_div_threshold;
 
     ap_dig_t(*apn_add_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
@@ -279,9 +275,6 @@ typedef struct apac_cpu_params
 
     ap_dig_t(*apn_lshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
     ap_dig_t(*apn_rshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-
-    ap_dig_t(*apn_lshift_add_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t(*apn_lshift_sub_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
 
     void (*apn_mul_bc_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_size_t);
     void (*apn_sqr_bc_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
@@ -301,29 +294,7 @@ extern apac_cpu_params curr_cpu;
  * ========================================================================== */
 
 #define KARATSUBA_MUL_THRESHOLD (curr_cpu.karatsuba_mul_threshold)
-#define TOOMCOOK3_MUL_THRESHOLD (curr_cpu.toomcook3_mul_threshold)
 #define KARATSUBA_SQR_THRESHOLD	(curr_cpu.karatsuba_sqr_threshold)
-#define TOOMCOOK3_SQR_THRESHOLD (curr_cpu.toomcook3_sqr_threshold)
 #define DNC_DIV_THRESHOLD	    (curr_cpu.dnc_div_threshold)
-
-/****************************************************************************************************/
-/*********************************      INTERNAL APN FUNCTIONS    ***********************************/
-/****************************************************************************************************/
-
-ap_dig_t apn_lshift_add(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size,
-    ap_dig_t bit_cnt
-);
-
-ap_dig_t apn_lshift_sub(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size,
-    ap_dig_t bit_cnt
-);
 
 #endif

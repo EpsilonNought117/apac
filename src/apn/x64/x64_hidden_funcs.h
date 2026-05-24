@@ -217,40 +217,6 @@ extern ap_dig_t rshift_lt64_x64(
 	ap_dig_t bit_cnt
 );
 
-/* ----------------------- LSHIFT-ADD/SUB COMBINED FUNCTIONS -------------------------- */
-
-extern ap_dig_t lshift_lt64_add_zen4(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t,
-	ap_dig_t
-);
-
-extern ap_dig_t lshift_lt64_add_x64(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t,
-	ap_dig_t
-);
-
-extern ap_dig_t lshift_lt64_sub_zen4(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t,
-	ap_dig_t
-);
-
-extern ap_dig_t lshift_lt64_sub_x64(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t,
-	ap_dig_t
-);
-
 /* ------------------------------- COMPARISION FUNCTION ------------------------------- */
 
 extern int cmp_avx2_4unroll(

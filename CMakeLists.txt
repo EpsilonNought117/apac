@@ -124,18 +124,12 @@ set(apac_c_sources
     # APN HIDDEN FUNCS
 
     "src/apn/commons/basecase_div.c"
-    "src/apn/commons/dnc_div.c"
-    "src/apn/commons/basecase_mul.c"
-    "src/apn/commons/karatsuba_mul.c"
-    "src/apn/commons/toomcook3_mul.c"
     "src/apn/commons/basecase_sqr.c"
+    "src/apn/commons/basecase_mul.c"
+    "src/apn/commons/dnc_div.c"
     "src/apn/commons/karatsuba_sqr.c"
-    "src/apn/commons/toomcook3_sqr.c"
+    "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/div_helpers.c"
-    "src/apn/commons/toomcook32_mul.c"
-    "src/apn/commons/toomcook42_mul.c"
-    "src/apn/commons/mul_dispatcher.c"
-    "src/apn/commons/lshift_add_sub.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
@@ -157,7 +151,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
         set(x64_asm_sources
             "src/apn/x64/asm_src/ms_abi/add_sub_n.asm"
             "src/apn/x64/asm_src/ms_abi/add_sub_one.asm"
-            "src/apn/x64/asm_src/ms_abi/add_sub_lshift_lt64.asm"
             "src/apn/x64/asm_src/ms_abi/mul_bc.asm"
             "src/apn/x64/asm_src/ms_abi/addmul_one.asm"
             "src/apn/x64/asm_src/ms_abi/submul_one.asm"
@@ -174,7 +167,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
             "src/apn/x64/asm_src/sysv_abi/add_sub_n.s"
             "src/apn/x64/asm_src/sysv_abi/add_sub_one.s"
-            "src/apn/x64/asm_src/sysv_abi/add_sub_lshift_lt64.s"
             "src/apn/x64/asm_src/sysv_abi/mul_bc.s"
             "src/apn/x64/asm_src/sysv_abi/addmul_one.s"
             "src/apn/x64/asm_src/sysv_abi/submul_one.s"
@@ -216,9 +208,8 @@ endif()
 
 set(apac_target apac)
 
-# Configuration-specific definitions
 target_compile_definitions(${apac_target} PRIVATE
-    "$<$<CONFIG:Release>:APAC_DISABLE_ASSERT>"
+    "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:APAC_DISABLE_ASSERT>"
 )
 
 # --- STRIP PATHS FROM __FILE__ -------------------------------------------------

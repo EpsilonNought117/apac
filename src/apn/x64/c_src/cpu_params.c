@@ -4,9 +4,7 @@
 void zen4_set_params(void)
 {
 	KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(30);
-	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(52);
-	TOOMCOOK3_MUL_THRESHOLD  = (ap_size_t)(181);
-	TOOMCOOK3_SQR_THRESHOLD  = (ap_size_t)(256);
+	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(56);
 	DNC_DIV_THRESHOLD        = (ap_size_t)(32);
 
 	curr_cpu.apn_add_n_ptr			= add_n_zen4;
@@ -17,8 +15,6 @@ void zen4_set_params(void)
 	curr_cpu.apn_submul_one_ptr		= submul_one_zen4;
 	curr_cpu.apn_lshift_ptr			= lshift_lt64_zen4;
 	curr_cpu.apn_rshift_ptr			= rshift_lt64_zen4;
-	curr_cpu.apn_lshift_add_ptr		= lshift_lt64_add_zen4;
-	curr_cpu.apn_lshift_sub_ptr		= lshift_lt64_sub_zen4;
 	curr_cpu.apn_mul_bc_ptr			= mul_bc_zen4;
 	curr_cpu.apn_sqr_bc_ptr			= sqr_bc_zen4;
 	curr_cpu.apn_neg_ptr			= neg_zen4;
@@ -36,8 +32,6 @@ void generic_x64_set_params(void)
 	/* random cut-off thresholds */
 	KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(20);
 	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(30);
-	TOOMCOOK3_MUL_THRESHOLD  = (ap_size_t)(40);
-	TOOMCOOK3_SQR_THRESHOLD  = (ap_size_t)(50);
 	DNC_DIV_THRESHOLD        = (ap_size_t)(30);
 
 	curr_cpu.apn_add_n_ptr          = add_n_x64;
@@ -48,8 +42,6 @@ void generic_x64_set_params(void)
 	curr_cpu.apn_submul_one_ptr     = submul_one_x64;
 	curr_cpu.apn_lshift_ptr    		= lshift_lt64_x64;
 	curr_cpu.apn_rshift_ptr    		= rshift_lt64_x64;
-	curr_cpu.apn_lshift_add_ptr		= lshift_lt64_add_x64;
-	curr_cpu.apn_lshift_sub_ptr		= lshift_lt64_sub_x64;
 	curr_cpu.apn_mul_bc_ptr         = mul_bc_x64;
 	curr_cpu.apn_sqr_bc_ptr         = sqr_bc_x64;
 	curr_cpu.apn_neg_ptr            = neg_x64;

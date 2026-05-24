@@ -63,15 +63,6 @@ typedef struct apac_tpool_t
 
 } apac_tpool_t;
 
-typedef struct apac_wtgrp_t
-{
-	apac_mutex_t lock;
-	apac_cond_t  cond;
-
-	size_t count;
-
-} apac_wtgrp_t;
-
 // ============================================================================
 // Mutex
 // ============================================================================
@@ -189,36 +180,6 @@ apac_tpool_get_queue_capacity(
 size_t
 apac_tpool_get_max_thrd_count(
 	apac_tpool_t* pool
-);
-
-// ============================================================================
-// Wait Group
-// ============================================================================
-
-apac_thrd_err_t
-apac_wtgrp_init(
-	apac_wtgrp_t* wg
-);
-
-apac_thrd_err_t
-apac_wtgrp_destroy(
-	apac_wtgrp_t* wg
-);
-
-apac_thrd_err_t
-apac_wtgrp_add(
-	apac_wtgrp_t* wg,
-	size_t delta
-);
-
-apac_thrd_err_t
-apac_wtgrp_done(
-	apac_wtgrp_t* wg
-);
-
-apac_thrd_err_t
-apac_wtgrp_wait(
-	apac_wtgrp_t* wg
 );
 
 #endif

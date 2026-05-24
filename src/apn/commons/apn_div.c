@@ -1,4 +1,3 @@
-#include "../../header/apac_internal.h"
 #include "../headers/hidden_div.h"
 
 // Balanced Divide and Conquer division scratch workspace

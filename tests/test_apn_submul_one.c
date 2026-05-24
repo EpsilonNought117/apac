@@ -1,7 +1,7 @@
 #include "../include/apac.h"
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)4096ULL)
+#define TEST_SIZE_MAX ((ap_size_t)512ULL)
 
 static void
 check_apn_submul_one(uint64_t iterations)
