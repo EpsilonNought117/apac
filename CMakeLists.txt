@@ -152,6 +152,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
     # ABI-specific assembly sources
     if (WIN32)
+
         message(STATUS "Using MS-ABI x64 assembly sources")
         set(x64_asm_sources
             "src/apn/x64/asm_src/ms_abi/add_sub_n.asm"
@@ -165,16 +166,15 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/asm_src/ms_abi/lshift_lt64.asm"
             "src/apn/x64/asm_src/ms_abi/rshift_lt64.asm"
         )
+    
     elseif (APPLE OR UNIX)
+
         message(STATUS "Using SYSV-ABI x64 assembly sources")
         set(x64_asm_sources
 
-            # merge these
-            "src/apn/x64/asm_src/sysv_abi/add_n.s"
-            "src/apn/x64/asm_src/sysv_abi/add_one.s"
-            "src/apn/x64/asm_src/sysv_abi/sub_n.s"
-            "src/apn/x64/asm_src/sysv_abi/sub_one.s"
-
+            "src/apn/x64/asm_src/sysv_abi/add_sub_n.s"
+            "src/apn/x64/asm_src/sysv_abi/add_sub_one.s"
+            "src/apn/x64/asm_src/sysv_abi/add_sub_lshift_lt64.s"
             "src/apn/x64/asm_src/sysv_abi/mul_bc.s"
             "src/apn/x64/asm_src/sysv_abi/addmul_one.s"
             "src/apn/x64/asm_src/sysv_abi/submul_one.s"
@@ -183,6 +183,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/asm_src/sysv_abi/lshift_lt64.s"
             "src/apn/x64/asm_src/sysv_abi/rshift_lt64.s"
         )
+    
     else ()
         message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
     endif()

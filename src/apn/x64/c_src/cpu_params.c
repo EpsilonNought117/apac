@@ -36,6 +36,8 @@ void generic_x64_set_params(void)
 	/* random cut-off thresholds */
 	curr_cpu.karatsuba_mul_threshold	= (ap_size_t)(20);
 	curr_cpu.karatsuba_sqr_threshold    = (ap_size_t)(40);
+	curr_cpu.toomcook3_mul_threshold    = (ap_size_t)(100);
+	curr_cpu.toomcook3_sqr_threshold    = (ap_size_t)(110);
 	curr_cpu.dnc_div_threshold          = (ap_size_t)(50);
 
 	curr_cpu.apn_add_n_ptr          = add_n_x64;
