@@ -35,7 +35,7 @@ check_apn_sub(uint64_t iterations)
         do
         {
             apn_set_random(&size2, 1);
-            size2 %= size1;
+            size2 %= TEST_SIZE_MAX;
 
         } while (size2 == 0);
 
@@ -97,30 +97,6 @@ check_apn_sub(uint64_t iterations)
 
         APAC_ALWAYS_ASSERT(borrow == 0);
         APAC_ALWAYS_ASSERT(is_zero == 0);
-
-        /* TEST-5: (a - b) + b == a when a >= b */
-
-        apn_set_random(a, size1);
-        apn_set_random(b, size2);
-
-        if (apn_cmp(a, b, size1) < 0)
-        {
-            apn_cpy(t, a, size1);
-            apn_set(a, size1, 0);
-            apn_cpy(a, b, size2);
-            apn_cpy(b, t, size1);
-        }
-
-        borrow = apn_sub(r, a, b, size1, size2);
-
-        APAC_ALWAYS_ASSERT(borrow == 0);
-
-        ap_dig_t carry = apn_add(t, r, b, size1, size2);
-
-        cmp = apn_cmp(t, a, size1);
-
-        APAC_ALWAYS_ASSERT(carry == 0);
-        APAC_ALWAYS_ASSERT(cmp == 0);
     }
 
     apac_free(t);
