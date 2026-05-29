@@ -1,4 +1,4 @@
-#include "../headers/hidden_div.h"
+#include "../../headers/hidden_div.h"
 
 /**
  * Algorithm 2: RECIPROCAL_WORD
@@ -72,6 +72,14 @@ ap_dig_t apn_recip_word_2by1(
         ap_dig_t v3 = (high64 >> 1) + (v2 << 31);
         uint64_t low64 = _umul128(v3, d, &high64);
 
+    #elif defined(APAC_ARM64_WIN)
+
+        uint64_t high64 = __umulh(e, v2);
+        ap_dig_t v3 = (high64 >> 1) + (v2 << 31);
+
+        uint64_t low64 = v3 * d;
+        high64 = __umulh(v3, d);
+
     #elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
 
         ap_dig_t v3 = (v2 << 31) + (((__uint128_t)e * v2) >> 65);
@@ -126,18 +134,22 @@ ap_dig_t apn_recip_word_3by2(
         p -= d1 * (c + d);
     }
 
-#if defined(APAC_X64_WIN)
-
     uint64_t t0, t1;
 
-    /* Step 10: (t1,t0) = v * d0 */
+#if defined(APAC_X64_WIN)
+
     t0 = _umul128(v, d0, &t1);
+
+#elif defined(APAC_ARM64_WIN)
+
+    t0 = v * d0;
+    t1 = __umulh(v, d0);
 
 #elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
 
     __uint128_t prod = (__uint128_t)v * d0;
-    uint64_t t0 = (uint64_t)prod;
-    uint64_t t1 = (uint64_t)(prod >> 64);
+    t0 = (uint64_t)prod;
+    t1 = (uint64_t)(prod >> 64);
 
 #else
     #error "Unsupported compiler"
@@ -191,6 +203,24 @@ ap_dig_t apn_udiv_2by1(
     uint8_t c = _addcarry_u64(0, q0, u0, &q0);
     c = _addcarry_u64(c, q1, u1, &q1);
 
+#elif defined(APAC_ARM64_WIN)
+
+    uint64_t q0, q1;
+
+    /* Step 1: <q1,q0> = v * u1 */
+    q0 = v * u1;
+    q1 = __umulh(v, u1);
+
+    /* Step 2: <q1,q0> += <u1,u0> */
+
+    uint64_t old_q0 = q0;
+    q0 += u0;
+
+    uint64_t carry = (q0 < old_q0);
+
+    q1 += u1;
+    q1 += carry;
+
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
     __uint128_t q;
@@ -205,7 +235,9 @@ ap_dig_t apn_udiv_2by1(
     uint64_t q0 = (ap_dig_t)q;
 
 #else
+
     #error "Unsupported Platform!"
+
 #endif
 
     /* Step 3 */
@@ -297,6 +329,76 @@ ap_dig_t apn_udiv_3by2_quot(
         q1++;
         c = _subborrow_u64(0, r0, d0, &r0);
         c = _subborrow_u64(c, r1, d1, &r1);
+    }
+
+#elif defined(APAC_ARM64_WIN)
+
+    uint64_t q0, q1;
+    uint64_t r0, r1;
+    uint64_t t0, t1;
+    uint64_t carry;
+    uint64_t borrow;
+
+    /* Step 1: q = v * u2 */
+    q0 = v * u2;
+    q1 = __umulh(v, u2);
+
+    /* Step 2: q += (u2,u1) */
+    uint64_t old = q0;
+    q0 += u1;
+    carry = (q0 < old);
+
+    q1 += u2;
+    q1 += carry;
+
+    /* Step 3: r1 = u1 - q1 * d1 (mod 2^64) */
+    r1 = u1 - q1 * d1;
+
+    /* Step 4: t = d0 * q1 */
+    t0 = d0 * q1;
+    t1 = __umulh(d0, q1);
+
+    /* Step 5: r = (r1,u0) - (t1,t0) - (d1,d0) */
+
+    borrow = (u0 < t0);
+    r0 = u0 - t0;
+
+    uint64_t tmp = r1 - t1;
+    borrow = (r1 < t1) + borrow;
+    r1 = tmp - (borrow != 0);
+
+    borrow = (r0 < d0);
+    r0 -= d0;
+
+    tmp = r1 - d1;
+    borrow = (r1 < d1) + borrow;
+    r1 = tmp - (borrow != 0);
+
+    /* Step 6 */
+    q1++;
+
+    /* Steps 7-9 */
+    if (r1 >= q0)
+    {
+        q1--;
+
+        old = r0;
+        r0 += d0;
+        carry = (r0 < old);
+
+        r1 += d1;
+        r1 += carry;
+    }
+
+    /* Steps 10-12 */
+    if ((r1 > d1) || (r1 == d1 && r0 >= d0))
+    {
+        q1++;
+
+        borrow = (r0 < d0);
+        r0 -= d0;
+
+        r1 = r1 - d1 - borrow;
     }
 
 #elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
