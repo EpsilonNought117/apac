@@ -56,7 +56,7 @@ static ap_size_t get_karatsuba_mul_threshold(void)
         thresh++)
     {
         printf(
-            "\rTesting Karatsuba Mul Threshold %" PRI_APN_SIZE,
+            "\rTesting Karatsuba Mul Threshold %" PRI_AP_SIZE,
             thresh);
 
         fflush(stdout);
@@ -145,7 +145,7 @@ static ap_size_t get_karatsuba_sqr_threshold(void)
         thresh++)
     {
         printf(
-            "\rTesting Karatsuba Sqr Threshold %" PRI_APN_SIZE,
+            "\rTesting Karatsuba Sqr Threshold %" PRI_AP_SIZE,
             thresh);
 
         fflush(stdout);
@@ -242,7 +242,7 @@ static ap_size_t get_dnc_div_threshold(void)
         thresh++)
     {
         printf(
-            "\rTesting Divide-&-Conquer Div Threshold %" PRI_APN_SIZE,
+            "\rTesting Divide-&-Conquer Div Threshold %" PRI_AP_SIZE,
             thresh);
 
         fflush(stdout);
@@ -401,15 +401,15 @@ int main(int argc, char** argv)
     apac_restore_dfs();
 
     printf(
-        "KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(%" PRI_APN_SIZE ");\n",
+        "KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(%" PRI_AP_SIZE ");\n",
         kara_mul_thresh);
 
     printf(
-        "KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(%" PRI_APN_SIZE ");\n",
+        "KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(%" PRI_AP_SIZE ");\n",
         kara_sqr_thresh);
 
     printf(
-        "DNC_DIV_THRESHOLD        = (ap_size_t)(%" PRI_APN_SIZE ");\n",
+        "DNC_DIV_THRESHOLD        = (ap_size_t)(%" PRI_AP_SIZE ");\n",
         dnc_div_thresh);
 
     return EXIT_SUCCESS;
