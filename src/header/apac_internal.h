@@ -24,12 +24,15 @@
 	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
 
+    #include <intrin.h>
+
 	#if defined(APAC_X64_WIN)
 
 		#include <immintrin.h>
-		#include <intrin.h>
-
+	
 	#elif defined(APAC_ARM64_WIN)
+
+        #include <arm64_neon.h>
 
 	#endif
 
@@ -73,7 +76,7 @@
 
 	#elif defined(APAC_ARM64_UNIX)
 
-		#include <arm_acle.h>        
+		#include <arm_neon.h>  
 	
 	#endif
 
@@ -118,11 +121,11 @@
 
 	#define APAC_64BIT_PLATFORM	1
     #define PRI_APN_PTR         "p"
-    #define PRI_APN_SIZE        "zu"
-    #define APN_SIZE_MAX        SIZE_MAX
-    #define APN_DIG_MAX         UINT64_MAX
-    #define PRI_APN_DIGU        PRIu64
-    #define PRI_APN_DIGX        PRIx64
+    #define PRI_AP_SIZE         "llu"
+    #define APN_SIZE_MAX        ULLONG_MAX
+    #define APN_DIG_MAX         ULLONG_MAX
+    #define PRI_AP_DIGU         "llu"
+    #define PRI_AP_DIGX         "llx"
 
     #define APN_DIG_BITS        64U
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
