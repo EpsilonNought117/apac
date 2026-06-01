@@ -300,4 +300,26 @@ extern apac_cpu_params curr_cpu;
 #define KARATSUBA_SQR_THRESHOLD	(curr_cpu.karatsuba_sqr_threshold)
 #define DNC_DIV_THRESHOLD	    (curr_cpu.dnc_div_threshold)
 
+/****************************************************************************************************/
+/*********************************     APN INTERNAL FUNCTIONS     ***********************************/
+/****************************************************************************************************/
+
+ap_dig_t*
+apn_reduce_mod_p_u64(
+    ap_dig_t* arr,
+    ap_size_t n,
+    ap_dig_t prime,
+    ap_dig_t magic,
+    ap_dig_t shift
+);
+
+double*
+apn_reduce_mod_p_f64(
+    ap_dig_t* arr,
+    ap_size_t n,
+    ap_dig_t prime,
+    ap_dig_t magic,
+    ap_dig_t shift
+);
+
 #endif
