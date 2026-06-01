@@ -1,4 +1,4 @@
-#include "../../headers/hidden_div.h"
+#include "../headers/hidden_div.h"
 
 /**
  * Algorithm 2: RECIPROCAL_WORD

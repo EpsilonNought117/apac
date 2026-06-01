@@ -38,183 +38,322 @@ void apn_karatsuba_mul(
 
 typedef struct ntt_prime_t
 {
-
     ap_dig_t prime;
-    ap_dig_t magic;
-    ap_dig_t barrett_m;
+    ap_dig_t barrett_m; // floor((2^100) / prime)
 
+    ap_dig_t magic;
+    ap_dig_t shift;
+    
+    ap_dig_t coefficient;
+    ap_dig_t max_power_two;
+    
     double twiddle_table[44];
     double prime_f64;
     double prime_f64_inv;
 
-    unsigned short coefficient;
-    unsigned short max_power_two;
-    unsigned short shift;
-    unsigned short add;
-
 } ntt_prime_t;
 
-static const ntt_prime_t NTT_PRIMES[4] =
+static const ntt_prime_t NTT_PRIMES[8] = 
 {
-   // ========================================================
-    //  p = 9 * 2^43 + 1
+    // ========================================================
+    //  p = 115 * 2^42 + 1
     // ========================================================
 
     {
-        .prime         = (9ULL << 43) + 1ULL,
+        .prime         = (115ULL << 42) + 1ULL,
 
-        .magic         = 16397105843297172089ULL,
+        .magic         = 5133007046597430301ULL,
 
-        .barrett_m     = 16012798675094894ULL,
+        .barrett_m     = 2506351096971401ULL,
 
         .twiddle_table =
         {
-            (double)79164837199872ULL, (double)32673132265234ULL, (double)20305099120877ULL, (double)39579957916562ULL,
-            (double)75942538918562ULL, (double)59652139836565ULL, (double)20624828515856ULL, (double)76119518187106ULL,
-            (double)69740145741383ULL, (double)75732696426949ULL, (double)13973145859902ULL, (double)67083337243677ULL,
-            (double)54852747079751ULL, (double)42609062690486ULL, (double)73648718738577ULL, (double)66668608089872ULL,
-            (double)54969621416071ULL, (double)49091704410171ULL, (double)27583800632336ULL, (double)52594140768013ULL,
-            (double)53454178270561ULL, (double)46088029742578ULL, (double)42734287245737ULL, (double)43413449706744ULL,
-            (double)50815157546300ULL, (double)71005215139865ULL, (double)12178223916498ULL, (double)39424926507588ULL,
-            (double)78638509653119ULL, (double)17161673261209ULL, (double)56746395738038ULL, (double) 4502640539222ULL,
-            (double) 3942849128304ULL, (double)70069238268302ULL, (double)39157489244367ULL, (double)47286949160522ULL,
-            (double)54843957378729ULL, (double)48234651972722ULL, (double)54616456290052ULL, (double)69804035624843ULL,
-            (double)53079601705925ULL, (double) 3814697265625ULL, (double)       1953125ULL, (double)             0ULL
+            (double)  172516186673807ULL, (double)  226211343681490ULL, (double)  115924480682815ULL, (double)  195679620262303ULL,
+            (double)  464522514521873ULL, (double)  102864900221067ULL, (double)  251973326463538ULL, (double)   36810722646142ULL,
+            (double)  425244151253244ULL, (double)  369411237486795ULL, (double)  204272269604548ULL, (double)  357110303465470ULL,
+            (double)  112969927974249ULL, (double)  475187202602034ULL, (double)    2475516680456ULL, (double)  225010625857364ULL,
+            (double)  193339503160158ULL, (double)  147588361990727ULL, (double)  103478837003149ULL, (double)  117571113519187ULL,
+            (double)   41314268431577ULL, (double)  225915254374440ULL, (double)  365333686467790ULL, (double)  252860494318280ULL,
+            (double)  384222690600920ULL, (double)  151187250847423ULL, (double)   85823262971288ULL, (double)    7591186588076ULL,
+            (double)   57665233327122ULL, (double)  329491885654487ULL, (double)  500427090054903ULL, (double)   64372209723759ULL,
+            (double)  295065444842456ULL, (double)  166630294507922ULL, (double)  328748620899517ULL, (double)  148702827038269ULL,
+            (double)  299060829846566ULL, (double)  141012338864163ULL, (double)  321564659195546ULL, (double)  415704513977290ULL,
+            (double)  318590188045477ULL, (double)  505775348776960ULL, (double)                1ULL, (double)                0ULL
         },
 
-        .prime_f64     = (double)79164837199873ULL,
+        .prime_f64     = (double)505775348776961ULL,
 
-        .prime_f64_inv = 1.0 / (double)79164837199873ULL,
+        .prime_f64_inv = 1.0 / (double)505775348776961ULL,
 
-        .coefficient   = 9,
+        .coefficient   = 115,
+
+        .max_power_two = 42,
+
+        .shift         = 47
+    },
+
+    // ========================================================
+    //  p = 159 * 2^42 + 1
+    // ========================================================
+
+    {
+        .prime         = (159ULL << 42) + 1ULL,
+
+        .magic         = 7425104532813896951ULL,
+
+        .barrett_m     = 1812769661331517ULL,
+
+        .twiddle_table =
+        {
+            (double)  643876812462936ULL, (double)  651799495178364ULL, (double)   58873305744392ULL, (double)  559861804683365ULL,
+            (double)  530518765208025ULL, (double)   95985907372983ULL, (double)  299960076468837ULL, (double)  110366640477232ULL,
+            (double)  513374379332229ULL, (double)  372494585029016ULL, (double)  199272209064928ULL, (double)  360606354885115ULL,
+            (double)  349127071085236ULL, (double)  323003168758522ULL, (double)   79876745311839ULL, (double)  144449987797064ULL,
+            (double)  103261426565294ULL, (double)  605575372258894ULL, (double)   69223014675082ULL, (double)  415870892267877ULL,
+            (double)  189717489056055ULL, (double)  292695431604081ULL, (double)   65944000111363ULL, (double)  273710408819860ULL,
+            (double)  364368634952905ULL, (double)  622779517142604ULL, (double)  329206268876788ULL, (double)  597464592558120ULL,
+            (double)  103377132373619ULL, (double)  623608487135405ULL, (double)  488591728611846ULL, (double)  202884888100841ULL,
+            (double)  696795994541917ULL, (double)  179721527579332ULL, (double)  239012899833485ULL, (double)  244070046291945ULL,
+            (double)  668076890266666ULL, (double)   98233049163354ULL, (double)  610841607039564ULL, (double)  184770160673964ULL,
+            (double)  514847792185270ULL, (double)  699289395265536ULL, (double)                1ULL, (double)                0ULL
+        },
+
+        .prime_f64     = (double)699289395265537ULL,
+
+        .prime_f64_inv = 1.0 / (double)699289395265537ULL,
+
+        .coefficient   = 159,
+
+        .max_power_two = 42,
+
+        .shift         = 48
+    },
+
+    // ========================================================
+    //  p = 207 * 2^42 + 1
+    // ========================================================
+
+    {
+        .prime         = (207ULL << 42) + 1ULL,
+
+        .magic         = 11406682325772077359ULL,
+
+        .barrett_m     = 1392417276095224ULL,
+
+        .twiddle_table =
+        {
+            (double)  212465101045679ULL, (double)  803402251629806ULL, (double)  628933820577364ULL, (double)  205469306257703ULL,
+            (double)  451980748078623ULL, (double)  193218791447654ULL, (double)  202389316246287ULL, (double)   37248301570755ULL,
+            (double)  847857065749852ULL, (double)  884096819761335ULL, (double)  300950555162459ULL, (double)  437748249827255ULL,
+            (double)  322980301055091ULL, (double)  845010139816708ULL, (double)  398651143098115ULL, (double)  193369998286205ULL,
+            (double)  332590843575892ULL, (double)  536364198913702ULL, (double)  334697738217984ULL, (double)  732061010752108ULL,
+            (double)  303478118445587ULL, (double)  106094026763177ULL, (double)  620799350043677ULL, (double)  750624629738156ULL,
+            (double)  861566755153795ULL, (double)  887605180829768ULL, (double)  471774853951387ULL, (double)  772826871432937ULL,
+            (double)  372732884266381ULL, (double)  705773813529841ULL, (double)  434344676731654ULL, (double)  562458611013956ULL,
+            (double)  597843530306532ULL, (double)  102955201479009ULL, (double)  673755987546267ULL, (double)  424716232952107ULL,
+            (double)  688916947494790ULL, (double)  303336742766754ULL, (double)  356689100781988ULL, (double)  389524527106070ULL,
+            (double)  318852943881667ULL, (double)  910395627798528ULL, (double)                1ULL, (double)                0ULL
+        },
+
+        .prime_f64     = (double)910395627798529ULL,
+
+        .prime_f64_inv = 1.0 / (double)910395627798529ULL,
+
+        .coefficient   = 207,
+
+        .max_power_two = 42,
+
+        .shift         = 49
+    },
+
+    // ========================================================
+    //  p = 247 * 2^42 + 1
+    // ========================================================
+
+    {
+        .prime         = (247ULL << 42) + 1ULL,
+
+        .magic         = 9559446321598463293ULL,
+
+        .barrett_m     = 1166924599804499ULL,
+
+        .twiddle_table =
+        {
+            (double)  813873581740013ULL, (double) 1017584146621833ULL, (double) 1001883406154027ULL, (double)  399388810901566ULL,
+            (double)  580057676602761ULL, (double)  861704420831397ULL, (double)   83055472667820ULL, (double)  956434454527863ULL,
+            (double)  280506422740464ULL, (double)  656050848733060ULL, (double)  179078271057436ULL, (double)  417782972570273ULL,
+            (double) 1049302414900875ULL, (double)  952170334743460ULL, (double)  920833329738732ULL, (double) 1061007779199887ULL,
+            (double)  975096655085155ULL, (double)  109989026498247ULL, (double)    4244788471044ULL, (double)  678204445944222ULL,
+            (double)  872136963179980ULL, (double)  480314125092252ULL, (double)  702537324697685ULL, (double)  771483826635079ULL,
+            (double)  245092761087288ULL, (double) 1068241675986200ULL, (double)  615456732651794ULL, (double)  367101539206423ULL,
+            (double)  419324129799797ULL, (double)  144911083810310ULL, (double)  414921319947421ULL, (double)  656776753396433ULL,
+            (double)  774156178124198ULL, (double)   12909816601084ULL, (double)  125720652037893ULL, (double)  365166793134028ULL,
+            (double)   29490787084355ULL, (double)  751324195164222ULL, (double)  725138888531475ULL, (double)  210201668638023ULL,
+            (double)  301092149163518ULL, (double) 1086317488242688ULL, (double)                1ULL, (double)                0ULL
+        },
+
+        .prime_f64     = (double)1086317488242689ULL,
+
+        .prime_f64_inv = 1.0 / (double)1086317488242689ULL,
+
+        .coefficient   = 247,
+
+        .max_power_two = 42,
+
+        .shift         = 49
+    },
+
+    // ========================================================
+    //  p = 11 * 2^43 + 1
+    // ========================================================
+
+    {
+        .prime         = (11ULL << 43) + 1ULL,
+
+        .magic         = 13415813871788626157ULL,
+
+        .barrett_m     = 13101380734168580ULL,
+
+        .twiddle_table =
+        {
+            (double)           177147ULL, (double)      31381059609ULL, (double)   76961560733062ULL, (double)   78111664663586ULL,
+            (double)   44103993397726ULL, (double)   77560470022895ULL, (double)   10908565321237ULL, (double)   61304740378095ULL,
+            (double)   74387491218904ULL, (double)   35030920465501ULL, (double)   35507591713098ULL, (double)   14736883445812ULL,
+            (double)     118122403951ULL, (double)   46175136454937ULL, (double)   56014752361721ULL, (double)   57347006712467ULL,
+            (double)   70731461504035ULL, (double)   80925295288329ULL, (double)   63496682325554ULL, (double)   90094547766557ULL,
+            (double)   13605602730752ULL, (double)   61421372598461ULL, (double)   84162057231393ULL, (double)   88644246420441ULL,
+            (double)   84380531071501ULL, (double)   27448222060074ULL, (double)   83125391779075ULL, (double)   25117643567475ULL,
+            (double)    9072295882313ULL, (double)    7118901039428ULL, (double)   91176476655774ULL, (double)   28872639062127ULL,
+            (double)   60992261479213ULL, (double)   75834893586148ULL, (double)   47339900899867ULL, (double)   59958104589341ULL,
+            (double)   80679186042070ULL, (double)   93783162282251ULL, (double)   48820947039984ULL, (double)   41630991080728ULL,
+            (double)   50327709636321ULL, (double)   92061214401519ULL, (double)   96757023244288ULL, (double)                1ULL
+        },
+
+        .prime_f64     = (double)96757023244289ULL,
+
+        .prime_f64_inv = 1.0 / (double)96757023244289ULL,
+
+        .coefficient   = 11,
 
         .max_power_two = 43,
 
-        .shift         = 46,
-
-        .add           = 0
+        .shift         = 46
     },
 
     // ========================================================
-    //  p = 15 * 2^44 + 1
+    //  p = 29 * 2^43 + 1
     // ========================================================
 
     {
-        .prime         = (15ULL << 44) + 1ULL,
+        .prime         = (29ULL << 43) + 1ULL,
 
-        .magic         = 4919131752989195123ULL,
+        .magic         = 10177513971701781683ULL,
 
-        .barrett_m     = 4803839602528510ULL,
+        .barrett_m     = 4969489243995010ULL,
 
         .twiddle_table =
         {
-            (double)263882790666240ULL, (double) 96874177198991ULL, (double)169647361331209ULL, (double) 74839147327884ULL,
-            (double)219479531082877ULL, (double)254953316083702ULL, (double) 14335899030929ULL, (double)104374235877625ULL,
-            (double)140320092078334ULL, (double)231460602433612ULL, (double)159686507286794ULL, (double)261297844521479ULL,
-            (double)145765277501825ULL, (double)126865043824258ULL, (double) 71123127889687ULL, (double)136694793957464ULL,
-            (double) 50043853185307ULL, (double)165494835505761ULL, (double) 22154170913001ULL, (double) 25309197395126ULL,
-            (double) 42489908125698ULL, (double) 24293199849874ULL, (double)177653757651132ULL, (double) 12077505994337ULL,
-            (double)118584788982848ULL, (double) 29686080599489ULL, (double)118373120628094ULL, (double)222826588246730ULL,
-            (double) 64223740524830ULL, (double)205426212491633ULL, (double)245418320602424ULL, (double)200630553550164ULL,
-            (double)193503047357194ULL, (double) 59370066278789ULL, (double)150044964276061ULL, (double) 85517440996627ULL,
-            (double)135998638979624ULL, (double)128845611580283ULL, (double)150223744460055ULL, (double)109794787131788ULL,
-            (double)  2300851410641ULL, (double) 96623784492484ULL, (double)177706635564837ULL, (double)  4747561509943ULL
+            (double)   68630377364883ULL, (double)  188731362164540ULL, (double)  254419031540391ULL, (double)  213946120958220ULL,
+            (double)  219162886873414ULL, (double)   96609930250521ULL, (double)  101137061869106ULL, (double)   64586781352587ULL,
+            (double)  148293486523287ULL, (double)   28803969314595ULL, (double)  119527972729066ULL, (double)  119760143971655ULL,
+            (double)  175868003714077ULL, (double)  122857909444582ULL, (double)   95572310589249ULL, (double)   49929046569894ULL,
+            (double)  111417682740098ULL, (double)   53843322710559ULL, (double)  181675970817071ULL, (double)   12303239105804ULL,
+            (double)   67867834859601ULL, (double)  241004286672100ULL, (double)   86634793263078ULL, (double)  174272935702765ULL,
+            (double)  205533592622223ULL, (double)    8014969919343ULL, (double)  231897826749875ULL, (double)   15937428744598ULL,
+            (double)  239543674841388ULL, (double)    6889417907037ULL, (double)   68178617896139ULL, (double)  127090155568707ULL,
+            (double)   84687171623347ULL, (double)   89258372240300ULL, (double)   61558578542724ULL, (double)  229256123978893ULL,
+            (double)  150528025548345ULL, (double)   16733925574254ULL, (double)   37394035087613ULL, (double)  115345514152624ULL,
+            (double)  197742111156947ULL, (double)   42555792054163ULL, (double)  255086697644032ULL, (double)                1ULL
         },
 
-        .prime_f64     = (double)263882790666241ULL,
+        .prime_f64     = (double)255086697644033ULL,
 
-        .prime_f64_inv = 1.0 / (double)263882790666241ULL,
+        .prime_f64_inv = 1.0 / (double)255086697644033ULL,
 
-        .coefficient   = 15,
+        .coefficient   = 29,
 
-        .max_power_two = 44,
+        .max_power_two = 43,
 
-        .shift         = 46,
-
-        .add           = 0
+        .shift         = 47
     },
 
     // ========================================================
-    //  p = 27 * 2^44 + 1
+    //  p = 51 * 2^43 + 1
     // ========================================================
 
     {
-        .prime         = (27ULL << 44) + 1ULL,
+        .prime         = (51ULL << 43) + 1ULL,
 
-        .magic         = 10931403895531563129ULL,
+        .magic         = 1446803456761530235ULL,
 
-        .barrett_m     = 2668799779182510ULL,
+        .barrett_m     = 2825788001487363ULL,
 
         .twiddle_table =
         {
-            (double)474989023199232ULL, (double)464110467020161ULL, (double)135350708912551ULL, (double)321727460506772ULL,
-            (double)106401440901376ULL, (double)220911057284769ULL, (double)127385901584353ULL, (double)435246015222818ULL,
-            (double)118071336691046ULL, (double) 81300405842855ULL, (double)227897485989402ULL, (double) 54267550345115ULL,
-            (double)276106822236007ULL, (double)348478044091513ULL, (double)  4827849866075ULL, (double)457826451206020ULL,
-            (double)462916617869353ULL, (double)315741889858653ULL, (double)270918994518659ULL, (double)425553051638339ULL,
-            (double)243878334397803ULL, (double)382203653262898ULL, (double)408231869856488ULL, (double)307827959340566ULL,
-            (double)411138074174517ULL, (double) 87148805141295ULL, (double)292671925825444ULL, (double)432848594034633ULL,
-            (double)358670431663572ULL, (double) 29494414159224ULL, (double)454883341789260ULL, (double)387239633649015ULL,
-            (double)246837078833254ULL, (double) 88332430385886ULL, (double) 54471702648877ULL, (double)128007654864053ULL,
-            (double)208162606575243ULL, (double)   511232517150ULL, (double)  1818465959047ULL, (double)434603160347624ULL,
-            (double)170445880904923ULL, (double)379491420499445ULL, (double)413399648687816ULL, (double)377768043858520ULL
+            (double)  361403907776071ULL, (double)  116127301404452ULL, (double)  114488020772742ULL, (double)   14915309336635ULL,
+            (double)   49725184089233ULL, (double)  261591417788558ULL, (double)  181535738308138ULL, (double)   72711887292730ULL,
+            (double)  195809621029587ULL, (double)  310807638248234ULL, (double)  111360496143858ULL, (double)   55623512267422ULL,
+            (double)  225681080187287ULL, (double)  106537479831870ULL, (double)  329243157636192ULL, (double)  277297354646753ULL,
+            (double)  246001628151506ULL, (double)  397604587447057ULL, (double)  204015068628731ULL, (double)  402930876538842ULL,
+            (double)   43694293156869ULL, (double)  113883776227243ULL, (double)  422475954821842ULL, (double)   63233810843645ULL,
+            (double)  288918103511369ULL, (double)  126996945760888ULL, (double)  220718550179336ULL, (double)  263570324670358ULL,
+            (double)  212839171679162ULL, (double)   25552896470316ULL, (double)  442228650820096ULL, (double)  447410145984634ULL,
+            (double)  314696518094055ULL, (double)   31820591761461ULL, (double)  418688680884800ULL, (double)  360702780091836ULL,
+            (double)  446050426762948ULL, (double)  156545156680540ULL, (double)  182419455707330ULL, (double)  269450852029908ULL,
+            (double)  130335554885735ULL, (double)   70275872337283ULL, (double)  448600744132608ULL, (double)                1ULL
         },
 
-        .prime_f64     = (double)474989023199233ULL,
+        .prime_f64     = (double)448600744132609ULL,
 
-        .prime_f64_inv = 1.0 / (double)474989023199233ULL,
+        .prime_f64_inv = 1.0 / (double)448600744132609ULL,
 
-        .coefficient   = 27,
+        .coefficient   = 51,
 
-        .max_power_two = 44,
+        .max_power_two = 43,
 
-        .shift         = 48,
-
-        .add           = 0
+        .shift         = 45
     },
 
     // ========================================================
-    //  p = 63 * 2^44 + 1
+    //  p = 75 * 2^43 + 1
     // ========================================================
 
     {
-        .prime         = (63ULL << 44) + 1ULL,
+        .prime         = (75ULL << 43) + 1ULL,
 
-        .magic         = 4684887383799246977ULL,
+        .magic         = 15741221609565460185ULL,
 
-        .barrett_m     = 1143771333935363ULL,
+        .barrett_m     = 1921535841011408ULL,
 
         .twiddle_table =
         {
-            (double)1108307720798208ULL, (double) 834463902588453ULL, (double) 982524503535289ULL, (double) 717649395518176ULL,
-            (double) 702315644809335ULL, (double) 739884912804600ULL, (double) 359708859995378ULL, (double)  43573700061864ULL,
-            (double) 127530762639715ULL, (double) 714622044849844ULL, (double) 722952786250989ULL, (double)  47508801853780ULL,
-            (double)  54144955344414ULL, (double)1067221487679684ULL, (double) 808196340939860ULL, (double) 400705862578896ULL,
-            (double)  29168776481124ULL, (double) 733410228814483ULL, (double) 973198108754437ULL, (double) 971018456874554ULL,
-            (double)1039029984172770ULL, (double) 337714919750706ULL, (double) 572965129136056ULL, (double)  29598010259900ULL,
-            (double) 335102667773610ULL, (double) 944785731158078ULL, (double) 612173141699626ULL, (double) 496594134287593ULL,
-            (double)    209141447223ULL, (double) 529799425356461ULL, (double) 869699914922316ULL, (double) 532478848124777ULL,
-            (double)  33221601499042ULL, (double) 274829696946219ULL, (double) 358645175366147ULL, (double) 611526591252824ULL,
-            (double) 353035949292892ULL, (double) 546014641375689ULL, (double) 684421603307337ULL, (double) 358499153441500ULL,
-            (double) 291976380365697ULL, (double) 869336496498271ULL, (double) 692415616839170ULL, (double) 194751219211145ULL
+            (double)  422061946989193ULL, (double)   58143155666860ULL, (double)   91635414306405ULL, (double)  646895763776599ULL,
+            (double)  419852408702297ULL, (double)  177463079846478ULL, (double)  489939971268089ULL, (double)  154722330950117ULL,
+            (double)  604909487584329ULL, (double)  459892863350964ULL, (double)  629052487306166ULL, (double)  644392181246681ULL,
+            (double)  279317116085772ULL, (double)  289214058035536ULL, (double)  115345673179591ULL, (double)  487681342060117ULL,
+            (double)  261837198889829ULL, (double)  142423866680127ULL, (double)  169570995016705ULL, (double)  197170157141984ULL,
+            (double)   88058517357649ULL, (double)  400718471864265ULL, (double)  379236458575249ULL, (double)  608449383710143ULL,
+            (double)  231796971650367ULL, (double)  359048271470472ULL, (double)  645884696401968ULL, (double)  590287327610717ULL,
+            (double)  137726617880350ULL, (double)  441866921897980ULL, (double)  622795896505702ULL, (double)     841110816188ULL,
+            (double)  465280636643717ULL, (double)  353920630589488ULL, (double)  438769532571355ULL, (double)  255262368915548ULL,
+            (double)  531912896292763ULL, (double)  580353428744310ULL, (double)  515099255573214ULL, (double)   78192893710957ULL,
+            (double)  198896548521787ULL, (double)  652403583836430ULL, (double)  659706976665600ULL, (double)                1ULL
         },
 
-        .prime_f64     = (double)1108307720798209ULL,
+        .prime_f64     = (double)659706976665601ULL,
 
-        .prime_f64_inv = 1.0 / (double)1108307720798209ULL,
+        .prime_f64_inv = 1.0 / (double)659706976665601ULL,
 
-        .coefficient   = 63,
+        .coefficient   = 75,
 
-        .max_power_two = 44,
+        .max_power_two = 43,
 
-        .shift         = 48,
-
-        .add           = 0
+        .shift         = 49
     }
 };
 
-#define CRT3_MAX_CONV_LEN   (1ULL << 18)
-#define CRT4_MAX_CONV_LEN   (1ULL << 43)
+#define CRT3_MAX_CONV_LEN   (1ULL << 17)
+#define CRT4_MAX_CONV_LEN   (1ULL << 42)
 
 #else
     #error "Only 64-bit systems supported!"
