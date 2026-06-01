@@ -130,6 +130,7 @@ set(apac_c_sources
     "src/apn/commons/karatsuba_sqr.c"
     "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/div_helpers.c"
+    "src/apn/commons/reduce_mod_p.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
@@ -142,6 +143,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
         "src/apn/x64/c_src/cpy.c"
         "src/apn/x64/c_src/is_zero.c"
         "src/apn/x64/c_src/cpu_params.c"
+        "src/apn/x64/c_src/r2_ntt_mul_x64.c"
     )
 
     # ABI-specific assembly sources
