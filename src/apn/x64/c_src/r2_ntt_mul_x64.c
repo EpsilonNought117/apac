@@ -6,7 +6,7 @@
 // ========================================================
 
 static inline ap_dig_t
-mod_mul_p50_x64(
+mod_mul_p51_x64(
     const ap_dig_t a,
     const ap_dig_t b,
     const ap_dig_t prime,
@@ -44,7 +44,7 @@ mod_mul_p50_x64(
 }
 
 static inline ap_dig_t
-mod_add_p50_x64(
+mod_add_p51_x64(
     const ap_dig_t a,
     const ap_dig_t b,
     const ap_dig_t prime
@@ -56,7 +56,7 @@ mod_add_p50_x64(
 }
 
 static inline ap_dig_t
-mod_sub_p50_x64(
+mod_sub_p51_x64(
     const ap_dig_t a,
     const ap_dig_t b,
     const ap_dig_t prime
@@ -96,14 +96,14 @@ dif_forward_ntt_x64(
                 ap_dig_t u = op1[i];
                 ap_dig_t v = op1[i + stage];
 
-                const ap_dig_t sum = mod_add_p50_x64(u, v, p->prime);
-                const ap_dig_t diff = mod_sub_p50_x64(u, v, p->prime);
+                const ap_dig_t sum = mod_add_p51_x64(u, v, p->prime);
+                const ap_dig_t diff = mod_sub_p51_x64(u, v, p->prime);
 
                 op1[i] = sum;
-                op1[i + stage] = mod_mul_p50_x64(diff, twiddle, p->prime, p->barrett_m);
+                op1[i + stage] = mod_mul_p51_x64(diff, twiddle, p->prime, p->barrett_m);
             }
 
-            twiddle = mod_mul_p50_x64(twiddle, omega, p->prime, p->barrett_m);
+            twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett_m);
         }
     }
 }
@@ -138,13 +138,13 @@ dit_inverse_ntt_x64(
             for (ap_size_t i = stride; i < size; i += (stage << 1))
             {
                 ap_dig_t u = op1[i];
-                ap_dig_t v = mod_mul_p50_x64(op1[i + stage], twiddle, p->prime, p->barrett_m);
+                ap_dig_t v = mod_mul_p51_x64(op1[i + stage], twiddle, p->prime, p->barrett_m);
 
-                op1[i] = mod_add_p50_x64(u, v, p->prime);
-                op1[i + stage] = mod_sub_p50_x64(u, v, p->prime);
+                op1[i] = mod_add_p51_x64(u, v, p->prime);
+                op1[i + stage] = mod_sub_p51_x64(u, v, p->prime);
             }
 
-            twiddle = mod_mul_p50_x64(twiddle, omega, p->prime, p->barrett_m);
+            twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett_m);
         }
     }
 
@@ -153,7 +153,7 @@ dit_inverse_ntt_x64(
 
     for (ap_size_t i = 0; i < size; i++)
     {
-        op1[i] = mod_mul_p50_x64(op1[i], n_inv, p->prime, p->barrett_m);
+        op1[i] = mod_mul_p51_x64(op1[i], n_inv, p->prime, p->barrett_m);
     }
 }
 
@@ -172,7 +172,7 @@ pointwise_mul_x64(
 
     for (ap_size_t i = 0; i < size; i++)
     {
-        result[i] = mod_mul_p50_x64(op1[i], op2[i], p->prime, p->barrett_m);
+        result[i] = mod_mul_p51_x64(op1[i], op2[i], p->prime, p->barrett_m);
     }
 
     return;
