@@ -19,17 +19,23 @@ mod_mul_p50_x64(
     ap_dig_t ab_hi      = __umulh(a, b);
     ap_dig_t ab_lo_m_hi = __umulh(ab_lo, barrett_m);
     ap_dig_t ab_hi_m_lo = ab_hi * barrett_m;
-    ap_dig_t q          = (ab_hi_m_lo + ab_lo_m_hi) >> 36;
-    ap_dig_t r          = ab_lo - q * prime;
+
+    ap_dig_t q = (ab_hi_m_lo + ab_lo_m_hi) >> 38;
+
+    ap_dig_t r = ab_lo - q * prime;
 
 #elif defined(APAC_X64_UNIX)
 
     __uint128_t ab = (__uint128_t)a * b;
-    ap_dig_t ab_hi = (ab >> 64);
-    ap_dig_t ab_lo = (ab);
-    ap_dig_t q     = (((__uint128_t)ab_hi * barrett_m
-                     + ((__uint128_t)ab_lo * barrett_m >> 64)) >> 36);
-    ap_dig_t r     = (ab - (__uint128_t)q * prime);
+
+    ap_dig_t ab_hi = (ap_dig_t)(ab >> 64);
+
+    ap_dig_t ab_lo = (ap_dig_t)ab;
+
+    ap_dig_t q = (((__uint128_t)ab_hi * barrett_m +
+                 (((__uint128_t)ab_lo * barrett_m) >> 64)) >> 38);
+
+    ap_dig_t r = (ab - (__uint128_t)q * prime);
 
 #endif
 
@@ -69,14 +75,14 @@ void
 dif_forward_ntt_x64(
     ap_dig_t* op1,      /* in-place DIF-FNTT        */
     ap_size_t size,     /* size must be power of 2  */
-    const ntt_prime_t* p,
-    ntt_type transform_type
+    const ntt_prime_t* p
 )
 {
     APAC_ASSERT((size & (size - 1)) == 0);
-    APAC_ASSERT(size <= (1ULL << 42));
+    APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
+    APAC_ASSERT(size >= MIN_COV_LEN);
 
-    ap_size_t twiddle_idx = transform_type == CYCLIC ? 0 : 1;
+    ap_size_t twiddle_idx = 0;
 
     for (ap_size_t stage = size / 2; stage >= 1; stage /= 2, twiddle_idx++)
     {
@@ -110,17 +116,17 @@ void
 dit_inverse_ntt_x64(
     ap_dig_t* op1,
     ap_size_t size,
-    const ntt_prime_t* p,
-    ntt_type transform_type
+    const ntt_prime_t* p
 )
 {
     APAC_ASSERT((size & (size - 1)) == 0);
-    APAC_ASSERT(size <= (1ULL << 42));
+    APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
+    APAC_ASSERT(size >= MIN_COV_LEN);
 
     ap_size_t num_stages = 0;
     CTZ(size, num_stages);
 
-    ap_size_t twiddle_idx = (transform_type == CYCLIC ? 0 : 1) + num_stages - 1;
+    ap_size_t twiddle_idx = num_stages - 1;
 
     for (ap_size_t stage = 1; stage <= size / 2; stage <<= 1, twiddle_idx--)
     {
@@ -161,7 +167,8 @@ pointwise_mul_x64(
 )
 {
     APAC_ASSERT((size & (size - 1)) == 0);
-    APAC_ASSERT(size <= (1ULL << 42));
+    APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
+    APAC_ASSERT(size >= MIN_COV_LEN);
 
     for (ap_size_t i = 0; i < size; i++)
     {
