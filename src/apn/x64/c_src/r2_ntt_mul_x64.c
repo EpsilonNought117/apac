@@ -6,7 +6,7 @@
 // ========================================================
 
 static inline ap_dig_t
-mod_mul_p51_x64(
+mul_mod_p51_x64(
     const ap_dig_t a,
     const ap_dig_t b,
     const ap_dig_t prime,
@@ -44,7 +44,7 @@ mod_mul_p51_x64(
 }
 
 static inline ap_dig_t
-mod_add_p51_x64(
+add_mod_p51_x64(
     const ap_dig_t a,
     const ap_dig_t b,
     const ap_dig_t prime
@@ -56,7 +56,7 @@ mod_add_p51_x64(
 }
 
 static inline ap_dig_t
-mod_sub_p51_x64(
+sub_mod_p51_x64(
     const ap_dig_t a,
     const ap_dig_t b,
     const ap_dig_t prime
@@ -72,7 +72,7 @@ mod_sub_p51_x64(
  * No need for Scramble Step
  */
 void
-dif_forward_ntt_x64(
+dif_fwd_ntt_x64(
     ap_dig_t* op1,      /* in-place DIF-FNTT        */
     ap_size_t size,     /* size must be power of 2  */
     const ntt_prime_t* p
@@ -113,7 +113,7 @@ dif_forward_ntt_x64(
  * No need for Scramble Step (dual of Gentleman-Sande DIF)
  */
 void
-dit_inverse_ntt_x64(
+dit_inv_ntt_x64(
     ap_dig_t* op1,
     ap_size_t size,
     const ntt_prime_t* p
