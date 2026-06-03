@@ -177,3 +177,8 @@ pointwise_mul_x64(
 
     return;
 }
+
+/*
+    TO WRITE
+    - matrix_trans_avx_fma
+*/
