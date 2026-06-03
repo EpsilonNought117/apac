@@ -136,6 +136,26 @@
 
 #endif
 
+#define APAC_PRAGMA(x) _Pragma(#x)
+
+#if defined(_MSC_VER)
+
+    #define APAC_UNROLL(x) __pragma(loop(hint_unroll, x))
+
+#elif defined(__GNUC__)
+
+    #define APAC_UNROLL(x) APAC_PRAGMA(GCC unroll x)
+
+#elif defined(__clang__)
+
+    #define APAC_UNROLL(x) APAC_PRAGMA(unroll x)
+    
+#else
+
+    #define APAC_UNROLL(x)
+
+#endif
+
 /****************************************************************************************************/
 /*********************************      ERROR HANDLING MACROS      **********************************/
 /****************************************************************************************************/
