@@ -50,6 +50,27 @@ sub_mod_p51_avx(
 }
 
 #if defined(__GNUC__) || defined(__clang__)
+__attribute__((target("avx")))
+#endif
+static inline __m256d
+canonicalize_p51_avx(
+    __m256d a,
+    __m256d p
+)
+{
+    __m256d mask = _mm256_cmp_pd(
+        a,
+        _mm256_setzero_pd(),
+        _CMP_LT_OQ
+    );
+
+    return _mm256_add_pd(
+        a,
+        _mm256_and_pd(mask, p)
+    );
+}
+
+#if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("avx,fma")))
 #endif
 static inline __m256d
@@ -66,18 +87,7 @@ normalize_p51_avx_fma(
         _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC
     );
 
-    __m256d y = _mm256_fnmadd_pd(q, p, a);
-
-    __m256d mask = _mm256_cmp_pd(
-        y,
-        _mm256_setzero_pd(),
-        _CMP_LT_OQ
-    );
-
-    return _mm256_add_pd(
-        y,
-        _mm256_and_pd(mask, p)
-    );
+    return _mm256_fnmadd_pd(q, p, a);
 }
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -107,22 +117,22 @@ APAC_UNROLL(4)
 
             d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 2 * 1 = 1.5
 
-            d0 = normalize(d0)              => v(d0) < 1
+            d0 = normalize(d0)              => v(d0) < 0.5+
 
-            a0    = d0 + d2                 => v(a0)    < 1 + 2   = 3
-            temp1 = d1 + d3                 => v(temp1) < 2 + 1.5 = 3.5
-            temp2 = d0 - d2                 => v(temp2) < 1 + 2   = 3
-            temp3 = d1 - d3                 => v(temp3) < 2 + 1.5 = 3.5
+            a0    = d0 + d2                 => v(a0)    < 0.5 + 2   = 2.5+
+            temp1 = d1 + d3                 => v(temp1) < 2 + 1.5   = 3.5
+            temp2 = d0 - d2                 => v(temp2) < 0.5 + 2   = 2.5+
+            temp3 = d1 - d3                 => v(temp3) < 2 + 1.5   = 3.5
 
             a1 = mul_mod(temp1, twiddle)    => v(a1) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
-            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 1/2 * 3 * 1   = 2.0
+            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 1/2 * 2.5 * 1 = 1.75
             a3 = mul_mod(temp3, twiddle)    => v(a3) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
 
-            Before normalize:               v(a0) < 3, v(a1) <= 2.25, v(a2) <= 2.0, v(a3) <= 2.25
+            Before normalize:               v(a0) < 2.5+, v(a1) <= 2.25, v(a2) <= 1.75, v(a3) <= 2.25
 
-            normalize(a0,a1,a2,a3)          => outputs in [0,p)
+            normalize(a0,a1,a2,a3)          => centered residues
 
-            Stored outputs:                 v(output) < 1
+            Stored outputs:                 v(output) < 0.5+
 
             Loop invariant restored.
         */
@@ -176,31 +186,32 @@ APAC_UNROLL(4)
         /*
             Growth analysis (v(x) = |x| / p)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1
+            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 0.5+
 
-            d0 = c0 + c2                    => v(d0) < 2
-            d1 = c0 - c2                    => v(d1) < 2
-            d2 = c1 + c3                    => v(d2) < 2
-            d3 = c1 - c3                    => v(d3) < 2
+            d0 = c0 + c2                    => v(d0) < 1+
+            d1 = c0 - c2                    => v(d1) < 1+
+            d2 = c1 + c3                    => v(d2) < 1+
+            d3 = c1 - c3                    => v(d3) < 1+
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 2 * 1 = 1.5
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 1 * 1 = 1
 
-            d0 = normalize(d0)              => v(d0) < 1
+            d0 = normalize(d0)              => v(d0) < 0.5+
 
-            a0    = d0 + d2                 => v(a0)    < 1 + 2   = 3
-            temp1 = d1 + d3                 => v(temp1) < 2 + 1.5 = 3.5
-            temp2 = d0 - d2                 => v(temp2) < 1 + 2   = 3
-            temp3 = d1 - d3                 => v(temp3) < 2 + 1.5 = 3.5
+            a0    = d0 + d2                 => v(a0)    < 0.5 + 1   = 1.5+
+            temp1 = d1 + d3                 => v(temp1) < 1 + 1     = 2
+            temp2 = d0 - d2                 => v(temp2) < 0.5 + 1   = 1.5+
+            temp3 = d1 - d3                 => v(temp3) < 1 + 1     = 2
 
-            a1 = mul_mod(temp1, twd1)       => v(a1) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
-            a2 = mul_mod(temp2, twd2)       => v(a2) <= 1/2 + 1/2 * 3 * 1   = 2.0
-            a3 = mul_mod(temp3, twd3)       => v(a3) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
+            a1 = mul_mod(temp1, twd1)       => v(a1) <= 1/2 + 1/2 * 2   * 1 = 1.5
+            a2 = mul_mod(temp2, twd2)       => v(a2) <= 1/2 + 1/2 * 1.5 * 1 = 1.25
+            a3 = mul_mod(temp3, twd3)       => v(a3) <= 1/2 + 1/2 * 2   * 1 = 1.5
 
-            Before normalize:               v(a0) < 3, v(a1) <= 2.25, v(a2) <= 2.0, v(a3) <= 2.25
+            Before normalize:               v(a0) < 1.5+, v(a1) <= 1.5,
+                                            v(a2) <= 1.25, v(a3) <= 1.5
 
-            normalize(a0,a1,a2,a3)          => outputs in [0,p)
+            normalize(a0,a1,a2,a3)          => centered residues
 
-            Stored outputs:                 v(output) < 1
+            Stored outputs:                 v(output) < 0.5+
 
             Loop invariant restored.
         */
@@ -243,6 +254,37 @@ APAC_UNROLL(4)
 APAC_UNROLL(4)
     for (ap_size_t j = 0; j < 64; j += 16)
     {
+        /*
+            Growth analysis (v(x) = |x| / p)
+
+            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 0.5+
+
+            Transpose/shuffle stage:        v(x0), v(x1), v(x2), v(x3) < 0.5+
+                                            (pure permutation, bounds unchanged)
+
+            d0 = x0 + x2                    => v(d0) < 1+
+            d1 = x0 - x2                    => v(d1) < 1+
+            d2 = x1 + x3                    => v(d2) < 1+
+            d3 = x1 - x3                    => v(d3) < 1+
+
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 1 * 1 = 1
+
+            d0 = normalize(d0)              => v(d0) < 0.5+
+
+            a0 = d0 + d2                    => v(a0) < 0.5 + 1 = 1.5+
+            a1 = d1 + d3                    => v(a1) < 1 + 1   = 2
+            a2 = d0 - d2                    => v(a2) < 0.5 + 1 = 1.5+
+            a3 = d1 - d3                    => v(a3) < 1 + 1   = 2
+
+            Before normalize:               v(a0) < 1.5+, v(a1) < 2,
+                                            v(a2) < 1.5+, v(a3) < 2
+
+            normalize(a0,a1,a2,a3)          => centered residues
+
+            Stored outputs:                 v(output) < 0.5+
+
+            Loop invariant restored.
+        */
 
         __m256d r0 = _mm256_loadu_pd(&op1[j +  0]);
         __m256d r1 = _mm256_loadu_pd(&op1[j +  4]);
@@ -301,9 +343,12 @@ APAC_UNROLL(4)
     - dit_inv_ntt_avx_fma
     - pointwise_mul_avx_fma
     - matrix_trans_avx_fma
+    - garner_crt_avx_fma
 */
 
+#if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("avx,fma")))
+#endif
 void
 dif_fwd_ntt_avx_fma(
     ap_dig_t* op1,      /* in-place DIF-FNTT        */
