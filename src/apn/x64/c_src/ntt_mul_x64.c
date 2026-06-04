@@ -82,7 +82,7 @@ dif_fwd_ntt_x64(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_COV_LEN);
 
-    ap_size_t twiddle_idx = 0;
+    ap_size_t twiddle_idx = 
 
     for (ap_size_t stage = size / 2; stage >= 1; stage /= 2, twiddle_idx++)
     {
@@ -138,22 +138,22 @@ dit_inv_ntt_x64(
             for (ap_size_t i = stride; i < size; i += (stage << 1))
             {
                 ap_dig_t u = op1[i];
-                ap_dig_t v = mod_mul_p51_x64(op1[i + stage], twiddle, p->prime, p->barrett_m);
+                ap_dig_t v = mod_mul_p51_x64(op1[i + stage], twiddle, p->prime, p->barrett);
 
                 op1[i] = mod_add_p51_x64(u, v, p->prime);
                 op1[i + stage] = mod_sub_p51_x64(u, v, p->prime);
             }
 
-            twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett_m);
+            twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett);
         }
     }
 
     // Final scaling: multiply every element by N^{-1} mod p
-    ap_dig_t n_inv = p->n_inv[num_stages];
+    ap_dig_t n_inv = p->size_inv[num_stages];
 
     for (ap_size_t i = 0; i < size; i++)
     {
-        op1[i] = mod_mul_p51_x64(op1[i], n_inv, p->prime, p->barrett_m);
+        op1[i] = mod_mul_p51_x64(op1[i], n_inv, p->prime, p->barrett);
     }
 }
 
@@ -172,7 +172,7 @@ pointwise_mul_x64(
 
     for (ap_size_t i = 0; i < size; i++)
     {
-        result[i] = mod_mul_p51_x64(op1[i], op2[i], p->prime, p->barrett_m);
+        result[i] = mod_mul_p51_x64(op1[i], op2[i], p->prime, p->barrett);
     }
 
     return;
@@ -180,5 +180,6 @@ pointwise_mul_x64(
 
 /*
     TO WRITE
-    - matrix_trans_avx_fma
+    - matrix_transpose_x64
+    - Garner's CRT
 */

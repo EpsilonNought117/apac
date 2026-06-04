@@ -15,11 +15,20 @@ typedef struct ntt_prime_t
     ap_dig_t shift;
     ap_dig_t barrett;
 
+    double prime_inv;
+
     ap_dig_t twiddle[46];
     ap_dig_t twiddle_inv[46];
     ap_dig_t size_inv[46];
 
 } ntt_prime_t;
+
+typedef enum ntt_tf_t
+{
+    CYCLIC,
+    NEGACYCLIC
+
+} ntt_tf_t;
 
 static const ntt_prime_t NTT_PRIMES[8] =
 {
@@ -35,6 +44,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
         .shift = 0X32ULL,
 
         .barrett = 0XC6980C6980C67ULL,
+
+        .prime_inv =    0X1.8D3018D3018CEP-51,
 
         .twiddle =
         {
@@ -99,6 +110,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
 
         .barrett = 0XF4898D5F85BAFULL,
 
+        .prime_inv =     0X1.E9131ABF0B76P-51,
+
         .twiddle =
         {
             0X00008AFF04DF6B7AULL, 0X0000515E846F21D4ULL, 0X0002C4A3DB19EE20ULL, 0X0003A859C0FE850AULL,
@@ -161,6 +174,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
         .shift = 0X32ULL,
 
         .barrett = 0XE070381C0E06DULL,
+
+        .prime_inv =    0X1.C0E070381C0DAP-51,
 
         .twiddle =
         {
@@ -225,6 +240,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
 
         .barrett = 0XB02C0B02C0B00ULL,
 
+        .prime_inv =    0X1.6058160581602P-51,
+
         .twiddle =
         {
             0X000292CDFD24BFC1ULL, 0X000393B53FA4B062ULL, 0X00020BD0FF41D9E5ULL, 0X00010AC0CD37F765ULL,
@@ -287,6 +304,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
         .shift = 0X31ULL,
 
         .barrett = 0X939A85C409399ULL,
+
+        .prime_inv =    0X1.27350B8812732P-51,
 
         .twiddle =
         {
@@ -351,6 +370,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
 
         .barrett = 0X8767AB5F34E46ULL,
 
+        .prime_inv =    0X1.0ECF56BE69C8EP-51,
+
         .twiddle =
         {
             0X0007071D8B9E602EULL, 0X000444F00DC80A26ULL, 0X00069B979B640652ULL, 0X0005916E2808DBD1ULL,
@@ -414,6 +435,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
 
         .barrett = 0XEA0EA0EA0EA0BULL,
 
+        .prime_inv =    0X1.D41D41D41D417P-51,
+
         .twiddle =
         {
             0X0002BF6CD9309773ULL, 0X000073375CBFFC82ULL, 0X00004D79F66833A0ULL, 0X0000B58576D93ECEULL,
@@ -476,6 +499,8 @@ static const ntt_prime_t NTT_PRIMES[8] =
         .shift = 0X30ULL,
 
         .barrett = 0XD79435E50D791ULL,
+
+        .prime_inv =    0X1.AF286BCA1AF23P-51,
 
         .twiddle =
         {
