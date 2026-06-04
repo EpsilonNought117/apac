@@ -140,7 +140,7 @@
 
 #if defined(_MSC_VER)
 
-    #define APAC_UNROLL(x) __pragma(loop(hint_unroll, x))
+    #define APAC_UNROLL(x)
 
 #elif defined(__GNUC__)
 
