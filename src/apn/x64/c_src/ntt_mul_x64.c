@@ -82,28 +82,36 @@ dif_fwd_ntt_x64(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_COV_LEN);
 
-    ap_size_t twiddle_idx = 
+    ap_size_t k = 0;
+    CTZ(size, k);
 
-    for (ap_size_t stage = size / 2; stage >= 1; stage /= 2, twiddle_idx++)
+    APAC_ASSERT(k >= 7);
+
+    ap_size_t n = p->power_of_two;
+    ntt_tf_t t = p->transform;
+
+    ap_size_t twiddle_idx = (t == NEGACYCLIC) ? n - k - 1 : n - k;
+
+    for (ap_size_t stride = size / 2; stride >= 1; stride /= 2, twiddle_idx++)
     {
         ap_dig_t omega = p->twiddle[twiddle_idx];
         ap_dig_t twiddle = 1;
 
-        for (ap_size_t stride = 0; stride < stage; stride++)
+        for (ap_size_t j = 0; j < stride; j++)
         {
-            for (ap_size_t i = stride; i < size; i += (stage << 1))
+            for (ap_size_t i = j; i < size; i += (stride << 1))
             {
                 ap_dig_t u = op1[i];
-                ap_dig_t v = op1[i + stage];
+                ap_dig_t v = op1[i + stride];
 
                 const ap_dig_t sum = mod_add_p51_x64(u, v, p->prime);
                 const ap_dig_t diff = mod_sub_p51_x64(u, v, p->prime);
 
                 op1[i] = sum;
-                op1[i + stage] = mod_mul_p51_x64(diff, twiddle, p->prime, p->barrett_m);
+                op1[i + stride] = mod_mul_p51_x64(diff, twiddle, p->prime, p->barrett);
             }
 
-            twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett_m);
+            twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett);
         }
     }
 }
@@ -123,33 +131,39 @@ dit_inv_ntt_x64(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_COV_LEN);
 
-    ap_size_t num_stages = 0;
-    CTZ(size, num_stages);
+    ap_size_t k = 0;
+    CTZ(size, k);
 
-    ap_size_t twiddle_idx = num_stages - 1;
+    APAC_ASSERT(k >= 7);
 
-    for (ap_size_t stage = 1; stage <= size / 2; stage <<= 1, twiddle_idx--)
+    ap_size_t n = p->power_of_two;
+    ntt_tf_t t = p->transform;
+
+    ap_size_t twiddle_idx = (t == NEGACYCLIC) ? n - 2 : n - 1;
+
+    for (ap_size_t stride = 1; stride <= size / 2; stride <<= 1, twiddle_idx--)
     {
-        ap_dig_t omega = p->twiddle[twiddle_idx];
+        ap_dig_t omega = p->twiddle_inv[twiddle_idx];
         ap_dig_t twiddle = 1;
 
-        for (ap_size_t stride = stage - 1; stride != (ap_size_t)-1; stride--)
+        for (ap_size_t j = stride - 1; j != (ap_size_t)-1; j--)
         {
-            for (ap_size_t i = stride; i < size; i += (stage << 1))
+            for (ap_size_t i = j; i < size; i += (stride << 1))
             {
                 ap_dig_t u = op1[i];
-                ap_dig_t v = mod_mul_p51_x64(op1[i + stage], twiddle, p->prime, p->barrett);
+
+                ap_dig_t v = mod_mul_p51_x64(op1[i + stride], twiddle, p->prime, p->barrett);
 
                 op1[i] = mod_add_p51_x64(u, v, p->prime);
-                op1[i + stage] = mod_sub_p51_x64(u, v, p->prime);
+                op1[i + stride] = mod_sub_p51_x64(u, v, p->prime);
             }
 
             twiddle = mod_mul_p51_x64(twiddle, omega, p->prime, p->barrett);
         }
     }
 
-    // Final scaling: multiply every element by N^{-1} mod p
-    ap_dig_t n_inv = p->size_inv[num_stages];
+    /* Final scaling: multiply every element by N^{-1} mod p */
+    ap_dig_t n_inv = p->size_inv[k];
 
     for (ap_size_t i = 0; i < size; i++)
     {
