@@ -121,6 +121,8 @@
 
 	#define APAC_64BIT_PLATFORM	1
 
+    #define PRI_APN_SIZE        "llu"    
+
     #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
 

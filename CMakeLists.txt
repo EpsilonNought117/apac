@@ -143,7 +143,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
         "src/apn/x64/c_src/cpy.c"
         "src/apn/x64/c_src/is_zero.c"
         "src/apn/x64/c_src/cpu_params.c"
-        "src/apn/x64/c_src/r2_ntt_mul_x64.c"
     )
 
     # ABI-specific assembly sources
