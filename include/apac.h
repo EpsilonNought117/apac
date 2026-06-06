@@ -305,7 +305,7 @@ APAC_API void apn_set_random(
 );
 
 APAC_API char* apn_print(
-    ap_dig_t* op1, /* this WILL get destroyed, so make a copy first */
+    const ap_dig_t* op1,
     ap_size_t size,
     apac_str_base base
 );

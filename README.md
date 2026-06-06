@@ -1,4 +1,4 @@
-﻿# libapac
+﻿# APAC - Arbitrary Precision Arithmetic and Computation
 
 **libapac** is a free and open-source, high-performance C library for
 arbitrary-precision integer arithmetic and computation.
@@ -37,7 +37,7 @@ arbitrary-precision integer arithmetic and computation.
     - Windows
 
       ```sh
-      cmake -S . -B build -G "Visual Studio 18 2026"
+      cmake -S . -B build
       ```
 
     - Linux
@@ -69,43 +69,14 @@ All options can be enabled or disabled during the CMake configuration step
 | Variable            | Description                                                          | Default |
 |---------------------|----------------------------------------------------------------------|---------|
 | `BUILD_SHARED_LIB`  | Build **libapac** as a shared library (`.dll` / `.so`)               | `OFF`   |
-| `BUILD_APN_TESTS`   | Build the `apn_tests` program for correctness testing                | `ON`    |
-| `BUILD_APN_TUNE`    | Build the `apn_tune` algorithm threshold tuning utility              | `ON`    |
-| `BUILD_EXAMPLES`    | Build example programs demonstrating library usage                   | `ON`    |
+| `BUILD_APAC_TESTS`  | Build the `apn_tests` program for correctness testing                | `OFF`   |
+| `BUILD_APN_TUNE`    | Build the `apn_tune` algorithm threshold tuning utility              | `OFF`   |
 
 ## Optimized Microarchitectures
 
 The following x86-64 microarchitectures contain assembly code especially optimized for them
 
-  - AMD Zen 3/3+
   - AMD Zen 4
-  - AMD Zen 5
-
-## Performance Comparison (vs GMP 6.3.0)
-
-> **Note on benchmarking:**  
-> These results were obtained by comparing **libapac** against **GMP 6.3.0** x86 
-> fat-binary built from source, running on an **AMD Ryzen 7 8845HS (Zen 4)**, with
-> benchmark code compiled using **GCC 14.2 at `-O2`** optimization level.
-
-<table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: none;">
-  <tr>
-    <td style="border: none;">
-      <img src="docs/images/cmp_div_3d.png" width="420"/>
-    </td>
-    <td style="border: none;">
-      <img src="docs/images/cmp_mul_3d.png" width="420"/>
-    </td>
-  </tr>
-  <tr>
-    <td style="border: none;">
-      <img src="docs/images/cmp_mul_n.png" width="420"/>
-    </td>
-    <td style="border: none;">
-      <img src="docs/images/cmp_sqr.png" width="420"/>
-    </td>
-  </tr>
-</table>
 
 ## Example Usage
 
@@ -128,18 +99,18 @@ int main(void)
 
 ## Testing and Tuning
 
-libapac includes dedicated utilities for correctness testing and performance tuning on particular micro-architectures.
+apac includes dedicated utilities for correctness testing and performance tuning on particular micro-architectures.
 
-### Correctness Testing (apn_tests)
+### Correctness Testing (BUILD_APAC_TESTS)
 
-The apn_tests program validates the correctness of arbitrary-precision
+The testing programs validate the correctness of arbitrary-precision
 operations across a wide range of operand sizes and edge cases. It is 
 intended to be run after changes to core arithmetic or assembly routines.
 
-By default, the test suite is built automatically.
-To disable it during configuration:
+By default, the test suite is not built 
+automatically. To enable it during configuration:
 
-    cmake -DBUILD_APN_TESTS=OFF
+    cmake -DBUILD_APAC_TESTS=ON
 
 After building, the test executable can be run directly from the build directory:
 
@@ -185,7 +156,7 @@ This ensures stable and reproducible timing results.
 
 > **Warning:** Terminating `apn_tune` prematurely (e.g. via forced termination)
 > may prevent turbo boost from being re-enabled. In such cases, the user will have to manually turn or turbo boost 
-or run the tuning utility again and let is terminate by itself.
+or run the tuning utility again and let it terminate by itself. Rebooting the system might also re-enable turbo boost.
 
 On **non-Windows platforms**, turbo boost control is not performed by libapac.
 Users must manually disable frequency scaling or turbo features if required
@@ -193,52 +164,5 @@ to obtain stable benchmark results.
 
 Note: Tuning results are CPU-specific. For best performance, run apn_tune
 on the same machine where libapac will be deployed.
-
-## Programming Examples
-
-Small example programs are provided which demonstrate basic usage of the
-arbitrary-precision integer API.
-
-> **Note:** Example programs are built by default. To disable building all
-> examples during configuration, set:
->
->     cmake -DBUILD_EXAMPLES=OFF
-
-### Factorial Example
-
-The factorial example computes `n!` using arbitrary-precision integers and
-serves as a minimal reference for iterative multi-precision computation.
-
-Running the factorial example:
-
-    ./factorial <n>
-
-Where:
-
-- `<n>` must be greater than 0 and less than 1,000,000
-
-Example:
-
-    ./factorial 1000
-
-### Fibonacci Example
-
-The Fibonacci example computes the `n`-th Fibonacci number using
-arbitrary-precision arithmetic.
-
-Running the Fibonacci example:
-
-    ./fibonacci <n>
-
-Where:
-
-- `<n>` must be greater than 2 and less than `2^22`
-
-Example:
-
-    ./fibonacci 100000
-
-Note: These examples are intended for demonstration purposes and correctness
-validation, not for algorithmic benchmarking or threshold tuning.
 
 > **Note**: The library is currently WIP

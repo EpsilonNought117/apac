@@ -64,6 +64,16 @@ typedef struct apac_tpool_t
 } apac_tpool_t;
 
 // ============================================================================
+// Global Vars
+// ============================================================================
+
+apac_barrier_t apac_barrier;
+
+apac_tpool_t apac_threadpool;
+
+bool is_threadpool_init = false;
+
+// ============================================================================
 // Barrier
 // ============================================================================
 
@@ -90,8 +100,7 @@ apac_barrier_destroy(
 apac_thrd_err_t
 apac_tpool_init(
 	apac_tpool_t* pool,
-	size_t thrd_count,
-	size_t work_queue_size
+	size_t thrd_count
 );
 
 apac_thrd_err_t
@@ -114,8 +123,7 @@ apac_tpool_wait(
 apac_thrd_err_t
 apac_tpool_set_size(
 	apac_tpool_t* pool,
-	size_t new_max_thrds,
-	size_t new_work_queue_size
+	size_t new_thrd_cnt
 );
 
 size_t
