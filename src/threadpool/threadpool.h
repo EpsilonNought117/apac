@@ -8,58 +8,60 @@
 	typedef HANDLE					apac_thrd_t;
 	typedef SRWLOCK					apac_mutex_t;
     typedef CONDITION_VARIABLE      apac_cond_t;
-    typedef SYNCHRONIZATION_BARRIER	apac_barrier_t;
-	typedef DWORD					apac_thrd_err_t;
+
+	#define APAC_THRD_CALL  		WINAPI
+	typedef DWORD           		apac_thrd_ret_t;
+	typedef LPVOID          		apac_thrd_arg_t;
 
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
 	typedef pthread_t				apac_thrd_t;
 	typedef pthread_cond_t			apac_cond_t;
 	typedef pthread_mutex_t			apac_mutex_t;
-	typedef pthread_barrier_t		apac_barrier_t;
-	typedef int						apac_thrd_err_t;
+
+	#define APAC_THRD_CALL          /* nothing */
+    typedef void*           		apac_thrd_ret_t;    
+    typedef void*           		apac_thrd_arg_t;
 
 #else
 	#error "Unknown Platform and CPU Architecture!"
 #endif
 
-// ALL IS GOOD
-#define APAC_THRD_OK			(apac_thrd_err_t)0
-// RAN OUT-OF-MEMORY
-#define APAC_THRD_OOM			(apac_thrd_err_t)1
-// FAILED TO CREATE THREAD HANDLE
-#define APAC_THRD_CREATE_FAIL	(apac_thrd_err_t)2
-// THREAD RESOURCE BUSY
-#define APAC_THRD_BUSY			(apac_thrd_err_t)3
-// THREADPOOL SHUTTING DOWN
-#define APAC_THRD_POOL_SHUT		(apac_thrd_err_t)4 
-
-typedef apac_thrd_ret_t	
-		(APAC_THRD_CALL* apac_thrd_func_t)(apac_thrd_arg_t);
-
-typedef struct apac_work_t
+typedef struct
 {
-	apac_thrd_func_t func;
-	apac_thrd_arg_t  arg;
+    /* Worker threads */
 
-} apac_work_t;
+    apac_thrd_t* workers;
+    ap_size_t max_thrds;
 
-typedef struct apac_tpool_t
-{
-	apac_mutex_t lock;
-	apac_cond_t queue_empty;		// signal if queue has no work
-	apac_cond_t	queue_not_empty;	// signal if queue is fully filled 
-	apac_cond_t queue_not_full;		// signal if queue has spot
+    /* Current parallel-for */
 
-	apac_thrd_t* workers;
-	apac_work_t* task_queue;		// circular FIFO buffer
+    apac_pfor_func_t func;
+    void* arg;
 
-	size_t	max_thrds, active_thrds; 
-	size_t	queue_curr_size, 
-			queue_max_size, 
-			queue_head;
+    ap_size_t begin;
+    ap_size_t end;
 
-	bool shutdown;
+    apac_sched_t sched;
+
+    /* Dynamic scheduling */
+
+    ap_size_t chunk_size;
+    ap_size_t next;
+
+    /* Completion tracking */
+
+    ap_size_t active_thrds;
+
+    /* Synchronization */
+
+    apac_mutex_t lock;
+
+    apac_cond_t work_ready;
+    apac_cond_t work_done;
+
+    bool has_work;
+    bool shutdown;
 
 } apac_tpool_t;
 
@@ -67,73 +69,8 @@ typedef struct apac_tpool_t
 // Global Vars
 // ============================================================================
 
-apac_barrier_t apac_barrier;
+static apac_tpool_t tpool;
 
-apac_tpool_t apac_threadpool;
-
-bool is_threadpool_init = false;
-
-// ============================================================================
-// Barrier
-// ============================================================================
-
-apac_thrd_err_t
-apac_barrier_init(
-	apac_barrier_t* b,
-	unsigned count
-);
-
-apac_thrd_err_t
-apac_barrier_wait(
-	apac_barrier_t* b
-);
-
-apac_thrd_err_t
-apac_barrier_destroy(
-	apac_barrier_t* b
-);
-
-// ============================================================================
-// Thread Pool
-// ============================================================================
-
-apac_thrd_err_t
-apac_tpool_init(
-	apac_tpool_t* pool,
-	size_t thrd_count
-);
-
-apac_thrd_err_t
-apac_tpool_destroy(
-	apac_tpool_t* pool
-);
-
-apac_thrd_err_t
-apac_tpool_submit(
-	apac_tpool_t* pool,
-	apac_thrd_func_t func,
-	apac_thrd_arg_t arg
-);
-
-apac_thrd_err_t
-apac_tpool_wait(
-	apac_tpool_t* pool
-);
-
-apac_thrd_err_t
-apac_tpool_set_size(
-	apac_tpool_t* pool,
-	size_t new_thrd_cnt
-);
-
-size_t
-apac_tpool_get_queue_capacity(
-	apac_tpool_t* pool
-);
-
-size_t
-apac_tpool_get_max_thrd_count(
-	apac_tpool_t* pool
-);
+static bool is_tpool_init = false;
 
 #endif

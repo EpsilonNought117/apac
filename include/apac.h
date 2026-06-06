@@ -107,8 +107,12 @@
 typedef enum apac_err
 {
     APAC_OK = 0,
+
     APAC_OOM,
-    APAC_DIV_BY_ZERO
+
+    APAC_DIV_BY_ZERO,
+
+    APAC_THRD_CREATE_FAIL
 
 } apac_err;
 
@@ -120,9 +124,45 @@ typedef enum apac_str_base
 
 } apac_str_base;
 
+typedef enum apac_sched_t
+{
+    APAC_SCHED_STATIC,
+    APAC_SCHED_DYNAMIC
+
+} apac_sched_t;
+
 /****************************************************************************************************/
 /*********************************    MISCELLANEOUS FUNCTIONS     ***********************************/
 /****************************************************************************************************/
+
+// ============================================================================
+// Parallel-For Related Functions and Definitions
+// ============================================================================
+
+typedef void (*apac_pfor_func_t)(
+    ap_size_t begin,
+    ap_size_t end,
+    void* arg
+);
+
+apac_err
+apac_tpool_init(ap_size_t thrd_count);
+
+apac_err
+apac_tpool_destroy(void);
+
+size_t
+apac_tpool_get_size(void);
+
+apac_err
+apac_pllfor_loop(
+    ap_size_t begin,
+    ap_size_t end,
+    ap_size_t chunk_size,
+    apac_sched_t sched,
+    apac_pfor_func_t func,
+    void* arg
+);
 
 /* ==========================================================================
  * Memory Allocation Functions and Global Allocator Struct

@@ -37,9 +37,6 @@
 	#endif
 
 	#define APAC_THRD_LOCAL __declspec(thread)
-	#define APAC_THRD_CALL  WINAPI
-	typedef DWORD           apac_thrd_ret_t;
-	typedef LPVOID          apac_thrd_arg_t;
 
 	#define CLZ(value, count)																	\
 			do																					\
@@ -81,9 +78,6 @@
 	#endif
 
     #define APAC_THRD_LOCAL __thread            /* GCC/Clang extension */
-    #define APAC_THRD_CALL                      /* nothing */
-    typedef void*           apac_thrd_ret_t;    
-    typedef void*           apac_thrd_arg_t;
 
 	#define CLZ(value, count)															\
 			do																			\
