@@ -197,6 +197,10 @@ if(BUILD_APAC_MT)
         "src/multithreading/parallel_for.c"
     )
 
+    target_compile_definitions(apac PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:BUILD_APAC_MT>
+    )
+
 endif()
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
@@ -214,7 +218,11 @@ set(apac_sources ${apac_c_sources} ${isa_sources} ${apac_mt_c_sources})
 # Build Shared/Static Library
 if(BUILD_SHARED_LIB)
     add_library(apac SHARED ${apac_sources})
-    target_compile_definitions(apac PRIVATE BUILD_SHARED_LIB)
+
+    target_compile_definitions(apac PRIVATE 
+        $<$<COMPILE_LANGUAGE:C>:BUILD_SHARED_LIB>
+    )
+    
 else()
     add_library(apac STATIC ${apac_sources})
 endif()

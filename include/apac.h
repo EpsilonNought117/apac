@@ -139,6 +139,17 @@ typedef enum apac_sched_t
 // Parallel-For Related Functions and Definitions
 // ============================================================================
 
+/*
+    NOTE: To use the below parallel-for functions
+          you must build the library with
+    
+          -DBUILD_APAC_MT=ON 
+    
+          while configuring the build with cmake,
+          otherwise you cannot use them in your 
+          source code.
+*/
+
 typedef void (*apac_pfor_func_t)(
     ap_size_t begin,
     ap_size_t end,
