@@ -1,4 +1,4 @@
-#include "threadpool.h"
+#include "parallel_for.h"
 
 // ============================================================================
 // LOW-LEVEL PLATFORM SYNCHRONIZATION WRAPPERS
@@ -223,103 +223,103 @@ apac_atomic_fetch_sub(ap_size_t* p, ap_size_t val)
 #endif
 
 static apac_thrd_ret_t APAC_THRD_CALL
-apac_tpool_worker(apac_thrd_arg_t arg)
+apac_pfor_worker(apac_thrd_arg_t arg)
 {
     ap_size_t tid = (ap_size_t)(uintptr_t)arg;   // ← extract index; was (void)empty
 
     while (true)
     {
-        apac_mutex_lock(&tpool.lock);
+        apac_mutex_lock(&pfor.lock);
 
-        while (!tpool.has_work && !tpool.shutdown)
+        while (!pfor.has_work && !pfor.shutdown)
         {
-            apac_cond_wait(&tpool.work_ready, &tpool.lock);
+            apac_cond_wait(&pfor.work_ready, &pfor.lock);
         }
         
-        if (tpool.shutdown)
+        if (pfor.shutdown)
         {
-            apac_mutex_unlock(&tpool.lock);
+            apac_mutex_unlock(&pfor.lock);
             break;
         }
 
-        apac_mutex_unlock(&tpool.lock);
+        apac_mutex_unlock(&pfor.lock);
 
-        if (tpool.sched == APAC_SCHED_DYNAMIC)
+        if (pfor.sched == APAC_SCHED_DYNAMIC)
         {
             while (true)
             {
-                ap_size_t start = apac_atomic_fetch_add(&tpool.next, tpool.chunk_size);
+                ap_size_t start = apac_atomic_fetch_add(&pfor.next, pfor.chunk_size);
 
-                if (start >= tpool.end)
+                if (start >= pfor.end)
                     break;
 
-                ap_size_t stop = start + tpool.chunk_size;
-                if (stop > tpool.end) stop = tpool.end;
+                ap_size_t stop = start + pfor.chunk_size;
+                if (stop > pfor.end) stop = pfor.end;
 
-                tpool.func(start, stop, tpool.arg);
+                pfor.func(start, stop, pfor.arg);
             }
         }
         else  // APAC_SCHED_STATIC
         {
-            ap_size_t total = tpool.end - tpool.begin;
-            ap_size_t n     = tpool.max_thrds;
+            ap_size_t total = pfor.end - pfor.begin;
+            ap_size_t n     = pfor.max_thrds;
             ap_size_t base  = total / n;
             ap_size_t rem   = total % n;
 
-            ap_size_t my_start = tpool.begin + tid * base;
+            ap_size_t my_start = pfor.begin + tid * base;
             ap_size_t my_count = (tid == n - 1) ? base + rem : base;
 
             if (my_count > 0)
             {
-                tpool.func(my_start, my_start + my_count, tpool.arg);
+                pfor.func(my_start, my_start + my_count, pfor.arg);
             }
         }
 
-        apac_mutex_lock(&tpool.lock);
+        apac_mutex_lock(&pfor.lock);
 
-        if (apac_atomic_fetch_sub(&tpool.active_thrds, 1) == 1)
+        if (apac_atomic_fetch_sub(&pfor.active_thrds, 1) == 1)
         {
-            tpool.has_work = false;
-            apac_cond_signal(&tpool.work_done);
+            pfor.has_work = false;
+            apac_cond_signal(&pfor.work_done);
         }
 
-        apac_mutex_unlock(&tpool.lock);
+        apac_mutex_unlock(&pfor.lock);
     }
 
     return 0;
 }
 
 apac_err
-apac_tpool_init(ap_size_t thrd_count)
+apac_pfor_init(ap_size_t thrd_count)
 {
     APAC_ASSERT(thrd_count != 0);
     APAC_ASSERT(thrd_count <= SIZE_MAX / sizeof(apac_thrd_t));
 
     ap_size_t i = 0;
 
-    if (is_tpool_init)
+    if (is_pfor_init)
     {
         return APAC_OK;
     }
 
     apac_err result = APAC_OK;
 
-    tpool.max_thrds     = thrd_count;
-    tpool.active_thrds  = 0;
-    tpool.next          = 0;
+    pfor.max_thrds     = thrd_count;
+    pfor.active_thrds  = 0;
+    pfor.next          = 0;
 
-    tpool.has_work      = false;
-    tpool.shutdown      = false;
+    pfor.has_work      = false;
+    pfor.shutdown      = false;
 
-    tpool.workers       = NULL;
+    pfor.workers       = NULL;
 
-    apac_mutex_init(&tpool.lock);
-    apac_cond_init(&tpool.work_ready);
-    apac_cond_init(&tpool.work_done);
+    apac_mutex_init(&pfor.lock);
+    apac_cond_init(&pfor.work_ready);
+    apac_cond_init(&pfor.work_done);
 
-    tpool.workers = apac_malloc(sizeof(apac_thrd_t) * thrd_count);
+    pfor.workers = apac_malloc(sizeof(apac_thrd_t) * thrd_count);
 
-    if (!tpool.workers)
+    if (!pfor.workers)
     {
         result = APAC_OOM;
         goto fail_cleanup;
@@ -329,16 +329,16 @@ apac_tpool_init(ap_size_t thrd_count)
     {
 #if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
 
-        tpool.workers[i] = CreateThread(
+        pfor.workers[i] = CreateThread(
             NULL, 
             0,
-            apac_tpool_worker,
+            apac_pfor_worker,
             (LPVOID)(uintptr_t)i,
             0, 
             NULL
         );
 
-        if (!tpool.workers[i])
+        if (!pfor.workers[i])
         {
             result = APAC_THRD_CREATE_FAIL;
             goto fail_cleanup;
@@ -347,8 +347,8 @@ apac_tpool_init(ap_size_t thrd_count)
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
         int ret_val = pthread_create(
-            &tpool.workers[i], NULL,
-            apac_tpool_worker,
+            &pfor.workers[i], NULL,
+            apac_pfor_worker,
             (void*)(uintptr_t)i
         );
 
@@ -360,42 +360,42 @@ apac_tpool_init(ap_size_t thrd_count)
 #endif
     }
 
-    is_tpool_init = true;
+    is_pfor_init = true;
 
     return APAC_OK;
 
 fail_cleanup:
 
-    apac_mutex_lock(&tpool.lock);
+    apac_mutex_lock(&pfor.lock);
 
-    tpool.shutdown = true;
+    pfor.shutdown = true;
 
-    apac_cond_broadcast(&tpool.work_ready);
+    apac_cond_broadcast(&pfor.work_ready);
 
-    apac_mutex_unlock(&tpool.lock);
+    apac_mutex_unlock(&pfor.lock);
 
     while (i-- > 0)
     {
 #if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
 
-        WaitForSingleObject(tpool.workers[i], INFINITE);
-        CloseHandle(tpool.workers[i]);
+        WaitForSingleObject(pfor.workers[i], INFINITE);
+        CloseHandle(pfor.workers[i]);
 
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
-        pthread_join(tpool.workers[i], NULL);
+        pthread_join(pfor.workers[i], NULL);
 
 #endif
     }
 
-    if (tpool.workers)
+    if (pfor.workers)
     {
-        apac_free(tpool.workers);
+        apac_free(pfor.workers);
     }
 
-    apac_cond_destroy(&tpool.work_done);
-    apac_cond_destroy(&tpool.work_ready);
-    apac_mutex_destroy(&tpool.lock);
+    apac_cond_destroy(&pfor.work_done);
+    apac_cond_destroy(&pfor.work_ready);
+    apac_mutex_destroy(&pfor.lock);
 
     return result;
 }
@@ -403,7 +403,7 @@ fail_cleanup:
 // NOT thread-safe with respect to concurrent callers.
 // Only one thread may call apac_pllfor_loop at a time.
 apac_err
-apac_pllfor_loop(
+apac_pfor_do(
     ap_size_t begin,
     ap_size_t end,
     ap_size_t chunk_size,
@@ -412,83 +412,83 @@ apac_pllfor_loop(
     void* arg
 )
 {
-    APAC_ASSERT(is_tpool_init);
+    APAC_ASSERT(is_pfor_init);
     APAC_ASSERT(func != NULL);
     APAC_ASSERT(begin <= end);
 
-    apac_mutex_lock(&tpool.lock);
+    apac_mutex_lock(&pfor.lock);
 
-    tpool.func       = func;
-    tpool.arg        = arg;
+    pfor.func       = func;
+    pfor.arg        = arg;
 
-    tpool.begin      = begin;
-    tpool.end        = end;
+    pfor.begin      = begin;
+    pfor.end        = end;
 
-    tpool.sched      = sched;
+    pfor.sched      = sched;
 
-    tpool.chunk_size = chunk_size;
-    tpool.next       = begin;
+    pfor.chunk_size = chunk_size;
+    pfor.next       = begin;
 
-    apac_atomic_store(&tpool.active_thrds, tpool.max_thrds);
+    apac_atomic_store(&pfor.active_thrds, pfor.max_thrds);
 
-    tpool.has_work = true;
+    pfor.has_work = true;
 
-    apac_cond_broadcast(&tpool.work_ready);
+    apac_cond_broadcast(&pfor.work_ready);
 
-    while (tpool.has_work)
+    while (pfor.has_work)
     {
-        apac_cond_wait(&tpool.work_done, &tpool.lock);
+        apac_cond_wait(&pfor.work_done, &pfor.lock);
     }
 
-    apac_mutex_unlock(&tpool.lock);
+    apac_mutex_unlock(&pfor.lock);
 
     return APAC_OK;
 }
 
 apac_err
-apac_tpool_destroy(void)
+apac_pfor_destroy(void)
 {
-    if (!is_tpool_init)
+    if (!is_pfor_init)
     {
         return APAC_OK;
     }
 
-    apac_mutex_lock(&tpool.lock);
+    apac_mutex_lock(&pfor.lock);
 
-    tpool.shutdown = true;
+    pfor.shutdown = true;
 
-    apac_cond_broadcast(&tpool.work_ready);
+    apac_cond_broadcast(&pfor.work_ready);
 
-    apac_mutex_unlock(&tpool.lock);
+    apac_mutex_unlock(&pfor.lock);
 
-    for (ap_size_t i = 0; i < tpool.max_thrds; i++)
+    for (ap_size_t i = 0; i < pfor.max_thrds; i++)
     {
 #if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
 
-        WaitForSingleObject(tpool.workers[i], INFINITE);
-        CloseHandle(tpool.workers[i]);
+        WaitForSingleObject(pfor.workers[i], INFINITE);
+        CloseHandle(pfor.workers[i]);
 
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
 
-        pthread_join(tpool.workers[i], NULL);
+        pthread_join(pfor.workers[i], NULL);
 
 #endif
     }
 
-    apac_free(tpool.workers);
+    apac_free(pfor.workers);
 
-    apac_cond_destroy(&tpool.work_done);
-    apac_cond_destroy(&tpool.work_ready);
+    apac_cond_destroy(&pfor.work_done);
+    apac_cond_destroy(&pfor.work_ready);
 
-    apac_mutex_destroy(&tpool.lock);
+    apac_mutex_destroy(&pfor.lock);
 
-    is_tpool_init = false;
+    is_pfor_init = false;
 
     return APAC_OK;
 }
 
 ap_size_t
-apac_tpool_get_size(void)
+apac_pfor_get_size(void)
 {
-    return tpool.max_thrds;
+    return pfor.max_thrds;
 }

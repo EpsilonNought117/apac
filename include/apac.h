@@ -146,16 +146,16 @@ typedef void (*apac_pfor_func_t)(
 );
 
 apac_err
-apac_tpool_init(ap_size_t thrd_count);
+apac_pfor_init(ap_size_t thrd_count);
 
 apac_err
-apac_tpool_destroy(void);
+apac_pfor_destroy(void);
 
 size_t
-apac_tpool_get_size(void);
+apac_pfor_get_size(void);
 
 apac_err
-apac_pllfor_loop(
+apac_pfor_do(
     ap_size_t begin,
     ap_size_t end,
     ap_size_t chunk_size,
@@ -346,12 +346,6 @@ APAC_API void apn_seed_prng(
 APAC_API void apn_set_random(
     ap_dig_t* op1,
     ap_size_t size1
-);
-
-APAC_API char* apn_print(
-    const ap_dig_t* op1,
-    ap_size_t size,
-    apac_str_base base
 );
 
 #endif

@@ -82,10 +82,10 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # --- BUILD OPTIONS -------------------------------------------------------------
 
-# Option to build a shared lib instead of a static lib
-option(BUILD_SHARED_LIB "Build libapac as a shared library" OFF)
-option(BUILD_APAC_TESTS "Build apn_tests program for testing correctness of routines" OFF)
-option(BUILD_APN_TUNE "Build apn_tune threshold tuning program" OFF)
+option(BUILD_SHARED_LIB "Build libapac as a shared library"                             OFF)
+option(BUILD_APAC_TESTS "Build apn_tests program for testing correctness of routines"   OFF)
+option(BUILD_APN_TUNE   "Build apn_tune threshold tuning program"                       OFF)
+option(BUILD_APAC_MT    "Build the multithreaded routines in libapac"                   OFF)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -97,10 +97,6 @@ set(apac_c_sources
     "src/misc/apac_init_alloc.c"
     "src/misc/apac_get_cpu_spec.c"
     "src/misc/apac_utilities.c"
-
-    # THREADPOOL
-
-    "src/threadpool/threadpool.c"
 
     # APN PUBLIC API
 
@@ -134,6 +130,7 @@ set(apac_c_sources
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
+
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
     # Common C sources (always used on x64)
@@ -189,15 +186,30 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 
 endif()
 
+# --- MULTI-THREADED C SOURCES --------------------------------------------------
+
+set(apac_mt_c_sources)
+
+if(BUILD_APAC_MT)
+
+    list(APPEND apac_mt_c_sources
+
+        "src/multithreading/parallel_for.c"
+    )
+
+endif()
+
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+
     set(isa_sources ${x64_specific})
+
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "AARCH64|aarch64")
 
 endif()
 
-set(apac_sources ${apac_c_sources} ${isa_sources})
+set(apac_sources ${apac_c_sources} ${isa_sources} ${apac_mt_c_sources})
 
 # Build Shared/Static Library
 if(BUILD_SHARED_LIB)

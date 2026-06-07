@@ -63,14 +63,14 @@ typedef struct
     bool has_work;
     bool shutdown;
 
-} apac_tpool_t;
+} apac_pfor_t;
 
 // ============================================================================
 // Global Vars
 // ============================================================================
 
-static apac_tpool_t tpool;
+static apac_pfor_t pfor;
 
-static bool is_tpool_init = false;
+static bool is_pfor_init = false;
 
 #endif
