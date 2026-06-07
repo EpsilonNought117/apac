@@ -76,38 +76,67 @@ apac_cond_wait(apac_cond_t* c, apac_mutex_t* m)
 static inline ap_size_t
 apac_atomic_load(const ap_size_t* p)
 {
+#if defined(APAC_ARM64_WIN)
+    return (ap_size_t)_InterlockedCompareExchange64_nf(
+        (volatile long long*)p,
+        0,
+        0
+    );
+#else
     return (ap_size_t)_InterlockedCompareExchange64(
         (volatile long long*)p,
         0,
         0
     );
+#endif
 }
 
 static inline void
 apac_atomic_store(ap_size_t* p, ap_size_t val)
 {
+#if defined(APAC_ARM64_WIN)
+    _InterlockedExchange64_nf(
+        (volatile long long*)p,
+        (long long)val
+    );
+#else
     _InterlockedExchange64(
         (volatile long long*)p,
         (long long)val
     );
+#endif
 }
 
 static inline ap_size_t
 apac_atomic_fetch_add(ap_size_t* p, ap_size_t val)
 {
+#if defined(APAC_ARM64_WIN)
+    return (ap_size_t)_InterlockedExchangeAdd64_nf(
+        (volatile long long*)p,
+        (long long)val
+    );
+#else
     return (ap_size_t)_InterlockedExchangeAdd64(
         (volatile long long*)p,
         (long long)val
     );
+#endif
 }
 
 static inline ap_size_t
 apac_atomic_fetch_sub(ap_size_t* p, ap_size_t val)
 {
+#if defined(APAC_ARM64_WIN)
+    return (ap_size_t)_InterlockedExchangeAdd64_nf(
+        (volatile long long*)p,
+        -(long long)val
+    );
+#else
     return (ap_size_t)_InterlockedExchangeAdd64(
         (volatile long long*)p,
         -(long long)val
     );
+#endif
 }
 
 #elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
@@ -178,13 +207,12 @@ apac_cond_wait(apac_cond_t* c, apac_mutex_t* m)
 // Atomic Instructions
 // ----------------------------------------------------------------------------
 
-
 static inline ap_size_t
 apac_atomic_load(const ap_size_t* p)
 {
     return __atomic_load_n(
         p,
-        __ATOMIC_SEQ_CST
+        __ATOMIC_RELAXED
     );
 }
 
@@ -194,7 +222,7 @@ apac_atomic_store(ap_size_t* p, ap_size_t val)
     __atomic_store_n(
         p,
         val,
-        __ATOMIC_SEQ_CST
+        __ATOMIC_RELAXED
     );
 }
 
@@ -204,7 +232,7 @@ apac_atomic_fetch_add(ap_size_t* p, ap_size_t val)
     return __atomic_fetch_add(
         p,
         val,
-        __ATOMIC_SEQ_CST
+        __ATOMIC_RELAXED
     );
 }
 
@@ -214,7 +242,7 @@ apac_atomic_fetch_sub(ap_size_t* p, ap_size_t val)
     return __atomic_fetch_sub(
         p,
         val,
-        __ATOMIC_SEQ_CST
+        __ATOMIC_RELAXED
     );
 }
 
