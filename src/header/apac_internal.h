@@ -115,17 +115,13 @@
 
 	#define APAC_64BIT_PLATFORM	1
 
-    #define PRI_APN_SIZE        "llu"    
+    #define PRI_APN_SIZE        "llu"
 
     #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
 
     #define APN_DIG_BITS        64U
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
-
-    #define APZ_POS             (1)
-    #define APZ_NEG             (-1)
-    #define APZ_ZERO            (0)
 
 #endif
 
