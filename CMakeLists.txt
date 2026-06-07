@@ -115,7 +115,7 @@ set(apac_c_sources
     "src/apn/commons/apn_clamp.c"
     "src/apn/commons/apn_div.c"
     "src/apn/commons/apn_div_one.c"
-    "src/apn/commons/apn_set_to_random.c"
+    "src/apn/commons/apn_set_random.c"
 
     # APN HIDDEN FUNCS
 
