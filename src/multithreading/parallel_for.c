@@ -401,7 +401,7 @@ fail_cleanup:
 }
 
 // NOT thread-safe with respect to concurrent callers.
-// Only one thread may call apac_pllfor_loop at a time.
+// Only one thread may call apac_pfor_do at a time.
 apac_err
 apac_pfor_do(
     ap_size_t begin,
