@@ -403,8 +403,8 @@ typedef struct apz_t
 
 } apz_t;
 
-#define APZ_POS     (1)
-#define APZ_NEG     (-1)
+#define APZ_POS (1)
+#define APZ_NEG (-1)
 
 APAC_API apac_err 
 apz_init(
@@ -415,7 +415,8 @@ apz_init(
 APAC_API apac_err
 apz_init_random(
     apz_t* op1,
-    ap_size_t bit_cnt
+    ap_size_t bit_cnt,
+    int sign
 );
 
 APAC_API apac_err
@@ -580,6 +581,12 @@ apz_rshift(
     apz_t* result, 
     const apz_t* op1,
     ap_size_t bit_cnt
+);
+
+APAC_API ap_size_t
+apz_size_in_base(
+    const apz_t* op1,
+    apac_str_base base
 );
 
 #endif

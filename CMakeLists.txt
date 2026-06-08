@@ -127,6 +127,11 @@ set(apac_c_sources
     "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/div_helpers.c"
     "src/apn/commons/reduce_mod_p.c"
+
+    # APZ PUBLIC API
+
+    "src/apz/apz_init.c"
+    "src/apz/apz_init_random.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
