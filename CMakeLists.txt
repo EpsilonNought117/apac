@@ -130,8 +130,9 @@ set(apac_c_sources
 
     # APZ PUBLIC API
 
-    "src/apz/apz_init.c"
+    "src/apz/apz_init_zero.c"
     "src/apz/apz_init_random.c"
+    "src/apz/apz_init_one.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------

@@ -407,7 +407,7 @@ typedef struct apz_t
 #define APZ_NEG (-1)
 
 APAC_API apac_err 
-apz_init(
+apz_init_zero(
     apz_t* op1, 
     ap_size_t size
 );

@@ -7,6 +7,7 @@ apz_init_random(
     int sign
 )
 {
+    APAC_ASSERT(apac_allocator.custom_malloc != NULL);
     APAC_ASSERT(op1 != NULL);
     APAC_ASSERT(bit_cnt != 0);
     APAC_ASSERT(bit_cnt < (APN_SIZE_MAX) / (APN_DIG_BITS * sizeof(ap_dig_t)));
