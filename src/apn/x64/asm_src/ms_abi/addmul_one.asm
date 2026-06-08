@@ -39,8 +39,6 @@ start_of_func:
     and     r8,  7
     shr     rcx, 3
 
-    lea     r9,  offset jump_table
-    lea     r9,  [r9 + r8 * 8]
     mov     rax, QWORD PTR [rbp]
     test    rcx, rcx
     jz      before_remainder
