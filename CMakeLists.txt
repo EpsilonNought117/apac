@@ -108,6 +108,7 @@ set(apac_c_sources
     "src/apn/commons/apn_cpy.c"
     "src/apn/commons/apn_sqr.c"
     "src/apn/commons/apn_cmp.c"
+    "src/apn/commons/apn_mul_one.c"
     "src/apn/commons/apn_addmul_one.c"
     "src/apn/commons/apn_submul_one.c"
     "src/apn/commons/apn_shift.c"
@@ -157,6 +158,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/asm_src/ms_abi/add_sub_n.asm"
             "src/apn/x64/asm_src/ms_abi/add_sub_one.asm"
             "src/apn/x64/asm_src/ms_abi/mul_bc.asm"
+            "src/apn/x64/asm_src/ms_abi/mul_one.asm"
             "src/apn/x64/asm_src/ms_abi/addmul_one.asm"
             "src/apn/x64/asm_src/ms_abi/submul_one.asm"
             "src/apn/x64/asm_src/ms_abi/sqr_bc.asm"
@@ -173,6 +175,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/asm_src/sysv_abi/add_sub_n.s"
             "src/apn/x64/asm_src/sysv_abi/add_sub_one.s"
             "src/apn/x64/asm_src/sysv_abi/mul_bc.s"
+            "src/apn/x64/asm_src/sysv_abi/mul_one.s"
             "src/apn/x64/asm_src/sysv_abi/addmul_one.s"
             "src/apn/x64/asm_src/sysv_abi/submul_one.s"
             "src/apn/x64/asm_src/sysv_abi/sqr_bc.s"
@@ -202,10 +205,6 @@ if(BUILD_APAC_MT)
     list(APPEND apac_mt_c_sources
 
         "src/multithreading/parallel_for.c"
-    )
-
-    target_compile_definitions(apac PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:BUILD_APAC_MT>
     )
 
 endif()
@@ -284,6 +283,7 @@ if (BUILD_APAC_TESTS)
         "tests/test_apn_sub_one.c"
         "tests/test_apn_sub_n.c"
         "tests/test_apn_sub.c"
+        "tests/test_apn_mul_one.c"
         "tests/test_apn_addmul_one.c"
         "tests/test_apn_submul_one.c"
         "tests/test_apn_div_one.c"
@@ -331,7 +331,6 @@ if (BUILD_APN_TUNE)
 
     target_include_directories(apn_tune PRIVATE
         ${CMAKE_SOURCE_DIR}/include
-
     )
 
 endif()
