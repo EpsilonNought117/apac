@@ -26,9 +26,6 @@
 sqr_bc_zen4:
 
 .cfi_startproc
-    push    r12
-.cfi_adjust_cfa_offset 8
-.cfi_rel_offset r12, 0
     push    r13
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r13, 0
@@ -57,8 +54,6 @@ sqr_bc_zen4:
     shr     rcx, 3          # curr_size /= 8 (for 8x unrolled loop)
     and     r9,  7          # curr_size %= 8
 
-    lea     r12, [rip + .Lzen4_pass1_jump_table]
-    lea     r12, [r12 + r9 * 8]
     test    rcx, rcx
     jz      .Lzen4_pass1_before_rmdr
 
@@ -86,54 +81,24 @@ sqr_bc_zen4:
 .p2align 4
 .Lzen4_pass1_before_rmdr:
 
-    jmp     QWORD PTR [r12]
+    mov     rcx, r9
+    jrcxz   .Lzen4_pass1_outer_loop_end
 
-.p2align 4
-.Lzen4_pass1_jump_table:
+.p2align 6
+.Lzen4_pass1_rmdr_loop:
 
-    .quad .Lpass1_outer_loop_end
-    .quad .Lpass1_rem1
-    .quad .Lpass1_rem2
-    .quad .Lpass1_rem3
-    .quad .Lpass1_rem4
-    .quad .Lpass1_rem5
-    .quad .Lpass1_rem6
-    .quad .Lpass1_rem7
-
-.macro PASS1_REM_CASE count
-
-.p2align 4
-.Lpass1_rem\count\():
-
-.set i, 0
-.rept \count
-
-    mulx    r11, r10, QWORD PTR [rsi + i * 8 + 8]
+    mulx    r11, r10, QWORD PTR [rsi + 8]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
+    adox    r11, QWORD PTR [rdi + 8]
+    mov     QWORD PTR [rdi], r10
     mov     rax, r11
 
-.set i, i + 1
-.endr
-
-    lea     rdi, [rdi + \count * 8]
-    lea     rsi, [rsi + \count * 8]
-    jmp     .Lpass1_outer_loop_end
-
-.endm
-
-# Generate all remainder cases from 7 down to 1
-PASS1_REM_CASE 7
-PASS1_REM_CASE 6
-PASS1_REM_CASE 5
-PASS1_REM_CASE 4
-PASS1_REM_CASE 3
-PASS1_REM_CASE 2
-PASS1_REM_CASE 1
+    lea     rsi, [rsi + 8]
+    lea     rdi, [rdi + 8]
+    loop    .Lzen4_pass1_rmdr_loop
 
 .p2align 4
-.Lpass1_outer_loop_end:
+.Lzen4_pass1_outer_loop_end:
 
     adc     QWORD PTR [rdi], rax
     sub     rsi, r8
@@ -221,8 +186,6 @@ PASS1_REM_CASE 1
     pop     r14
 .cfi_adjust_cfa_offset -8
     pop     r13
-.cfi_adjust_cfa_offset -8
-    pop     r12
 .cfi_adjust_cfa_offset -8
     ret
 

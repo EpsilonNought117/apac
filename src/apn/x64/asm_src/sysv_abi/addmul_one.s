@@ -29,12 +29,10 @@ addmul_one_zen4:
 
 .Lzen4_start_of_func:
     
-    xchg    rcx, rdx
+    xchg    rcx, rdx    # convenient, innit?
     mov     r8,  rcx
     and     r8,  7
     shr     rcx, 3
-    lea     r9,  [rip + .Lzen4_jump_table]
-    lea     r9,  [r9 + r8 * 8]
     
     mov     rax, QWORD PTR [rdi]
     test    rcx, rcx
@@ -64,54 +62,27 @@ addmul_one_zen4:
 .p2align 4
 .Lzen4_before_remainder:
 
-    jmp     QWORD PTR [r9]
+    mov     rcx, r8
+    jrcxz   .Lzen4_end_of_loop
 
-.p2align 4
-.Lzen4_jump_table:
+.p2align 6
+.Lzen4_rmdr_loop:
 
-    .quad .Lzen4_end_of_loop
-    .quad .Lzen4_rem1
-    .quad .Lzen4_rem2
-    .quad .Lzen4_rem3
-    .quad .Lzen4_rem4
-    .quad .Lzen4_rem5
-    .quad .Lzen4_rem6
-    .quad .Lzen4_rem7
-
-.macro REM_CASE outer
-.p2align 4
-
-.Lzen4_rem\outer\():
-
-.set i, 0
-.rept \outer
-
-    mulx    r11, r10, QWORD PTR [rsi + i * 8]
+    mulx    r11, r10, QWORD PTR [rsi]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
-    mov     QWORD PTR [rdi + i * 8], r10
+    adox    r11, QWORD PTR [rdi + 8]
+    mov     QWORD PTR [rdi], r10
     mov     rax, r11
 
-.set i, i + 1
-.endr
-
-    jmp     .Lzen4_end_of_loop
-
-.endm
-
-REM_CASE 7
-REM_CASE 6
-REM_CASE 5
-REM_CASE 4
-REM_CASE 3
-REM_CASE 2
-REM_CASE 1
+    lea     rsi, [rsi + 8]
+    lea     rdi, [rdi + 8]
+    loop    .Lzen4_rmdr_loop
 
 .p2align 5
 .Lzen4_end_of_loop:
 
     adcx    rax, rcx
-    mov     QWORD PTR [rdi + r8 * 8], rax
+    mov     QWORD PTR [rdi], rax
 
 .Lzen4_end_of_func:
 

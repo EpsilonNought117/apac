@@ -103,7 +103,7 @@ extern void mul_bc_x64(
 	ap_size_t size2
 );
 
-/* ------------------- APN-ARR TO ONE-LIMB MULTIPLICATION FUNCTIONS ------------------- */
+/* ------------------------- FUSED-MULTIPLY-ADD-ONE FUNCTIONS ------------------------- */
 
 extern ap_dig_t addmul_one_zen4(
 	ap_dig_t* result,
@@ -119,6 +119,8 @@ extern ap_dig_t addmul_one_x64(
 	ap_dig_t val
 );
 
+/* ------------------------- FUSED-MULTIPLY-SUB-ONE FUNCTIONS ------------------------- */
+
 extern ap_dig_t submul_one_zen4(
 	ap_dig_t* result,
 	const ap_dig_t* op1,
@@ -127,6 +129,22 @@ extern ap_dig_t submul_one_zen4(
 );
 
 extern ap_dig_t submul_one_x64(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	ap_size_t size,
+	ap_dig_t val
+);
+
+/* ------------------------------ MULTIPLY-ONE FUNCTIONS ------------------------------ */
+
+extern void mul_one_zen4(
+	ap_dig_t* result,
+	const ap_dig_t* op1,
+	ap_size_t size,
+	ap_dig_t val
+);
+
+extern void mul_one_x64(
 	ap_dig_t* result,
 	const ap_dig_t* op1,
 	ap_size_t size,
