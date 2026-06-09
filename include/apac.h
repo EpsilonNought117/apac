@@ -295,6 +295,14 @@ apn_mul(
     ap_size_t size2
 );
 
+APAC_API void
+apn_mul_one(
+    ap_dig_t* result,
+    const ap_dig_t* op1,
+    ap_size_t size,
+    ap_dig_t val
+);
+
 APAC_API ap_dig_t 
 apn_addmul_one(
     ap_dig_t* result,
