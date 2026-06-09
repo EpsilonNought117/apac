@@ -83,7 +83,7 @@ mul_one_zen4:
     ret
 
 .cfi_endproc
-.size addmul_one_zen4, .-addmul_one_zen4
+.size mul_one_zen4, .-mul_one_zen4
 
 #   -------------------------
 #
@@ -91,7 +91,7 @@ mul_one_zen4:
 #
 #   -------------------------
 
-addmul_one_x64:
+mul_one_x64:
 .cfi_startproc
 
     xchg    rcx, rdx
@@ -127,6 +127,6 @@ addmul_one_x64:
     ret
 
 .cfi_endproc
-.size addmul_one_x64, .-addmul_one_x64
+.size mul_one_x64, .-mul_one_x64
 
 .section .note.GNU-stack,"",@progbits
