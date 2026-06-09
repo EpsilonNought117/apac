@@ -26,22 +26,21 @@ addmul_one_zen4 PROC FRAME
     
     push    rbx
 .pushreg    rbx
-    push    rbp
-.pushreg    rbp
 .endprolog
 
 start_of_func:
 
-    xchg    rbp, rcx
-    xchg    rbx, rdx
-    mov     rdx, r9
-    mov     rcx, r8
-    and     r8,  7
-    shr     rcx, 3
+    xchg    rax, rcx    ; empty rcx for storing counter
+    xchg    rbx, rdx    ; empty rdx for mulx
+    mov     rdx, r9     ; store val in rdx
+    mov     rcx, r8     ; copy of size in rcx
+    and     r8,  7      ; size % 8
+    shr     rcx, 3      ; size / 8
 
-    mov     rax, QWORD PTR [rbp]
-    test    rcx, rcx
-    jz      before_remainder
+    mov     r9,  rax            ; store result_ptr in r9
+    mov     rax, QWORD PTR [r9] ; load result[0] into rax
+    test    rcx, rcx            ; test if (size / 8) == 0
+    jz      before_remainder    ; jump to rmdr if zero
     
 ALIGN 64
 unroll8_loop:
@@ -51,15 +50,15 @@ WHILE i LT 8
 
     mulx    r11, r10, QWORD PTR [rbx + i * 8]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + i * 8 + 8]
-    mov     QWORD PTR [rbp + i * 8], r10
+    adox    r11, QWORD PTR [r9 + i * 8 + 8]
+    mov     QWORD PTR [r9 + i * 8], r10
     mov     rax, r11
-        
-    i = i + 1
+
+i = i + 1
 ENDM
 
     lea     rbx, [rbx + 64]
-    lea     rbp, [rbp + 64]
+    lea     r9,  [r9  + 64]
     lea     rcx, [rcx - 1]
     jrcxz   before_remainder
     jmp     unroll8_loop
@@ -67,52 +66,33 @@ ENDM
 ALIGN 16
 before_remainder:
 
-    jmp     QWORD PTR [r9]
+    mov     rcx, r8
+    jrcxz   end_of_loop
 
-ALIGN 16
-jump_table:
+ALIGN 64
+rmdr_loop:
 
-    QWORD offset end_of_loop
-    QWORD offset rem1
-    QWORD offset rem2
-    QWORD offset rem3
-    QWORD offset rem4
-    QWORD offset rem5
-    QWORD offset rem6
-    QWORD offset rem7
-
-FOR outer, <7, 6, 5, 4, 3, 2, 1>
-
-ALIGN 16
-rem&outer&:
-
-i = 0
-WHILE i LT outer
-    mulx    r11, r10, QWORD PTR [rbx + i*8]
+    mulx    r11, r10, QWORD PTR [rbx]
     adcx    r10, rax
-    adox    r11, QWORD PTR [rbp + i*8 + 8]
-    mov     QWORD PTR [rbp + i*8], r10
+    adox    r11, QWORD PTR [r9 + 8]
+    mov     QWORD PTR [r9], r10
     mov     rax, r11
-            
-i = i + 1
-ENDM
 
-    jmp end_of_loop
-        
-ENDM
+    lea     rbx, [rbx + 8]
+    lea     r9,  [r9  + 8]
+    loop    rmdr_loop
 
 ALIGN 32
 end_of_loop:
     
-    adcx    rax, rcx
-    mov     QWORD PTR [rbp + r8 * 8], rax
+    adcx    rax, rcx            ; rcx is zero by now
+    mov     QWORD PTR [r9], rax ; r9 points to &result[size]
 
 end_of_func:
 
     seto    al
     movzx   rax, al
 
-    pop     rbp
     pop     rbx
     ret
 
@@ -127,7 +107,7 @@ addmul_one_zen4 ENDP
 addmul_one_x64 PROC FRAME
 .endprolog
 
-    xchg    r10, rcx    ; free up rcx for jrcxz/loop
+    xchg    r10, rcx    ; free up rcx for temp_reg
     xchg    r11, rdx    ; free up rdx for mul
 
     ; r10 <- result

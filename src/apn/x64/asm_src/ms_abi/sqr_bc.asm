@@ -33,8 +33,6 @@ sqr_bc_zen4 PROC FRAME
 .pushreg    rdi
     push    rsi
 .pushreg    rsi
-    push    r13
-.pushreg    r13
 .endprolog
 
 start_of_func:
@@ -57,8 +55,6 @@ outer_loop_pass1:
     mov     r9,  r11                    ; for later finding the jump_table label
     shr     rcx, 3                      ; curr_size /= 8 (for 8x unrolled loop)
     and     r9,  7                      ; curr_size %= 8
-    lea     r13, offset jump_table_pass1
-    lea     r13, [r13 + r9 * 8]
     test    rcx, rcx
     jz      bef_inner_rmdr_pass1
 
@@ -86,43 +82,20 @@ ENDM
 ALIGN 16
 bef_inner_rmdr_pass1:
 
-    jmp     QWORD PTR [r13]
+    mov     rcx, r9
+    jrcxz   outer_loop_end_pass1
 
-    jmp     start_of_func
+rmdr_loop_pass1:
 
-jump_table_pass1:
-
-    QWORD offset outer_loop_end_pass1
-    QWORD offset inner_pass1_rem1
-    QWORD offset inner_pass1_rem2
-    QWORD offset inner_pass1_rem3
-    QWORD offset inner_pass1_rem4
-    QWORD offset inner_pass1_rem5
-    QWORD offset inner_pass1_rem6
-    QWORD offset inner_pass1_rem7
-
-FOR i, <7, 6, 5, 4, 3, 2, 1>
-
-ALIGN 16
-inner_pass1_rem&i&:
-
-j = 0
-WHILE j LT i
-
-    mulx    rdi, rsi, QWORD PTR [rbx + j * 8 + 8]
+    mulx    rdi, rsi, QWORD PTR [rbx + 8]
     adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + j * 8 + 8]
-    mov     QWORD PTR [rbp + j * 8], rsi
+    adox    rdi, QWORD PTR [rbp + 8]
+    mov     QWORD PTR [rbp], rsi
     mov     rax, rdi
 
-j = j + 1    
-ENDM
-
-    lea     rbp, [rbp + i * 8]
-    lea     rbx, [rbx + i * 8]
-    jmp     outer_loop_end_pass1
-
-ENDM
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
+    loop    rmdr_loop_pass1
 
 ALIGN 16
 outer_loop_end_pass1:
@@ -210,7 +183,6 @@ pass2_rmdr_loop:
 
 end_of_func:
 
-    pop     r13
     pop     rsi
     pop     rdi
     pop     rbx
