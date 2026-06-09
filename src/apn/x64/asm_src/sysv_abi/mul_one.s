@@ -56,7 +56,7 @@ mul_one_zen4:
 
     setc    r9b
     test    r8,  r8
-    bt      r9b, 0
+    bt      r9w, 0
     jz      .Lzen4_end_of_loop
 
 .p2align 6

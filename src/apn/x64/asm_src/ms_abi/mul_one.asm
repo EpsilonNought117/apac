@@ -59,11 +59,11 @@ ENDM
     dec     r8
     jnz     unroll8_loop
 
-before_remainder:
+bef_rmdr:
 
     setc    r8b
     test    r9,  r9
-    bt      r8b, 0
+    bt      r8w,  0
     jz      end_of_func
 
 rmdr_loop:
