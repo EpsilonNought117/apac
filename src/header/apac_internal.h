@@ -282,6 +282,7 @@ typedef struct apac_cpu_params
     ap_dig_t(*apn_sub_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
     void (*apn_neg_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
 
+    void (*apn_mul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
     ap_dig_t(*apn_addmul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
     ap_dig_t(*apn_submul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
 

@@ -18,6 +18,7 @@ void zen4_set_params(void)
 	curr_cpu.apn_mul_bc_ptr			= mul_bc_zen4;
 	curr_cpu.apn_sqr_bc_ptr			= sqr_bc_zen4;
 	curr_cpu.apn_neg_ptr			= neg_zen4;
+	curr_cpu.apn_mul_one_ptr		= mul_one_zen4;
 
 	curr_cpu.apn_set_ptr			= set_avx512f_4unroll;
 	curr_cpu.apn_cpy_ptr			= cpy_avx512f_4unroll;
@@ -45,6 +46,7 @@ void generic_x64_set_params(void)
 	curr_cpu.apn_mul_bc_ptr         = mul_bc_x64;
 	curr_cpu.apn_sqr_bc_ptr         = sqr_bc_x64;
 	curr_cpu.apn_neg_ptr            = neg_x64;
+	curr_cpu.apn_mul_one_ptr		= mul_one_x64;
 	
 	curr_cpu.apn_set_ptr            = set_sse2_4unroll;
 	curr_cpu.apn_cpy_ptr            = cpy_sse2_4unroll;
