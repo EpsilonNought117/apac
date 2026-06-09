@@ -28,7 +28,7 @@ sqr_bc_zen4:
 .cfi_startproc
     push    r12
 .cfi_adjust_cfa_offset 8
-.cfi_rel_offset r13, 0
+.cfi_rel_offset r12, 0
     push    r13
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r13, 0
