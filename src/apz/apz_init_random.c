@@ -24,7 +24,7 @@ apz_init_random(
         goto func_end;
     }
 
-    apn_set_random(op1, whole);
+    apn_set_random(op1->num, whole);
 
     if (frac)
     {
