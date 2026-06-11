@@ -2,15 +2,34 @@
 
 apac_err
 apz_cpy(
-    apz_t* result,
-    const apz_t* op1
+	apz_t* result,
+	const apz_t* op1
 )
 {
-    APAC_ASSERT(apac_allocator.custom_realloc != NULL);
-    APAC_ASSERT(result != NULL);
-    APAC_ASSERT(op1 != NULL);
+	APAC_ASSERT(apac_allocator.custom_realloc != NULL);
+	APAC_ASSERT(result != NULL);
+	APAC_ASSERT(op1 != NULL);
 
-    /* assumes result has been validly initalized already */
+	// assumes result and op1 
+	// have been initalized 
+	// already in a valid way
 
-    apac_err retval = APAC_OK;
+	apac_err retval = APAC_OK;
+
+	ap_dig_t* temp = (ap_dig_t*)apac_realloc(result->num, sizeof(ap_dig_t) * op1->max_size);
+
+	if (!temp) { retval = APAC_OOM; goto func_end; }
+
+	result->num = temp;
+	temp = NULL;
+
+	apn_cpy(result->num, op1->num, op1->max_size);
+
+	result->curr_size = op1->curr_size;
+	result->max_size = op1->max_size;
+	result->sign = op1->sign;
+
+func_end:
+
+	return result;
 }
