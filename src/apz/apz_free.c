@@ -6,8 +6,10 @@ apz_free(
 )
 {
     APAC_ASSERT(op1 != NULL);
-
+    
     apac_free(op1->num);
+
+    op1->num = NULL;
     op1->curr = 0;
     op1->max = 0;
     op1->sign = APZ_POS;
