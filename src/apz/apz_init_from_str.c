@@ -191,7 +191,7 @@ apz_init_from_str(
 		}
 
 		op1->num[curr_dig] = acc;
-		APAC_ALWAYS_ASSERT(curr_dig = digits - 1);
+		APAC_ALWAYS_ASSERT(curr_dig == digits - 1);
 		op1->curr = digits;
 	}
 
