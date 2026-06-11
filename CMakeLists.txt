@@ -135,6 +135,8 @@ set(apac_c_sources
     "src/apz/apz_init_random.c"
     "src/apz/apz_init_one.c"
     "src/apz/apz_init_from_str.c"
+    "src/apz/apz_resize.c"
+    "src/apz/apz_free.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
