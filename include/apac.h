@@ -445,6 +445,12 @@ apz_init_from_str(
 );
 
 APAC_API apac_err
+apz_init_cpy(
+    apz_t* result,
+    const apz_t* op1
+);
+
+APAC_API apac_err
 apz_resize(
     apz_t* op1,
     ap_size_t new_size
