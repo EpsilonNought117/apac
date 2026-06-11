@@ -96,6 +96,9 @@
     typedef unsigned long long  ap_dig_t;
     typedef unsigned long long  ap_size_t;
 
+    #define APN_DIG_BITS        64U
+    #define APN_DIG_HIGH_BIT    (1ULL << 63)
+
 #else
     #error "Unknown Platform and CPU Architecture!"
 #endif
@@ -424,7 +427,7 @@ APAC_API apac_err
 apz_init_random(
     apz_t* op1,
     ap_size_t bit_cnt,
-    int sign
+    int sign        /* one of APZ_POS or APZ_NEG */
 );
 
 APAC_API apac_err
@@ -443,7 +446,7 @@ apz_init_from_str(
 
 APAC_API apac_err
 apz_resize(
-    apz_t op1,
+    apz_t* op1,
     ap_size_t new_size
 );
 

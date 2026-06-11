@@ -119,10 +119,7 @@
 
     #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
-
-    #define APN_DIG_BITS        64U
-    #define APN_DIG_HIGH_BIT    (1ULL << 63)
-
+    
     #define TEN_TO_POW19        (10ULL * 1'000'000'000ULL * 1'000'000'000ULL)
 
 #endif
