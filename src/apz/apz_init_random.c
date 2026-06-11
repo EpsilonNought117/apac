@@ -10,11 +10,13 @@ apz_init_random(
     APAC_ASSERT(apac_allocator.custom_malloc != NULL);
     APAC_ASSERT(op1 != NULL);
     APAC_ASSERT(bit_cnt != 0);
-    APAC_ASSERT(bit_cnt < (APN_SIZE_MAX) / (APN_DIG_BITS * sizeof(ap_dig_t)));
+    APAC_ASSERT(bit_cnt <= APN_SIZE_MAX - APN_DIG_BITS + 1);
+    APAC_ASSERT(sign == APZ_POS || sign == APZ_NEG);
 
-    ap_size_t frac = bit_cnt % 64;
-    ap_size_t whole = frac ? (bit_cnt / 64) : (bit_cnt / 64) + 1;
     apac_err result = APAC_OK;
+
+    ap_size_t frac = bit_cnt % APN_DIG_BITS;
+    ap_size_t whole = (bit_cnt + APN_DIG_BITS - 1) / APN_DIG_BITS;
 
     op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * whole);
 
@@ -26,6 +28,8 @@ apz_init_random(
 
     apn_set_random(op1->num, whole);
 
+    // if top-most limb isn't supposed to
+    // be full 64-bits reduce it to frac-bits
     if (frac)
     {
         op1->num[whole - 1] &= ((1ULL << frac) - 1);
