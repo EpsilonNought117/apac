@@ -409,7 +409,7 @@ apn_set_random(
 typedef struct apz_t
 {
     ap_dig_t* num;
-    ap_size_t curr, max;
+    ap_size_t curr_size, max_size;
     int sign;
 
 } apz_t;

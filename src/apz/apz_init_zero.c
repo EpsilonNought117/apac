@@ -23,8 +23,8 @@ apz_init_zero(
 
     apn_set(op1->num, size, 0); // zero out array
     
-    op1->max = size;
-    op1->curr = 0;
+    op1->max_size = size;
+    op1->curr_size = 0;
     op1->sign = APZ_POS; // given that 0 is in Z+
 
 func_end:

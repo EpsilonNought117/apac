@@ -12,16 +12,16 @@ apz_init_cpy(
 
     apac_err retval = APAC_OK;
 
-    result->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * op1->max);
+    result->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * op1->max_size);
 
     if (!result->num) { retval = APAC_OOM; goto func_end; }
 
-    result->max = op1->max;
+    result->max_size = op1->max_size;
     result->sign = op1->sign;
-    result->curr = op1->curr;
+    result->curr_size = op1->curr_size;
 
-    apn_cpy(result->num, op1->num, op1->curr);
-    apn_set(&(result->num[result->curr]), (result->max - result->curr), 0);
+    apn_cpy(result->num, op1->num, op1->curr_size);
+    apn_set(&(result->num[result->curr_size]), (result->max_size - result->curr_size), 0);
 
 func_end:
     return retval;

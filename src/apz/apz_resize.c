@@ -20,8 +20,8 @@ apz_resize(
 
     op1->num = temp;
     temp = NULL;
-    op1->max = new_size;
-    op1->curr = op1->curr < new_size ? op1->curr : new_size;
+    op1->max_size = new_size;
+    op1->curr_size = op1->curr_size < new_size ? op1->curr_size : new_size;
 
 func_end:
     return result;

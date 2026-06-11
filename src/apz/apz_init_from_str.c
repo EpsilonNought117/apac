@@ -73,7 +73,7 @@ apz_init_from_str(
 
 		if (!(op1->num)) { result = APAC_OOM; goto func_end; }
 
-		op1->max = digits;
+		op1->max_size = digits;
 		apn_set(op1->num, digits, 0);
 
 		ap_dig_t i = 1;
@@ -101,7 +101,7 @@ apz_init_from_str(
 
 		apn_mul_one(op1->num, op1->num, curr_size, i);
 		op1->num[0] += acc;
-		op1->curr = apn_clamp(op1->num, curr_size + 1);
+		op1->curr_size = apn_clamp(op1->num, curr_size + 1);
 	}
 	else
 	{
@@ -148,7 +148,7 @@ apz_init_from_str(
 
 		if (!(op1->num)) { result = APAC_OOM; goto func_end; }
 
-		op1->max = digits;
+		op1->max_size = digits;
 		apn_set(op1->num, digits, 0);
 
 		ap_size_t i = 0;
@@ -192,7 +192,7 @@ apz_init_from_str(
 
 		op1->num[curr_dig] = acc;
 		APAC_ALWAYS_ASSERT(curr_dig == digits - 1);
-		op1->curr = digits;
+		op1->curr_size = digits;
 	}
 
 func_end:

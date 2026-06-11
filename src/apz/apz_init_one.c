@@ -22,8 +22,8 @@ apz_init_one(
     }
 
     op1->num[0] = val;
-    op1->max = 1;
-    op1->curr = 1;
+    op1->max_size = 1;
+    op1->curr_size = 1;
     op1->sign = sign;
 
 func_end:

@@ -35,8 +35,8 @@ apz_init_random(
         op1->num[whole - 1] &= ((1ULL << frac) - 1);
     }
 
-    op1->curr = whole;
-    op1->max = whole;
+    op1->curr_size = whole;
+    op1->max_size = whole;
     op1->sign = sign;
 
 func_end:
