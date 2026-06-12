@@ -31,5 +31,5 @@ apz_cpy(
 
 func_end:
 
-	return result;
+	return retval;
 }
