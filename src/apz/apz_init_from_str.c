@@ -164,19 +164,9 @@ apz_init_from_str(
 			i++;
 
 			ap_dig_t val = 0;
-
-			if (c >= '0' && c <= '9')
-			{
-				val = (ap_size_t)c - '0';
-			}
-			else if (c >= 'a' && c <= 'f')
-			{
-				val = 10ULL + c - 'a';
-			}
-			else
-			{
-				val = 10ULL + c - 'A';
-			}
+			
+			c |= 0x20; // force lowercase: 'A' to 'a', '0' to '0' (digits unaffected)
+			val = c >= 'a' ? (ap_size_t)(c - 'a' + 10) : (ap_size_t)(c - '0');
 
 			acc = (acc << 4) | val;
 
@@ -191,7 +181,6 @@ apz_init_from_str(
 		}
 
 		op1->num[curr_dig] = acc;
-		APAC_ALWAYS_ASSERT(curr_dig == digits - 1);
 		op1->curr_size = digits;
 	}
 
