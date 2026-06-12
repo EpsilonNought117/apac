@@ -5,17 +5,14 @@
 static void
 check_apn_mul_one(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
     ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
-    APAC_ALWAYS_ASSERT(op3 != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX, 0);
+    apn_set(op1, TEST_SIZE_MAX + 1, 0);
     apn_set(op2, TEST_SIZE_MAX + 1, 0);
-    apn_set(op3, TEST_SIZE_MAX + 1, 0);
 
     while (iterations--)
     {
@@ -32,63 +29,63 @@ check_apn_mul_one(uint64_t iterations)
 
         apn_set(op1, size, APN_DIG_MAX);
 
-        apn_set(op2, size + 1, 0);
-        apn_set(op3, size + 1, 0);
+        apn_set(op2, size + 1, APN_DIG_MAX);
+        op2[0]    = 1ULL;
+        op2[size] = APN_DIG_MAX - 1ULL;
 
-        apn_addmul_one(op3, op1, size, APN_DIG_MAX);
+        apn_mul_one(op1, op1, size, APN_DIG_MAX);
 
-        apn_mul_one(op2, op1, size, APN_DIG_MAX);
-
-        int cmp_res = apn_cmp(op2, op3, size + 1);
+        int cmp_res = apn_cmp(op1, op2, size + 1);
         APAC_ALWAYS_ASSERT(cmp_res == 0);
 
         /* TEST-2: mul_one(..., 1) == copy */
 
         apn_set_random(op1, size);
+        op1[size] = 0;
 
-        apn_set(op2, size + 1, 0);
-        apn_set(op3, size + 1, 0);
+        apn_cpy(op2, op1, size + 1);
 
-        apn_addmul_one(op3, op1, size, 1);
+        apn_mul_one(op1, op1, size, 1);
 
-        apn_mul_one(op2, op1, size, 1);
-
-        cmp_res = apn_cmp(op2, op3, size + 1);
+        cmp_res = apn_cmp(op1, op2, size + 1);
         APAC_ALWAYS_ASSERT(cmp_res == 0);
 
         /* TEST-3: mul_one(..., 0) == zero */
 
-        apn_set_random(op1, size);
+        apn_set_random(op1, size + 1);
 
         apn_set(op2, size + 1, 0);
-        apn_set(op3, size + 1, 0);
 
-        apn_addmul_one(op3, op1, size, 0);
+        apn_mul_one(op1, op1, size, 0);
 
-        apn_mul_one(op2, op1, size, 0);
-
-        cmp_res = apn_cmp(op2, op3, size + 1);
+        cmp_res = apn_cmp(op1, op2, size + 1);
         APAC_ALWAYS_ASSERT(cmp_res == 0);
 
         /* TEST-4: random op1, random val */
 
         apn_set_random(op1, size);
-
-        ap_dig_t val = 0;
-        apn_set_random(&val, 1);
+        op1[size] = 0;
 
         apn_set(op2, size + 1, 0);
-        apn_set(op3, size + 1, 0);
 
-        apn_addmul_one(op3, op1, size, val);
+        ap_dig_t val = 0;
 
-        apn_mul_one(op2, op1, size, val);
+        do
+        {
+            apn_set_random(&val, 1);
+        }
+        while (val == 0);
 
-        cmp_res = apn_cmp(op2, op3, size + 1);
+        apn_addmul_one(op2, op1, size, val);
+        apn_mul_one(op1, op1, size, val);
+
+        cmp_res = apn_cmp(op1, op2, size + 1);
         APAC_ALWAYS_ASSERT(cmp_res == 0);
+
+        apn_set(op1, size + 1, 0);
+        apn_set(op2, size + 1, 0);
     }
 
-    apac_free(op3);
     apac_free(op2);
     apac_free(op1);
 }
