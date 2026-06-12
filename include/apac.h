@@ -165,7 +165,7 @@ apac_pfor_init(ap_size_t thrd_count);
 apac_err
 apac_pfor_destroy(void);
 
-size_t
+ap_size_t
 apac_pfor_get_size(void);
 
 apac_err
