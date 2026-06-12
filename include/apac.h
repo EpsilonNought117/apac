@@ -600,10 +600,4 @@ apz_rshift(
     ap_size_t bit_cnt
 );
 
-APAC_API ap_size_t
-apz_size_in_base(
-    const apz_t* op1,
-    apac_str_base base
-);
-
 #endif
