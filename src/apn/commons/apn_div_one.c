@@ -12,7 +12,12 @@ ap_dig_t apn_div_one(
     APAC_ASSERT(quotient != NULL);
     APAC_ASSERT(dividend != NULL);
     APAC_ASSERT(size_divd != 0);
-    APAC_FULL_ALIAS_ONLY(quotient, size_divd, dividend, size_divd);
+    APAC_PARTIAL_OVERLAP_BELOW(
+        quotient, 
+        size_divd + size_divd_frac, 
+        dividend, 
+        size_divd
+    );
     APAC_ASSERT(divisor != 0);
 
     ap_dig_t rmdr = 0;

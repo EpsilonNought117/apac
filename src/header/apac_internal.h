@@ -199,18 +199,6 @@
                 ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
             )
 
-    #define APAC_FULL_ALIAS_ONLY(op1, size1, op2, size2)                        \
-            APAC_ALWAYS_ASSERT(                                                 \
-                (                                                               \
-                    (uintptr_t)(op1) == (uintptr_t)(op2) &&                     \
-                    (uintptr_t)(op1) + (size1) == (uintptr_t)(op2) + (size2)    \
-                ) ||                                                            \
-                (                                                               \
-                    ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||         \
-                    ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)            \
-                )                                                               \
-            )
-
     #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                  \
             APAC_ALWAYS_ASSERT(                                                 \
                 ((uintptr_t)(op1) + (size1)) <= ((uintptr_t)(op2) + (size2)) || \
@@ -226,7 +214,6 @@
 #else
 
     #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
-    #define APAC_FULL_ALIAS_ONLY(op1, size1, op2, size2)        do { /* nothing */ } while (0)
     #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
 
