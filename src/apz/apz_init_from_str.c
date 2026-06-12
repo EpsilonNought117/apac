@@ -80,7 +80,7 @@ apz_init_from_str(
 		ap_size_t curr_size = 1;
 		ap_dig_t acc = 0;
 
-		while (curr != '\0')
+		while (*curr != '\0')
 		{
 			acc = acc * 10 + (*curr) - '0';
 			i *= 10;
