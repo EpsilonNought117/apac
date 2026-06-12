@@ -120,7 +120,7 @@
     #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
     
-    #define TEN_TO_POW19        (10ULL * 1'000'000'000ULL * 1'000'000'000ULL)
+    #define TEN_TO_POW19        (10ULL * 1000000000ULL * 1000000000ULL)
 
 #endif
 
