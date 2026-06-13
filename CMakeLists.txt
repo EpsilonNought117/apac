@@ -141,7 +141,7 @@ set(apac_c_sources
     "src/apz/apz_cpy.c"
     "src/apz/apz_init_cpy.c"
     "src/apz/apz_get_as_str.c"
-        
+    "src/apz/apz_size_in_base.c"  
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------

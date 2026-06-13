@@ -96,7 +96,7 @@
     typedef unsigned long long  ap_dig_t;
     typedef unsigned long long  ap_size_t;
 
-    #define APN_DIG_BITS        64U
+    #define APN_DIG_BITS        64ULL
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
 
 #else
@@ -598,6 +598,12 @@ apz_rshift(
     apz_t* result, 
     const apz_t* op1,
     ap_size_t bit_cnt
+);
+
+APAC_API ap_size_t
+apz_size_in_base(
+    const apz_t* op1,
+    apac_str_base base
 );
 
 #endif
