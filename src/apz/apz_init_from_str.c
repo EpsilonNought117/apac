@@ -58,7 +58,7 @@ apz_init_from_str(
 			str_len++;
 		}
 
-		APAC_ALWAYS_ASSERT(str_len != 0);
+		APAC_ASSERT(str_len != 0);
 
 		// string is now verified to be correct and
 		// we have the required length in count of 
@@ -76,30 +76,34 @@ apz_init_from_str(
 		op1->max_size = digits;
 		apn_set(op1->num, digits, 0);
 
-		ap_dig_t i = 1;
+		ap_dig_t i = 0;
 		ap_size_t curr_size = 1;
 		ap_dig_t acc = 0;
 
 		while (*curr != '\0')
 		{
 			acc = acc * 10 + (*curr) - '0';
-			i *= 10;
+			i++;
 
-			if (i == TEN_TO_POW19)
+			if (i == (ap_size_t)19)
 			{
 				apn_mul_one(op1->num, op1->num, curr_size, TEN_TO_POW19);
 				op1->num[0] += acc;
 				curr_size = apn_clamp(op1->num, curr_size + 1);
 
 				// reset multiplier and acc
-				i = 1;
+				i = 0;
 				acc = 0;
 			}
 
 			curr++;
 		}
 
-		apn_mul_one(op1->num, op1->num, curr_size, i);
+		ap_dig_t mult = 1;
+
+		while (i--) { mult *= 10; }
+
+		apn_mul_one(op1->num, op1->num, curr_size, mult);
 		op1->num[0] += acc;
 		op1->curr_size = apn_clamp(op1->num, curr_size + 1);
 	}
@@ -140,7 +144,7 @@ apz_init_from_str(
 			str_len++;
 		}
 
-		APAC_ALWAYS_ASSERT(str_len != 0);
+		APAC_ASSERT(str_len != 0);
 
 		ap_size_t digits = (str_len + 15) / 16;
 
