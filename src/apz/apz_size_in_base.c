@@ -10,6 +10,11 @@ apz_size_in_base(
     APAC_ASSERT(base == BASE10 || base == BASE16);
     APAC_ASSERT(op1->curr_size <= APN_SIZE_MAX);
 
+    if (op1->curr_size == 0)
+    {
+        return 0;
+    }
+
     ap_size_t size = 0;
     ap_size_t bitcnt = 0;
 
@@ -22,6 +27,19 @@ apz_size_in_base(
 
     if (base == BASE10)
     {
+        // Let L = log10(2).
+        //
+        // B = floor(L * 2^64)
+        // C = floor((L * 2^64 - B) * 2^64)
+        //
+        // Together, B and C form a 128-bit fixed-point approximation of L:
+        //
+        //     L ≈ B/2^64 + C/2^128
+        //
+        // The high product bitcnt * B provides the primary estimate, while
+        // bitcnt * C supplies enough additional precision to decide whether
+        // the final ceil() result requires an extra increment.
+
         static const ap_size_t B = 5553023288523357132ULL;
         static const ap_size_t C = 5171448307347507388ULL;
 
