@@ -7,3 +7,4 @@ build/
 *.out
 *.bin
 *.o
+cpp.hint
