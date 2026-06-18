@@ -481,7 +481,8 @@ apz_get_as_str(
 APAC_API apac_err
 apz_set_random(
     apz_t* op1,
-    ap_dig_t bit_cnt
+    ap_dig_t bit_cnt,
+    int sign
 );
 
 APAC_API apac_err
