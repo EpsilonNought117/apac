@@ -61,7 +61,7 @@ check_apn_add(uint64_t iterations)
         carry = apn_add(op3, op1, op2, size1, size1);
 
         APAC_ALWAYS_ASSERT(carry == 1);
-        APAC_ALWAYS_ASSERT(apn_is_zero(op3, size1) == 0);
+        APAC_ALWAYS_ASSERT(apn_is_zero(op3, size1) == 1);
 
         /* TEST-3: c = a + b && d = c - b  => d == a */
 
@@ -90,7 +90,7 @@ check_apn_add(uint64_t iterations)
         carry = apn_add(op3, op1, op2, size1, size2);
 
         APAC_ALWAYS_ASSERT(carry == 1);
-        APAC_ALWAYS_ASSERT(apn_is_zero(op3, size1) == 0);
+        APAC_ALWAYS_ASSERT(apn_is_zero(op3, size1) == 1);
 
         /* TEST-6: (a + b) + c = (a + c) + b */
 

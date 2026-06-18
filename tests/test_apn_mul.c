@@ -95,7 +95,7 @@ check_apn_mul(uint64_t iterations)
 
         int is_zero = apn_is_zero(op3, size1 + size2);
 
-        APAC_ALWAYS_ASSERT(is_zero == 0);
+        APAC_ALWAYS_ASSERT(is_zero == 1);
 
         /* TEST-3: multiply by one */
 

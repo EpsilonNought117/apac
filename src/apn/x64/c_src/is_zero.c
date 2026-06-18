@@ -41,7 +41,7 @@ int is_zero_avx512f_4unroll(
         __mmask8 result = _mm512_test_epi64_mask(a0, a0);
 
         if (result)
-            return 1;
+            return 0;
 
         counter += 32;
     }
@@ -75,7 +75,7 @@ int is_zero_avx512f_4unroll(
 
     __mmask8 result = _mm512_test_epi64_mask(a0, a0);
 
-    return (result ? 1 : 0);
+    return (result ? 0 : 1);
 }
 
 #if (defined(__GNUC__) || defined(__clang__))
@@ -119,7 +119,7 @@ int is_zero_avx2_4unroll(
         __mmask8 result = _mm256_testz_si256(a0, a0);
 
         if (!result)
-            return 1;
+            return 0;
 
         counter += 16;
     }
@@ -127,12 +127,12 @@ int is_zero_avx2_4unroll(
     while (counter < size)
     {
         if (op1[counter] != 0ULL)
-            return 1;
+            return 0;
 
         counter++;
     }
 
-    return 0;
+    return 1;
 }
 
 #if (defined(__GNUC__) || defined(__clang__))
@@ -179,7 +179,7 @@ int is_zero_sse2_4unroll(
         int result = _mm_movemask_epi8(val);
 
         if (result != 0xFFFF)
-            return 1;
+            return 0;
 
         counter += 8;
     }
@@ -188,10 +188,10 @@ int is_zero_sse2_4unroll(
     while (counter < size)
     {
         if (op1[counter] != 0ULL)
-            return 1;
+            return 0;
 
         counter++;
     }
 
-    return 0;
+    return 1;
 }

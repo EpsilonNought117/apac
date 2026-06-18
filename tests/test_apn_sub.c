@@ -96,7 +96,7 @@ check_apn_sub(uint64_t iterations)
         int is_zero = apn_is_zero(r, size1);
 
         APAC_ALWAYS_ASSERT(borrow == 0);
-        APAC_ALWAYS_ASSERT(is_zero == 0);
+        APAC_ALWAYS_ASSERT(is_zero == 1);
     }
 
     apac_free(t);

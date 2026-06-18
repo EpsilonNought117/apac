@@ -38,7 +38,7 @@ check_apn_add_one(uint64_t iterations)
 
         int is_zero = apn_is_zero(op2, size);
 
-        APAC_ALWAYS_ASSERT(is_zero == 0);
+        APAC_ALWAYS_ASSERT(is_zero == 1);
 
         /* TEST-2: add_one(..., 0) == identity */
 

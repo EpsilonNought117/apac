@@ -69,7 +69,7 @@ check_apn_sub_n(uint64_t iterations)
         int is_zero = apn_is_zero(op3, size);
 
         APAC_ALWAYS_ASSERT(borrow == 0);
-        APAC_ALWAYS_ASSERT(is_zero == 0);
+        APAC_ALWAYS_ASSERT(is_zero == 1);
 
         /* TEST-4: borrow matches comparison */
 

@@ -45,7 +45,7 @@ check_apn_neg(uint64_t iterations)
 
         int is_zero = apn_is_zero(op3, size);
 
-        APAC_ALWAYS_ASSERT(is_zero == 0);
+        APAC_ALWAYS_ASSERT(is_zero == 1);
 
         /* TEST-2: neg(neg(a)) = a */
 
@@ -64,7 +64,7 @@ check_apn_neg(uint64_t iterations)
 
         is_zero = apn_is_zero(op2, size);
 
-        APAC_ALWAYS_ASSERT(is_zero == 0);
+        APAC_ALWAYS_ASSERT(is_zero == 1);
     }
 
     apac_free(op3);

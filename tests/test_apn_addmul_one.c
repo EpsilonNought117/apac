@@ -107,7 +107,7 @@ check_apn_addmul_one(uint64_t iterations)
 
         carry = apn_addmul_one(op2, op1, size, val);
 
-        int op1_is_zero = (apn_is_zero(op1, size) == 0);
+        int op1_is_zero = (apn_is_zero(op1, size) == 1);
 
         cmp_res = apn_cmp(op2, op3, size + 1);
 

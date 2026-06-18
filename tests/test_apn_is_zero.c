@@ -14,11 +14,11 @@ is_zero_ref(
     {
         if (op[i] != 0)
         {
-            return 1;
+            return 0;
         }
     }
 
-    return 0;
+    return 1;
 }
 
 static void
