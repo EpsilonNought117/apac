@@ -123,7 +123,7 @@ apz_init_from_str(
 				(c >= '0' && c <= '9') ||
 				(c >= 'a' && c <= 'f') ||
 				(c >= 'A' && c <= 'F')
-				))
+			))
 			{
 				fprintf(
 					stderr,
