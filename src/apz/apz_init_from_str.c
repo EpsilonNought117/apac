@@ -58,8 +58,6 @@ apz_init_from_str(
 			str_len++;
 		}
 
-		APAC_ASSERT(str_len != 0);
-
 		// string is now verified to be correct and
 		// we have the required length in count of 
 		// decimal digits needed, allocate op1->num
@@ -144,9 +142,7 @@ apz_init_from_str(
 			str_len++;
 		}
 
-		APAC_ASSERT(str_len != 0);
-
-		ap_size_t digits = (str_len + 15) / 16;
+		ap_size_t digits = (str_len + 15) / 16 + 1;
 
 		op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * digits);
 
