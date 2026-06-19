@@ -13,8 +13,8 @@ apz_add(
 
     apac_err retval = APAC_OK;
 
-    ap_size_t larger = op1->curr_size > op2->curr_size 
-                       ? op1->curr_size : op2->curr_size;
+    ap_size_t larger = op1->curr_size > op2->curr_size ? 
+                       op1->curr_size : op2->curr_size;
 
     if (result->max_size < larger)
     {
@@ -63,8 +63,9 @@ apz_add(
         );
     }
 
-    result->curr_size = apn_clamp(result->num, )
-    result->sign = max_op->sign;
+    result->curr_size = apn_clamp(result->num, larger);
+    result->sign = result->curr_size ? max_op->sign : APZ_POS /* if the result is zero */;
+    /* can't have zero with sign as APZ_NEG */
 
 func_end:
     return retval;
