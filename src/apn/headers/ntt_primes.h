@@ -22,9 +22,9 @@ typedef struct ntt_prime_t
 
     double prime_inv;
 
-    ap_dig_t twiddle[46];
-    ap_dig_t twiddle_inv[46];
-    ap_dig_t size_inv[46];
+    ap_dig_t twiddle[44];
+    ap_dig_t twiddle_inv[44];
+    ap_dig_t size_inv[44];
 
     double cdlt64_cyclic_fwd[60];
     double cdlt64_cyclic_inv[60];
