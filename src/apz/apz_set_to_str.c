@@ -48,10 +48,133 @@ apz_set_to_str(
             str_len++;
         }
 
-        APAC_ASSERT(str_len != 0);
+        // string is now verified to be correct and
+		// we have the required length in count of 
+		// decimal digits needed
+
+		ap_size_t digits = (str_len + 18) / 19 + 1;
+
+        if (digits > op1->max_size)
+        {
+            op1->num = (ap_dig_t*)apac_realloc(op1->num, digits * sizeof(ap_dig_t));
+            if (!op1->num) { retval = APAC_OOM; goto func_end; }
+            op1->max_size = digits;
+        }
+
+        apn_set(op1->num, digits, 0);
+
+        ap_dig_t i = 0;
+		ap_size_t curr_size = 1;
+		ap_dig_t acc = 0;
+
+		while (*curr != '\0')
+		{
+			acc = acc * 10 + (*curr) - '0';
+			i++;
+
+			if (i == (ap_size_t)19)
+			{
+				apn_mul_one(op1->num, op1->num, curr_size, TEN_TO_POW19);
+				op1->num[0] += acc;
+				curr_size = apn_clamp(op1->num, curr_size + 1);
+
+				// reset multiplier and acc
+				i = 0;
+				acc = 0;
+			}
+
+			curr++;
+		}
+
+		ap_dig_t mult = 1;
+
+		while (i--) { mult *= 10; }
+
+		apn_mul_one(op1->num, op1->num, curr_size, mult);
+		op1->num[0] += acc;
+		op1->curr_size = apn_clamp(op1->num, curr_size + 1);
     }
     else
     {
+        	// 0x or 0X at start of hex string should be skipped
+		if (curr[0] == '0' && (curr[1] == 'x' || curr[1] == 'X'))
+		{
+			curr += 2;
+		}
 
+		while (curr[str_len] != '\0')
+		{
+			char c = curr[str_len];
+
+			if (!(
+				(c >= '0' && c <= '9') ||
+				(c >= 'a' && c <= 'f') ||
+				(c >= 'A' && c <= 'F')
+			))
+			{
+				fprintf(
+					stderr,
+					"Invalid character in string"
+					"for Base-16 at index %" PRI_APN_SIZE
+					"\nMalformed String: %s\n",
+					str_len + (curr - str),
+					str
+				);
+
+				APAC_ALWAYS_ASSERT(
+					(c >= '0' && c <= '9') ||
+					(c >= 'a' && c <= 'f') ||
+					(c >= 'A' && c <= 'F')
+				);
+			}
+
+			str_len++;
+		}
+
+		ap_size_t digits = (str_len + 15) / 16 + 1;
+
+        if (digits > op1->max_size)
+        {
+            op1->num = (ap_dig_t*)apac_realloc(op1->num, sizeof(ap_dig_t) * digits);
+            if (!op1->num) { retval = APAC_OOM; goto func_end; }
+            op1->max_size = digits;
+        }
+
+        apn_set(op1->num, digits, 0);
+
+        ap_size_t i = 0;
+		ap_size_t curr_dig = 0;
+		ap_size_t curr_char = str_len - 1;
+		ap_dig_t acc = 0;
+	
+		// using well-defined unsigned integer 
+		// wrap-around behaviour from C11
+		while (curr_char < str_len)
+		{
+			char c = curr[curr_char];
+			i++;
+
+			ap_dig_t val = 0;
+			
+			c |= 0x20; // force lowercase: 'A' to 'a', '0' to '0' (digits unaffected)
+			val = c >= 'a' ? (ap_size_t)(c - 'a' + 10) : (ap_size_t)(c - '0');
+
+			acc = (acc << 4) | val;
+
+			if (i == 16ULL)
+			{
+				op1->num[curr_dig] = acc;
+				acc = 0; i = 0;
+				curr_dig++;
+			}
+
+			curr_char--;
+		}
+
+		op1->num[curr_dig] = acc;
+		op1->curr_size = digits;
     }
+
+func_end:
+    return retval;
 }
