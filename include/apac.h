@@ -493,6 +493,13 @@ apz_set_to_str(
 );
 
 APAC_API apac_err
+apz_set_one(
+    apz_t* op1,
+    ap_dig_t val,
+    int sign
+);
+
+APAC_API apac_err
 apz_add(
     apz_t* result,
     const apz_t* op1,
