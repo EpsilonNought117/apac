@@ -567,12 +567,9 @@ static const ntt_prime_t NTT_PRIMES[4] =
                           0X1P+0 /* psi_inv^(0 ) */,     0X1.AEB7895444FFP+50 /* psi_inv^(4 ) */,    0X1.C55462F878D8CP+50 /* psi_inv^(8 ) */,       0X1.1342A8650CP+41 /* psi_inv^(12) */,
                           0X1P+0 /* psi_inv^(0 ) */,    0X1.C55462F878D8CP+50 /* psi_inv^(8 ) */,    0X1.2D1EEE807EFECP+50 /* psi_inv^(16) */,    0X1.56A6D07F866DCP+50 /* psi_inv^(24) */,
                           0X1P+0 /* psi_inv^(0 ) */,       0X1.1342A8650CP+41 /* psi_inv^(12) */,    0X1.56A6D07F866DCP+50 /* psi_inv^(24) */,     0X1.2842435C9FD5P+50 /* psi_inv^(36) */
-        },
-
+        }
     }
-
 };
-
 
 #define MIN_CONV_LEN		(1ULL << 7)
 #define CRT3_MAX_CONV_LEN   (1ULL << 23)
