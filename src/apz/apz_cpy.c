@@ -16,12 +16,11 @@ apz_cpy(
 
 	apac_err retval = APAC_OK;
 
-	ap_dig_t* temp = (ap_dig_t*)apac_realloc(result->num, sizeof(ap_dig_t) * op1->max_size);
-
-	if (!temp) { retval = APAC_OOM; goto func_end; }
-
-	result->num = temp;
-	temp = NULL;
+	if (op1->curr_size > result->max_size)
+	{
+		retval = apz_resize(result, op1->curr_size);
+		if (retval != APAC_OK) { goto func_end; }
+	}
 
 	apn_cpy(result->num, op1->num, op1->max_size);
 
@@ -30,6 +29,5 @@ apz_cpy(
 	result->sign = op1->sign;
 
 func_end:
-
 	return retval;
 }

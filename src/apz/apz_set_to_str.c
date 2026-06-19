@@ -56,9 +56,8 @@ apz_set_to_str(
 
         if (digits > op1->max_size)
         {
-            op1->num = (ap_dig_t*)apac_realloc(op1->num, digits * sizeof(ap_dig_t));
-            if (!op1->num) { retval = APAC_OOM; goto func_end; }
-            op1->max_size = digits;
+			retval =  apz_resize(op1, digits);
+			if (retval != APAC_OK) { goto func_end; }
         }
 
         apn_set(op1->num, digits, 0);
@@ -135,9 +134,8 @@ apz_set_to_str(
 
         if (digits > op1->max_size)
         {
-            op1->num = (ap_dig_t*)apac_realloc(op1->num, sizeof(ap_dig_t) * digits);
-            if (!op1->num) { retval = APAC_OOM; goto func_end; }
-            op1->max_size = digits;
+			retval =  apz_resize(op1, digits);
+			if (retval != APAC_OK) { goto func_end; }
         }
 
         apn_set(op1->num, digits, 0);
