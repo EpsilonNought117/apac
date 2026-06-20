@@ -572,7 +572,8 @@ void
 dif_fwd_ntt_avx_fma(
     ap_dig_t* op1,      /* in-place DIF-Forward NTT */
     ap_size_t size,     /* size must be power of 2  */
-    const ntt_prime_t* p
+    const ntt_prime_t* p,
+    const ntt_tf_t tf
 )
 {
     APAC_ASSERT((size & (size - 1)) == 0);
@@ -584,11 +585,9 @@ dif_fwd_ntt_avx_fma(
 
     APAC_ASSERT(k >= 7);
 
-    ap_size_t n = p->power_of_two;
-    ntt_tf_t t = p->transform;
-
-    ap_size_t twiddle_idx = (t == NEGACYCLIC) ? n - k - 1 : n - k;
-
+    ap_size_t twiddle_idx = tf == NEGACYCLIC ?
+                            NTT_PRIME_POW2 - k - 1 : NTT_PRIME_POW2 - k;
+                            
     // safe as the calling function converts values from ap_dig_t
     // to doubles in the array, but function prototype has to be
     // consistent to use function pointers

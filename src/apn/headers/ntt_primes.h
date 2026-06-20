@@ -571,6 +571,7 @@ static const ntt_prime_t NTT_PRIMES[4] =
     }
 };
 
+#define NTT_PRIME_POW2      (44ULL)
 #define MIN_CONV_LEN		(1ULL << 7)
 #define CRT3_MAX_CONV_LEN   (1ULL << 23)
 #define CRT4_MAX_CONV_LEN   (1ULL << 43)

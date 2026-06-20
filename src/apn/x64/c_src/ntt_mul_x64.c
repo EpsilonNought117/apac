@@ -75,7 +75,8 @@ void
 dif_fwd_ntt_x64(
     ap_dig_t* op1,      /* in-place DIF-FNTT        */
     ap_size_t size,     /* size must be power of 2  */
-    const ntt_prime_t* p
+    const ntt_prime_t* p,
+    const ntt_tf_t tf
 )
 {
     APAC_ASSERT((size & (size - 1)) == 0);
@@ -87,10 +88,7 @@ dif_fwd_ntt_x64(
 
     APAC_ASSERT(k >= 7);
 
-    ap_size_t n = p->power_of_two;
-    ntt_tf_t t = p->transform;
-
-    ap_size_t twiddle_idx = (t == NEGACYCLIC) ? n - k - 1 : n - k;
+    ap_size_t twiddle_idx = tf == NEGACYCLIC ? NTT_PRIME_POW2 - k - 1 : NTT_PRIME_POW2 - k;
 
     for (ap_size_t stride = size / 2; stride >= 1; stride /= 2, twiddle_idx++)
     {
@@ -124,7 +122,8 @@ void
 dit_inv_ntt_x64(
     ap_dig_t* op1,
     ap_size_t size,
-    const ntt_prime_t* p
+    const ntt_prime_t* p,
+    const ntt_tf_t tf
 )
 {
     APAC_ASSERT((size & (size - 1)) == 0);
@@ -136,10 +135,7 @@ dit_inv_ntt_x64(
 
     APAC_ASSERT(k >= 7);
 
-    ap_size_t n = p->power_of_two;
-    ntt_tf_t t = p->transform;
-
-    ap_size_t twiddle_idx = (t == NEGACYCLIC) ? n - 2 : n - 1;
+    ap_size_t twiddle_idx = tf == NEGACYCLIC ? NTT_PRIME_POW2 - 2 : NTT_PRIME_POW2 - 1;
 
     for (ap_size_t stride = 1; stride <= size / 2; stride <<= 1, twiddle_idx--)
     {
@@ -183,13 +179,11 @@ pointwise_mul_x64(
     APAC_ASSERT((size & (size - 1)) == 0);
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_CONV_LEN);
-
+    
     for (ap_size_t i = 0; i < size; i++)
     {
         result[i] = mod_mul_p51_x64(op1[i], op2[i], p->prime, p->barrett);
     }
-
-    return;
 }
 
 /*
