@@ -3,7 +3,7 @@
 apac_err
 apz_init_random(
     apz_t* op1,
-    ap_size_t bit_cnt,
+    apn_size_t bit_cnt,
     int sign
 )
 {
@@ -15,10 +15,10 @@ apz_init_random(
 
     apac_err result = APAC_OK;
 
-    ap_size_t frac = bit_cnt % APN_DIG_BITS;
-    ap_size_t whole = (bit_cnt + APN_DIG_BITS - 1) / APN_DIG_BITS;
+    apn_size_t frac = bit_cnt % APN_DIG_BITS;
+    apn_size_t whole = (bit_cnt + APN_DIG_BITS - 1) / APN_DIG_BITS;
 
-    op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * whole);
+    op1->num = (apn_dig_t*)apac_malloc(sizeof(apn_dig_t) * whole);
 
     if (!(op1->num))
     {

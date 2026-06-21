@@ -3,7 +3,7 @@
 apac_err
 apz_set_one(
     apz_t* op1,
-    ap_dig_t val,
+    apn_dig_t val,
     int sign
 )
 {
@@ -14,7 +14,7 @@ apz_set_one(
 
     if (op1->max_size == 0)
     {
-        op1->num = (ap_dig_t*)apac_malloc(1 * sizeof(ap_dig_t));
+        op1->num = (apn_dig_t*)apac_malloc(1 * sizeof(apn_dig_t));
         if (!op1->num) { retval = APAC_OOM; goto func_end; }
         op1->max_size = 1;
     }

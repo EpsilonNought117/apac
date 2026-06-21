@@ -32,26 +32,26 @@ typedef struct
     /* Worker threads */
 
     apac_thrd_t* workers;
-    ap_size_t max_thrds;
+    apn_size_t max_thrds;
 
     /* Current parallel-for */
 
     apac_pfor_func_t func;
     void* arg;
 
-    ap_size_t begin;
-    ap_size_t end;
+    apn_size_t begin;
+    apn_size_t end;
 
     apac_sched_t sched;
 
     /* Dynamic scheduling */
 
-    ap_size_t chunk_size;
-    ap_size_t next;
+    apn_size_t chunk_size;
+    apn_size_t next;
 
     /* Completion tracking */
 
-    ap_size_t active_thrds;
+    apn_size_t active_thrds;
 
     /* Synchronization */
 

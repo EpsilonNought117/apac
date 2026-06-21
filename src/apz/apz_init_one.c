@@ -3,7 +3,7 @@
 apac_err
 apz_init_one(
     apz_t* op1,
-    ap_dig_t val,
+    apn_dig_t val,
     int sign
 )
 {
@@ -13,7 +13,7 @@ apz_init_one(
     APAC_ASSERT(val != 0);
 
     apac_err result = APAC_OK;
-    op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t));
+    op1->num = (apn_dig_t*)apac_malloc(sizeof(apn_dig_t));
 
     if(!(op1->num))
     {

@@ -12,7 +12,7 @@ apz_init_cpy(
 
     apac_err retval = APAC_OK;
 
-    result->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * op1->max_size);
+    result->num = (apn_dig_t*)apac_malloc(sizeof(apn_dig_t) * op1->max_size);
 
     if (!result->num) { retval = APAC_OOM; goto func_end; }
 

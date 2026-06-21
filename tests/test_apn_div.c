@@ -1,15 +1,15 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_div(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX * 2));
-    ap_dig_t* quot = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* rmdr = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* temp = apac_malloc(sizeof(ap_dig_t) * ((TEST_SIZE_MAX * 2) + 1));
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX * 2));
+    apn_dig_t* quot = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* rmdr = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* temp = apac_malloc(sizeof(apn_dig_t) * ((TEST_SIZE_MAX * 2) + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -25,8 +25,8 @@ check_apn_div(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t i = 0;
-        ap_size_t j = 0;
+        apn_size_t i = 0;
+        apn_size_t j = 0;
 
         do
         {
@@ -70,10 +70,10 @@ check_apn_div(uint64_t iterations)
         APAC_ALWAYS_ASSERT(ret != APAC_OOM);
         
         /* decide multiplication order (quotient size is always j + 1) */
-        ap_dig_t* mul_a;
-        ap_dig_t* mul_b;
-        ap_size_t mul_asz;
-        ap_size_t mul_bsz;
+        apn_dig_t* mul_a;
+        apn_dig_t* mul_b;
+        apn_size_t mul_asz;
+        apn_size_t mul_bsz;
 
         if ((j + 1) >= i)
         {
@@ -102,7 +102,7 @@ check_apn_div(uint64_t iterations)
         APAC_ALWAYS_ASSERT(ret != APAC_OOM);
 
         /* temp += rmdr */
-        ap_dig_t carry = apn_add(
+        apn_dig_t carry = apn_add(
             temp,
             temp,
             rmdr,

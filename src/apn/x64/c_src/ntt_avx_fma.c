@@ -103,7 +103,7 @@ dif_fwd_ntt_r4_unroll64(
 )
 {
 APAC_UNROLL(4)
-    for (ap_size_t j = 0; j < 16; j += 4)
+    for (apn_size_t j = 0; j < 16; j += 4)
     {
         /*
             Growth analysis (v(x) = |x| / p)
@@ -181,7 +181,7 @@ APAC_UNROLL(4)
     __m256d twd3 = _mm256_loadu_pd(&twd_tbl[56]);
 
 APAC_UNROLL(4)
-    for (ap_size_t j = 0; j < 64; j += 16)
+    for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
             Growth analysis (v(x) = |x| / p)
@@ -252,7 +252,7 @@ APAC_UNROLL(4)
     }
 
 APAC_UNROLL(4)
-    for (ap_size_t j = 0; j < 64; j += 16)
+    for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
             Growth analysis (v(x) = |x| / p)
@@ -349,7 +349,7 @@ dit_inv_ntt_r4_unroll64(
 )
 {
 APAC_UNROLL(4)
-    for (ap_size_t j = 0; j < 64; j += 16)
+    for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
             Growth analysis (v(x) = |x| / p)
@@ -442,7 +442,7 @@ APAC_UNROLL(4)
     __m256d twd3 = _mm256_loadu_pd(&twd_inv_tbl[56]);
 
     APAC_UNROLL(4)
-    for (ap_size_t j = 0; j < 64; j += 16)
+    for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
             Growth analysis (v(x) = |x| / p)
@@ -499,7 +499,7 @@ APAC_UNROLL(4)
     }
 
     APAC_UNROLL(4)
-    for (ap_size_t j = 0; j < 16; j += 4)
+    for (apn_size_t j = 0; j < 16; j += 4)
     {
         /*
             Growth analysis (v(x) = |x| / p)
@@ -570,8 +570,8 @@ __attribute__((target("avx,fma")))
 #endif
 void
 dif_fwd_ntt_avx_fma(
-    ap_dig_t* op1,      /* in-place DIF-Forward NTT */
-    ap_size_t size,     /* size must be power of 2  */
+    apn_dig_t* op1,      /* in-place DIF-Forward NTT */
+    apn_size_t size,     /* size must be power of 2  */
     const ntt_prime_t* p,
     const ntt_tf_t tf
 )
@@ -580,15 +580,15 @@ dif_fwd_ntt_avx_fma(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_CONV_LEN);
 
-    ap_size_t k = 0;
+    apn_size_t k = 0;
     CTZ(size, k);
 
     APAC_ASSERT(k >= 7);
 
-    ap_size_t twiddle_idx = tf == NEGACYCLIC ?
+    apn_size_t twiddle_idx = tf == NEGACYCLIC ?
                             NTT_PRIME_POW2 - k - 1 : NTT_PRIME_POW2 - k;
                             
-    // safe as the calling function converts values from ap_dig_t
+    // safe as the calling function converts values from apn_dig_t
     // to doubles in the array, but function prototype has to be
     // consistent to use function pointers
     double* op = (double*)op1;
@@ -596,14 +596,14 @@ dif_fwd_ntt_avx_fma(
     __m256d vp = _mm256_set1_pd((double)p->prime);
     __m256d vp_inv = _mm256_set1_pd(p->prime_inv);
 
-    for (ap_size_t stride = size / 2; stride >= 64; stride /= 2, twiddle_idx++)
+    for (apn_size_t stride = size / 2; stride >= 64; stride /= 2, twiddle_idx++)
     {
         double curr_omega = (double)p->twiddle[twiddle_idx];
         double twiddle = 1.0;
         
-        for (ap_size_t j = 0; j < stride; j += 2)
+        for (apn_size_t j = 0; j < stride; j += 2)
         {
-            for (ap_size_t i = j; i < size; i += (stride << 1))
+            for (apn_size_t i = j; i < size; i += (stride << 1))
             {
                 
             }

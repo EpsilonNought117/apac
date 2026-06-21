@@ -3,17 +3,17 @@
 apac_err 
 apz_init_zero(
     apz_t* op1, 
-    ap_size_t size
+    apn_size_t size
 )
 {
     APAC_ASSERT(apac_allocator.custom_malloc != NULL);
     APAC_ASSERT(op1 != NULL);
     APAC_ASSERT(size != 0);
-    APAC_ASSERT(size <= (APN_SIZE_MAX) / sizeof(ap_dig_t));
+    APAC_ASSERT(size <= (APN_SIZE_MAX) / sizeof(apn_dig_t));
 
     apac_err result = APAC_OK;
 
-    op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * size);
+    op1->num = (apn_dig_t*)apac_malloc(sizeof(apn_dig_t) * size);
 
     if (!(op1->num))
     {

@@ -1,14 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_addmul_one(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* op4 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op3 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op4 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -22,7 +22,7 @@ check_apn_addmul_one(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size = 0;
+        apn_size_t size = 0;
 
         do
         {
@@ -41,7 +41,7 @@ check_apn_addmul_one(uint64_t iterations)
         op3[size] = APN_DIG_MAX - 1;
         op3[0] = 1;
 
-        ap_dig_t carry = apn_addmul_one(op2, op1, size, APN_DIG_MAX);
+        apn_dig_t carry = apn_addmul_one(op2, op1, size, APN_DIG_MAX);
         int cmp_res = apn_cmp(op3, op2, size + 1);
 
         APAC_ALWAYS_ASSERT(carry == 0);
@@ -53,7 +53,7 @@ check_apn_addmul_one(uint64_t iterations)
         apn_set_random(op2, size + 1);
         apn_cpy(op3, op2, size + 1);
 
-        ap_dig_t carry_ref = apn_add(op3, op3, op1, size + 1, size);
+        apn_dig_t carry_ref = apn_add(op3, op3, op1, size + 1, size);
 
         carry = apn_addmul_one(op2, op1, size, 1);
         cmp_res = apn_cmp(op3, op2, size + 1);
@@ -94,7 +94,7 @@ check_apn_addmul_one(uint64_t iterations)
 
         apn_set_random(op1, size);
 
-        ap_dig_t val = 0;
+        apn_dig_t val = 0;
 
         do
         {
@@ -119,8 +119,8 @@ check_apn_addmul_one(uint64_t iterations)
 
         /* TEST-6: distributive decomposition */
 
-        ap_dig_t val1 = 0;
-        ap_dig_t val2 = 0;
+        apn_dig_t val1 = 0;
+        apn_dig_t val2 = 0;
 
         do
         {
@@ -132,7 +132,7 @@ check_apn_addmul_one(uint64_t iterations)
         {
             apn_set_random(&val2, 1);
 
-        } while ((ap_dig_t)(val1 + val2) < val1);
+        } while ((apn_dig_t)(val1 + val2) < val1);
 
         apn_set_random(op1, size);
         apn_set_random(op2, size + 1);
@@ -140,8 +140,8 @@ check_apn_addmul_one(uint64_t iterations)
         apn_cpy(op3, op2, size + 1);
         apn_cpy(op4, op2, size + 1);
 
-        ap_dig_t carry1 = apn_addmul_one(op3, op1, size, (val1 + val2));
-        ap_dig_t carry2 = apn_addmul_one(op4, op1, size, val1);
+        apn_dig_t carry1 = apn_addmul_one(op3, op1, size, (val1 + val2));
+        apn_dig_t carry2 = apn_addmul_one(op4, op1, size, val1);
 
         carry2 += apn_addmul_one(op4, op1, size, val2);
 

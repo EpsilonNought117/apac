@@ -13,10 +13,10 @@ ADD_SUB_N SEGMENT ALIGN(64) 'CODE'
     ;
     ;   Function Arguments
     ;
-    ;   rcx -> result       (ap_dig_t*)   
-    ;   rdx -> op1          (const ap_dig_t*)
-    ;   r8  -> op2          (const ap_dig_t*)
-    ;   r9  -> size         (ap_size_t)
+    ;   rcx -> result       (apn_dig_t*)   
+    ;   rdx -> op1          (const apn_dig_t*)
+    ;   r8  -> op2          (const apn_dig_t*)
+    ;   r9  -> size         (apn_size_t)
 
 GEN_ADD_SUB_N_ZEN4 MACRO OP, INSTR
 

@@ -11,10 +11,10 @@ MUL_ONE SEGMENT ALIGN(64) 'CODE'
 
 	;   Function Arguments
     ;
-    ;   rcx -> result       (ap_dig_t*)   
-    ;   rdx -> op1          (const ap_dig_t*)
-    ;   r8  -> size         (ap_size_t)
-    ;   r9  -> val          (ap_dig_t)
+    ;   rcx -> result       (apn_dig_t*)   
+    ;   rdx -> op1          (const apn_dig_t*)
+    ;   r8  -> size         (apn_size_t)
+    ;   r9  -> val          (apn_dig_t)
 
 ;   -------------------------
 ;

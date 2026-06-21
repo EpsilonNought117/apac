@@ -11,9 +11,9 @@
  * 5) Faster than doing basecase_mul with identical input operands as it does approx n(n+1)/2 steps
  */
 void apn_basecase_sqr(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size
 );
 
 /*
@@ -24,10 +24,10 @@ void apn_basecase_sqr(
 * 5) Recursively calls basecase multiplication
 */
 void apn_karatsuba_sqr(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size,
-	ap_dig_t* temp
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size,
+	apn_dig_t* temp
 );
 
 #endif

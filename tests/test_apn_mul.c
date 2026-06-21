@@ -1,14 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_mul(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX * 2));
-    ap_dig_t* op4 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX * 2));
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op3 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX * 2));
+    apn_dig_t* op4 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX * 2));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -22,8 +22,8 @@ check_apn_mul(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size1 = 0;
-        ap_size_t size2 = 0;
+        apn_size_t size1 = 0;
+        apn_size_t size2 = 0;
 
         do
         {
@@ -41,7 +41,7 @@ check_apn_mul(uint64_t iterations)
 
         if (size2 > size1)
         {
-            ap_size_t tmp = size1;
+            apn_size_t tmp = size1;
             size1 = size2;
             size2 = tmp;
         }
@@ -64,7 +64,7 @@ check_apn_mul(uint64_t iterations)
 
         APAC_ALWAYS_ASSERT(err_out != APAC_OOM);
 
-        for (ap_size_t k = 0; k < size2; k++)
+        for (apn_size_t k = 0; k < size2; k++)
         {
             apn_addmul_one(
                 &op4[k],

@@ -8,12 +8,12 @@
 */
 
 void apn_karatsuba_mul(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t size1,
-	ap_size_t size2,
-	ap_dig_t* temp
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	const apn_dig_t* op2,
+	apn_size_t size1,
+	apn_size_t size2,
+	apn_dig_t* temp
 )
 {
 	APAC_ASSERT(temp != NULL);
@@ -25,9 +25,9 @@ void apn_karatsuba_mul(
 		return;
 	}
 
-	ap_size_t lower = (size1 + 1) >> 1;	// lower half of the operands
-	ap_size_t upper_a = size1 - lower;  // upper half of operand 1
-	ap_size_t upper_b = size2 - lower;	// upper half of operand 2
+	apn_size_t lower = (size1 + 1) >> 1;	// lower half of the operands
+	apn_size_t upper_a = size1 - lower;  // upper half of operand 1
+	apn_size_t upper_b = size2 - lower;	// upper half of operand 2
 
 	APAC_ASSERT(upper_a > 0 && upper_a <= lower);
 	APAC_ASSERT(upper_b > 0 && upper_b <= lower);
@@ -46,7 +46,7 @@ void apn_karatsuba_mul(
 
 	// carry1 = carryA
 
-	ap_dig_t carry1 = apn_sub(temp, op1, &op1[lower], lower, upper_a);
+	apn_dig_t carry1 = apn_sub(temp, op1, &op1[lower], lower, upper_a);
 	if (carry1) { apn_neg(temp, temp, lower); }
 
 	// b0 = op2[0 : (lower - 1)]
@@ -55,7 +55,7 @@ void apn_karatsuba_mul(
 
 	// carry2 = carryB
 	// rest is same
-	ap_dig_t carry2 = apn_sub(&temp[lower], op2, &op2[lower], lower, upper_b);
+	apn_dig_t carry2 = apn_sub(&temp[lower], op2, &op2[lower], lower, upper_b);
 	if (carry2) { apn_neg(&temp[lower], &temp[lower], lower); }
 
 	// result[0 : (2 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
@@ -74,7 +74,7 @@ void apn_karatsuba_mul(
 	apn_karatsuba_mul(&result[2 * lower], &op1[lower], &op2[lower], upper_a, upper_b, &temp[2 * lower]);
 
 	// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)] and then propagate any carry
-	ap_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, upper_a + upper_b);
+	apn_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, upper_a + upper_b);
 
 	if (carry1 == carry2) // if both signs are same
 	{

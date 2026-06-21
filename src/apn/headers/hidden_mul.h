@@ -11,11 +11,11 @@
  * 5) In-place, O(1) space requirement
  */
 void apn_basecase_mul(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size1,
-    ap_size_t size2
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
 /*
@@ -26,12 +26,12 @@ void apn_basecase_mul(
  * 5) size1 must be greater than or equal to size2
  */
 void apn_karatsuba_mul(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size1,
-    ap_size_t size2,
-    ap_dig_t* temp
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size1,
+    apn_size_t size2,
+    apn_dig_t* temp
 );
 
 #endif

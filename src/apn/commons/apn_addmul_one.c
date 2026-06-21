@@ -1,10 +1,10 @@
 #include "../../header/apac_internal.h"
 
-ap_dig_t apn_addmul_one(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size,
-	ap_dig_t val
+apn_dig_t apn_addmul_one(
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size,
+	apn_dig_t val
 )
 {
 	APAC_ASSERT(size != 0);
@@ -13,6 +13,6 @@ ap_dig_t apn_addmul_one(
 	APAC_PARTIAL_OVERLAP_ABOVE(result, size + 1, op1, size);
 	APAC_ASSERT(curr_cpu.apn_addmul_one_ptr != NULL);
 
-	ap_dig_t out_val = curr_cpu.apn_addmul_one_ptr(result, op1, size, val);
+	apn_dig_t out_val = curr_cpu.apn_addmul_one_ptr(result, op1, size, val);
 	return out_val;
 }

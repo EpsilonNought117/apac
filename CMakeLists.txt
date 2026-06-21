@@ -141,7 +141,7 @@ set(apac_c_sources
     "src/apz/apz_cpy.c"
     "src/apz/apz_init_cpy.c"
     "src/apz/apz_get_as_str.c"
-    "src/apz/apz_size_in_base.c"
+    "src/apz/apz_str_size_in_base.c"
     "src/apz/apz_set_random.c"
     "src/apz/apz_set_to_str.c"
     "src/apz/apz_set_one.c"

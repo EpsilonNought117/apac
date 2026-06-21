@@ -13,7 +13,7 @@ apz_set_to_str(
 
     apac_err retval = APAC_OK;
     const char* curr = &str[0];
-    ap_size_t str_len = 0;
+    apn_size_t str_len = 0;
 
     if (curr[0] == '-')
     {
@@ -52,7 +52,7 @@ apz_set_to_str(
 		// we have the required length in count of 
 		// decimal digits needed
 
-		ap_size_t digits = (str_len + 18) / 19 + 1;
+		apn_size_t digits = (str_len + 18) / 19 + 1;
 
         if (digits > op1->max_size)
         {
@@ -62,16 +62,16 @@ apz_set_to_str(
 
         apn_set(op1->num, digits, 0);
 
-        ap_dig_t i = 0;
-		ap_size_t curr_size = 1;
-		ap_dig_t acc = 0;
+        apn_dig_t i = 0;
+		apn_size_t curr_size = 1;
+		apn_dig_t acc = 0;
 
 		while (*curr != '\0')
 		{
 			acc = acc * 10 + (*curr) - '0';
 			i++;
 
-			if (i == (ap_size_t)19)
+			if (i == (apn_size_t)19)
 			{
 				apn_mul_one(op1->num, op1->num, curr_size, TEN_TO_POW19);
 				op1->num[0] += acc;
@@ -85,7 +85,7 @@ apz_set_to_str(
 			curr++;
 		}
 
-		ap_dig_t mult = 1;
+		apn_dig_t mult = 1;
 
 		while (i--) { mult *= 10; }
 
@@ -130,7 +130,7 @@ apz_set_to_str(
 			str_len++;
 		}
 
-		ap_size_t digits = (str_len + 15) / 16 + 1;
+		apn_size_t digits = (str_len + 15) / 16 + 1;
 
         if (digits > op1->max_size)
         {
@@ -140,10 +140,10 @@ apz_set_to_str(
 
         apn_set(op1->num, digits, 0);
 
-        ap_size_t i = 0;
-		ap_size_t curr_dig = 0;
-		ap_size_t curr_char = str_len - 1;
-		ap_dig_t acc = 0;
+        apn_size_t i = 0;
+		apn_size_t curr_dig = 0;
+		apn_size_t curr_char = str_len - 1;
+		apn_dig_t acc = 0;
 	
 		// using well-defined unsigned integer 
 		// wrap-around behaviour from C11
@@ -152,10 +152,10 @@ apz_set_to_str(
 			char c = curr[curr_char];
 			i++;
 
-			ap_dig_t val = 0;
+			apn_dig_t val = 0;
 			
 			c |= 0x20; // force lowercase: 'A' to 'a', '0' to '0' (digits unaffected)
-			val = c >= 'a' ? (ap_size_t)(c - 'a' + 10) : (ap_size_t)(c - '0');
+			val = c >= 'a' ? (apn_size_t)(c - 'a' + 10) : (apn_size_t)(c - '0');
 
 			acc = (acc << 4) | val;
 

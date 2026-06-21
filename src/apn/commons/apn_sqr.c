@@ -3,9 +3,9 @@
 #define KARATSUBA_SQR_WS_SIZE(size)	(2 * (size + APN_DIG_BITS))
 
 apac_err apn_sqr(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -24,8 +24,8 @@ apac_err apn_sqr(
 
 		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
-		ap_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+		apn_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
+		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
 
 		if (!workspace) { return APAC_OOM; }
 

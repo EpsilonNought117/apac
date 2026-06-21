@@ -1,9 +1,9 @@
 #include "../../header/apac_internal.h"
 
 void apn_set(
-	ap_dig_t* result, 
-	ap_size_t size, 
-	ap_dig_t val
+	apn_dig_t* result, 
+	apn_size_t size, 
+	apn_dig_t val
 )
 {
 	APAC_ASSERT(result != NULL);

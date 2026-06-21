@@ -1,9 +1,9 @@
 #include "../../header/apac_internal.h"
 
 void apn_cpy(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size
 )
 {
 	APAC_ASSERT(size != 0);

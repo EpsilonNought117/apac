@@ -93,8 +93,8 @@
      defined(APAC_ARM64_UNIX)       \
     )
 
-    typedef unsigned long long  ap_dig_t;
-    typedef unsigned long long  ap_size_t;
+    typedef unsigned long long  apn_dig_t;
+    typedef unsigned long long  apn_size_t;
 
     #define APN_DIG_BITS        64ULL
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
@@ -154,25 +154,25 @@ typedef enum apac_sched_t
 */
 
 typedef void (*apac_pfor_func_t)(
-    ap_size_t begin,
-    ap_size_t end,
+    apn_size_t begin,
+    apn_size_t end,
     void* arg
 );
 
 apac_err
-apac_pfor_init(ap_size_t thrd_count);
+apac_pfor_init(apn_size_t thrd_count);
 
 apac_err
 apac_pfor_destroy(void);
 
-ap_size_t
+apn_size_t
 apac_pfor_get_size(void);
 
 apac_err
 apac_pfor_do(
-    ap_size_t begin,
-    ap_size_t end,
-    ap_size_t chunk_size,
+    apn_size_t begin,
+    apn_size_t end,
+    apn_size_t chunk_size,
     apac_sched_t sched,
     apac_pfor_func_t func,
     void* arg
@@ -217,189 +217,189 @@ apac_init(void);
 /*********************************          APN FUNCTIONS         ***********************************/
 /****************************************************************************************************/
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_add_n(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_add_one(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t val
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t val
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_add(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size1,
-    ap_size_t size2
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_sub_n(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_sub_one(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t val
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t val
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_sub(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size1,
-    ap_size_t size2
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
 APAC_API void 
 apn_cpy(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size
 );
 
 APAC_API void 
 apn_neg(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size
 );
 
 APAC_API apac_err 
 apn_mul_n(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size
 );
 
 APAC_API apac_err 
 apn_mul(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size1,
-    ap_size_t size2
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size1,
+    apn_size_t size2
 );
 
 APAC_API void
 apn_mul_one(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t val
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t val
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_addmul_one(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t val
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t val
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_submul_one(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t val
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t val
 );
 
 APAC_API apac_err 
 apn_sqr(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size
 );
 
 APAC_API void 
 apn_set(
-    ap_dig_t* result,
-    ap_size_t size,
-    ap_dig_t val
+    apn_dig_t* result,
+    apn_size_t size,
+    apn_dig_t val
 );
 
 APAC_API int 
 apn_cmp(
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size
 );
 
 APAC_API apac_err 
 apn_div(
-    ap_dig_t* quotient,
-    ap_dig_t* remainder,
-    const ap_dig_t* dividend,
-    const ap_dig_t* divisor,
-    ap_size_t size_divd,
-    ap_size_t size_divd_frac,
-    ap_size_t size_dvsr
+    apn_dig_t* quotient,
+    apn_dig_t* remainder,
+    const apn_dig_t* dividend,
+    const apn_dig_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_divd_frac,
+    apn_size_t size_dvsr
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_div_one(
-    ap_dig_t* quotient,
-    const ap_dig_t* dividend,
-    ap_dig_t divisor,
-    ap_size_t size_divd,
-    ap_size_t size_divd_frac
+    apn_dig_t* quotient,
+    const apn_dig_t* dividend,
+    apn_dig_t divisor,
+    apn_size_t size_divd,
+    apn_size_t size_divd_frac
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_rshift(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t bit_cnt
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t bit_cnt
 );
 
-APAC_API ap_dig_t 
+APAC_API apn_dig_t 
 apn_lshift(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    ap_size_t size,
-    ap_dig_t bit_cnt
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    apn_size_t size,
+    apn_dig_t bit_cnt
 );
 
 APAC_API int 
 apn_is_zero(
-    const ap_dig_t* op1,
-    ap_size_t size
+    const apn_dig_t* op1,
+    apn_size_t size
 );
 
-APAC_API ap_size_t 
+APAC_API apn_size_t 
 apn_clamp(
-    const ap_dig_t* op1,
-    ap_size_t size
+    const apn_dig_t* op1,
+    apn_size_t size
 );
 
 APAC_API void 
 apn_seed_prng(
-    ap_dig_t seed
+    apn_dig_t seed
 );
 
 APAC_API void 
 apn_set_random(
-    ap_dig_t* op1,
-    ap_size_t size1
+    apn_dig_t* op1,
+    apn_size_t size1
 );
 
 /****************************************************************************************************/
@@ -408,8 +408,8 @@ apn_set_random(
 
 typedef struct apz_t
 {
-    ap_dig_t* num;
-    ap_size_t curr_size, max_size;
+    apn_dig_t* num;
+    apn_size_t curr_size, max_size;
     int sign;
 
 } apz_t;
@@ -420,20 +420,20 @@ typedef struct apz_t
 APAC_API apac_err 
 apz_init_zero(
     apz_t* op1, 
-    ap_size_t size
+    apn_size_t size
 );
 
 APAC_API apac_err
 apz_init_random(
     apz_t* op1,
-    ap_size_t bit_cnt,
+    apn_size_t bit_cnt,
     int sign        /* one of APZ_POS or APZ_NEG */
 );
 
 APAC_API apac_err
 apz_init_one(
     apz_t* op1,
-    ap_dig_t val,
+    apn_dig_t val,
     int sign        /* one of APZ_POS or APZ_NEG */
 );
 
@@ -453,7 +453,7 @@ apz_init_cpy(
 APAC_API apac_err
 apz_resize(
     apz_t* op1,
-    ap_size_t new_size
+    apn_size_t new_size
 );
 
 APAC_API apac_err
@@ -472,8 +472,9 @@ apz_cpy(
     const apz_t* op1
 );
 
-APAC_API char*
+APAC_API apac_err
 apz_get_as_str(
+    char* in,
     const apz_t* op1,
     apac_str_base base
 );
@@ -481,7 +482,7 @@ apz_get_as_str(
 APAC_API apac_err
 apz_set_random(
     apz_t* op1,
-    ap_dig_t bit_cnt,
+    apn_dig_t bit_cnt,
     int sign
 );
 
@@ -495,7 +496,7 @@ apz_set_to_str(
 APAC_API apac_err
 apz_set_one(
     apz_t* op1,
-    ap_dig_t val,
+    apn_dig_t val,
     int sign
 );
 
@@ -510,7 +511,7 @@ APAC_API apac_err
 apz_add_one(
     apz_t* result,
     const apz_t* op1,
-    ap_dig_t val
+    apn_dig_t val
 );
 
 APAC_API apac_err
@@ -524,7 +525,7 @@ APAC_API apac_err
 apz_sub_one(
     apz_t* result,
     const apz_t* op1,
-    ap_dig_t val
+    apn_dig_t val
 );
 
 APAC_API apac_err
@@ -544,21 +545,21 @@ APAC_API apac_err
 apz_mul_one(
     apz_t* result,
     const apz_t* op1,
-    ap_dig_t val
+    apn_dig_t val
 );
 
 APAC_API apac_err
 apz_addmul_one(
     apz_t* result,
     const apz_t* op1,
-    ap_dig_t val
+    apn_dig_t val
 );
 
 APAC_API apac_err
 apz_submul_one(
     apz_t* result,
     const apz_t* op1,
-    ap_dig_t val
+    apn_dig_t val
 );
 
 APAC_API apac_err
@@ -581,11 +582,11 @@ apz_div(
     const apz_t* divisor
 );
 
-APAC_API ap_dig_t
+APAC_API apn_dig_t
 apz_div_one(
     apz_t* quotient,
     const apz_t* dividend,
-    ap_dig_t divisor
+    apn_dig_t divisor
 );
 
 APAC_API int
@@ -598,18 +599,18 @@ APAC_API apac_err
 apz_lshift(
     apz_t* result,
     const apz_t* op1,
-    ap_size_t bit_cnt
+    apn_size_t bit_cnt
 );
 
 APAC_API apac_err
 apz_rshift(
     apz_t* result, 
     const apz_t* op1,
-    ap_size_t bit_cnt
+    apn_size_t bit_cnt
 );
 
-APAC_API ap_size_t
-apz_size_in_base(
+APAC_API apn_size_t
+apz_str_size_in_base(
     const apz_t* op1,
     apac_str_base base
 );

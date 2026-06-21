@@ -13,12 +13,12 @@ apz_add(
 
     apac_err retval = APAC_OK;
 
-    ap_size_t larger = op1->curr_size > op2->curr_size ? 
+    apn_size_t larger = op1->curr_size > op2->curr_size ? 
                        op1->curr_size : op2->curr_size;
 
     if (result->max_size < larger)
     {
-        ap_size_t new_size = ((result->max_size * 3) / 2) + 8;
+        apn_size_t new_size = ((result->max_size * 3) / 2) + 8;
         new_size = new_size > larger ? new_size : larger; 
         new_size++;
 

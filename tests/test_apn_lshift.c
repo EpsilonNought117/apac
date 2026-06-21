@@ -1,13 +1,13 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_lshift(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op3 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -19,7 +19,7 @@ check_apn_lshift(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size = 0;
+        apn_size_t size = 0;
 
         do
         {
@@ -36,7 +36,7 @@ check_apn_lshift(uint64_t iterations)
         {
             apn_set(op2, size + 1, 0);
 
-            ap_dig_t carry = apn_lshift(
+            apn_dig_t carry = apn_lshift(
                 op2,
                 op1,
                 size,
@@ -57,14 +57,14 @@ check_apn_lshift(uint64_t iterations)
 
             apn_set(op2, size + 1, 0);
 
-            ap_dig_t carry = apn_lshift(
+            apn_dig_t carry = apn_lshift(
                 op2,
                 op1,
                 size,
                 sh
             );
 
-            ap_dig_t expected_carry = (op1[size - 1] >> (APN_DIG_BITS - sh));
+            apn_dig_t expected_carry = (op1[size - 1] >> (APN_DIG_BITS - sh));
 
             APAC_ALWAYS_ASSERT(carry == expected_carry);
         }
@@ -89,7 +89,7 @@ check_apn_lshift(uint64_t iterations)
                 op3,
                 op1,
                 size,
-                ((ap_dig_t)1 << sh)
+                ((apn_dig_t)1 << sh)
             );
 
             int cmp_res = apn_cmp(op2, op3, size + 1);

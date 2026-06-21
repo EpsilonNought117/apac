@@ -1,10 +1,10 @@
 #include "../headers/hidden_sqr.h"
 
 void apn_karatsuba_sqr(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size,
-	ap_dig_t* temp
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size,
+	apn_dig_t* temp
 )
 {
 	/*
@@ -22,10 +22,10 @@ void apn_karatsuba_sqr(
 		return;
 	}
 	
-	ap_size_t lower = (size + 1) >> 1;
-	ap_size_t upper = size >> 1;
+	apn_size_t lower = (size + 1) >> 1;
+	apn_size_t upper = size >> 1;
 
-	ap_dig_t carry = apn_sub(temp, op1, &op1[lower], lower, upper);
+	apn_dig_t carry = apn_sub(temp, op1, &op1[lower], lower, upper);
 	if (carry) { apn_neg(temp, temp, lower); }
 
 	// first recursive call
@@ -40,7 +40,7 @@ void apn_karatsuba_sqr(
 	apn_karatsuba_sqr(&result[2 * lower], &op1[lower], upper, &temp[2 * lower]);
 
 	// (c0 + c1)
-	ap_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
+	apn_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
 	
 	// c2 = (c0 + c1 - (|c0 - c1|)^2)
 	temp_val -= apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower, 2 * lower);

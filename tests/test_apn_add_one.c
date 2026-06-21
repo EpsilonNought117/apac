@@ -1,13 +1,13 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_add_one(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op3 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -19,7 +19,7 @@ check_apn_add_one(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size = 0;
+        apn_size_t size = 0;
 
         do
         {
@@ -32,7 +32,7 @@ check_apn_add_one(uint64_t iterations)
 
         apn_set(op1, size, APN_DIG_MAX);
 
-        ap_dig_t carry_out = apn_add_one(op2, op1, size, 1);
+        apn_dig_t carry_out = apn_add_one(op2, op1, size, 1);
 
         APAC_ALWAYS_ASSERT(carry_out == 1);
 
@@ -56,7 +56,7 @@ check_apn_add_one(uint64_t iterations)
 
         apn_set_random(op1, size);
 
-        ap_dig_t val = 0;
+        apn_dig_t val = 0;
 
         do
         {
@@ -83,7 +83,7 @@ check_apn_add_one(uint64_t iterations)
         apn_set(op3, size, 0);
         op3[0] = val;
 
-        ap_dig_t carry_ref = apn_add_n(op2, op1, op3, size);
+        apn_dig_t carry_ref = apn_add_n(op2, op1, op3, size);
 
         carry_out = apn_add_one(op3, op1, size, val);
 
@@ -95,8 +95,8 @@ check_apn_add_one(uint64_t iterations)
 
         /* TEST-5: associativity */
 
-        ap_dig_t val1 = 0;
-        ap_dig_t val2 = 0;
+        apn_dig_t val1 = 0;
+        apn_dig_t val2 = 0;
 
         do
         {
@@ -108,12 +108,12 @@ check_apn_add_one(uint64_t iterations)
         {
             apn_set_random(&val2, 1);
 
-        } while ((ap_dig_t)(val1 + val2) < val1);
+        } while ((apn_dig_t)(val1 + val2) < val1);
 
         apn_set_random(op1, size);
 
-        ap_dig_t carry0 = apn_add_one(op2, op1, size, (val1 + val2));
-        ap_dig_t carry1 = apn_add_one(op3, op1, size, val1);
+        apn_dig_t carry0 = apn_add_one(op2, op1, size, (val1 + val2));
+        apn_dig_t carry1 = apn_add_one(op3, op1, size, val1);
         carry1 += apn_add_one(op3, op3, size, val2);
 
         APAC_ALWAYS_ASSERT(carry0 == carry1);
@@ -134,12 +134,12 @@ check_apn_add_one(uint64_t iterations)
 
         apn_cpy(op2, op1, size);
 
-        ap_dig_t carry_alias = apn_add_one(op1, op1, size, val);
+        apn_dig_t carry_alias = apn_add_one(op1, op1, size, val);
 
         apn_set(op3, size, 0);
         op3[0] = val;
 
-        ap_dig_t carry_ref_alias = apn_add_n(op3, op2, op3, size);
+        apn_dig_t carry_ref_alias = apn_add_n(op3, op2, op3, size);
 
         APAC_ALWAYS_ASSERT(carry_alias == carry_ref_alias);
 

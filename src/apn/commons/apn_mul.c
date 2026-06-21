@@ -16,10 +16,10 @@
 #define KARATSUBA_MUL_WS_SIZE(size1, size2)	(((size1) + APN_DIG_BITS) * 2)
 
 apac_err apn_mul_n(
-	ap_dig_t* result, 
-	const ap_dig_t* op1, 
-	const ap_dig_t* op2, 
-	ap_size_t size
+	apn_dig_t* result, 
+	const apn_dig_t* op1, 
+	const apn_dig_t* op2, 
+	apn_size_t size
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -40,8 +40,8 @@ apac_err apn_mul_n(
 	{
 		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
-		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size, size);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+		apn_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size, size);
+		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
 
 		if (!workspace) { return APAC_OOM; }
 		
@@ -55,11 +55,11 @@ apac_err apn_mul_n(
 }
 
 apac_err apn_mul(
-	ap_dig_t* result, 
-	const ap_dig_t* op1, 
-	const ap_dig_t* op2, 
-	ap_size_t size1, 
-	ap_size_t size2
+	apn_dig_t* result, 
+	const apn_dig_t* op1, 
+	const apn_dig_t* op2, 
+	apn_size_t size1, 
+	apn_size_t size2
 )
 {
 	APAC_ASSERT(result != NULL);
@@ -75,7 +75,7 @@ apac_err apn_mul(
 
 	if (size2 == 1)
 	{
-		ap_dig_t carry = apn_addmul_one(result, op1, size1, op2[0]);
+		apn_dig_t carry = apn_addmul_one(result, op1, size1, op2[0]);
 		APAC_ASSERT(carry == 0);
 	}
 	else if (size1 < KARATSUBA_MUL_THRESHOLD || (size2 <= (size1 + 1) / 2))
@@ -86,8 +86,8 @@ apac_err apn_mul(
 	{
 		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
-		ap_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size1, size2);
-		ap_dig_t* workspace = apac_malloc(sizeof(ap_dig_t) * ws_size);
+		apn_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size1, size2);
+		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
 
 		if (!workspace) { return APAC_OOM; }
 

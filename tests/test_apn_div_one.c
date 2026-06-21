@@ -1,14 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_div_one(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* q1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* q2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* q1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* q2 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -22,7 +22,7 @@ check_apn_div_one(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size = 0;
+        apn_size_t size = 0;
 
         do
         {
@@ -40,11 +40,11 @@ check_apn_div_one(uint64_t iterations)
             apn_set(q1, size, 0);
             apn_set(q2, size, 0);
 
-            ap_dig_t shift_out = apn_rshift(q2, op1, size, sh);
+            apn_dig_t shift_out = apn_rshift(q2, op1, size, sh);
 
-            ap_dig_t divisor = ((ap_dig_t)1 << sh);
+            apn_dig_t divisor = ((apn_dig_t)1 << sh);
 
-            ap_dig_t rem = apn_div_one(
+            apn_dig_t rem = apn_div_one(
                 q1,
                 op1,
                 divisor,
@@ -54,7 +54,7 @@ check_apn_div_one(uint64_t iterations)
 
             int cmp_q = apn_cmp(q1, q2, size);
 
-            ap_dig_t expected_rem =
+            apn_dig_t expected_rem =
                 shift_out >> (APN_DIG_BITS - sh);
 
             APAC_ALWAYS_ASSERT(cmp_q == 0);
@@ -65,7 +65,7 @@ check_apn_div_one(uint64_t iterations)
 
         apn_set_random(op1, size);
 
-        ap_dig_t divisor = 0;
+        apn_dig_t divisor = 0;
 
         do
         {
@@ -76,7 +76,7 @@ check_apn_div_one(uint64_t iterations)
         apn_set(q1, size, 0);
         apn_set(op2, size + 1, 0);
 
-        ap_dig_t rem = apn_div_one(
+        apn_dig_t rem = apn_div_one(
             q1,
             op1,
             divisor,
@@ -86,7 +86,7 @@ check_apn_div_one(uint64_t iterations)
 
         op2[0] = rem;
 
-        ap_dig_t carry = apn_addmul_one(
+        apn_dig_t carry = apn_addmul_one(
                             op2,
                             q1,
                             size,

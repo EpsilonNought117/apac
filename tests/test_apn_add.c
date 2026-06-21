@@ -1,14 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_add(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op3 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* op4 = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op3 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op4 = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -22,7 +22,7 @@ check_apn_add(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size1 = 0, size2 = 0;
+        apn_size_t size1 = 0, size2 = 0;
 
         do
         {
@@ -38,8 +38,8 @@ check_apn_add(uint64_t iterations)
 
         } while (size2 == 0);
 
-        ap_size_t large = size1 > size2 ? size1 : size2;
-        ap_size_t small = size1 > size2 ? size2 : size1;
+        apn_size_t large = size1 > size2 ? size1 : size2;
+        apn_size_t small = size1 > size2 ? size2 : size1;
         size1 = large;
         size2 = small;
 
@@ -48,7 +48,7 @@ check_apn_add(uint64_t iterations)
         /* TEST-1: a = a + 0 */
         
         apn_set(op2, size2, 0);
-        ap_dig_t carry = apn_add(op3, op1, op2, size1, size2);
+        apn_dig_t carry = apn_add(op3, op1, op2, size1, size2);
         int res = apn_cmp(op1, op3, size1);
 
         APAC_ALWAYS_ASSERT(carry == 0);
@@ -75,8 +75,8 @@ check_apn_add(uint64_t iterations)
 
         /* TEST-4: a + a = (2 * a) */
 
-        ap_dig_t carry1 = apn_add(op3, op1, op1, size1, size1);
-        ap_dig_t carry2 = apn_lshift(op4, op1, size1, 1);
+        apn_dig_t carry1 = apn_add(op3, op1, op1, size1, size1);
+        apn_dig_t carry2 = apn_lshift(op4, op1, size1, 1);
 
         APAC_ALWAYS_ASSERT(carry1 == carry2);
         APAC_ALWAYS_ASSERT(apn_cmp(op4, op3, size1) == 0);
@@ -85,7 +85,7 @@ check_apn_add(uint64_t iterations)
 
         apn_set(op1, size1, APN_DIG_MAX);
         apn_set(op2, size2, 0);
-        op2[0] = (ap_dig_t)1;
+        op2[0] = (apn_dig_t)1;
 
         carry = apn_add(op3, op1, op2, size1, size2);
 

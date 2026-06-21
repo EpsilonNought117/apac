@@ -11,11 +11,11 @@ MUL_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 	;   Function Arguments
     ;
-    ;   rcx -> result           (ap_dig_t*)   
-    ;   rdx -> op1              (const ap_dig_t*)
-    ;   r8  -> op2              (const ap_dig_t*)
-    ;   r9  -> size1            (ap_size_t)
-    ;   [rsp + 40] -> size2     (ap_size_t) (where rsp is initially at function entering)
+    ;   rcx -> result           (apn_dig_t*)   
+    ;   rdx -> op1              (const apn_dig_t*)
+    ;   r8  -> op2              (const apn_dig_t*)
+    ;   r9  -> size1            (apn_size_t)
+    ;   [rsp + 40] -> size2     (apn_size_t) (where rsp is initially at function entering)
 
     ;   ASSUMPTION
     ;   (size1 >= size2)

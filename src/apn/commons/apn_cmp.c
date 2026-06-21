@@ -1,9 +1,9 @@
 #include "../../header/apac_internal.h"
 
 int apn_cmp(
-	const ap_dig_t* op1,
-	const ap_dig_t* op2,
-	ap_size_t size
+	const apn_dig_t* op1,
+	const apn_dig_t* op2,
+	apn_size_t size
 )
 {
 	APAC_ASSERT(op1 != NULL);

@@ -1,12 +1,12 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_mul_one(uint64_t iterations)
 {
-    ap_dig_t* op1 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
-    ap_dig_t* op2 = apac_malloc(sizeof(ap_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op1 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
+    apn_dig_t* op2 = apac_malloc(sizeof(apn_dig_t) * (TEST_SIZE_MAX + 1));
 
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
@@ -16,7 +16,7 @@ check_apn_mul_one(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size = 0;
+        apn_size_t size = 0;
 
         do
         {
@@ -68,7 +68,7 @@ check_apn_mul_one(uint64_t iterations)
 
         apn_set(op2, size + 1, 0);
 
-        ap_dig_t val = 0;
+        apn_dig_t val = 0;
 
         do
         {

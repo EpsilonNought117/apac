@@ -2,18 +2,18 @@
 
 #if defined(APAC_64BIT_PLATFORM)
 
-APAC_THRD_LOCAL ap_dig_t prng_state[4] = { 0 };
+APAC_THRD_LOCAL apn_dig_t prng_state[4] = { 0 };
 APAC_THRD_LOCAL bool state_init = false;
 
 static inline uint64_t random_sfc64(void)
 {
-	ap_dig_t out = prng_state[1] + prng_state[2] + prng_state[0];
+	apn_dig_t out = prng_state[1] + prng_state[2] + prng_state[0];
 
 	prng_state[0]++;
 	prng_state[1] = prng_state[2] ^ (prng_state[2] >> 11);
 	prng_state[2] = prng_state[3] + (prng_state[3] << 3);
     
-    ap_dig_t temp = prng_state[3];
+    apn_dig_t temp = prng_state[3];
     ROTL(temp, 24);
 	
     prng_state[3] = temp + out;
@@ -21,14 +21,14 @@ static inline uint64_t random_sfc64(void)
     return out;
 }
 
-static inline void seed_random_sfc64(ap_dig_t seed)
+static inline void seed_random_sfc64(apn_dig_t seed)
 {
 	prng_state[0] = 1;
 	prng_state[1] = seed;
 	prng_state[2] = seed;
 	prng_state[3] = seed;
 
-	for (ap_size_t i = 0; i < (ap_size_t)16; i++){ random_sfc64(); }
+	for (apn_size_t i = 0; i < (apn_size_t)16; i++){ random_sfc64(); }
 
 	state_init = true;
 }
@@ -36,7 +36,7 @@ static inline void seed_random_sfc64(ap_dig_t seed)
 #endif
 
 void apn_seed_prng(
-	ap_dig_t seed_val
+	apn_dig_t seed_val
 )
 {
 #if defined(APAC_64BIT_PLATFORM)
@@ -47,8 +47,8 @@ void apn_seed_prng(
 }
 
 void apn_set_random(
-    ap_dig_t* op1, 
-    ap_size_t size
+    apn_dig_t* op1, 
+    apn_size_t size
 )
 {
     APAC_ASSERT(op1 != NULL);
@@ -58,7 +58,7 @@ void apn_set_random(
 
     if (state_init != true) { seed_random_sfc64(0x117); }
 
-	for (ap_size_t i = 0; i < size; i++)
+	for (apn_size_t i = 0; i < size; i++)
 	{
 		op1[i] = random_sfc64();
 	}

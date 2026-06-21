@@ -7,7 +7,7 @@
  * Small step size is important because recursive crossover
  * regions can shift sharply across only a few limbs.
  */
-#define SIZE_STEP_SIZE ((ap_size_t)2)
+#define SIZE_STEP_SIZE ((apn_size_t)2)
 
  /*
   * We use minimum observed timings because system noise
@@ -27,31 +27,31 @@
         APAC_ALWAYS_ASSERT((expr));     \
     } while (0)
 
-static ap_size_t get_karatsuba_mul_threshold(void)
+static apn_size_t get_karatsuba_mul_threshold(void)
 {
-    const ap_size_t thresh_start = 10;
-    const ap_size_t thresh_end = 80;
+    const apn_size_t thresh_start = 10;
+    const apn_size_t thresh_end = 80;
 
-    const ap_size_t size_start = 1;
-    const ap_size_t size_end = 256;
+    const apn_size_t size_start = 1;
+    const apn_size_t size_end = 256;
 
-    ap_dig_t* op1 =
-        apac_malloc(sizeof(ap_dig_t) * size_end);
+    apn_dig_t* op1 =
+        apac_malloc(sizeof(apn_dig_t) * size_end);
 
-    ap_dig_t* op2 =
-        apac_malloc(sizeof(ap_dig_t) * size_end);
+    apn_dig_t* op2 =
+        apac_malloc(sizeof(apn_dig_t) * size_end);
 
-    ap_dig_t* res =
-        apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
+    apn_dig_t* res =
+        apac_malloc(sizeof(apn_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(op2 != NULL);
     APN_TUNE_ASSERT(res != NULL);
 
     double global_best_avg = 1e300;
-    ap_size_t best_thresh = thresh_start;
+    apn_size_t best_thresh = thresh_start;
 
-    for (ap_size_t thresh = thresh_start;
+    for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
         thresh++)
     {
@@ -66,7 +66,7 @@ static ap_size_t get_karatsuba_mul_threshold(void)
         double total = 0.0;
         uint64_t count = 0;
 
-        for (ap_size_t size = size_start;
+        for (apn_size_t size = size_start;
             size <= size_end;
             size += SIZE_STEP_SIZE)
         {
@@ -120,27 +120,27 @@ static ap_size_t get_karatsuba_mul_threshold(void)
     return best_thresh;
 }
 
-static ap_size_t get_karatsuba_sqr_threshold(void)
+static apn_size_t get_karatsuba_sqr_threshold(void)
 {
-    const ap_size_t thresh_start = 10;
-    const ap_size_t thresh_end = 100;
+    const apn_size_t thresh_start = 10;
+    const apn_size_t thresh_end = 100;
 
-    const ap_size_t size_start = 1;
-    const ap_size_t size_end = 256;
+    const apn_size_t size_start = 1;
+    const apn_size_t size_end = 256;
 
-    ap_dig_t* op1 =
-        apac_malloc(sizeof(ap_dig_t) * size_end);
+    apn_dig_t* op1 =
+        apac_malloc(sizeof(apn_dig_t) * size_end);
 
-    ap_dig_t* res =
-        apac_malloc(sizeof(ap_dig_t) * (2 * size_end));
+    apn_dig_t* res =
+        apac_malloc(sizeof(apn_dig_t) * (2 * size_end));
 
     APN_TUNE_ASSERT(op1 != NULL);
     APN_TUNE_ASSERT(res != NULL);
 
     double global_best_avg = 1e300;
-    ap_size_t best_thresh = thresh_start;
+    apn_size_t best_thresh = thresh_start;
 
-    for (ap_size_t thresh = thresh_start;
+    for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
         thresh++)
     {
@@ -155,7 +155,7 @@ static ap_size_t get_karatsuba_sqr_threshold(void)
         double total = 0.0;
         uint64_t count = 0;
 
-        for (ap_size_t size = size_start;
+        for (apn_size_t size = size_start;
             size <= size_end;
             size += SIZE_STEP_SIZE)
         {
@@ -207,25 +207,25 @@ static ap_size_t get_karatsuba_sqr_threshold(void)
     return best_thresh;
 }
 
-static ap_size_t get_dnc_div_threshold(void)
+static apn_size_t get_dnc_div_threshold(void)
 {
-    const ap_size_t thresh_start = 10;
-    const ap_size_t thresh_end = 80;
+    const apn_size_t thresh_start = 10;
+    const apn_size_t thresh_end = 80;
 
-    const ap_size_t size_start = 1;
-    const ap_size_t size_end = 384;
+    const apn_size_t size_start = 1;
+    const apn_size_t size_end = 384;
 
-    ap_dig_t* dividend =
-        apac_malloc(sizeof(ap_dig_t) * (size_end * 2));
+    apn_dig_t* dividend =
+        apac_malloc(sizeof(apn_dig_t) * (size_end * 2));
 
-    ap_dig_t* divisor =
-        apac_malloc(sizeof(ap_dig_t) * size_end);
+    apn_dig_t* divisor =
+        apac_malloc(sizeof(apn_dig_t) * size_end);
 
-    ap_dig_t* quot =
-        apac_malloc(sizeof(ap_dig_t) * (size_end * 2));
+    apn_dig_t* quot =
+        apac_malloc(sizeof(apn_dig_t) * (size_end * 2));
 
-    ap_dig_t* rem =
-        apac_malloc(sizeof(ap_dig_t) * size_end);
+    apn_dig_t* rem =
+        apac_malloc(sizeof(apn_dig_t) * size_end);
 
     APN_TUNE_ASSERT(dividend != NULL);
     APN_TUNE_ASSERT(divisor != NULL);
@@ -235,9 +235,9 @@ static ap_size_t get_dnc_div_threshold(void)
     apn_set_random(dividend, size_end * 2);
 
     double global_best_avg = 1e300;
-    ap_size_t best_thresh = thresh_start;
+    apn_size_t best_thresh = thresh_start;
 
-    for (ap_size_t thresh = thresh_start;
+    for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
         thresh++)
     {
@@ -252,7 +252,7 @@ static ap_size_t get_dnc_div_threshold(void)
         double total = 0.0;
         uint64_t count = 0;
 
-        for (ap_size_t size_dvsr = size_start;
+        for (apn_size_t size_dvsr = size_start;
             size_dvsr <= size_end;
             size_dvsr += SIZE_STEP_SIZE)
         {
@@ -261,7 +261,7 @@ static ap_size_t get_dnc_div_threshold(void)
                 apn_set_random(divisor, size_dvsr);
             } while (divisor[size_dvsr - 1] == 0);
 
-            for (ap_size_t size_divd = size_dvsr;
+            for (apn_size_t size_divd = size_dvsr;
                 size_divd <= size_end * 2;
                 size_divd += SIZE_STEP_SIZE)
             {
@@ -383,17 +383,17 @@ int main(int argc, char** argv)
 
     apac_disable_dfs();
 
-    ap_size_t kara_mul_thresh =
+    apn_size_t kara_mul_thresh =
         get_karatsuba_mul_threshold();
 
     printf("\n");
 
-    ap_size_t kara_sqr_thresh =
+    apn_size_t kara_sqr_thresh =
         get_karatsuba_sqr_threshold();
 
     printf("\n");
 
-    ap_size_t dnc_div_thresh =
+    apn_size_t dnc_div_thresh =
         get_dnc_div_threshold();
 
     printf("\n\n");
@@ -401,15 +401,15 @@ int main(int argc, char** argv)
     apac_restore_dfs();
 
     printf(
-        "KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(%" PRI_AP_SIZE ");\n",
+        "KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(%" PRI_AP_SIZE ");\n",
         kara_mul_thresh);
 
     printf(
-        "KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(%" PRI_AP_SIZE ");\n",
+        "KARATSUBA_SQR_THRESHOLD  = (apn_size_t)(%" PRI_AP_SIZE ");\n",
         kara_sqr_thresh);
 
     printf(
-        "DNC_DIV_THRESHOLD        = (ap_size_t)(%" PRI_AP_SIZE ");\n",
+        "DNC_DIV_THRESHOLD        = (apn_size_t)(%" PRI_AP_SIZE ");\n",
         dnc_div_thresh);
 
     return EXIT_SUCCESS;

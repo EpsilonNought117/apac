@@ -5,30 +5,30 @@
 
 /* ---------------------------- DIVISION-HELPER FUNCTIONS -------------------------------- */
 
-ap_dig_t apn_recip_word_2by1(
-    ap_dig_t d
+apn_dig_t apn_recip_word_2by1(
+    apn_dig_t d
 );
 
-ap_dig_t apn_recip_word_3by2(
-    ap_dig_t d1,
-    ap_dig_t d0
+apn_dig_t apn_recip_word_3by2(
+    apn_dig_t d1,
+    apn_dig_t d0
 );
 
-ap_dig_t apn_udiv_2by1(
-    ap_dig_t u1,
-    ap_dig_t u0,
-    ap_dig_t d,
-    ap_dig_t v,
-    ap_dig_t* r
+apn_dig_t apn_udiv_2by1(
+    apn_dig_t u1,
+    apn_dig_t u0,
+    apn_dig_t d,
+    apn_dig_t v,
+    apn_dig_t* r
 );
 
-ap_dig_t apn_udiv_3by2_quot(
-    ap_dig_t u2,
-    ap_dig_t u1,
-    ap_dig_t u0,
-    ap_dig_t d1,
-    ap_dig_t d0,
-    ap_dig_t v
+apn_dig_t apn_udiv_3by2_quot(
+    apn_dig_t u2,
+    apn_dig_t u1,
+    apn_dig_t u0,
+    apn_dig_t d1,
+    apn_dig_t d0,
+    apn_dig_t v
 );
 
 /* ----------------------------- DIVISION-MAIN FUNCTIONS --------------------------------- */
@@ -44,32 +44,32 @@ ap_dig_t apn_udiv_3by2_quot(
 * 8) Most significant segment of divisor should be non-zero
 * 9) Returns MSD of quotient
 */
-ap_dig_t apn_basecase_div(
-    ap_dig_t* quotient,
-    ap_dig_t* dividend,
-    const ap_dig_t* divisor,
-    ap_size_t size_divd,
-    ap_size_t size_dvsr
+apn_dig_t apn_basecase_div(
+    apn_dig_t* quotient,
+    apn_dig_t* dividend,
+    const apn_dig_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_dvsr
 );
 
 // dnc = divide-n-conquer
-ap_dig_t apn_dnc_div_balanced(
-    ap_dig_t* quotient,
-    ap_dig_t* dividend,
-    const ap_dig_t* divisor,
-    ap_size_t size_divd,
-    ap_size_t size_dvsr,
-    ap_dig_t* temp
+apn_dig_t apn_dnc_div_balanced(
+    apn_dig_t* quotient,
+    apn_dig_t* dividend,
+    const apn_dig_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_dvsr,
+    apn_dig_t* temp
 );
 
 // divide-n-conquer unbalanced
-ap_dig_t apn_dnc_div_unbalanced(
-    ap_dig_t* quotient,
-    ap_dig_t* dividend,
-    const ap_dig_t* divisor,
-    ap_size_t size_divd,
-    ap_size_t size_dvsr,
-    ap_dig_t* temp
+apn_dig_t apn_dnc_div_unbalanced(
+    apn_dig_t* quotient,
+    apn_dig_t* dividend,
+    const apn_dig_t* divisor,
+    apn_size_t size_divd,
+    apn_size_t size_dvsr,
+    apn_dig_t* temp
 );
 
 #endif

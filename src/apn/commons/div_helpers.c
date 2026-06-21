@@ -10,8 +10,8 @@
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t apn_recip_word_2by1(
-    ap_dig_t d
+apn_dig_t apn_recip_word_2by1(
+    apn_dig_t d
 )
 {
     /* Preconditions from the paper */
@@ -56,33 +56,33 @@ ap_dig_t apn_recip_word_2by1(
         1038, 1036, 1034, 1032, 1030, 1028, 1026, 1024
     };
 
-    ap_dig_t d0 = d & 1;
-    ap_dig_t d9 = d >> 55;
-    ap_dig_t d40 = (d >> 24) + 1;
-    ap_dig_t d63 = (d >> 1) + d0;
+    apn_dig_t d0 = d & 1;
+    apn_dig_t d9 = d >> 55;
+    apn_dig_t d40 = (d >> 24) + 1;
+    apn_dig_t d63 = (d >> 1) + d0;
 
-    ap_dig_t v0 = (ap_dig_t)D9_LUT[d9 - 256];
-    ap_dig_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
-    ap_dig_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
-    ap_dig_t e = (v2 >> 1) * d0 - v2 * d63;
+    apn_dig_t v0 = (apn_dig_t)D9_LUT[d9 - 256];
+    apn_dig_t v1 = (v0 << 11) - ((v0 * v0 * d40) >> 40) - 1;
+    apn_dig_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
+    apn_dig_t e = (v2 >> 1) * d0 - v2 * d63;
 
     #if defined(APAC_X64_WIN)
 
         uint64_t high64 = __umulh(e, v2);
-        ap_dig_t v3 = (high64 >> 1) + (v2 << 31);
+        apn_dig_t v3 = (high64 >> 1) + (v2 << 31);
         uint64_t low64 = _umul128(v3, d, &high64);
 
     #elif defined(APAC_ARM64_WIN)
 
         uint64_t high64 = __umulh(e, v2);
-        ap_dig_t v3 = (high64 >> 1) + (v2 << 31);
+        apn_dig_t v3 = (high64 >> 1) + (v2 << 31);
 
         uint64_t low64 = v3 * d;
         high64 = __umulh(v3, d);
 
     #elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
 
-        ap_dig_t v3 = (v2 << 31) + (((__uint128_t)e * v2) >> 65);
+        apn_dig_t v3 = (v2 << 31) + (((__uint128_t)e * v2) >> 65);
         __uint128_t prod = (__uint128_t)v3 * d;
         
         uint64_t low64 = (uint64_t)prod;
@@ -93,7 +93,7 @@ ap_dig_t apn_recip_word_2by1(
     #endif
 
     uint8_t carry = (low64 + d) < low64;
-    ap_dig_t v4 = v3 - (high64 + d + carry);
+    apn_dig_t v4 = v3 - (high64 + d + carry);
     
     return v4;
 
@@ -111,15 +111,15 @@ ap_dig_t apn_recip_word_2by1(
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t apn_recip_word_3by2(
-    ap_dig_t d1, 
-    ap_dig_t d0
+apn_dig_t apn_recip_word_3by2(
+    apn_dig_t d1, 
+    apn_dig_t d0
 )
 {
     /* Step 1: v = RECIPROCAL_WORD(d1) */
-    ap_dig_t v = apn_recip_word_2by1(d1);
+    apn_dig_t v = apn_recip_word_2by1(d1);
 
-    ap_dig_t p;
+    apn_dig_t p;
 
     /* Step 2-3: p = (d1 * v + d0) mod 2^64 */
     p = v * d1;
@@ -127,8 +127,8 @@ ap_dig_t apn_recip_word_3by2(
 
     /* Step 4-9 */
     {
-        ap_dig_t c = (p < d0);
-        ap_dig_t d = c & (p >= d1);
+        apn_dig_t c = (p < d0);
+        apn_dig_t d = c & (p >= d1);
 
         v -= c + d;
         p -= d1 * (c + d);
@@ -160,8 +160,8 @@ ap_dig_t apn_recip_word_3by2(
 
     /* Step 12-15 */
     {
-        ap_dig_t c = (p < t1);
-        ap_dig_t d = c & ((p > d1) | ((p == d1) & (t0 >= d0)));
+        apn_dig_t c = (p < t1);
+        apn_dig_t d = c & ((p > d1) | ((p == d1) & (t0 >= d0)));
 
         v -= c + d;
     }
@@ -180,12 +180,12 @@ ap_dig_t apn_recip_word_3by2(
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t apn_udiv_2by1(
-    ap_dig_t u1,
-    ap_dig_t u0,
-    ap_dig_t d,
-    ap_dig_t v,
-    ap_dig_t* r
+apn_dig_t apn_udiv_2by1(
+    apn_dig_t u1,
+    apn_dig_t u0,
+    apn_dig_t d,
+    apn_dig_t v,
+    apn_dig_t* r
 )
 {
     /* Preconditions from the paper */
@@ -231,8 +231,8 @@ ap_dig_t apn_udiv_2by1(
     /* Step 2 */
     q += ((__uint128_t)u1 << APN_DIG_BITS) | u0;
 
-    uint64_t q1 = (ap_dig_t)(q >> APN_DIG_BITS);
-    uint64_t q0 = (ap_dig_t)q;
+    uint64_t q1 = (apn_dig_t)(q >> APN_DIG_BITS);
+    uint64_t q0 = (apn_dig_t)q;
 
 #else
 
@@ -248,14 +248,14 @@ ap_dig_t apn_udiv_2by1(
 
     /* Step 5-7: first correction */
     {
-        ap_dig_t m = (*r > q0);
+        apn_dig_t m = (*r > q0);
         q1 -= m;
         *r += d * m;
     }
 
     /* Step 8-10: second correction */
     {
-        ap_dig_t m = (*r >= d);
+        apn_dig_t m = (*r >= d);
         q1 += m;
         *r -= d * m;
     }
@@ -273,13 +273,13 @@ ap_dig_t apn_udiv_2by1(
  *   Niels Moeller, Torbjorn Granlund
  *   "Improved Division by Invariant Integers"
  */
-ap_dig_t apn_udiv_3by2_quot(
-    ap_dig_t u2,
-    ap_dig_t u1,
-    ap_dig_t u0,
-    ap_dig_t d1,
-    ap_dig_t d0,
-    ap_dig_t v   /* reciprocal */
+apn_dig_t apn_udiv_3by2_quot(
+    apn_dig_t u2,
+    apn_dig_t u1,
+    apn_dig_t u0,
+    apn_dig_t d1,
+    apn_dig_t d0,
+    apn_dig_t v   /* reciprocal */
 )
 {
     /* Preconditions from the paper */
@@ -449,5 +449,5 @@ ap_dig_t apn_udiv_3by2_quot(
     #error "Unsupported compiler"
 #endif
 
-    return (ap_dig_t)q1;
+    return (apn_dig_t)q1;
 }

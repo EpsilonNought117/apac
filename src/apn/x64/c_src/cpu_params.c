@@ -3,9 +3,9 @@
 // Tested on Ryzen 7 8845HS running at 3.8 GHz Base Clock
 void zen4_set_params(void)
 {
-	KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(30);
-	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(56);
-	DNC_DIV_THRESHOLD        = (ap_size_t)(32);
+	KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(30);
+	KARATSUBA_SQR_THRESHOLD  = (apn_size_t)(56);
+	DNC_DIV_THRESHOLD        = (apn_size_t)(32);
 
 	curr_cpu.apn_add_n_ptr			= add_n_zen4;
 	curr_cpu.apn_sub_n_ptr			= sub_n_zen4;
@@ -31,9 +31,9 @@ void zen4_set_params(void)
 void generic_x64_set_params(void)
 {
 	/* random cut-off thresholds */
-	KARATSUBA_MUL_THRESHOLD  = (ap_size_t)(20);
-	KARATSUBA_SQR_THRESHOLD  = (ap_size_t)(30);
-	DNC_DIV_THRESHOLD        = (ap_size_t)(30);
+	KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(20);
+	KARATSUBA_SQR_THRESHOLD  = (apn_size_t)(30);
+	DNC_DIV_THRESHOLD        = (apn_size_t)(30);
 
 	curr_cpu.apn_add_n_ptr          = add_n_x64;
 	curr_cpu.apn_sub_n_ptr          = sub_n_x64;

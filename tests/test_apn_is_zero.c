@@ -1,14 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static int
 is_zero_ref(
-    const ap_dig_t* op,
-    ap_size_t size
+    const apn_dig_t* op,
+    apn_size_t size
 )
 {
-    ap_size_t i = size;
+    apn_size_t i = size;
 
     while (i-- > 0)
     {
@@ -24,7 +24,7 @@ is_zero_ref(
 static void
 check_apn_is_zero(uint64_t iterations)
 {
-    ap_dig_t* op = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* op = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(op != NULL);
 
@@ -32,7 +32,7 @@ check_apn_is_zero(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size = 0;
+        apn_size_t size = 0;
 
         do
         {
@@ -54,13 +54,13 @@ check_apn_is_zero(uint64_t iterations)
 
         apn_set(op, size, 0);
 
-        ap_size_t pos = 0;
+        apn_size_t pos = 0;
 
         apn_set_random(&pos, 1);
 
         pos %= size;
 
-        ap_dig_t val = 0;
+        apn_dig_t val = 0;
 
         do
         {

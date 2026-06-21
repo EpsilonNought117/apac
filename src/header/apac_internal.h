@@ -42,14 +42,14 @@
 			do																					\
 			{																					\
 				unsigned long idx = 0;															\
-				(count) = _BitScanReverse64(&idx, (value)) ? (ap_dig_t)63 - idx : (ap_dig_t)64;	\
+				(count) = _BitScanReverse64(&idx, (value)) ? (apn_dig_t)63 - idx : (apn_dig_t)64;	\
 			} while (0)
 
 	#define CTZ(value, count)														\
 			do																		\
 			{																		\
 				unsigned long idx = 0;												\
-				(count) = _BitScanForward64(&idx, (value)) ? idx : (ap_dig_t)64;	\
+				(count) = _BitScanForward64(&idx, (value)) ? idx : (apn_dig_t)64;	\
 			} while (0)
 
 	#define ROTL(value, count)	do { value = _rotl64((value), (count)); } while (0)
@@ -82,13 +82,13 @@
 	#define CLZ(value, count)															\
 			do																			\
 			{																			\
-				(count) = (value) ? (ap_dig_t)__builtin_clzll((value)) : (ap_dig_t)64;	\
+				(count) = (value) ? (apn_dig_t)__builtin_clzll((value)) : (apn_dig_t)64;	\
 			} while (0)
 
 	#define CTZ(value, count)															\
 			do																			\
 			{																			\
-				(count) = (value) ? (ap_dig_t)__builtin_ctzll((value)) : (ap_dig_t)64;	\
+				(count) = (value) ? (apn_dig_t)__builtin_ctzll((value)) : (apn_dig_t)64;	\
 			} while(0)
 
 	#define ROTL(value, count)											\
@@ -258,31 +258,31 @@ void apac_restore_dfs(void);
 
 typedef struct apac_cpu_params
 {
-    ap_size_t karatsuba_mul_threshold;
-    ap_size_t karatsuba_sqr_threshold;
-    ap_size_t dnc_div_threshold;
+    apn_size_t karatsuba_mul_threshold;
+    apn_size_t karatsuba_sqr_threshold;
+    apn_size_t dnc_div_threshold;
 
-    ap_dig_t(*apn_add_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
-    ap_dig_t(*apn_sub_n_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t);
-    ap_dig_t(*apn_add_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t(*apn_sub_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    void (*apn_neg_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
+    apn_dig_t(*apn_add_n_ptr)(apn_dig_t*, const apn_dig_t*, const apn_dig_t*, apn_size_t);
+    apn_dig_t(*apn_sub_n_ptr)(apn_dig_t*, const apn_dig_t*, const apn_dig_t*, apn_size_t);
+    apn_dig_t(*apn_add_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
+    apn_dig_t(*apn_sub_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
+    void (*apn_neg_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t);
 
-    void (*apn_mul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t(*apn_addmul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t(*apn_submul_one_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    void (*apn_mul_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
+    apn_dig_t(*apn_addmul_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
+    apn_dig_t(*apn_submul_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
 
-    ap_dig_t(*apn_lshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
-    ap_dig_t(*apn_rshift_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t, ap_dig_t);
+    apn_dig_t(*apn_lshift_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
+    apn_dig_t(*apn_rshift_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
 
-    void (*apn_mul_bc_ptr)(ap_dig_t*, const ap_dig_t*, const ap_dig_t*, ap_size_t, ap_size_t);
-    void (*apn_sqr_bc_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
+    void (*apn_mul_bc_ptr)(apn_dig_t*, const apn_dig_t*, const apn_dig_t*, apn_size_t, apn_size_t);
+    void (*apn_sqr_bc_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t);
 
-    void (*apn_cpy_ptr)(ap_dig_t*, const ap_dig_t*, ap_size_t);
-    void (*apn_set_ptr)(ap_dig_t*, ap_size_t, ap_dig_t);
+    void (*apn_cpy_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t);
+    void (*apn_set_ptr)(apn_dig_t*, apn_size_t, apn_dig_t);
 
-    int (*apn_cmp_ptr)(const ap_dig_t*, const ap_dig_t*, ap_size_t);
-    int (*apn_is_zero_ptr)(const ap_dig_t*, ap_size_t);
+    int (*apn_cmp_ptr)(const apn_dig_t*, const apn_dig_t*, apn_size_t);
+    int (*apn_is_zero_ptr)(const apn_dig_t*, apn_size_t);
 
 } apac_cpu_params;
 
@@ -300,22 +300,22 @@ extern apac_cpu_params curr_cpu;
 /*********************************     APN INTERNAL FUNCTIONS     ***********************************/
 /****************************************************************************************************/
 
-ap_dig_t*
+apn_dig_t*
 apn_reduce_mod_p_u64(
-    ap_dig_t* arr,
-    ap_size_t n,
-    ap_dig_t prime,
-    ap_dig_t magic,
-    ap_dig_t shift
+    apn_dig_t* arr,
+    apn_size_t n,
+    apn_dig_t prime,
+    apn_dig_t magic,
+    apn_dig_t shift
 );
 
 double*
 apn_reduce_mod_p_f64(
-    ap_dig_t* arr,
-    ap_size_t n,
-    ap_dig_t prime,
-    ap_dig_t magic,
-    ap_dig_t shift
+    apn_dig_t* arr,
+    apn_size_t n,
+    apn_dig_t prime,
+    apn_dig_t magic,
+    apn_dig_t shift
 );
 
 #endif

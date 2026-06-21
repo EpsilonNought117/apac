@@ -14,7 +14,7 @@ apz_init_from_str(
 
 	apac_err result = APAC_OK;
 	const char* curr = &str[0];
-	ap_size_t str_len = 0;
+	apn_size_t str_len = 0;
 
 	// if negative integer
 	// skip the minus sign
@@ -65,25 +65,25 @@ apz_init_from_str(
 		/*  Always allocate 1 digit extra as it  */
 		/*  helps for using apn_mul_one in-place */
 
-		ap_size_t digits = (str_len + 18) / 19 + 1;
+		apn_size_t digits = (str_len + 18) / 19 + 1;
 
-		op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * digits);
+		op1->num = (apn_dig_t*)apac_malloc(sizeof(apn_dig_t) * digits);
 
 		if (!(op1->num)) { result = APAC_OOM; goto func_end; }
 
 		op1->max_size = digits;
 		apn_set(op1->num, digits, 0);
 
-		ap_dig_t i = 0;
-		ap_size_t curr_size = 1;
-		ap_dig_t acc = 0;
+		apn_dig_t i = 0;
+		apn_size_t curr_size = 1;
+		apn_dig_t acc = 0;
 
 		while (*curr != '\0')
 		{
 			acc = acc * 10 + (*curr) - '0';
 			i++;
 
-			if (i == (ap_size_t)19)
+			if (i == (apn_size_t)19)
 			{
 				apn_mul_one(op1->num, op1->num, curr_size, TEN_TO_POW19);
 				op1->num[0] += acc;
@@ -97,7 +97,7 @@ apz_init_from_str(
 			curr++;
 		}
 
-		ap_dig_t mult = 1;
+		apn_dig_t mult = 1;
 
 		while (i--) { mult *= 10; }
 
@@ -142,19 +142,19 @@ apz_init_from_str(
 			str_len++;
 		}
 
-		ap_size_t digits = (str_len + 15) / 16 + 1;
+		apn_size_t digits = (str_len + 15) / 16 + 1;
 
-		op1->num = (ap_dig_t*)apac_malloc(sizeof(ap_dig_t) * digits);
+		op1->num = (apn_dig_t*)apac_malloc(sizeof(apn_dig_t) * digits);
 
 		if (!(op1->num)) { result = APAC_OOM; goto func_end; }
 
 		op1->max_size = digits;
 		apn_set(op1->num, digits, 0);
 
-		ap_size_t i = 0;
-		ap_size_t curr_dig = 0;
-		ap_size_t curr_char = str_len - 1;
-		ap_dig_t acc = 0;
+		apn_size_t i = 0;
+		apn_size_t curr_dig = 0;
+		apn_size_t curr_char = str_len - 1;
+		apn_dig_t acc = 0;
 	
 		// using well-defined unsigned integer 
 		// wrap-around behaviour from C11
@@ -163,10 +163,10 @@ apz_init_from_str(
 			char c = curr[curr_char];
 			i++;
 
-			ap_dig_t val = 0;
+			apn_dig_t val = 0;
 			
 			c |= 0x20; // force lowercase: 'A' to 'a', '0' to '0' (digits unaffected)
-			val = c >= 'a' ? (ap_size_t)(c - 'a' + 10) : (ap_size_t)(c - '0');
+			val = c >= 'a' ? (apn_size_t)(c - 'a' + 10) : (apn_size_t)(c - '0');
 
 			acc = (acc << 4) | val;
 

@@ -5,37 +5,37 @@
 //  SCALAR CODE (for x64 CPUs without AVX-FMA minimum)
 // ========================================================
 
-static inline ap_dig_t
+static inline apn_dig_t
 mul_mod_p51_x64(
-    const ap_dig_t a,
-    const ap_dig_t b,
-    const ap_dig_t prime,
-    const ap_dig_t barrett_m
+    const apn_dig_t a,
+    const apn_dig_t b,
+    const apn_dig_t prime,
+    const apn_dig_t barrett_m
 )
 {
 #if defined(APAC_X64_WIN)
 
-    ap_dig_t ab_lo      = a * b;
-    ap_dig_t ab_hi      = __umulh(a, b);
-    ap_dig_t ab_lo_m_hi = __umulh(ab_lo, barrett_m);
-    ap_dig_t ab_hi_m_lo = ab_hi * barrett_m;
+    apn_dig_t ab_lo      = a * b;
+    apn_dig_t ab_hi      = __umulh(a, b);
+    apn_dig_t ab_lo_m_hi = __umulh(ab_lo, barrett_m);
+    apn_dig_t ab_hi_m_lo = ab_hi * barrett_m;
 
-    ap_dig_t q = (ab_hi_m_lo + ab_lo_m_hi) >> 38;
+    apn_dig_t q = (ab_hi_m_lo + ab_lo_m_hi) >> 38;
 
-    ap_dig_t r = ab_lo - q * prime;
+    apn_dig_t r = ab_lo - q * prime;
 
 #elif defined(APAC_X64_UNIX)
 
     __uint128_t ab = (__uint128_t)a * b;
 
-    ap_dig_t ab_hi = (ap_dig_t)(ab >> 64);
+    apn_dig_t ab_hi = (apn_dig_t)(ab >> 64);
 
-    ap_dig_t ab_lo = (ap_dig_t)ab;
+    apn_dig_t ab_lo = (apn_dig_t)ab;
 
-    ap_dig_t q = (((__uint128_t)ab_hi * barrett_m +
+    apn_dig_t q = (((__uint128_t)ab_hi * barrett_m +
                  (((__uint128_t)ab_lo * barrett_m) >> 64)) >> 38);
 
-    ap_dig_t r = (ab - (__uint128_t)q * prime);
+    apn_dig_t r = (ab - (__uint128_t)q * prime);
 
 #endif
 
@@ -43,26 +43,26 @@ mul_mod_p51_x64(
     return r;
 }
 
-static inline ap_dig_t
+static inline apn_dig_t
 add_mod_p51_x64(
-    const ap_dig_t a,
-    const ap_dig_t b,
-    const ap_dig_t prime
+    const apn_dig_t a,
+    const apn_dig_t b,
+    const apn_dig_t prime
 )
 {
-    ap_dig_t r = a + b;
+    apn_dig_t r = a + b;
     r = (r >= prime) ? r - prime : r;
     return r;
 }
 
-static inline ap_dig_t
+static inline apn_dig_t
 sub_mod_p51_x64(
-    const ap_dig_t a,
-    const ap_dig_t b,
-    const ap_dig_t prime
+    const apn_dig_t a,
+    const apn_dig_t b,
+    const apn_dig_t prime
 )
 {
-    ap_dig_t r = a - b;
+    apn_dig_t r = a - b;
     r = (r > a) ? r + prime : r;
     return r;
 }
@@ -73,8 +73,8 @@ sub_mod_p51_x64(
  */
 void
 dif_fwd_ntt_x64(
-    ap_dig_t* op1,      /* in-place DIF-FNTT        */
-    ap_size_t size,     /* size must be power of 2  */
+    apn_dig_t* op1,      /* in-place DIF-FNTT        */
+    apn_size_t size,     /* size must be power of 2  */
     const ntt_prime_t* p,
     const ntt_tf_t tf
 )
@@ -83,27 +83,27 @@ dif_fwd_ntt_x64(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_CONV_LEN);
 
-    ap_size_t k = 0;
+    apn_size_t k = 0;
     CTZ(size, k);
 
     APAC_ASSERT(k >= 7);
 
-    ap_size_t twiddle_idx = tf == NEGACYCLIC ? NTT_PRIME_POW2 - k - 1 : NTT_PRIME_POW2 - k;
+    apn_size_t twiddle_idx = tf == NEGACYCLIC ? NTT_PRIME_POW2 - k - 1 : NTT_PRIME_POW2 - k;
 
-    for (ap_size_t stride = size / 2; stride >= 1; stride /= 2, twiddle_idx++)
+    for (apn_size_t stride = size / 2; stride >= 1; stride /= 2, twiddle_idx++)
     {
-        ap_dig_t omega = p->twiddle[twiddle_idx];
-        ap_dig_t twiddle = 1;
+        apn_dig_t omega = p->twiddle[twiddle_idx];
+        apn_dig_t twiddle = 1;
 
-        for (ap_size_t j = 0; j < stride; j++)
+        for (apn_size_t j = 0; j < stride; j++)
         {
-            for (ap_size_t i = j; i < size; i += (stride << 1))
+            for (apn_size_t i = j; i < size; i += (stride << 1))
             {
-                ap_dig_t u = op1[i];
-                ap_dig_t v = op1[i + stride];
+                apn_dig_t u = op1[i];
+                apn_dig_t v = op1[i + stride];
 
-                const ap_dig_t sum = mod_add_p51_x64(u, v, p->prime);
-                const ap_dig_t diff = mod_sub_p51_x64(u, v, p->prime);
+                const apn_dig_t sum = mod_add_p51_x64(u, v, p->prime);
+                const apn_dig_t diff = mod_sub_p51_x64(u, v, p->prime);
 
                 op1[i] = sum;
                 op1[i + stride] = mod_mul_p51_x64(diff, twiddle, p->prime, p->barrett);
@@ -120,8 +120,8 @@ dif_fwd_ntt_x64(
  */
 void
 dit_inv_ntt_x64(
-    ap_dig_t* op1,
-    ap_size_t size,
+    apn_dig_t* op1,
+    apn_size_t size,
     const ntt_prime_t* p,
     const ntt_tf_t tf
 )
@@ -130,25 +130,25 @@ dit_inv_ntt_x64(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_CONV_LEN);
 
-    ap_size_t k = 0;
+    apn_size_t k = 0;
     CTZ(size, k);
 
     APAC_ASSERT(k >= 7);
 
-    ap_size_t twiddle_idx = tf == NEGACYCLIC ? NTT_PRIME_POW2 - 2 : NTT_PRIME_POW2 - 1;
+    apn_size_t twiddle_idx = tf == NEGACYCLIC ? NTT_PRIME_POW2 - 2 : NTT_PRIME_POW2 - 1;
 
-    for (ap_size_t stride = 1; stride <= size / 2; stride <<= 1, twiddle_idx--)
+    for (apn_size_t stride = 1; stride <= size / 2; stride <<= 1, twiddle_idx--)
     {
-        ap_dig_t omega = p->twiddle_inv[twiddle_idx];
-        ap_dig_t twiddle = 1;
+        apn_dig_t omega = p->twiddle_inv[twiddle_idx];
+        apn_dig_t twiddle = 1;
 
-        for (ap_size_t j = stride - 1; j < stride; j--)
+        for (apn_size_t j = stride - 1; j < stride; j--)
         {
-            for (ap_size_t i = j; i < size; i += (stride << 1))
+            for (apn_size_t i = j; i < size; i += (stride << 1))
             {
-                ap_dig_t u = op1[i];
+                apn_dig_t u = op1[i];
 
-                ap_dig_t v = mod_mul_p51_x64(op1[i + stride], twiddle, p->prime, p->barrett);
+                apn_dig_t v = mod_mul_p51_x64(op1[i + stride], twiddle, p->prime, p->barrett);
 
                 op1[i] = mod_add_p51_x64(u, v, p->prime);
                 op1[i + stride] = mod_sub_p51_x64(u, v, p->prime);
@@ -159,9 +159,9 @@ dit_inv_ntt_x64(
     }
 
     /* Final scaling: multiply every element by N^{-1} mod p */
-    ap_dig_t n_inv = p->size_inv[k];
+    apn_dig_t n_inv = p->size_inv[k];
 
-    for (ap_size_t i = 0; i < size; i++)
+    for (apn_size_t i = 0; i < size; i++)
     {
         op1[i] = mod_mul_p51_x64(op1[i], n_inv, p->prime, p->barrett);
     }
@@ -169,10 +169,10 @@ dit_inv_ntt_x64(
 
 void 
 pointwise_mul_x64(
-    ap_dig_t* result,
-    const ap_dig_t* op1,
-    const ap_dig_t* op2,
-    ap_size_t size,
+    apn_dig_t* result,
+    const apn_dig_t* op1,
+    const apn_dig_t* op2,
+    apn_size_t size,
     const ntt_prime_t* p
 )
 {
@@ -180,7 +180,7 @@ pointwise_mul_x64(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(size >= MIN_CONV_LEN);
     
-    for (ap_size_t i = 0; i < size; i++)
+    for (apn_size_t i = 0; i < size; i++)
     {
         result[i] = mod_mul_p51_x64(op1[i], op2[i], p->prime, p->barrett);
     }

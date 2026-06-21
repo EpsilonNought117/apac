@@ -1,14 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define TEST_SIZE_MAX ((ap_size_t)512ULL)
+#define TEST_SIZE_MAX ((apn_size_t)512ULL)
 
 static void
 check_apn_sub(uint64_t iterations)
 {
-    ap_dig_t* a = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* b = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* r = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
-    ap_dig_t* t = apac_malloc(sizeof(ap_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* a = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* b = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* r = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
+    apn_dig_t* t = apac_malloc(sizeof(apn_dig_t) * TEST_SIZE_MAX);
 
     APAC_ALWAYS_ASSERT(a != NULL);
     APAC_ALWAYS_ASSERT(b != NULL);
@@ -22,8 +22,8 @@ check_apn_sub(uint64_t iterations)
 
     while (iterations--)
     {
-        ap_size_t size1 = 0;
-        ap_size_t size2 = 0;
+        apn_size_t size1 = 0;
+        apn_size_t size2 = 0;
 
         do
         {
@@ -41,7 +41,7 @@ check_apn_sub(uint64_t iterations)
 
         if (size2 > size1)
         {
-            ap_size_t temp = size1;
+            apn_size_t temp = size1;
             size1 = size2;
             size2 = temp;
         }
@@ -51,7 +51,7 @@ check_apn_sub(uint64_t iterations)
         apn_set_random(a, size1);
         apn_set(b, size2, 0);
 
-        ap_dig_t borrow = apn_sub(r, a, b, size1, size2);
+        apn_dig_t borrow = apn_sub(r, a, b, size1, size2);
 
         int cmp = apn_cmp(r, a, size1);
 

@@ -1,10 +1,10 @@
 #include "../../header/apac_internal.h"
 
 void apn_mul_one(
-	ap_dig_t* result,
-	const ap_dig_t* op1,
-	ap_size_t size,
-	ap_dig_t val
+	apn_dig_t* result,
+	const apn_dig_t* op1,
+	apn_size_t size,
+	apn_dig_t val
 )
 {
 	APAC_ASSERT(size != 0);

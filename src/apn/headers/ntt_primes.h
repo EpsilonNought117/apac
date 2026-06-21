@@ -14,17 +14,17 @@ typedef enum ntt_tf_t
 
 typedef struct ntt_prime_t
 {
-    ap_dig_t prime;
+    apn_dig_t prime;
 
-    ap_dig_t magic;
-    ap_dig_t shift;
-    ap_dig_t barrett;
+    apn_dig_t magic;
+    apn_dig_t shift;
+    apn_dig_t barrett;
 
     double prime_inv;
 
-    ap_dig_t twiddle[44];
-    ap_dig_t twiddle_inv[44];
-    ap_dig_t size_inv[44];
+    apn_dig_t twiddle[44];
+    apn_dig_t twiddle_inv[44];
+    apn_dig_t size_inv[44];
 
     double cdlt64_cyclic_fwd[60];
     double cdlt64_cyclic_inv[60];

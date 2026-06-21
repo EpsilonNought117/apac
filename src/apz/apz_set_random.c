@@ -3,7 +3,7 @@
 apac_err
 apz_set_random(
     apz_t* op1,
-    ap_dig_t bitcnt,
+    apn_dig_t bitcnt,
     int sign
 )
 {
@@ -12,7 +12,7 @@ apz_set_random(
     APAC_ALWAYS_ASSERT(op1->num != NULL);
     APAC_ASSERT(sign == APZ_POS || sign == APZ_NEG);
 
-    ap_size_t digits_needed = (bitcnt + APN_DIG_BITS - 1) / APN_DIG_BITS;
+    apn_size_t digits_needed = (bitcnt + APN_DIG_BITS - 1) / APN_DIG_BITS;
     apac_err retval = APAC_OK;
 
     if (digits_needed > op1->max_size)
@@ -21,7 +21,7 @@ apz_set_random(
         if (retval != APAC_OK) { goto func_end; }
     }
 
-    ap_size_t frac = bitcnt % APN_DIG_BITS;
+    apn_size_t frac = bitcnt % APN_DIG_BITS;
 
     apn_set_random(op1->num, digits_needed);
 

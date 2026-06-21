@@ -73,17 +73,17 @@ apac_cond_wait(apac_cond_t* c, apac_mutex_t* m)
 // Atomic Instructions
 // ----------------------------------------------------------------------------
 
-static inline ap_size_t
-apac_atomic_load(const ap_size_t* p)
+static inline apn_size_t
+apac_atomic_load(const apn_size_t* p)
 {
 #if defined(APAC_ARM64_WIN)
-    return (ap_size_t)_InterlockedCompareExchange64_nf(
+    return (apn_size_t)_InterlockedCompareExchange64_nf(
         (volatile long long*)p,
         0,
         0
     );
 #else
-    return (ap_size_t)_InterlockedCompareExchange64(
+    return (apn_size_t)_InterlockedCompareExchange64(
         (volatile long long*)p,
         0,
         0
@@ -92,7 +92,7 @@ apac_atomic_load(const ap_size_t* p)
 }
 
 static inline void
-apac_atomic_store(ap_size_t* p, ap_size_t val)
+apac_atomic_store(apn_size_t* p, apn_size_t val)
 {
 #if defined(APAC_ARM64_WIN)
     _InterlockedExchange64_nf(
@@ -107,32 +107,32 @@ apac_atomic_store(ap_size_t* p, ap_size_t val)
 #endif
 }
 
-static inline ap_size_t
-apac_atomic_fetch_add(ap_size_t* p, ap_size_t val)
+static inline apn_size_t
+apac_atomic_fetch_add(apn_size_t* p, apn_size_t val)
 {
 #if defined(APAC_ARM64_WIN)
-    return (ap_size_t)_InterlockedExchangeAdd64_nf(
+    return (apn_size_t)_InterlockedExchangeAdd64_nf(
         (volatile long long*)p,
         (long long)val
     );
 #else
-    return (ap_size_t)_InterlockedExchangeAdd64(
+    return (apn_size_t)_InterlockedExchangeAdd64(
         (volatile long long*)p,
         (long long)val
     );
 #endif
 }
 
-static inline ap_size_t
-apac_atomic_fetch_sub(ap_size_t* p, ap_size_t val)
+static inline apn_size_t
+apac_atomic_fetch_sub(apn_size_t* p, apn_size_t val)
 {
 #if defined(APAC_ARM64_WIN)
-    return (ap_size_t)_InterlockedExchangeAdd64_nf(
+    return (apn_size_t)_InterlockedExchangeAdd64_nf(
         (volatile long long*)p,
         -(long long)val
     );
 #else
-    return (ap_size_t)_InterlockedExchangeAdd64(
+    return (apn_size_t)_InterlockedExchangeAdd64(
         (volatile long long*)p,
         -(long long)val
     );
@@ -207,8 +207,8 @@ apac_cond_wait(apac_cond_t* c, apac_mutex_t* m)
 // Atomic Instructions
 // ----------------------------------------------------------------------------
 
-static inline ap_size_t
-apac_atomic_load(const ap_size_t* p)
+static inline apn_size_t
+apac_atomic_load(const apn_size_t* p)
 {
     return __atomic_load_n(
         p,
@@ -217,7 +217,7 @@ apac_atomic_load(const ap_size_t* p)
 }
 
 static inline void
-apac_atomic_store(ap_size_t* p, ap_size_t val)
+apac_atomic_store(apn_size_t* p, apn_size_t val)
 {
     __atomic_store_n(
         p,
@@ -226,8 +226,8 @@ apac_atomic_store(ap_size_t* p, ap_size_t val)
     );
 }
 
-static inline ap_size_t
-apac_atomic_fetch_add(ap_size_t* p, ap_size_t val)
+static inline apn_size_t
+apac_atomic_fetch_add(apn_size_t* p, apn_size_t val)
 {
     return __atomic_fetch_add(
         p,
@@ -236,8 +236,8 @@ apac_atomic_fetch_add(ap_size_t* p, ap_size_t val)
     );
 }
 
-static inline ap_size_t
-apac_atomic_fetch_sub(ap_size_t* p, ap_size_t val)
+static inline apn_size_t
+apac_atomic_fetch_sub(apn_size_t* p, apn_size_t val)
 {
     return __atomic_fetch_sub(
         p,
@@ -253,7 +253,7 @@ apac_atomic_fetch_sub(ap_size_t* p, ap_size_t val)
 static apac_thrd_ret_t APAC_THRD_CALL
 apac_pfor_worker(apac_thrd_arg_t arg)
 {
-    ap_size_t tid = (ap_size_t)(uintptr_t)arg;   // ← extract index; was (void)empty
+    apn_size_t tid = (apn_size_t)(uintptr_t)arg;   // ← extract index; was (void)empty
 
     while (true)
     {
@@ -276,12 +276,12 @@ apac_pfor_worker(apac_thrd_arg_t arg)
         {
             while (true)
             {
-                ap_size_t start = apac_atomic_fetch_add(&pfor.next, pfor.chunk_size);
+                apn_size_t start = apac_atomic_fetch_add(&pfor.next, pfor.chunk_size);
 
                 if (start >= pfor.end)
                     break;
 
-                ap_size_t stop = start + pfor.chunk_size;
+                apn_size_t stop = start + pfor.chunk_size;
                 if (stop > pfor.end) stop = pfor.end;
 
                 pfor.func(start, stop, pfor.arg);
@@ -289,13 +289,13 @@ apac_pfor_worker(apac_thrd_arg_t arg)
         }
         else  // APAC_SCHED_STATIC
         {
-            ap_size_t total = pfor.end - pfor.begin;
-            ap_size_t n     = pfor.max_thrds;
-            ap_size_t base  = total / n;
-            ap_size_t rem   = total % n;
+            apn_size_t total = pfor.end - pfor.begin;
+            apn_size_t n     = pfor.max_thrds;
+            apn_size_t base  = total / n;
+            apn_size_t rem   = total % n;
 
-            ap_size_t my_start = pfor.begin + tid * base;
-            ap_size_t my_count = (tid == n - 1) ? base + rem : base;
+            apn_size_t my_start = pfor.begin + tid * base;
+            apn_size_t my_count = (tid == n - 1) ? base + rem : base;
 
             if (my_count > 0)
             {
@@ -318,12 +318,12 @@ apac_pfor_worker(apac_thrd_arg_t arg)
 }
 
 apac_err
-apac_pfor_init(ap_size_t thrd_count)
+apac_pfor_init(apn_size_t thrd_count)
 {
     APAC_ASSERT(thrd_count != 0);
     APAC_ASSERT(thrd_count <= SIZE_MAX / sizeof(apac_thrd_t));
 
-    ap_size_t i = 0;
+    apn_size_t i = 0;
 
     if (is_pfor_init)
     {
@@ -432,9 +432,9 @@ fail_cleanup:
 // Only one thread may call apac_pfor_do at a time.
 apac_err
 apac_pfor_do(
-    ap_size_t begin,
-    ap_size_t end,
-    ap_size_t chunk_size,
+    apn_size_t begin,
+    apn_size_t end,
+    apn_size_t chunk_size,
     apac_sched_t sched,
     apac_pfor_func_t func,
     void* arg
@@ -489,7 +489,7 @@ apac_pfor_destroy(void)
 
     apac_mutex_unlock(&pfor.lock);
 
-    for (ap_size_t i = 0; i < pfor.max_thrds; i++)
+    for (apn_size_t i = 0; i < pfor.max_thrds; i++)
     {
 #if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
 
@@ -515,7 +515,7 @@ apac_pfor_destroy(void)
     return APAC_OK;
 }
 
-ap_size_t
+apn_size_t
 apac_pfor_get_size(void)
 {
     return pfor.max_thrds;
