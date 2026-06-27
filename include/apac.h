@@ -138,46 +138,6 @@ typedef enum apac_sched_t
 /*********************************    MISCELLANEOUS FUNCTIONS     ***********************************/
 /****************************************************************************************************/
 
-// ============================================================================
-// Parallel-For Related Functions and Definitions
-// ============================================================================
-
-/*
-    NOTE: To use the below parallel-for functions
-          you must build the library with
-    
-          -DBUILD_APAC_MT=ON 
-    
-          while configuring the build with cmake,
-          otherwise you cannot use them in your 
-          source code.
-*/
-
-typedef void (*apac_pfor_func_t)(
-    apn_size_t begin,
-    apn_size_t end,
-    void* arg
-);
-
-apac_err
-apac_pfor_init(apn_size_t thrd_count);
-
-apac_err
-apac_pfor_destroy(void);
-
-apn_size_t
-apac_pfor_get_size(void);
-
-apac_err
-apac_pfor_do(
-    apn_size_t begin,
-    apn_size_t end,
-    apn_size_t chunk_size,
-    apac_sched_t sched,
-    apac_pfor_func_t func,
-    void* arg
-);
-
 /* ==========================================================================
  * Memory Allocation Functions and Global Allocator Struct
  * ========================================================================== */
