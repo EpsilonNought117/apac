@@ -85,7 +85,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 option(BUILD_SHARED_LIB "Build libapac as a shared library"                             OFF)
 option(BUILD_APAC_TESTS "Build apn_tests program for testing correctness of routines"   OFF)
 option(BUILD_APN_TUNE   "Build apn_tune threshold tuning program"                       OFF)
-option(BUILD_APAC_MT    "Build the multithreaded routines in libapac"                   OFF)
 
 # --- COMMON C SOURCES ----------------------------------------------------------
 
@@ -127,7 +126,6 @@ set(apac_c_sources
     "src/apn/commons/karatsuba_sqr.c"
     "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/div_helpers.c"
-    "src/apn/commons/reduce_mod_p.c"
 
     # APZ PUBLIC API
 
@@ -205,19 +203,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 # --- AArch64 SPECIFIC SOURCES --------------------------------------------------
 
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
-
-endif()
-
-# --- MULTI-THREADED C SOURCES --------------------------------------------------
-
-set(apac_mt_c_sources)
-
-if(BUILD_APAC_MT)
-
-    list(APPEND apac_mt_c_sources
-
-        "src/multithreading/parallel_for.c"
-    )
 
 endif()
 

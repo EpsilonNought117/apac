@@ -117,7 +117,7 @@
 
     #define PRI_APN_SIZE        "llu"
 
-    #define APN_SIZE_MAX        (1ULL << 43)    // limit imposed due to SIMD-NTT
+    #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
     
     #define TEN_TO_POW19        (10ULL * 1000000000ULL * 1000000000ULL)

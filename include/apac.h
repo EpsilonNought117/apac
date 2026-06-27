@@ -115,8 +115,6 @@ typedef enum apac_err
 
     APAC_DIV_BY_ZERO,
 
-    APAC_THRD_CREATE_FAIL
-
 } apac_err;
 
 typedef enum apac_str_base
@@ -126,13 +124,6 @@ typedef enum apac_str_base
     BASE16 = 16
 
 } apac_str_base;
-
-typedef enum apac_sched_t
-{
-    APAC_SCHED_STATIC,
-    APAC_SCHED_DYNAMIC
-
-} apac_sched_t;
 
 /****************************************************************************************************/
 /*********************************    MISCELLANEOUS FUNCTIONS     ***********************************/
