@@ -1,0 +1,101 @@
+#include "../headers/hidden_mul.h"
+
+/**
+ * Scratch workspace size upper bound for karatsuba multiplication
+ * 
+ * The constant APN_DIG_BITS here is the number of times the function recurses before hitting 
+ * basecase. In reality you never recurse even 8 times before you hit basecase multiplication,
+ * and you are likely way outside the size ranges for which karatsuba mul is fastest.
+ * 
+ * At each level, 4 * ((curr_size + 1) / 2) space is needed, with no 
+ * extra space for carries as a subtractive karatsuba variant is used.
+ * 
+ * The "infinite" geometric sum caps out at 2*n + 2*(log_2(n)), where we assume log_2(n)
+ * to be at most APN_DIG_BITS.
+ */
+#define KARATSUBA_MUL_WS_SIZE(size1, size2)	(((size1) + APN_DIG_BITS) * 2)
+
+apac_err apn_mul_n(
+	apn_dig_t* result, 
+	const apn_dig_t* op1, 
+	const apn_dig_t* op2, 
+	apn_size_t size
+)
+{
+	APAC_ASSERT(result != NULL);
+	APAC_ASSERT(op1 != NULL);
+	APAC_ASSERT(op2 != NULL);
+	APAC_ASSERT(size != 0);
+	APAC_NO_OVERLAP(result, size * 2, op1, size);
+	APAC_NO_OVERLAP(result, size * 2, op2, size);
+
+	// zero out result before mul
+	apn_set(result, 2 * size, 0);
+
+	if (size < KARATSUBA_MUL_THRESHOLD)
+	{
+		apn_basecase_mul(result, op1, op2, size, size);
+	}
+	else
+	{
+		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
+
+		apn_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size, size);
+		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
+
+		if (!workspace) { return APAC_OOM; }
+		
+		apn_set(workspace, ws_size, 0);
+
+		apn_karatsuba_mul(result, op1, op2, size, size, workspace);
+		apac_free(workspace);	// free temporary workspace
+	}
+
+	return APAC_OK;
+}
+
+apac_err apn_mul(
+	apn_dig_t* result, 
+	const apn_dig_t* op1, 
+	const apn_dig_t* op2, 
+	apn_size_t size1, 
+	apn_size_t size2
+)
+{
+	APAC_ASSERT(result != NULL);
+	APAC_ASSERT(op1 != NULL);
+	APAC_ASSERT(op2 != NULL);
+	APAC_ASSERT(size2 != 0);
+	APAC_ASSERT(size1 >= size2);
+	APAC_NO_OVERLAP(result, size1 + size2, op1, size1);
+	APAC_NO_OVERLAP(result, size1 + size2, op2, size2);
+
+	// zero out result before mul
+	apn_set(result, size1 + size2, 0);
+
+	if (size2 == 1)
+	{
+		apn_dig_t carry = apn_addmul_one(result, op1, size1, op2[0]);
+		APAC_ASSERT(carry == 0);
+	}
+	else if (size1 < KARATSUBA_MUL_THRESHOLD || (size2 <= (size1 + 1) / 2))
+	{
+		apn_basecase_mul(result, op1, op2, size1, size2);
+	}
+	else
+	{
+		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
+
+		apn_size_t ws_size = KARATSUBA_MUL_WS_SIZE(size1, size2);
+		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
+
+		if (!workspace) { return APAC_OOM; }
+
+		apn_set(workspace, ws_size, 0);
+
+		apn_karatsuba_mul(result, op1, op2, size1, size2, workspace);
+		apac_free(workspace);	// free temporary workspace
+	}
+
+	return APAC_OK;
+}
