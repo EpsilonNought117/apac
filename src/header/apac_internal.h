@@ -60,12 +60,6 @@
     #include <time.h>
     #include <sched.h>
 
-    #if defined(_POSIX_THREADS) && (_POSIX_THREADS > 0)
-        #include <pthread.h>
-    #else
-        #error "PThreads are needed for working with libapac!"
-    #endif
-
 	#if defined(APAC_X64_UNIX)
 
 		#include <cpuid.h>
@@ -119,28 +113,6 @@
 
     #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
-    
-    #define TEN_TO_POW19        (10ULL * 1000000000ULL * 1000000000ULL)
-
-#endif
-
-#define APAC_PRAGMA(x) _Pragma(#x)
-
-#if defined(_MSC_VER)
-
-    #define APAC_UNROLL(x)
-
-#elif defined(__GNUC__)
-
-    #define APAC_UNROLL(x) APAC_PRAGMA(GCC unroll x)
-
-#elif defined(__clang__)
-
-    #define APAC_UNROLL(x) APAC_PRAGMA(unroll x)
-    
-#else
-
-    #define APAC_UNROLL(x)
 
 #endif
 
@@ -295,27 +267,5 @@ extern apac_cpu_params curr_cpu;
 #define KARATSUBA_MUL_THRESHOLD (curr_cpu.karatsuba_mul_threshold)
 #define KARATSUBA_SQR_THRESHOLD	(curr_cpu.karatsuba_sqr_threshold)
 #define DNC_DIV_THRESHOLD	    (curr_cpu.dnc_div_threshold)
-
-/****************************************************************************************************/
-/*********************************     APN INTERNAL FUNCTIONS     ***********************************/
-/****************************************************************************************************/
-
-apn_dig_t*
-apn_reduce_mod_p_u64(
-    apn_dig_t* arr,
-    apn_size_t n,
-    apn_dig_t prime,
-    apn_dig_t magic,
-    apn_dig_t shift
-);
-
-double*
-apn_reduce_mod_p_f64(
-    apn_dig_t* arr,
-    apn_size_t n,
-    apn_dig_t prime,
-    apn_dig_t magic,
-    apn_dig_t shift
-);
 
 #endif

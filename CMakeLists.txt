@@ -127,24 +127,6 @@ set(apac_c_sources
     "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/div_helpers.c"
 
-    # APZ PUBLIC API
-
-    "src/apz/apz_init_zero.c"
-    "src/apz/apz_init_random.c"
-    "src/apz/apz_init_one.c"
-    "src/apz/apz_init_from_str.c"
-    "src/apz/apz_resize.c"
-    "src/apz/apz_free.c"
-    "src/apz/apz_set_to_zero.c"
-    "src/apz/apz_cpy.c"
-    "src/apz/apz_init_cpy.c"
-    "src/apz/apz_get_as_str.c"
-    "src/apz/apz_str_size_in_base.c"
-    "src/apz/apz_set_random.c"
-    "src/apz/apz_set_to_str.c"
-    "src/apz/apz_set_one.c"
-
-    "src/apz/apz_add.c"
 )
 
 # --- x64 SPECIFIC SOURCES ------------------------------------------------------
@@ -216,7 +198,7 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "AARCH64|aarch64")
 
 endif()
 
-set(apac_sources ${apac_c_sources} ${isa_sources} ${apac_mt_c_sources})
+set(apac_sources ${apac_c_sources} ${isa_sources})
 
 # Build Shared/Static Library
 if(BUILD_SHARED_LIB)
