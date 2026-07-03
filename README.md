@@ -1,6 +1,6 @@
 ﻿# APAC - Arbitrary Precision Arithmetic and Computation
 
-**libapac** is a free and open-source, high-performance C library for
+**libapac** is a free, high-performance C library for
 arbitrary-precision integer arithmetic and computation.
 
 ## Build Requirements
@@ -80,7 +80,7 @@ The following x86-64 microarchitectures contain assembly code especially optimiz
 
 ## Example Usage
 
-Before using any libapac routines, the library must be initialized to perform
+Before using any apac routines, the library must be initialized to perform
 CPU feature detection and set up optimized dispatch tables.
 
 ```c
@@ -112,17 +112,27 @@ automatically. To enable it during configuration:
 
     cmake -DBUILD_APAC_TESTS=ON
 
-After building, the test executable can be run directly from the build directory:
+After building, the tests can be run via
 
-    ./apn_tests <seed>
+    ctest --test-dir <dir-name> --parallel <proc-count>
 
-Where:
-
-- `<seed>` is a hexadecimal PRNG seed used to deterministically generate test vectors
+Optionally, you can pass in `PRNG_SEED` and `ITERATIONS` environment variables via the command line,
+where `PRNG_SEED` is a hexadecimal seed value for the pseudo-random number generator and `ITERATIONS`
+tests the `apn_*` as many times as specified.
 
 Example:
 
-    ./apn_tests C0FFEE
+- Windows
+
+```sh
+set PRNG_SEED = C0FFEE && set ITERATIONS = 16384 && ctest --test-dir build --parallel 8
+```
+
+- Linux
+
+```sh
+PRNG_SEED = C0FFEE && ITERATIONS = 16384 ctest --test-dir build --parallel 8
+```
 
 ### Algorithm Threshold Tuning (apn_tune)
 
@@ -130,10 +140,10 @@ The apn_tune utility benchmarks different algorithmic variants (e.g. basecase,
 Karatsuba) to determine optimal size thresholds
 for the target CPU.
 
-This tool is also built by default.
-To disable it during configuration:
+This tool is not built by default.
+To enable it during configuration:
 
-    cmake -DBUILD_APN_TUNE=OFF
+    cmake -DBUILD_APN_TUNE=ON
 
 Running the tuner:
 
