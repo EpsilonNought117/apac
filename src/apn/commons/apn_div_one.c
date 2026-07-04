@@ -37,9 +37,7 @@ apn_dig_t apn_div_one(
 
     for (apn_size_t j = size_divd - 1; j >= 1; j--)
     {
-        apn_dig_t valid_shift = (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_DIG_BITS - shift_val));
-
-        temp_val = (shift_val) ? valid_shift : dividend[j];
+        temp_val = shift_val ? (dividend[j] << shift_val) | (dividend[j - 1] >> (APN_DIG_BITS - shift_val)) : dividend[j];
         quotient[j + size_divd_frac] = apn_udiv_2by1(rmdr, temp_val, divisor, dvsr_recip, &rmdr);
     }
 
