@@ -14,7 +14,7 @@ void apn_karatsuba_sqr(
 	*/
 
 	APAC_ASSERT(temp != NULL);
-	APAC_ASSERT(KARATSUBA_SQR_THRESHOLD >= 2);
+	APAC_ASSERT(KARATSUBA_SQR_THRESHOLD >= 5);
 
 	if (size < KARATSUBA_SQR_THRESHOLD)
 	{
@@ -46,7 +46,12 @@ void apn_karatsuba_sqr(
 	temp_val -= apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower, 2 * lower);
 
 	apn_add(&result[lower], &result[lower], &temp[2 * lower], lower + 2 * upper, 2 * lower);
-	apn_add_one(&result[3 * lower], &result[3 * lower], 2 * upper - lower, temp_val);
+
+	if (2 * upper > lower)
+	{
+		apn_add_one(&result[3 * lower], &result[3 * lower], 2 * upper - lower, temp_val);
+	}
+	
 	apn_set(temp, 4 * lower, 0);
 			
 	return;
