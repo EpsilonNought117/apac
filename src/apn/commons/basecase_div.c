@@ -44,8 +44,7 @@ apn_dig_t apn_basecase_div(
         if (borrow_out)
         {
             sel_quot--;
-            apn_dig_t carry_out = apn_add(dividend + j, dividend + j, divisor, size_divd - j, n);
-            dividend[n + j] += carry_out;
+            dividend[n + j] += apn_add(dividend + j, dividend + j, divisor, size_divd - j, n);
         }
     
         quotient[j] = sel_quot;
