@@ -205,7 +205,7 @@ inner_loop:
 
 outer_loop_end:
 
-    adc     QWORD PTR [rcx], rdi
+    mov     QWORD PTR [rcx], rdi
 
     mov     r11, r9
     shl     r11, 3
