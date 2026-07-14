@@ -7,7 +7,7 @@
  * Small step size is important because recursive crossover
  * regions can shift sharply across only a few limbs.
  */
-#define SIZE_STEP_SIZE ((apn_size_t)2)
+#define SIZE_STEP_SIZE ((apn_size_t)8)
 
  /*
   * We use minimum observed timings because system noise
