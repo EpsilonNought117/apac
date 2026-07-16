@@ -83,9 +83,6 @@ GEN_ADD_SUB_N_X64 MACRO OP, INSTR
 OP&_n_x64 PROC FRAME
 .endprolog
 
-    test    r9,  r9             ; if size == 0 → exit
-    jz      end_of_func
-
 main_loop:
 
     mov     rax, QWORD PTR [rdx] 

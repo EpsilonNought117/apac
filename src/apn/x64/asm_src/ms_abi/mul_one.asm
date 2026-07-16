@@ -109,8 +109,6 @@ mul_one_x64 PROC FRAME
     xor     rdx, rdx
     xor     rcx, rcx
     mov     rax, r9     ; val in rax for mul
-    test    r8,  r8
-    jz      end_of_func
 
 main_loop:
 
