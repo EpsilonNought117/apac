@@ -83,6 +83,8 @@ GEN_ADD_SUB_N_X64 MACRO OP, INSTR
 OP&_n_x64 PROC FRAME
 .endprolog
 
+    xor     rax, rax
+
 main_loop:
 
     mov     rax, QWORD PTR [rdx] 

@@ -77,6 +77,8 @@ neg_zen4 ENDP
 neg_x64 PROC FRAME
 .endprolog
 
+    xor     rax, rax
+
 small_loop:
 
     mov     rax, 0
