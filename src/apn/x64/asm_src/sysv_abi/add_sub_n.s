@@ -101,8 +101,6 @@
 .cfi_startproc
 
     xor     rax, rax
-    test    rcx, rcx
-    jz      .L\op\()_x64_end_of_func
 
 .p2align 4
 .L\op\()_x64_main_loop:

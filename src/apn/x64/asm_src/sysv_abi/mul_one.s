@@ -99,8 +99,6 @@ mul_one_x64:
     xor     rdx, rdx
     xor     r10, r10
     mov     rax, r9
-    test    rcx, rcx
-    jz      .Lx64_end_of_func
 
 .Lx64_main_loop:
 

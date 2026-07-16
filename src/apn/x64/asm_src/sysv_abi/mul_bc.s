@@ -190,9 +190,6 @@ mul_bc_x64:
     mov     r9,  QWORD PTR [rbx]    # op2[i]
     mov     rax, r9
 
-    test    r11, r11
-    jz      .Lx64_outer_loop_end
-
 .p2align 4
 .Lx64_inner_loop:
 

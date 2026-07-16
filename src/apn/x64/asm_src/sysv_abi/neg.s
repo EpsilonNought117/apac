@@ -79,8 +79,7 @@ neg_zen4:
 neg_x64:
 .cfi_startproc
 
-    test    rdx, rdx
-    jz      .Lx64_end_of_func
+    xor     rax, rax
 
 .Lx64_main_loop:
 
