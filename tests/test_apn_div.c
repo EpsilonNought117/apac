@@ -31,7 +31,7 @@ check_apn_div(uint64_t iterations)
         do
         {
             apn_set_random(&i, 1);
-            i %= TEST_SIZE_MAX;
+            i %= (TEST_SIZE_MAX + 1);
 
         } while (i == 0);
 

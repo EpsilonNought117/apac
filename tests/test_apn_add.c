@@ -27,14 +27,14 @@ check_apn_add(uint64_t iterations)
         do
         {
             apn_set_random(&size1, 1);
-            size1 %= TEST_SIZE_MAX;
+            size1 %= (TEST_SIZE_MAX + 1);
 
         } while (size1 == 0);
 
         do
         {
             apn_set_random(&size2, 1);
-            size2 %= TEST_SIZE_MAX;
+            size2 %= (TEST_SIZE_MAX + 1);
 
         } while (size2 == 0);
 
