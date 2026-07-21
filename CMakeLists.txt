@@ -215,7 +215,7 @@ endif()
 set(apac_target apac)
 
 target_compile_definitions(${apac_target} PRIVATE
-    "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:APAC_DISABLE_ASSERT>"
+    "$<$<AND:$<COMPILE_LANGUAGE:C>,$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>>:APAC_DISABLE_ASSERT>"
 )
 
 # --- STRIP PATHS FROM __FILE__ -------------------------------------------------

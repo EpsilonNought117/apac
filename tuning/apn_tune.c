@@ -1,13 +1,13 @@
 #include "../src/header/apac_internal.h"
 
-#define MAX_RUNTIME_1 ((uint64_t)10 * 1000 * 1000)
+#define MAX_RUNTIME_1 ((uint64_t)1000 * 1000)
 #define MAX_RUNTIME_2 ((uint64_t)100 * 1000)
 
 /*
  * Small step size is important because recursive crossover
  * regions can shift sharply across only a few limbs.
  */
-#define SIZE_STEP_SIZE ((apn_size_t)8)
+#define SIZE_STEP_SIZE ((apn_size_t)7)
 
  /*
   * We use minimum observed timings because system noise
@@ -30,7 +30,7 @@
 static apn_size_t get_karatsuba_mul_threshold(void)
 {
     const apn_size_t thresh_start = 10;
-    const apn_size_t thresh_end = 80;
+    const apn_size_t thresh_end = 50;
 
     const apn_size_t size_start = 1;
     const apn_size_t size_end = 256;
@@ -122,8 +122,8 @@ static apn_size_t get_karatsuba_mul_threshold(void)
 
 static apn_size_t get_karatsuba_sqr_threshold(void)
 {
-    const apn_size_t thresh_start = 10;
-    const apn_size_t thresh_end = 100;
+    const apn_size_t thresh_start = 20;
+    const apn_size_t thresh_end = 70;
 
     const apn_size_t size_start = 1;
     const apn_size_t size_end = 256;
@@ -209,11 +209,11 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
 
 static apn_size_t get_dnc_div_threshold(void)
 {
-    const apn_size_t thresh_start = 10;
-    const apn_size_t thresh_end = 80;
+    const apn_size_t thresh_start = 20;
+    const apn_size_t thresh_end = 60;
 
     const apn_size_t size_start = 1;
-    const apn_size_t size_end = 384;
+    const apn_size_t size_end = 256;
 
     apn_dig_t* dividend =
         apac_malloc(sizeof(apn_dig_t) * (size_end * 2));
