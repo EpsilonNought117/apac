@@ -121,6 +121,7 @@ typedef enum apac_str_base
 {
 
     BASE10 = 10,
+    
     BASE16 = 16
 
 } apac_str_base;

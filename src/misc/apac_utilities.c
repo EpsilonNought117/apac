@@ -36,63 +36,6 @@ uint64_t apac_cpu_timer(void)
 #endif
 }
 
-uint64_t apac_os_timer(void)
-{
-#if defined(_WIN32)
-
-    APAC_THRD_LOCAL static uint64_t freq = 0;
-    LARGE_INTEGER t;
-
-    if (!freq)
-    {
-        LARGE_INTEGER f;
-        QueryPerformanceFrequency(&f);
-        freq = (uint64_t)f.QuadPart;
-    }
-
-    QueryPerformanceCounter(&t);
-
-    return (uint64_t)((t.QuadPart * 1000000000ULL) / freq);
-
-#elif (defined(__linux__)  || defined(__linux) || \
-       defined(__unix__)   || defined(__unix))
-
-    struct timespec ts;
-
-    /* Prefer RAW if available (no NTP adjustments) */
-    #ifdef CLOCK_MONOTONIC_RAW
-        if (clock_gettime(CLOCK_MONOTONIC_RAW, &ts) != 0)
-            return 0;
-    #else
-        if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
-            return 0;
-    #endif
-
-    return ((uint64_t)ts.tv_sec * 1000000000ULL) +
-           (uint64_t)ts.tv_nsec;
-
-#elif defined(__APPLE__) && defined(__MACH__)
-
-    static uint64_t timebase = 0;
-    uint64_t t = mach_absolute_time();
-
-    if (!timebase)
-    {
-        mach_timebase_info_data_t tb;
-        mach_timebase_info(&tb);
-        timebase = ((uint64_t)tb.numer << 32) | tb.denom;
-    }
-
-    return (t * (timebase >> 32)) /
-        (timebase & 0xffffffffu);
-
-#else
-
-    return 0;
-
-#endif
-}
-
 int apac_pin_thread_to_core(uint32_t core_id)
 {
 #if defined(_WIN32)

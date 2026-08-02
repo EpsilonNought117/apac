@@ -217,8 +217,6 @@ extern apac_alloc_t apac_allocator;
 
 uint64_t apac_cpu_timer(void);
 
-uint64_t apac_os_timer(void);
-
 int apac_pin_thread_to_core(uint32_t core_id);
 
 void apac_disable_dfs(void);

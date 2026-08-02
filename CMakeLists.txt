@@ -6,30 +6,35 @@
 
 # --- CHECKS --------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 project(apac)
 
 enable_testing()
 
 # Requires a 64-bit Computer
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message(FATAL_ERROR "Only 64-bit builds are supported.")
+
+    message(FATAL_ERROR "Only 64-bit builds are supported!")
+
 endif()
 
 # Detect platform & compiler
 if (WIN32)
-    message(STATUS "Building on 64-bit Windows")
 
     if (MSVC)
+
         if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
             message(STATUS "Compiler: Clang-cl (version ${CMAKE_C_COMPILER_VERSION})")
 
         else ()
+        
             message(STATUS "Compiler: MSVC (version ${MSVC_VERSION})")
 
         endif()
 
     else ()
+
         message(FATAL_ERROR "Unsupported compiler on Windows: ${CMAKE_C_COMPILER_ID}")
 
     endif()
@@ -79,6 +84,7 @@ endif()
 # Enforce C standard
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
 # --- BUILD OPTIONS -------------------------------------------------------------
 

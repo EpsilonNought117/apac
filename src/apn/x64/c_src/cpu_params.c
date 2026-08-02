@@ -3,7 +3,7 @@
 // Tested on Ryzen 7 8845HS running at 3.8 GHz Base Clock
 void zen4_set_params(void)
 {
-	KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(30);
+	KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(257);
 	KARATSUBA_SQR_THRESHOLD  = (apn_size_t)(56);
 	DNC_DIV_THRESHOLD        = (apn_size_t)(32);
 

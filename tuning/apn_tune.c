@@ -74,7 +74,7 @@ static apn_size_t get_karatsuba_mul_threshold(void)
             apn_set_random(op2, size);
 
             uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_os_timer();
+            uint64_t last_improve = apac_cpu_timer();
 
             for (;;)
             {
@@ -90,9 +90,9 @@ static apn_size_t get_karatsuba_mul_threshold(void)
                     dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
                 {
                     best = dur;
-                    last_improve = apac_os_timer();
+                    last_improve = apac_cpu_timer();
                 }
-                else if ((apac_os_timer() - last_improve) >= MAX_RUNTIME_1)
+                else if ((apac_cpu_timer() - last_improve) >= MAX_RUNTIME_1)
                 {
                     break;
                 }
@@ -162,7 +162,7 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
             apn_set_random(op1, size);
 
             uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_os_timer();
+            uint64_t last_improve = apac_cpu_timer();
 
             for (;;)
             {
@@ -178,9 +178,9 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
                     dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
                 {
                     best = dur;
-                    last_improve = apac_os_timer();
+                    last_improve = apac_cpu_timer();
                 }
-                else if ((apac_os_timer() - last_improve) >= MAX_RUNTIME_1)
+                else if ((apac_cpu_timer() - last_improve) >= MAX_RUNTIME_1)
                 {
                     break;
                 }
@@ -276,7 +276,7 @@ static apn_size_t get_dnc_div_threshold(void)
                     0);
 
                 uint64_t best = UINT64_MAX;
-                uint64_t last_improve = apac_os_timer();
+                uint64_t last_improve = apac_cpu_timer();
 
                 for (;;)
                 {
@@ -299,9 +299,9 @@ static apn_size_t get_dnc_div_threshold(void)
                         dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
                     {
                         best = dur;
-                        last_improve = apac_os_timer();
+                        last_improve = apac_cpu_timer();
                     }
-                    else if ((apac_os_timer() - last_improve) >= MAX_RUNTIME_2)
+                    else if ((apac_cpu_timer() - last_improve) >= MAX_RUNTIME_2)
                     {
                         break;
                     }
