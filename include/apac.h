@@ -13,22 +13,32 @@
 
 #if defined(_WIN32)
 
-    #if defined(_MSC_VER)
+    #if defined(__MINGW32__) || defined(__MINGW64__)
 
-        #if defined(_M_X64) || defined(_M_AMD64)
+        #error "MinGW Toolchain is not supported on Windows! Use MSVC, Clang-cl, or Clang instead."
+    
+    #endif
+
+    #if defined(_MSC_VER) || defined(__clang__)
+
+        #if defined(_M_X64) || defined(_M_AMD64) || defined(__x86_64__) || defined(__amd64__)
 
             #define APAC_X64_WIN
 
-        #elif defined(_M_ARM64) || defined(_M_ARM64EC)
+        #elif defined(_M_ARM64) || defined(_M_ARM64EC) || defined(__aarch64__) || defined(__arm64__)
 
             #define APAC_ARM64_WIN
-
-		#else
-			#error "Unsupported Architecture on Windows and MSVC!"	
-		#endif
+        
+        #else
+        
+            #error "Unsupported Architecture on Windows!"
+        
+        #endif
 
     #else
-        #error "Unknown Compiler on Windows!"
+
+        #error "Unknown Compiler on Windows! Use MSVC, clang-cl, or Clang."
+    
     #endif
 
     #if defined(BUILD_SHARED_LIB)
@@ -54,15 +64,19 @@
             #define APAC_X64_UNIX
         
         #elif defined(__aarch64__) || defined(__arm64__)
-                      
+        
             #define APAC_ARM64_UNIX
 
-		#else
-			#error "Unsupported Architecture on Linux/Unix/MacOS and GCC/Clang!"
+        #else
+
+            #define APAC_GENERIC_UNIX
+        
         #endif
 
     #else
+
         #error "Unknown Compiler on Linux/Unix/MacOS!"
+    
     #endif
 
     #if defined(BUILD_SHARED_LIB)
