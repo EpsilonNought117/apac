@@ -1,17 +1,18 @@
+
 #   O---------------------------------------------------------------------------O
 #   |                                                                           |
-#   |                          LIBAPAC CMAKE BUILD FILE                         |
+#   |            APAC - Arbitrary Precision Arithmetic and Computation          |
 #   |                                                                           |
 #   O---------------------------------------------------------------------------O
 
 # --- CHECKS --------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 project(apac)
 
 enable_testing()
 
-# Requires a 64-bit Computer
+# Requires a 64-bit Processor
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 
     message(FATAL_ERROR "Only 64-bit builds are supported!")
@@ -21,17 +22,29 @@ endif()
 # Detect platform & compiler
 if (WIN32)
 
-    if (MSVC)
+    message(STATUS "Building on Windows")
 
+    if (MINGW)
+        
+        message(FATAL_ERROR "MinGW toolchain is not supported on Windows. Use MSVC, Clang-cl or Clang.")
+    
+    endif()
+
+    if (MSVC)
+        
         if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
             message(STATUS "Compiler: Clang-cl (version ${CMAKE_C_COMPILER_VERSION})")
-
-        else ()
         
-            message(STATUS "Compiler: MSVC (version ${MSVC_VERSION})")
+        else ()
 
+            message(STATUS "Compiler: MSVC (version ${CMAKE_C_COMPILER_VERSION})")
+        
         endif()
+
+    elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
+        message(STATUS "Compiler: Clang (version ${CMAKE_C_COMPILER_VERSION}), targeting MSVC ABI")
 
     else ()
 
@@ -40,44 +53,74 @@ if (WIN32)
     endif()
 
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-        message(STATUS "Enabling MASM64 assembler")
+
+        message(STATUS "Enabling x86-64 assembler")
         enable_language(ASM_MASM)
-        
+
+    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64|aarch64|AARCH64")
+
+        message(STATUS "Enabling ARM64 assembler")
+        enable_language(ASM_MARMASM)
+
+    else ()
+
+        message(FATAL_ERROR "Unsupported architecture on Windows: ${CMAKE_SYSTEM_PROCESSOR}")
+
     endif()
 
 elseif (APPLE)
+
     message(STATUS "Building on macOS")
 
     if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        message(STATUS "Compiler: Clang")
+
+        message(STATUS "Compiler: Clang (version ${CMAKE_C_COMPILER_VERSION})")
 
     else ()
+
         message(FATAL_ERROR "Unsupported compiler on macOS: ${CMAKE_C_COMPILER_ID}")
 
     endif()
 
-    message(STATUS "Enabling assembler")
-    enable_language(ASM)
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|arm64)$")
+
+        message(STATUS "Enabling assembler")
+        enable_language(ASM)
+
+    else ()
+
+        message(FATAL_ERROR "Unsupported architecture on macOS: ${CMAKE_SYSTEM_PROCESSOR}")
+
+    endif()
 
 elseif (UNIX)
+
     message(STATUS "Building on Unix/Linux")
 
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-        message(STATUS "Compiler: GCC")
+
+        message(STATUS "Compiler: GCC (version ${CMAKE_C_COMPILER_VERSION})")
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        message(STATUS "Compiler: Clang")
+
+        message(STATUS "Compiler: Clang (version ${CMAKE_C_COMPILER_VERSION})")
 
     else ()
+
         message(FATAL_ERROR "Unsupported compiler on Unix/Linux: ${CMAKE_C_COMPILER_ID}")
 
     endif()
 
-    message(STATUS "Enabling assembler")
-    enable_language(ASM)
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|aarch64)$")
 
-else ()
-    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
+        message(STATUS "Enabling assembler for ${CMAKE_SYSTEM_PROCESSOR}")
+        enable_language(ASM)
+
+    else ()
+
+        message(STATUS "Architecture ${CMAKE_SYSTEM_PROCESSOR} has no assembly routines — using generic C sources")
+
+    endif()
 
 endif()
 
@@ -88,13 +131,14 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 # --- BUILD OPTIONS -------------------------------------------------------------
 
-option(BUILD_SHARED_LIB "Build libapac as a shared library"                             OFF)
-option(BUILD_APAC_TESTS "Build apn_tests program for testing correctness of routines"   OFF)
-option(BUILD_APN_TUNE   "Build apn_tune threshold tuning program"                       OFF)
+option(APAC_BUILD_SHARED   "Build apac as a shared library"   OFF)
+option(APAC_BUILD_TESTS    "Build tests"                      OFF)
+option(APAC_BUILD_TUNE     "Build performance tuning utility" OFF)
+option(APAC_BUILD_MT_FUNCS "Build multi-threaded functions"   OFF)
 
-# --- COMMON C SOURCES ----------------------------------------------------------
+# --- Single-Threaded C Sources -------------------------------------------------
 
-set(apac_c_sources
+set(st_c_sources
 
     # MISCELLANEOUS
 
@@ -135,12 +179,17 @@ set(apac_c_sources
 
 )
 
-# --- x64 SPECIFIC SOURCES ------------------------------------------------------
+# --- Multi-Threaded C Sources --------------------------------------------------
+
+
+
+# --- x64 specific sources ------------------------------------------------------
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
     # Common C sources (always used on x64)
     set(x64_c_sources
+
         "src/apn/x64/c_src/set.c"
         "src/apn/x64/c_src/cmp.c"
         "src/apn/x64/c_src/cpy.c"
@@ -151,8 +200,10 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     # ABI-specific assembly sources
     if (WIN32)
 
-        message(STATUS "Using MS-ABI x64 assembly sources")
+        message(STATUS "Using MS-ABI x86-64 assembly sources")
+
         set(x64_asm_sources
+        
             "src/apn/x64/asm_src/ms_abi/add_sub_n.asm"
             "src/apn/x64/asm_src/ms_abi/add_sub_one.asm"
             "src/apn/x64/asm_src/ms_abi/mul_bc.asm"
@@ -167,7 +218,8 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
     
     elseif (APPLE OR UNIX)
 
-        message(STATUS "Using SYSV-ABI x64 assembly sources")
+        message(STATUS "Using SysV-ABI x86-64 assembly sources")
+
         set(x64_asm_sources
 
             "src/apn/x64/asm_src/sysv_abi/add_sub_n.s"
@@ -181,16 +233,20 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/asm_src/sysv_abi/lshift_lt64.s"
             "src/apn/x64/asm_src/sysv_abi/rshift_lt64.s"
         )
-    
-    else ()
-        message(FATAL_ERROR "Unsupported OS for x64 assembly ABI")
+
     endif()
 
     set(x64_specific "src/apn/x64/x64_hidden_funcs.h" ${x64_c_sources} ${x64_asm_sources})
 
-# --- AArch64 SPECIFIC SOURCES --------------------------------------------------
+# --- AArch64 specific sources --------------------------------------------------
 
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
+
+# --- Generic sources -----------------------------------------------------------
+
+else()
+
+    
 
 endif()
 
@@ -253,27 +309,33 @@ if (BUILD_APAC_TESTS)
 
     set(APAC_TEST_SOURCES
 
-        "tests/test_apn_div.c"
-        "tests/test_apn_mul.c"
-        "tests/test_apn_mul_n.c"
-        "tests/test_apn_sqr.c"
-        "tests/test_apn_set.c"    
+        "tests/test_apn_set.c"
         "tests/test_apn_cpy.c"
         "tests/test_apn_cmp.c"
         "tests/test_apn_is_zero.c"
+
         "tests/test_apn_add_one.c"
         "tests/test_apn_add_n.c"
         "tests/test_apn_add.c"
-        "tests/test_apn_neg.c"
+
         "tests/test_apn_sub_one.c"
         "tests/test_apn_sub_n.c"
         "tests/test_apn_sub.c"
+        
+        "tests/test_apn_neg.c"
+
+        "tests/test_apn_lshift.c"
+        "tests/test_apn_rshift.c"
+    
         "tests/test_apn_mul_one.c"
         "tests/test_apn_addmul_one.c"
         "tests/test_apn_submul_one.c"
         "tests/test_apn_div_one.c"
-        "tests/test_apn_lshift.c"
-        "tests/test_apn_rshift.c"
+        
+        "tests/test_apn_mul_n.c"
+        "tests/test_apn_sqr.c"
+        "tests/test_apn_mul.c"    
+        "tests/test_apn_div.c"
     )
 
     foreach(test_src ${APAC_TEST_SOURCES})
