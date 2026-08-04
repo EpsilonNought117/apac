@@ -25,7 +25,7 @@
 
             #define APAC_X64_WIN        1
 
-        #elif defined(_M_ARM64) || defined(_M_ARM64EC)
+        #elif defined(_M_ARM64) || defined(_M_ARM64EC) || defined(__aarch64__) || defined(__arm64__)
 
             #define APAC_ARM64_WIN      1
 
@@ -114,6 +114,7 @@
 
         #error "Unsupported Compiler on Linux. Please use GCC or Clang instead."
 
+    
     #endif
 
     #if defined(BUILD_SHARED_LIB)
