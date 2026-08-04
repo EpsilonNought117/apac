@@ -7,120 +7,134 @@
 
 # --- CHECKS --------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.20)
 project(apac)
 
 enable_testing()
 
-# Requires a 64-bit Processor
+# Requires a 64-bit target architecture
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 
-    message(FATAL_ERROR "Only 64-bit builds are supported!")
+    message(FATAL_ERROR "This project requires a 64-bit target architecture. "
+                        "Detected a ${CMAKE_SIZEOF_VOID_P}-byte pointer width, "
+                        "indicating a 32-bit target. 32-bit builds are not supported.")
 
 endif()
 
 # Detect platform & compiler
 if (WIN32)
 
-    message(STATUS "Building on Windows")
+    message(STATUS "Target platform: Windows")
 
     if (MINGW)
-        
-        message(FATAL_ERROR "MinGW toolchain is not supported on Windows. Use MSVC, Clang-cl or Clang.")
-    
+
+        message(FATAL_ERROR "Unsupported toolchain on Windows: MinGW (GCC/Clang). "
+                            "Supported toolchains are MSVC, Clang-cl, and Clang targeting the MSVC ABI.")
+
     endif()
 
     if (MSVC)
-        
+
         if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
-            message(STATUS "Compiler: Clang-cl (version ${CMAKE_C_COMPILER_VERSION})")
-        
+            message(STATUS "Selected C11 compiler: Clang-cl (version ${CMAKE_C_COMPILER_VERSION})")
+
         else ()
 
-            message(STATUS "Compiler: MSVC (version ${CMAKE_C_COMPILER_VERSION})")
-        
+            message(STATUS "Selected C11 compiler: MSVC (version ${CMAKE_C_COMPILER_VERSION})")
+
         endif()
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
-        message(STATUS "Compiler: Clang (version ${CMAKE_C_COMPILER_VERSION}), targeting MSVC ABI")
+        message(STATUS "Selected C11 compiler: Clang (version ${CMAKE_C_COMPILER_VERSION}), targeting the MSVC ABI")
 
     else ()
 
-        message(FATAL_ERROR "Unsupported compiler on Windows: ${CMAKE_C_COMPILER_ID}")
+        message(FATAL_ERROR "Unsupported C11 compiler on Windows: ${CMAKE_C_COMPILER_ID}. "
+                            "Supported compilers are MSVC, Clang-cl, and Clang.")
 
     endif()
 
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
 
-        message(STATUS "Enabling x86-64 assembler")
+        message(STATUS "Target processor ISA: x86-64/AMD64")
         enable_language(ASM_MASM)
 
-    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64|aarch64|AARCH64")
+    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|aarch64|AARCH64)$")
 
-        message(STATUS "Enabling ARM64 assembler")
+        message(STATUS "Target processor ISA: AArch64/ARM64")
         enable_language(ASM_MARMASM)
 
     else ()
 
-        message(FATAL_ERROR "Unsupported architecture on Windows: ${CMAKE_SYSTEM_PROCESSOR}")
+        message(FATAL_ERROR "Unsupported processor ISA on Windows: ${CMAKE_SYSTEM_PROCESSOR}. "
+                            "Supported ISAs are x86-64/AMD64 and AArch64/ARM64.")
 
     endif()
 
 elseif (APPLE)
 
-    message(STATUS "Building on macOS")
+    message(STATUS "Target platform: macOS")
 
-    if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 
-        message(STATUS "Compiler: Clang (version ${CMAKE_C_COMPILER_VERSION})")
+        message(STATUS "Selected C11 compiler: Apple Clang (version ${CMAKE_C_COMPILER_VERSION})")
 
     else ()
 
-        message(FATAL_ERROR "Unsupported compiler on macOS: ${CMAKE_C_COMPILER_ID}")
+        message(FATAL_ERROR "Unsupported C11 compiler on macOS: ${CMAKE_C_COMPILER_ID}. "
+                            "Only Apple Clang is supported.")
 
     endif()
 
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|arm64)$")
 
-        message(STATUS "Enabling assembler")
+        message(STATUS "Target processor ISA: ${CMAKE_SYSTEM_PROCESSOR}")
         enable_language(ASM)
 
     else ()
 
-        message(FATAL_ERROR "Unsupported architecture on macOS: ${CMAKE_SYSTEM_PROCESSOR}")
+        message(FATAL_ERROR "Unsupported processor ISA on macOS: ${CMAKE_SYSTEM_PROCESSOR}. "
+                            "Supported ISAs are x86-64 and ARM64.")
 
     endif()
 
-elseif (UNIX)
+elseif (LINUX)
 
-    message(STATUS "Building on Unix/Linux")
+    message(STATUS "Target platform: Linux")
 
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
-        message(STATUS "Compiler: GCC (version ${CMAKE_C_COMPILER_VERSION})")
+        message(STATUS "Selected C11 compiler: GCC (version ${CMAKE_C_COMPILER_VERSION})")
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
-        message(STATUS "Compiler: Clang (version ${CMAKE_C_COMPILER_VERSION})")
+        message(STATUS "Selected C11 compiler: Clang (version ${CMAKE_C_COMPILER_VERSION})")
 
     else ()
 
-        message(FATAL_ERROR "Unsupported compiler on Unix/Linux: ${CMAKE_C_COMPILER_ID}")
+        message(FATAL_ERROR "Unsupported C11 compiler on Linux: ${CMAKE_C_COMPILER_ID}. "
+                            "Supported compilers are GCC and Clang.")
 
     endif()
 
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|aarch64)$")
 
-        message(STATUS "Enabling assembler for ${CMAKE_SYSTEM_PROCESSOR}")
+        message(STATUS "Target processor ISA: ${CMAKE_SYSTEM_PROCESSOR}")
         enable_language(ASM)
 
     else ()
 
-        message(STATUS "Architecture ${CMAKE_SYSTEM_PROCESSOR} has no assembly routines — using generic C sources")
+        message(FATAL_ERROR "Unsupported processor ISA on Linux: ${CMAKE_SYSTEM_PROCESSOR}. "
+                            "Supported ISAs are x86-64 and AArch64/ARM64.")
 
     endif()
+
+else ()
+
+    message(FATAL_ERROR "Unsupported target platform. "
+                        "This project supports Windows, macOS, and Linux only.")
 
 endif()
 
@@ -131,10 +145,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 # --- BUILD OPTIONS -------------------------------------------------------------
 
-option(APAC_BUILD_SHARED   "Build apac as a shared library"   OFF)
-option(APAC_BUILD_TESTS    "Build tests"                      OFF)
-option(APAC_BUILD_TUNE     "Build performance tuning utility" OFF)
-option(APAC_BUILD_MT_FUNCS "Build multi-threaded functions"   OFF)
+option(APAC_SHARED   "Build apac as a shared library"   OFF)
+option(APAC_TESTS    "Build property tests"             OFF)
+option(APAC_TUNE     "Build performance tuning utility" OFF)
+option(APAC_MT_FUNCS "Build multi-threaded functions"   OFF)
 
 # --- Single-Threaded C Sources -------------------------------------------------
 
@@ -176,12 +190,13 @@ set(st_c_sources
     "src/apn/commons/karatsuba_sqr.c"
     "src/apn/commons/karatsuba_mul.c"
     "src/apn/commons/div_helpers.c"
-
 )
 
 # --- Multi-Threaded C Sources --------------------------------------------------
 
+set (mt_c_sources
 
+)
 
 # --- x64 specific sources ------------------------------------------------------
 
@@ -216,7 +231,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
             "src/apn/x64/asm_src/ms_abi/rshift_lt64.asm"
         )
     
-    elseif (APPLE OR UNIX)
+    elseif (APPLE OR LINUX)
 
         message(STATUS "Using SysV-ABI x86-64 assembly sources")
 
@@ -242,12 +257,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 
-# --- Generic sources -----------------------------------------------------------
-
-else()
-
-    
-
 endif()
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
@@ -260,7 +269,7 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "AARCH64|aarch64")
 
 endif()
 
-set(apac_sources ${apac_c_sources} ${isa_sources})
+set(apac_sources ${st_c_sources} ${isa_sources})
 
 # Build Shared/Static Library
 if(BUILD_SHARED_LIB)
@@ -303,7 +312,7 @@ endif()
 
 # --- APAC TESTS ----------------------------------------------------------------
 
-if (BUILD_APAC_TESTS)
+if (APAC_TESTS)
 
     message(STATUS "Building APAC tests")
 
@@ -366,9 +375,9 @@ endif()
 
 # --- APN TUNING ----------------------------------------------------------------
 
-if (BUILD_APN_TUNE)
+if (APAC_TUNE)
 
-    message(STATUS "Building apn_tune")
+    message(STATUS "Building tuning utility")
 
     add_executable(apn_tune
         "tuning/apn_tune.c"

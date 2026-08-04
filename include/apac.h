@@ -13,60 +13,111 @@
 
 #if defined(_WIN32)
 
+    #if defined(MINGW)
+
+        #error "MinGW Toolchain compilers are not supported. Please use MSVC, Clang-cl or Clang instead."
+
+    #endif
+
     #if defined(_MSC_VER)
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
-            #define APAC_X64_WIN
+            #define APAC_X64_WIN        1
 
         #elif defined(_M_ARM64) || defined(_M_ARM64EC)
 
-            #define APAC_ARM64_WIN
+            #define APAC_ARM64_WIN      1
 
-		#else
-			#error "Unsupported Architecture on Windows and MSVC!"	
-		#endif
+        #else
 
-    #else
-        #error "Unknown Compiler on Windows!"
-    #endif
+            #error "Unsupported CPU Architecture on Windows."
 
-    #if defined(BUILD_SHARED_LIB)
-        // Export symbols when building the DLL
-        #define APAC_API __declspec(dllexport)
-    #elif defined(LIBAPAC_SHARED)
-        // Import symbols when using the DLL
-        #define APAC_API __declspec(dllimport)
-    #else
-        // Static library, no import/export needed
-        #define APAC_API
-    #endif
-
-#elif defined(__linux__) || defined(__linux)    ||  \
-      defined(__unix__)  || defined(__unix)     ||  \
-      defined(__APPLE__) || defined(__MACH__)
-
-    #if defined(__GNUC__) || defined(__clang__)
-
-        #if defined(__x86_64)   || defined(__amd64)   || \
-            defined(__x86_64__) || defined(__amd64__)
-
-            #define APAC_X64_UNIX
-        
-        #elif defined(__aarch64__) || defined(__arm64__)
-                      
-            #define APAC_ARM64_UNIX
-
-		#else
-			#error "Unsupported Architecture on Linux/Unix/MacOS and GCC/Clang!"
         #endif
 
     #else
-        #error "Unknown Compiler on Linux/Unix/MacOS!"
+
+        #error "Unsupported Compiler on Windows. Please use MSVC, Clang-cl or Clang instead."
+
     #endif
 
     #if defined(BUILD_SHARED_LIB)
-        // Export symbols when building the shared object/dylib
+
+        // Export symbols when building the DLL
+        #define APAC_API __declspec(dllexport)
+
+    #elif defined(LIBAPAC_SHARED)
+
+        // Import symbols when using the DLL
+        #define APAC_API __declspec(dllimport)
+
+    #else
+
+        // Static library, no import/export needed
+        #define APAC_API
+
+    #endif
+
+#elif defined(__APPLE__) && defined(__MACH__)
+
+    #if defined(__apple_build_version__)
+
+        #if defined(__x86_64) || defined(__amd64) || \
+            defined(__x86_64__) || defined(__amd64__)
+
+            #define APAC_X64_MACOS      1
+
+        #elif defined(__aarch64__) || defined(__arm64__)
+
+            #define APAC_ARM64_MACOS    1
+
+        #else
+
+            #error "Unsupported CPU Architecture on macOS."
+
+        #endif
+
+    #else
+
+        #error "Unsupported Compiler on macOS. Only Apple Clang is supported."
+
+    #endif
+
+    #if defined(BUILD_SHARED_LIB)
+        // Export symbols when building the dylib
+        #define APAC_API __attribute__((visibility("default")))
+    #else
+        // Static library, no visibility attributes needed
+        #define APAC_API
+    #endif
+
+#elif defined(__linux__) || defined(__linux)
+
+    #if defined(__GNUC__) || defined(__clang__)
+
+        #if defined(__x86_64)   || defined(__amd64)     || \
+            defined(__x86_64__) || defined(__amd64__)
+
+            #define APAC_X64_LINUX      1
+
+        #elif defined(__aarch64__) || defined(__arm64__)
+
+            #define APAC_ARM64_LINUX    1
+
+        #else
+
+            #error "Unsupported CPU Architecture on Linux."
+
+        #endif
+        
+    #else
+
+        #error "Unsupported Compiler on Linux. Please use GCC or Clang instead."
+
+    #endif
+
+    #if defined(BUILD_SHARED_LIB)
+        // Export symbols when building the shared object
         #define APAC_API __attribute__((visibility("default")))
     #else
         // Static library, no visibility attributes needed
@@ -75,7 +126,7 @@
 
 #else
 
-    #error "Unknown Platform!"
+    #error "Unsupported Platform. This project supports Windows, macOS and Linux only."
 
 #endif
 
@@ -87,27 +138,28 @@
  * Typedefs
  * ========================================================================== */
 
-#if (defined(APAC_X64_WIN)      ||  \
-     defined(APAC_X64_UNIX)     ||  \
-     defined(APAC_ARM64_WIN)    ||  \
-     defined(APAC_ARM64_UNIX)       \
-    )
-
-    typedef unsigned long long  apn_dig_t;
-    typedef unsigned long long  apn_size_t;
+#if defined(APAC_X64_WIN)       ||  \
+    defined(APAC_X64_LINUX)     ||  \
+    defined(APAC_ARM64_WIN)     ||  \
+    defined(APAC_ARM64_UNIX)
+    
+    typedef unsigned long long  apn_dig_t;      // digit type for arbitrary precision natural numbers
+    typedef unsigned long long  apn_size_t;     // count of digits in a arbitrary precision natural number
 
     #define APN_DIG_BITS        64ULL
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
 
 #else
+
     #error "Unknown Platform and CPU Architecture!"
+
 #endif
 
 /* ==========================================================================
  * Relevant Enums
  * ========================================================================== */
 
-typedef enum apac_err
+typedef enum apac_err_t
 {
     APAC_OK = 0,
 
@@ -115,28 +167,43 @@ typedef enum apac_err
 
     APAC_DIV_BY_ZERO,
 
-} apac_err;
+} apac_err_t;
 
-typedef enum apac_str_base
+typedef enum apac_num_base_t
 {
 
     BASE10 = 10,
     
     BASE16 = 16
 
-} apac_str_base;
+} apac_num_base_t;
 
-/****************************************************************************************************/
-/*********************************    MISCELLANEOUS FUNCTIONS     ***********************************/
-/****************************************************************************************************/
+/* -------------------------------------------------------------------------------------------------- */
+/*                                        MISCELLANEOUS FUNCTIONS                                     */
+/* -------------------------------------------------------------------------------------------------- */
 
-/* ==========================================================================
- * Memory Allocation Functions and Global Allocator Struct
- * ========================================================================== */
+/* ========================================================================== */
+/*          Memory Allocation Functions and Global Allocator Struct           */
+/* ========================================================================== */
 
-typedef void* (*apac_malloc_t)(size_t new_size, void* ctx);
-typedef void* (*apac_realloc_t)(void* old_arr, size_t new_size, void* ctx);
-typedef void (*apac_free_t)(void* old_arr, void* ctx);
+typedef 
+void* (*apac_malloc_t)(
+    size_t new_size,
+    void* ctx
+);
+
+typedef 
+void* (*apac_realloc_t)(
+    void* old_arr,
+    size_t new_size,
+    void* ctx
+);
+
+typedef 
+void (*apac_free_t)(
+    void* old_arr,
+    void* ctx
+);
 
 APAC_API void 
 apac_init_allocator(  
