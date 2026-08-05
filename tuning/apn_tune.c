@@ -333,7 +333,7 @@ static apn_size_t get_dnc_div_threshold(void)
 
 int main(int argc, char** argv)
 {
-    apac_init();
+    apac_get_cpu_spec();
 
     if (argc < 2 || argc > 3)
     {

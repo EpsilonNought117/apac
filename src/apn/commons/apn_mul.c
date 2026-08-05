@@ -15,7 +15,7 @@
  */
 #define KARATSUBA_MUL_WS_SIZE(size1, size2)	(((size1) + APN_DIG_BITS) * 2)
 
-apac_err apn_mul_n(
+apac_err_t apn_mul_n(
 	apn_dig_t* result, 
 	const apn_dig_t* op1, 
 	const apn_dig_t* op2, 
@@ -54,7 +54,7 @@ apac_err apn_mul_n(
 	return APAC_OK;
 }
 
-apac_err apn_mul(
+apac_err_t apn_mul(
 	apn_dig_t* result, 
 	const apn_dig_t* op1, 
 	const apn_dig_t* op2, 

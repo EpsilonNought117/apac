@@ -128,7 +128,7 @@ check_apn_div_one(uint64_t iterations)
 int
 main(void)
 {
-    apac_init();
+    apac_get_cpu_spec();
 
     char* prng_seed = getenv("PRNG_SEED");
     char* iter = getenv("ITERATIONS");

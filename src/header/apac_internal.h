@@ -119,6 +119,9 @@
     #define APN_SIZE_MAX        ULLONG_MAX
     #define APN_DIG_MAX         ULLONG_MAX
 
+    #define APN_DIG_BITS        64U
+    #define APN_DIG_HIGH_BIT    (1ULL << 63)
+
 #endif
 
 /* ---------------------------------------------------------------------------------------------- */

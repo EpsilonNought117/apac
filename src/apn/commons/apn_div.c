@@ -3,7 +3,7 @@
 // Balanced Divide and Conquer division scratch workspace
 #define DNC_DIV_BALANCED_WS_SIZE(size)      ((size) + 1)
 
-apac_err apn_div(
+apac_err_t apn_div(
     apn_dig_t* quotient,        // must be (size_divd + size_divd_frac - size_dvsr + 1) length
     apn_dig_t* remainder,       // must be size_dvsr length
     const apn_dig_t* dividend,

@@ -54,7 +54,7 @@ check_apn_mul(uint64_t iterations)
         apn_set(op3, size1 + size2, 0);
         apn_set(op4, size1 + size2, 0);
 
-        apac_err err_out = apn_mul(
+        apac_err_t err_out = apn_mul(
             op3,
             op1,
             op2,
@@ -127,7 +127,7 @@ check_apn_mul(uint64_t iterations)
         apn_set(op3, size1 * 2, 0);
         apn_set(op4, size1 * 2, 0);
 
-        apac_err err_out1 = apn_mul(
+        apac_err_t err_out1 = apn_mul(
             op3,
             op1,
             op2,
@@ -137,7 +137,7 @@ check_apn_mul(uint64_t iterations)
 
         APAC_ALWAYS_ASSERT(err_out1 != APAC_OOM);
 
-        apac_err err_out2 = apn_mul_n(
+        apac_err_t err_out2 = apn_mul_n(
             op4,
             op1,
             op2,
@@ -160,7 +160,7 @@ check_apn_mul(uint64_t iterations)
 int
 main(void)
 {
-    apac_init();
+    apac_get_cpu_spec();
 
     char* prng_seed = getenv("PRNG_SEED");
     char* iter = getenv("ITERATIONS");

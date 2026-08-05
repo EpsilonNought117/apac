@@ -2,7 +2,7 @@
 
 #define KARATSUBA_SQR_WS_SIZE(size)	(2 * (size + APN_DIG_BITS))
 
-apac_err apn_sqr(
+apac_err_t apn_sqr(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size

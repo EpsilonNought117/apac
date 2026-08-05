@@ -66,13 +66,13 @@ apn_dig_t apn_recip_word_2by1(
     apn_dig_t v2 = (v1 << 13) + ((v1 * ((1ULL << 60) - v1 * d40)) >> 47);
     apn_dig_t e = (v2 >> 1) * d0 - v2 * d63;
 
-    #if defined(APAC_X64_WIN)
+#if defined(APAC_WIN_X64)
 
         uint64_t high64 = __umulh(e, v2);
         apn_dig_t v3 = (high64 >> 1) + (v2 << 31);
         uint64_t low64 = _umul128(v3, d, &high64);
 
-    #elif defined(APAC_ARM64_WIN)
+#elif defined(APAC_WIN_ARM64)
 
         uint64_t high64 = __umulh(e, v2);
         apn_dig_t v3 = (high64 >> 1) + (v2 << 31);
@@ -80,7 +80,8 @@ apn_dig_t apn_recip_word_2by1(
         uint64_t low64 = v3 * d;
         high64 = __umulh(v3, d);
 
-    #elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)  || \
+      defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
 
         apn_dig_t v3 = (v2 << 31) + (((__uint128_t)e * v2) >> 65);
         __uint128_t prod = (__uint128_t)v3 * d;
@@ -88,17 +89,13 @@ apn_dig_t apn_recip_word_2by1(
         uint64_t low64 = (uint64_t)prod;
         uint64_t high64 = (uint64_t)(prod >> 64);
 
-    #else
-        #error "Unsupported Platform!"
-    #endif
+#endif
 
     uint8_t carry = (low64 + d) < low64;
     apn_dig_t v4 = v3 - (high64 + d + carry);
     
     return v4;
 
-#else
-    #error "Unsupported Platform!"
 #endif
 }
 
@@ -136,23 +133,22 @@ apn_dig_t apn_recip_word_3by2(
 
     uint64_t t0, t1;
 
-#if defined(APAC_X64_WIN)
+#if defined(APAC_WIN_X64)
 
     t0 = _umul128(v, d0, &t1);
 
-#elif defined(APAC_ARM64_WIN)
+#elif defined(APAC_WIN_ARM64)
 
     t0 = v * d0;
     t1 = __umulh(v, d0);
 
-#elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)  || \
+      defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
 
     __uint128_t prod = (__uint128_t)v * d0;
     t0 = (uint64_t)prod;
     t1 = (uint64_t)(prod >> 64);
 
-#else
-    #error "Unsupported compiler"
 #endif
 
     /* Step 11 */
@@ -192,7 +188,7 @@ apn_dig_t apn_udiv_2by1(
     APAC_ASSERT(u1 < d);
     APAC_ASSERT(d & APN_DIG_HIGH_BIT);
 
-#if defined(APAC_X64_WIN)
+#if defined(APAC_WIN_X64)
 
     uint64_t q0, q1;
 
@@ -203,7 +199,7 @@ apn_dig_t apn_udiv_2by1(
     uint8_t c = _addcarry_u64(0, q0, u0, &q0);
     c = _addcarry_u64(c, q1, u1, &q1);
 
-#elif defined(APAC_ARM64_WIN)
+#elif defined(APAC_WIN_ARM64)
 
     uint64_t q0, q1;
 
@@ -221,7 +217,8 @@ apn_dig_t apn_udiv_2by1(
     q1 += u1;
     q1 += carry;
 
-#elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)  || \
+      defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
 
     __uint128_t q;
 
@@ -233,10 +230,6 @@ apn_dig_t apn_udiv_2by1(
 
     uint64_t q1 = (apn_dig_t)(q >> APN_DIG_BITS);
     uint64_t q0 = (apn_dig_t)q;
-
-#else
-
-    #error "Unsupported Platform!"
 
 #endif
 
@@ -286,7 +279,7 @@ apn_dig_t apn_udiv_3by2_quot(
     APAC_ASSERT(d1 & APN_DIG_HIGH_BIT);
     APAC_ASSERT((d1 > u2) || (d1 == u2 && d0 > u1));
 
-#if defined(APAC_X64_WIN)
+#if defined(APAC_WIN_X64)
 
     uint64_t q0, q1;
     uint64_t r0, r1;
@@ -331,7 +324,7 @@ apn_dig_t apn_udiv_3by2_quot(
         c = _subborrow_u64(c, r1, d1, &r1);
     }
 
-#elif defined(APAC_ARM64_WIN)
+#elif defined(APAC_WIN_ARM64)
 
     uint64_t q0, q1;
     uint64_t r0, r1;
@@ -401,7 +394,8 @@ apn_dig_t apn_udiv_3by2_quot(
         r1 = r1 - d1 - borrow;
     }
 
-#elif (defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX))
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)  || \
+      defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
 
     __uint128_t q;
     __uint128_t r;
@@ -445,8 +439,6 @@ apn_dig_t apn_udiv_3by2_quot(
         r -= d;
     }
 
-#else
-    #error "Unsupported compiler"
 #endif
 
     return (apn_dig_t)q1;
