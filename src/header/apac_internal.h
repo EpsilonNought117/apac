@@ -161,7 +161,7 @@
 
 #if !defined(APAC_DISABLE_ASSERT)
 
-     /* These checks are only useful on platforms with a flat address space per process. */
+    /* These checks are only useful on platforms with a flat address space per process. */
 
     #if defined(APAC_WIN_X64)       ||  \
         defined(APAC_LINUX_X64)     ||  \
@@ -187,14 +187,13 @@
                     ((uintptr_t)(op2) + (size2)) <= ((uintptr_t)(op1) + (size1)) || \
                     ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2)                \
                 )
-
-    #else
-
-        #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
-        #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
-        #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
-
     #endif
+
+#else
+
+    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
+    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
 
 #endif
 
