@@ -33,28 +33,15 @@ void apac_init_allocator(
     apac_malloc_t malloc_ptr,
     apac_realloc_t realloc_ptr,
     apac_free_t free_ptr,
-    void* ctx_ptr
+    void* ctx
 )
 {
-    APAC_ASSERT(
-        (!malloc_ptr && !realloc_ptr && !free_ptr) ||
-        ( malloc_ptr &&  realloc_ptr &&  free_ptr)
-    );
+    APAC_ASSERT(malloc_ptr && realloc_ptr && free_ptr);
 
-    if (malloc_ptr && realloc_ptr && free_ptr && ctx_ptr)
-    {
-        apac_allocator.custom_malloc = malloc_ptr;
-        apac_allocator.custom_realloc = realloc_ptr;
-        apac_allocator.custom_free = free_ptr;
-        apac_allocator.ctx = ctx_ptr;
-    }
-    else
-    {
-        apac_allocator.custom_malloc = libc_malloc_wrapper;
-        apac_allocator.custom_realloc = libc_realloc_wrapper;
-        apac_allocator.custom_free = libc_free_wrapper;
-        apac_allocator.ctx = NULL;
-    }
+    apac_allocator.custom_malloc = malloc_ptr;
+    apac_allocator.custom_realloc = realloc_ptr;
+    apac_allocator.custom_free = free_ptr;
+    apac_allocator.ctx = ctx;
 }
 
 void* apac_malloc(size_t new_size)

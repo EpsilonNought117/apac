@@ -7,7 +7,7 @@
 
 # --- CHECKS --------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 project(apac)
 
 enable_testing()
@@ -21,7 +21,22 @@ if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 
 endif()
 
-# Detect platform & compiler
+# detect CPU ISA
+
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64|x64)$")
+    set(APAC_CMAKE_X64 TRUE)
+else()
+    set(APAC_CMAKE_X64 FALSE)
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|ARM64|arm64)$")
+    set(APAC_CMAKE_ARM64 TRUE)
+else()
+    set(APAC_CMAKE_ARM64 FALSE)
+endif()
+
+# Detect platform and compiler
+
 if (WIN32)
 
     message(STATUS "Target platform: Windows")
@@ -56,12 +71,12 @@ if (WIN32)
 
     endif()
 
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+    if (APAC_CMAKE_X64)
 
         message(STATUS "Target processor ISA: x86-64/AMD64")
         enable_language(ASM_MASM)
 
-    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|aarch64|AARCH64)$")
+    elseif (APAC_CMAKE_ARM64)
 
         message(STATUS "Target processor ISA: AArch64/ARM64")
         enable_language(ASM_MARMASM)
@@ -88,7 +103,7 @@ elseif (APPLE)
 
     endif()
 
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|arm64)$")
+    if (APAC_CMAKE_X64 OR APAC_CMAKE_ARM64)
 
         message(STATUS "Target processor ISA: ${CMAKE_SYSTEM_PROCESSOR}")
         enable_language(ASM)
@@ -119,7 +134,7 @@ elseif (LINUX)
 
     endif()
 
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|aarch64)$")
+    if (APAC_CMAKE_X64 OR APAC_CMAKE_ARM64)
 
         message(STATUS "Target processor ISA: ${CMAKE_SYSTEM_PROCESSOR}")
         enable_language(ASM)
@@ -156,7 +171,6 @@ set(st_c_sources
 
     # MISCELLANEOUS
 
-    "src/misc/apac_init.c"
     "src/misc/apac_init_alloc.c"
     "src/misc/apac_get_cpu_spec.c"
     "src/misc/apac_utilities.c"
@@ -200,7 +214,7 @@ set (mt_c_sources
 
 # --- x64 specific sources ------------------------------------------------------
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+if (APAC_CMAKE_X64)
 
     # Common C sources (always used on x64)
     set(x64_c_sources
@@ -251,36 +265,28 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 
     endif()
 
-    set(x64_specific "src/apn/x64/x64_hidden_funcs.h" ${x64_c_sources} ${x64_asm_sources})
+    set(isa_sources "src/apn/x64/x64_hidden_funcs.h" ${x64_c_sources} ${x64_asm_sources})
 
-# --- AArch64 specific sources --------------------------------------------------
+# --- AArch64/ARM64 specific sources --------------------------------------------------
 
-elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
+elseif (APAC_CMAKE_ARM64)
 
 endif()
 
 # --- BUILDING DLL/STATIC -------------------------------------------------------
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+set(apac_sources ${mt_c_sources} ${st_c_sources} ${isa_sources})
 
-    set(isa_sources ${x64_specific})
+if(APAC_SHARED)
 
-elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "AARCH64|aarch64")
-
-endif()
-
-set(apac_sources ${st_c_sources} ${isa_sources})
-
-# Build Shared/Static Library
-if(BUILD_SHARED_LIB)
     add_library(apac SHARED ${apac_sources})
 
-    target_compile_definitions(apac PRIVATE 
-        $<$<COMPILE_LANGUAGE:C>:BUILD_SHARED_LIB>
-    )
+    target_compile_definitions(apac PRIVATE $<$<COMPILE_LANGUAGE:C>:APAC_BUILD_SHARED>)
     
 else()
+
     add_library(apac STATIC ${apac_sources})
+
 endif()
 
 set(apac_target apac)
@@ -289,25 +295,40 @@ target_compile_definitions(${apac_target} PRIVATE
     "$<$<AND:$<COMPILE_LANGUAGE:C>,$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>>:APAC_DISABLE_ASSERT>"
 )
 
+target_compile_definitions(${apac_target} PRIVATE
+    "$<$<AND:$<BOOL:${APAC_MT_FUNCS}>,$<COMPILE_LANGUAGE:C>>:APAC_MT_FUNCS>"
+)
+
 # --- STRIP PATHS FROM __FILE__ -------------------------------------------------
 
 if (MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
     # MSVC (cl.exe)
     target_compile_options(${apac_target} PRIVATE
         $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>
     )
 
-elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND MSVC)
-    # clang-cl
+elseif (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
+    # clang-cl (MSVC-compatible driver)
     target_compile_options(${apac_target} PRIVATE
         $<$<COMPILE_LANGUAGE:C>:/clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
     )
 
-else()
-    # GCC / Clang
+elseif (WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
+    # Clang targeting the MSVC ABI, native GNU-style driver (not clang-cl)
     target_compile_options(${apac_target} PRIVATE
         $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
     )
+
+else()
+
+    # GCC / Clang (Linux, macOS)
+    target_compile_options(${apac_target} PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
+    )
+
 endif()
 
 # --- APAC TESTS ----------------------------------------------------------------

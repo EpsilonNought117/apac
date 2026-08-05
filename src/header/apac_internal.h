@@ -24,24 +24,28 @@
 	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
 
-    #include <intrin.h>
+	#include <intrin.h>
 
-	#if defined(APAC_X64_WIN)
-
+	#if defined(APAC_WIN_X64)
 		#include <immintrin.h>
-	
-	#elif defined(APAC_ARM64_WIN)
-
-        #include <arm64_neon.h>
-
 	#endif
 
-	#define APAC_THRD_LOCAL _thread_loc
+	/* --- MSVC always uses C11 threads --- */
 
-	#define CLZ(value, count)																	\
-			do																					\
-			{																					\
-				unsigned long idx = 0;															\
+	#if (_MSC_VER < 1939)
+		#error "C11 <threads.h> requires MSVC 19.39 (Visual Studio 2022 17.9) or later."
+	#endif
+
+    #include <stdatomic.h>
+	#include <threads.h>
+
+	#define APAC_USE_C11_THREADS	1
+	#define APAC_THRD_LOCAL			_Thread_local
+
+	#define CLZ(value, count)																		\
+			do																						\
+			{																						\
+				unsigned long idx = 0;																\
 				(count) = _BitScanReverse64(&idx, (value)) ? (apn_dig_t)63 - idx : (apn_dig_t)64;	\
 			} while (0)
 
@@ -54,35 +58,36 @@
 
 	#define ROTL(value, count)	do { value = _rotl64((value), (count)); } while (0)
 
-#elif defined(APAC_X64_UNIX) || defined(APAC_ARM64_UNIX)
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)	|| \
+	  defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
 
 	#include <unistd.h>
-    #include <time.h>
-    #include <sched.h>
-    #include <pthread.h>
+	#include <time.h>
+	#include <sched.h>
+    #include <stdatomic.h>
+	#include <pthread.h>
 
-	#if defined(APAC_X64_UNIX)
+	#if defined(APAC_LINUX_X64)
 
 		#include <cpuid.h>
 		#include <immintrin.h>
 
-	#elif defined(APAC_ARM64_UNIX)
-
-		#include <arm_neon.h>  
+	#elif defined(APAC_LINUX_ARM64)
 	
 	#endif
 
-    #define APAC_THRD_LOCAL __thread            /* GCC/Clang extension */
+	#define APAC_USE_PTHREADS		1
+	#define APAC_THRD_LOCAL			__thread	/* GCC/Clang extension */
 
-	#define CLZ(value, count)															\
-			do																			\
-			{																			\
+	#define CLZ(value, count)																\
+			do																				\
+			{																				\
 				(count) = (value) ? (apn_dig_t)__builtin_clzll((value)) : (apn_dig_t)64;	\
 			} while (0)
 
-	#define CTZ(value, count)															\
-			do																			\
-			{																			\
+	#define CTZ(value, count)																\
+			do																				\
+			{																				\
 				(count) = (value) ? (apn_dig_t)__builtin_ctzll((value)) : (apn_dig_t)64;	\
 			} while(0)
 
@@ -90,23 +95,19 @@
 			do															\
 			{															\
 				value = (												\
-					(((uint64_t)(value)) << ((count) & 63)) 	   	| 	\
-					(((uint64_t)(value)) >> (64 - ((count) & 63)))		\
+					(((apn_dig_t)(value)) << ((count) & 63)) 	   	| 	\
+					(((apn_dig_t)(value)) >> (64 - ((count) & 63)))		\
 				);														\
 			} while (0)
-
-#else
-
-	#error "Unknown Compiler, OS Platform and CPU ISA!"
-
 #endif
 
 
-#if (defined(APAC_X64_WIN)      ||  \
-     defined(APAC_X64_UNIX)     ||  \
-     defined(APAC_ARM64_WIN)    ||  \
-     defined(APAC_ARM64_UNIX)       \
-    )
+#if defined(APAC_WIN_X64)       ||  \
+    defined(APAC_LINUX_X64)     ||  \
+    defined(APAC_MACOS_X64)     ||  \
+    defined(APAC_WIN_ARM64)     ||  \
+    defined(APAC_LINUX_ARM64)   ||  \
+    defined(APAC_MACOS_ARM64)
 
 	#define APAC_64BIT_PLATFORM	1
 
@@ -146,7 +147,7 @@
  * Debug-Only Assertion
  * ========================================================================== */
 
-#ifndef APAC_DISABLE_ASSERT
+#if !defined(APAC_DISABLE_ASSERT)
     #define APAC_ASSERT(expr)   APAC_ALWAYS_ASSERT(expr)
 #else
     #define APAC_ASSERT(expr)   do { /* nothing */ } while (0)
@@ -156,39 +157,44 @@
  * Debug-Only Overlap Checks
  * ========================================================================== */
 
-/*
-    These checks are only useful on platforms with a flat address space per process.
-*/
-#if !defined(APAC_DISABLE_ASSERT)   &&  \
-    (defined(APAC_X64_WIN)          ||  \
-     defined(APAC_X64_UNIX)         ||  \
-     defined(APAC_ARM64_WIN)        ||  \
-     defined(APAC_ARM64_UNIX)           \
-    )
+#if !defined(APAC_DISABLE_ASSERT)
 
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)                             \
-            APAC_ALWAYS_ASSERT(                                                 \
-                ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||             \
-                ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
-            )
+     /*
+         These checks are only useful on platforms with a flat address space per process.
+     */
 
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                  \
-            APAC_ALWAYS_ASSERT(                                                 \
-                ((uintptr_t)(op1) + (size1)) <= ((uintptr_t)(op2) + (size2)) || \
-                ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
-            )
+    #if defined(APAC_WIN_X64)       ||  \
+        defined(APAC_LINUX_X64)     ||  \
+        defined(APAC_MACOS_X64)     ||  \
+        defined(APAC_WIN_ARM64)     ||  \
+        defined(APAC_LINUX_ARM64)   ||  \
+        defined(APAC_MACOS_ARM64)
 
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                  \
-            APAC_ALWAYS_ASSERT(                                                 \
-                ((uintptr_t)(op2) + (size2)) <= ((uintptr_t)(op1) + (size1)) || \
-                ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2)                \
-            )
+        #define APAC_NO_OVERLAP(op1, size1, op2, size2)                             \
+                APAC_ALWAYS_ASSERT(                                                 \
+                    ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2) ||             \
+                    ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
+                )
 
-#else
+        #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)                  \
+                APAC_ALWAYS_ASSERT(                                                 \
+                    ((uintptr_t)(op1) + (size1)) <= ((uintptr_t)(op2) + (size2)) || \
+                    ((uintptr_t)(op2) + (size2)) <= (uintptr_t)(op1)                \
+                )
 
-    #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
-    #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
-    #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+        #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)                  \
+                APAC_ALWAYS_ASSERT(                                                 \
+                    ((uintptr_t)(op2) + (size2)) <= ((uintptr_t)(op1) + (size1)) || \
+                    ((uintptr_t)(op1) + (size1)) <= (uintptr_t)(op2)                \
+                )
+
+    #else
+
+        #define APAC_NO_OVERLAP(op1, size1, op2, size2)             do { /* nothing */ } while (0)
+        #define APAC_PARTIAL_OVERLAP_ABOVE(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+        #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
+
+    #endif
 
 #endif
 

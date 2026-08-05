@@ -1,7 +1,3 @@
-#if defined(_M_X64)   || defined(_M_AMD64)   ||	\
-	defined(__x86_64) || defined(__x86_64__) ||	\
-	defined(__amd64) || defined(__amd64__)
-
 #ifndef X64_HIDDEN_FUNCS
 #define X64_HIDDEN_FUNCS
 
@@ -265,7 +261,5 @@ extern int is_zero_sse2_4unroll(
 	const apn_dig_t* op1,
 	apn_size_t size
 );
-
-#endif
 
 #endif

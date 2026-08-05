@@ -7,14 +7,16 @@
 
 uint64_t apac_cpu_timer(void)
 {
-#if defined(APAC_X64_WIN) || defined(APAC_X64_UNIX)
+#if defined(APAC_WIN_X64)   || \
+    defined(APAC_LINUX_X64) || \
+    defined(APAC_MACOS_X64)
 
     _mm_lfence();
     uint64_t t = __rdtsc();
     _mm_lfence();
     return t;
 
-#elif defined(APAC_ARM64_WIN)
+#elif defined(APAC_WIN_ARM64)
 
     uint64_t cnt, frq;
     __isb(0xF);
@@ -22,7 +24,7 @@ uint64_t apac_cpu_timer(void)
     frq = _ReadStatusReg(ARM64_CNTFRQ_EL0);
     return (cnt * 1000000000ULL) / frq;
 
-#elif defined(APAC_ARM64_UNIX)
+#elif defined(APAC_LINUX_ARM64) || defined(APAC_MACOS_ARM64)
 
     __isb();
     uint64_t cnt = __arm_rsr64("cntvct_el0");
@@ -30,15 +32,13 @@ uint64_t apac_cpu_timer(void)
     return (cnt * 1000000000ULL) / frq;
 
 #else
-    
     return 0;
-
 #endif
 }
 
 int apac_pin_thread_to_core(uint32_t core_id)
 {
-#if defined(_WIN32)
+#if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
 
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
@@ -49,7 +49,7 @@ int apac_pin_thread_to_core(uint32_t core_id)
     HANDLE thread = GetCurrentThread();
     return (SetThreadAffinityMask(thread, mask) != 0) ? 0 : -1;
 
-#elif defined(__linux__) || defined(__linux)
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)
 
     long num_cores = sysconf(_SC_NPROCESSORS_ONLN);
     if (num_cores > 0)
@@ -71,7 +71,7 @@ int apac_pin_thread_to_core(uint32_t core_id)
 }
 
 
-#if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
+#if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
     static GUID* CurrentScheme;
     static DWORD CurrentMode;
 #endif
@@ -81,7 +81,7 @@ int apac_pin_thread_to_core(uint32_t core_id)
  */
 void apac_disable_dfs(void)
 {
-#if defined(_WIN32)
+#if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
 
     PowerGetActiveScheme(NULL, &CurrentScheme);
     PowerReadACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, &CurrentMode);
@@ -122,7 +122,7 @@ void apac_disable_dfs(void)
  */
 void apac_restore_dfs(void)
 {
-#if defined(_WIN32)
+#if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
 
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, CurrentMode);
     PowerWriteACValueIndex(NULL, CurrentScheme, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_PERF_BOOST_MODE, PROCESSOR_PERF_BOOST_MODE_ENABLED);

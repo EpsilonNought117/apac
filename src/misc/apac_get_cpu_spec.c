@@ -4,17 +4,17 @@ apac_cpu_params curr_cpu = { 0 };
 
 // x64/AMD64 Version
 
-#if (defined(APAC_X64_WIN) || defined(APAC_X64_UNIX))
+#if (defined(APAC_WIN_X64) || defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64))
 
 extern void zen4_set_params(void);
 extern void generic_x64_set_params(void);
 
-#if defined(APAC_X64_WIN)
+#if defined(APAC_WIN_X64)
 
 	#define CPUID(cpuInfo, Leaf)			__cpuid(cpuInfo, Leaf)
 	#define CPUIDEX(cpuInfo, Leaf, SubLeaf) __cpuidex(cpuInfo, Leaf, SubLeaf)
 
-#elif defined(APAC_X64_UNIX)
+#elif defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64)
 
     #define CPUID(cpuInfo, leaf)    \
         __cpuid((leaf),             \
@@ -31,9 +31,6 @@ extern void generic_x64_set_params(void);
                     (cpuInfo)[2],           \
                     (cpuInfo)[3]			\
 				)
-
-#else
-    #error "Unsupported Compiler!"
 #endif
 
 void apac_get_cpu_spec(void)

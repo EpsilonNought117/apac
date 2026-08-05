@@ -17,7 +17,6 @@ static inline uint64_t random_sfc64(void)
     ROTL(temp, 24);
 	
     prng_state[3] = temp + out;
-	
     return out;
 }
 
@@ -56,7 +55,7 @@ void apn_set_random(
 
 #if defined(APAC_64BIT_PLATFORM)
 
-    if (state_init != true) { seed_random_sfc64(0x117); }
+    if (state_init != true) { seed_random_sfc64(0xC0FFEE117); }
 
 	for (apn_size_t i = 0; i < size; i++)
 	{

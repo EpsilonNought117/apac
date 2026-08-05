@@ -18,9 +18,7 @@
 #if defined(_WIN32)
 
     #if defined(MINGW)
-
         #error "MinGW Toolchain compilers are not supported. Please use MSVC, Clang-cl or Clang instead."
-
     #endif
 
     #if defined(_MSC_VER)
@@ -34,39 +32,29 @@
             #define APAC_WIN_ARM64      1
 
         #else
-
             #error "Unsupported CPU Architecture on Windows."
-
         #endif
 
     #else
-
         #error "Unsupported Compiler on Windows. Please use MSVC, Clang-cl or Clang instead."
-
     #endif
 
-    #if defined(BUILD_SHARED_LIB)
-
+    #if defined(APAC_BUILD_SHARED)
         // Export symbols when building the DLL
         #define APAC_API __declspec(dllexport)
-
     #elif defined(LIBAPAC_SHARED)
-
         // Import symbols when using the DLL
         #define APAC_API __declspec(dllimport)
-
     #else
-
         // Static library, no import/export needed
         #define APAC_API
-
     #endif
 
 #elif defined(__APPLE__) && defined(__MACH__)
 
     #if defined(__apple_build_version__)
 
-        #if defined(__x86_64) || defined(__amd64) || \
+        #if defined(__x86_64) || defined(__amd64)       || \
             defined(__x86_64__) || defined(__amd64__)
 
             #define APAC_MACOS_X64      1
@@ -76,18 +64,14 @@
             #define APAC_MACOS_ARM64    1
 
         #else
-
             #error "Unsupported CPU Architecture on macOS."
-
         #endif
 
     #else
-
         #error "Unsupported Compiler on macOS. Only Apple Clang is supported."
-
     #endif
 
-    #if defined(BUILD_SHARED_LIB)
+    #if defined(APAC_BUILD_SHARED)
         // Export symbols when building the dylib
         #define APAC_API __attribute__((visibility("default")))
     #else
@@ -109,19 +93,14 @@
             #define APAC_LINUX_ARM64    1
 
         #else
-
             #error "Unsupported CPU Architecture on Linux."
-
         #endif
         
     #else
-
         #error "Unsupported Compiler on Linux. Please use GCC or Clang instead."
-
-    
     #endif
 
-    #if defined(BUILD_SHARED_LIB)
+    #if defined(APAC_BUILD_SHARED)
         // Export symbols when building the shared object
         #define APAC_API __attribute__((visibility("default")))
     #else
@@ -130,9 +109,7 @@
     #endif
 
 #else
-
     #error "Unsupported Platform. This project supports Windows, macOS and Linux only."
-
 #endif
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -179,9 +156,9 @@ typedef enum apac_num_base_t
 
 } apac_num_base_t;
 
-/* -------------------------------------------------------------------------------------------------- */
-/*                                        MISCELLANEOUS FUNCTIONS                                     */
-/* -------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------- */
+/*                                     MISCELLANEOUS FUNCTIONS                                    */
+/* ---------------------------------------------------------------------------------------------- */
 
 APAC_API void*
 apac_malloc(size_t new_size); // wrapper for convenience
@@ -193,7 +170,7 @@ APAC_API void
 apac_free(void* old_buffer);   // wrapper for convenience
 
 APAC_API void
-apac_init_allocators(
+apac_init_allocator(
     apac_malloc_t    custom_malloc,
     apac_realloc_t  custom_realloc,
     apac_free_t        custom_free,
@@ -203,9 +180,9 @@ apac_init_allocators(
 APAC_API void 
 apac_get_cpu_spec(void);
 
-/****************************************************************************************************/
-/*********************************          APN FUNCTIONS         ***********************************/
-/****************************************************************************************************/
+/* ---------------------------------------------------------------------------------------------- */
+/*                                            APN FUNCTIONS                                       */
+/* ---------------------------------------------------------------------------------------------- */
 
 APAC_API apn_dig_t 
 apn_add_n(
