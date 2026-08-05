@@ -19,7 +19,7 @@
 /***********************   COMPILER SPECIFIC HEADERS, TYPEDEFS AND MACROS    ************************/
 /****************************************************************************************************/
 
-#if defined(APAC_X64_WIN) || defined(APAC_ARM64_WIN)
+#if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
 
 	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
@@ -36,7 +36,7 @@
 
 	#endif
 
-	#define APAC_THRD_LOCAL __declspec(thread)
+	#define APAC_THRD_LOCAL _thread_loc
 
 	#define CLZ(value, count)																	\
 			do																					\
