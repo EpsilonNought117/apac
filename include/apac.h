@@ -1,15 +1,19 @@
 #ifndef APAC_H
 #define APAC_H
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                          BECAUSE GNU (TvT)                                     */
+/* ---------------------------------------------------------------------------------------------- */
+
 #if defined(__GNUC__)
     #define _GNU_SOURCE
 #endif
 
-#include <stddef.h> // for size_t
+/* ---------------------------------------------------------------------------------------------- */
+/*                             PLATFORM SPECIFIC MACROS AND COMMON HEADER                         */
+/* ---------------------------------------------------------------------------------------------- */
 
-/****************************************************************************************************/
-/******************   COMPILER SPECIFIC HEADERS AND DLL/STATIC IMPORT/EXPORTS    ********************/
-/****************************************************************************************************/
+#include <stddef.h> // for size_t
 
 #if defined(_WIN32)
 
@@ -23,11 +27,11 @@
 
         #if defined(_M_X64) || defined(_M_AMD64)
 
-            #define APAC_X64_WIN        1
+            #define APAC_WIN_X64        1
 
         #elif defined(_M_ARM64) || defined(_M_ARM64EC) || defined(__aarch64__) || defined(__arm64__)
 
-            #define APAC_ARM64_WIN      1
+            #define APAC_WIN_ARM64      1
 
         #else
 
@@ -65,11 +69,11 @@
         #if defined(__x86_64) || defined(__amd64) || \
             defined(__x86_64__) || defined(__amd64__)
 
-            #define APAC_X64_MACOS      1
+            #define APAC_MACOS_X64      1
 
         #elif defined(__aarch64__) || defined(__arm64__)
 
-            #define APAC_ARM64_MACOS    1
+            #define APAC_MACOS_ARM64    1
 
         #else
 
@@ -98,11 +102,11 @@
         #if defined(__x86_64)   || defined(__amd64)     || \
             defined(__x86_64__) || defined(__amd64__)
 
-            #define APAC_X64_LINUX      1
+            #define APAC_LINUX_X64      1
 
         #elif defined(__aarch64__) || defined(__arm64__)
 
-            #define APAC_ARM64_LINUX    1
+            #define APAC_LINUX_ARM64    1
 
         #else
 
@@ -131,24 +135,19 @@
 
 #endif
 
-/****************************************************************************************************/
-/**********************************    MACROS AND TYPEDEFS    ***************************************/
-/****************************************************************************************************/
+/* ---------------------------------------------------------------------------------------------- */
+/*                                        TYPEDEFS AND ENUMS                                      */
+/* ---------------------------------------------------------------------------------------------- */
 
-/* ==========================================================================
- * Typedefs
- * ========================================================================== */
-
-#if defined(APAC_X64_WIN)       ||  \
-    defined(APAC_X64_LINUX)     ||  \
-    defined(APAC_ARM64_WIN)     ||  \
-    defined(APAC_ARM64_UNIX)
+#if defined(APAC_WIN_X64)       ||  \
+    defined(APAC_LINUX_X64)     ||  \
+    defined(APAC_MACOS_X64)     ||  \
+    defined(APAC_WIN_ARM64)     ||  \
+    defined(APAC_LINUX_ARM64)   ||  \
+    defined(APAC_MACOS_ARM64)
     
     typedef unsigned long long  apn_dig_t;      // digit type for arbitrary precision natural numbers
     typedef unsigned long long  apn_size_t;     // count of digits in a arbitrary precision natural number
-
-    #define APN_DIG_BITS        64ULL
-    #define APN_DIG_HIGH_BIT    (1ULL << 63)
 
 #else
 
@@ -156,26 +155,27 @@
 
 #endif
 
-/* ==========================================================================
- * Relevant Enums
- * ========================================================================== */
+/* Signature for a custom allocator's `malloc` function. */
+typedef void* (*apac_malloc_t)(void* ctx, size_t new_size);
+
+/* Signature for a custom allocator's `realloc` function. */
+typedef void* (*apac_realloc_t)(void* ctx, void* old_buffer, size_t new_size);
+
+/* Signature for a custom allocator's `free` function. */
+typedef void (*apac_free_t)(void* ctx, void* old_buffer);
 
 typedef enum apac_err_t
 {
-    APAC_OK = 0,
-
-    APAC_OOM,
-
-    APAC_DIV_BY_ZERO,
+    APAC_OK = 0,        // all ok
+    APAC_OOM,           // ran out of memory
+    APAC_DIV_BY_ZERO,   // tried to divide by zero
 
 } apac_err_t;
 
 typedef enum apac_num_base_t
 {
-
-    BASE10 = 10,
-    
-    BASE16 = 16
+    BASE10 = 10,        // Decimal
+    BASE16 = 16         // Hexadecimal
 
 } apac_num_base_t;
 
@@ -183,55 +183,25 @@ typedef enum apac_num_base_t
 /*                                        MISCELLANEOUS FUNCTIONS                                     */
 /* -------------------------------------------------------------------------------------------------- */
 
-/* ========================================================================== */
-/*          Memory Allocation Functions and Global Allocator Struct           */
-/* ========================================================================== */
-
-typedef 
-void* (*apac_malloc_t)(
-    size_t new_size,
-    void* ctx
-);
-
-typedef 
-void* (*apac_realloc_t)(
-    void* old_arr,
-    size_t new_size,
-    void* ctx
-);
-
-typedef 
-void (*apac_free_t)(
-    void* old_arr,
-    void* ctx
-);
-
-APAC_API void 
-apac_init_allocator(  
-    apac_malloc_t malloc_ptr,
-    apac_realloc_t realloc_ptr,
-    apac_free_t free_ptr,
-    void* ctx_ptr
-);
+APAC_API void*
+apac_malloc(size_t new_size); // wrapper for convenience
 
 APAC_API void*
-apac_malloc(size_t new_size);
-
-APAC_API void*
-apac_realloc(void* old_arr, size_t new_size);
+apac_realloc(void* old_buffer, size_t new_size); // wrapper for convenience
 
 APAC_API void
-apac_free(void* old_arr);
+apac_free(void* old_buffer);   // wrapper for convenience
 
-/* ==========================================================================
- * CPU detection and Default Initialization Functions 
- * ========================================================================== */
+APAC_API void
+apac_init_allocators(
+    apac_malloc_t    custom_malloc,
+    apac_realloc_t  custom_realloc,
+    apac_free_t        custom_free,
+    void*                  context
+);
 
 APAC_API void 
 apac_get_cpu_spec(void);
-
-APAC_API void 
-apac_init(void);
 
 /****************************************************************************************************/
 /*********************************          APN FUNCTIONS         ***********************************/
@@ -301,7 +271,7 @@ apn_neg(
     apn_size_t size
 );
 
-APAC_API apac_err 
+APAC_API apac_err_t 
 apn_mul_n(
     apn_dig_t* result,
     const apn_dig_t* op1,
@@ -309,7 +279,7 @@ apn_mul_n(
     apn_size_t size
 );
 
-APAC_API apac_err 
+APAC_API apac_err_t 
 apn_mul(
     apn_dig_t* result,
     const apn_dig_t* op1,
@@ -342,7 +312,7 @@ apn_submul_one(
     apn_dig_t val
 );
 
-APAC_API apac_err 
+APAC_API apac_err_t 
 apn_sqr(
     apn_dig_t* result,
     const apn_dig_t* op1,
@@ -363,7 +333,7 @@ apn_cmp(
     apn_size_t size
 );
 
-APAC_API apac_err 
+APAC_API apac_err_t 
 apn_div(
     apn_dig_t* quotient,
     apn_dig_t* remainder,
