@@ -28,7 +28,7 @@ mul_one_zen4:
     and     r8,  7
     shr     rcx, 3
     
-    mov     rax, 0
+    xor     rax, rax
     test    rcx, rcx
     jz      .Lzen4_before_remainder
 
