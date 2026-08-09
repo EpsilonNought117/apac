@@ -1,21 +1,14 @@
 #include "../src/header/apac_internal.h"
 
-#define MAX_RUNTIME_1 ((uint64_t)1000 * 1000)
-#define MAX_RUNTIME_2 ((uint64_t)100 * 1000)
+#define ITERS_1 256ULL
+#define ITERS_2 16ULL
 
 /*
  * Small step size is important because recursive crossover
  * regions can shift sharply across only a few limbs.
  */
-#define SIZE_STEP_SIZE ((apn_size_t)7)
-
- /*
-  * We use minimum observed timings because system noise
-  * almost always increases runtime rather than decreases it.
-  *
-  * Small improve threshold avoids premature convergence.
-  */
-#define IMPROVE_PCT (0.0005)
+#define STEP_SIZE1 ((apn_size_t)1)
+#define STEP_SIZE2 ((apn_size_t)3)
 
 #define APN_TUNE_ASSERT(expr)           \
     do                                  \
@@ -33,7 +26,7 @@ static apn_size_t get_karatsuba_mul_threshold(void)
     const apn_size_t thresh_end = 50;
 
     const apn_size_t size_start = 1;
-    const apn_size_t size_end = 256;
+    const apn_size_t size_end = 128;
 
     apn_dig_t* op1 =
         apac_malloc(sizeof(apn_dig_t) * size_end);
@@ -55,12 +48,6 @@ static apn_size_t get_karatsuba_mul_threshold(void)
         thresh <= thresh_end;
         thresh++)
     {
-        printf(
-            "\rTesting Karatsuba Mul Threshold %" PRI_APN_SIZE,
-            thresh);
-
-        fflush(stdout);
-
         KARATSUBA_MUL_THRESHOLD = thresh;
 
         double total = 0.0;
@@ -68,33 +55,26 @@ static apn_size_t get_karatsuba_mul_threshold(void)
 
         for (apn_size_t size = size_start;
             size <= size_end;
-            size += SIZE_STEP_SIZE)
+            size += STEP_SIZE1)
         {
             apn_set_random(op1, size);
             apn_set_random(op2, size);
 
             uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_cpu_timer();
 
-            for (;;)
+            for (uint64_t iter = 0; iter < ITERS_1; iter++)
             {
                 uint64_t t0 = apac_cpu_timer();
 
-                apn_mul_n(res, op1, op2, size);
+                apn_mul(res, op1, op2, size, size);
 
                 uint64_t t1 = apac_cpu_timer();
 
                 uint64_t dur = t1 - t0;
 
-                if (best == UINT64_MAX ||
-                    dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
+                if (dur < best)
                 {
                     best = dur;
-                    last_improve = apac_cpu_timer();
-                }
-                else if ((apac_cpu_timer() - last_improve) >= MAX_RUNTIME_1)
-                {
-                    break;
                 }
             }
 
@@ -126,7 +106,7 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
     const apn_size_t thresh_end = 70;
 
     const apn_size_t size_start = 1;
-    const apn_size_t size_end = 256;
+    const apn_size_t size_end = 128;
 
     apn_dig_t* op1 =
         apac_malloc(sizeof(apn_dig_t) * size_end);
@@ -144,12 +124,6 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
         thresh <= thresh_end;
         thresh++)
     {
-        printf(
-            "\rTesting Karatsuba Sqr Threshold %" PRI_APN_SIZE,
-            thresh);
-
-        fflush(stdout);
-
         KARATSUBA_SQR_THRESHOLD = thresh;
 
         double total = 0.0;
@@ -157,14 +131,13 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
 
         for (apn_size_t size = size_start;
             size <= size_end;
-            size += SIZE_STEP_SIZE)
+            size += STEP_SIZE1)
         {
             apn_set_random(op1, size);
 
             uint64_t best = UINT64_MAX;
-            uint64_t last_improve = apac_cpu_timer();
 
-            for (;;)
+            for (uint64_t iter = 0; iter < ITERS_1; iter++)
             {
                 uint64_t t0 = apac_cpu_timer();
 
@@ -174,15 +147,9 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
 
                 uint64_t dur = t1 - t0;
 
-                if (best == UINT64_MAX ||
-                    dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
+                if (dur < best)
                 {
                     best = dur;
-                    last_improve = apac_cpu_timer();
-                }
-                else if ((apac_cpu_timer() - last_improve) >= MAX_RUNTIME_1)
-                {
-                    break;
                 }
             }
 
@@ -213,7 +180,7 @@ static apn_size_t get_dnc_div_threshold(void)
     const apn_size_t thresh_end = 60;
 
     const apn_size_t size_start = 1;
-    const apn_size_t size_end = 256;
+    const apn_size_t size_end = 128;
 
     apn_dig_t* dividend =
         apac_malloc(sizeof(apn_dig_t) * (size_end * 2));
@@ -240,13 +207,7 @@ static apn_size_t get_dnc_div_threshold(void)
     for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
         thresh++)
-    {
-        printf(
-            "\rTesting Divide-&-Conquer Div Threshold %" PRI_APN_SIZE,
-            thresh);
-
-        fflush(stdout);
-
+    {            
         DNC_DIV_THRESHOLD = thresh;
 
         double total = 0.0;
@@ -254,7 +215,7 @@ static apn_size_t get_dnc_div_threshold(void)
 
         for (apn_size_t size_dvsr = size_start;
             size_dvsr <= size_end;
-            size_dvsr += SIZE_STEP_SIZE)
+            size_dvsr += STEP_SIZE2)
         {
             do
             {
@@ -263,7 +224,7 @@ static apn_size_t get_dnc_div_threshold(void)
 
             for (apn_size_t size_divd = size_dvsr;
                 size_divd <= size_end * 2;
-                size_divd += SIZE_STEP_SIZE)
+                size_divd += STEP_SIZE2)
             {
                 apn_set(
                     quot,
@@ -276,9 +237,8 @@ static apn_size_t get_dnc_div_threshold(void)
                     0);
 
                 uint64_t best = UINT64_MAX;
-                uint64_t last_improve = apac_cpu_timer();
 
-                for (;;)
+                for (uint64_t iter = 0; iter < ITERS_2; iter++)
                 {
                     uint64_t t0 = apac_cpu_timer();
 
@@ -289,21 +249,16 @@ static apn_size_t get_dnc_div_threshold(void)
                         divisor,
                         size_divd,
                         0,
-                        size_dvsr);
+                        size_dvsr
+                    );
 
                     uint64_t t1 = apac_cpu_timer();
 
                     uint64_t dur = t1 - t0;
 
-                    if (best == UINT64_MAX ||
-                        dur < (uint64_t)((double)best * (1.0 - IMPROVE_PCT)))
+                    if (dur < best)
                     {
                         best = dur;
-                        last_improve = apac_cpu_timer();
-                    }
-                    else if ((apac_cpu_timer() - last_improve) >= MAX_RUNTIME_2)
-                    {
-                        break;
                     }
                 }
 
@@ -383,34 +338,25 @@ int main(int argc, char** argv)
 
     apac_disable_dfs();
 
-    apn_size_t kara_mul_thresh =
-        get_karatsuba_mul_threshold();
-
-    printf("\n");
-
-    apn_size_t kara_sqr_thresh =
-        get_karatsuba_sqr_threshold();
-
-    printf("\n");
-
-    apn_size_t dnc_div_thresh =
-        get_dnc_div_threshold();
-
-    printf("\n\n");
-
-    apac_restore_dfs();
+    apn_size_t kara_mul_thresh = get_karatsuba_mul_threshold();
 
     printf(
         "KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(%" PRI_APN_SIZE ");\n",
         kara_mul_thresh);
 
+    apn_size_t kara_sqr_thresh = get_karatsuba_sqr_threshold();
+
     printf(
         "KARATSUBA_SQR_THRESHOLD  = (apn_size_t)(%" PRI_APN_SIZE ");\n",
         kara_sqr_thresh);
 
+    apn_size_t dnc_div_thresh = get_dnc_div_threshold();
+
     printf(
         "DNC_DIV_THRESHOLD        = (apn_size_t)(%" PRI_APN_SIZE ");\n",
         dnc_div_thresh);
+
+    apac_restore_dfs();
 
     return EXIT_SUCCESS;
 }
