@@ -28,10 +28,7 @@ apac_err_t apn_mul_n(
 	APAC_ASSERT(size != 0);
 	APAC_NO_OVERLAP(result, size * 2, op1, size);
 	APAC_NO_OVERLAP(result, size * 2, op2, size);
-
-	// zero out result before mul
-	apn_set(result, 2 * size, 0);
-
+	
 	if (size < KARATSUBA_MUL_THRESHOLD)
 	{
 		apn_basecase_mul(result, op1, op2, size, size);
@@ -45,8 +42,6 @@ apac_err_t apn_mul_n(
 
 		if (!workspace) { return APAC_OOM; }
 		
-		apn_set(workspace, ws_size, 0);
-
 		apn_karatsuba_mul(result, op1, op2, size, size, workspace);
 		apac_free(workspace);	// free temporary workspace
 	}
@@ -70,13 +65,9 @@ apac_err_t apn_mul(
 	APAC_NO_OVERLAP(result, size1 + size2, op1, size1);
 	APAC_NO_OVERLAP(result, size1 + size2, op2, size2);
 
-	// zero out result before mul
-	apn_set(result, size1 + size2, 0);
-
 	if (size2 == 1)
 	{
-		apn_dig_t carry = apn_addmul_one(result, op1, size1, op2[0]);
-		APAC_ASSERT(carry == 0);
+		apn_mul_one(result, op1, size1, op2[0]);
 	}
 	else if (size1 < KARATSUBA_MUL_THRESHOLD || (size2 <= (size1 + 1) / 2))
 	{
@@ -90,8 +81,6 @@ apac_err_t apn_mul(
 		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
 
 		if (!workspace) { return APAC_OOM; }
-
-		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_mul(result, op1, op2, size1, size2, workspace);
 		apac_free(workspace);	// free temporary workspace
