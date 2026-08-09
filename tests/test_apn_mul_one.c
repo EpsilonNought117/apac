@@ -66,7 +66,7 @@ check_apn_mul_one(uint64_t iterations)
         apn_set_random(op1, size);
         op1[size] = 0;
 
-        apn_set(op2, size + 1, 0);
+        apn_set(op2, size + 1, 0); // for addmul_one
 
         apn_dig_t val = 0;
 

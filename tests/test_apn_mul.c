@@ -51,7 +51,6 @@ check_apn_mul(uint64_t iterations)
         apn_set_random(op1, size1);
         apn_set_random(op2, size2);
 
-        apn_set(op3, size1 + size2, 0);
         apn_set(op4, size1 + size2, 0);
 
         apac_err_t err_out = apn_mul(
@@ -81,7 +80,6 @@ check_apn_mul(uint64_t iterations)
         /* TEST-2: multiply by zero */
 
         apn_set(op2, size2, 0);
-        apn_set(op3, size1 + size2, 0);
 
         err_out = apn_mul(
             op3,
@@ -103,7 +101,6 @@ check_apn_mul(uint64_t iterations)
         op2[0] = 1;
 
         apn_set_random(op1, size1);
-        apn_set(op3, size1 + size2, 0);
 
         err_out = apn_mul(
             op3,
@@ -123,9 +120,6 @@ check_apn_mul(uint64_t iterations)
 
         apn_set_random(op1, size1);
         apn_set_random(op2, size1);
-
-        apn_set(op3, size1 * 2, 0);
-        apn_set(op4, size1 * 2, 0);
 
         apac_err_t err_out1 = apn_mul(
             op3,

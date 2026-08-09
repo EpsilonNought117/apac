@@ -34,12 +34,11 @@ check_apn_mul_n(uint64_t iterations)
 
         } while (size == 0);
 
-        /* TEST-1: compare against schoolbook addmul_one */
+        /* TEST-1: compare against addmul_one */
 
         apn_set_random(op1, size);
         apn_set_random(op2, size);
 
-        apn_set(op3, size * 2, 0);
         apn_set(op4, size * 2, 0);
 
         apac_err_t err_out = apn_mul_n(
@@ -70,8 +69,6 @@ check_apn_mul_n(uint64_t iterations)
         apn_set(op1, size, APN_DIG_MAX);
         apn_set(op2, size, APN_DIG_MAX);
 
-        apn_set(op4, size * 2, 0);
-
         apn_set(op3, size, 0);
         op3[0] = 1;
 
@@ -97,7 +94,6 @@ check_apn_mul_n(uint64_t iterations)
         op2[0] = 1;
 
         apn_set_random(op1, size);
-        apn_set(op3, size * 2, 0);
 
         err_out = apn_mul_n(
             op3,
@@ -115,9 +111,7 @@ check_apn_mul_n(uint64_t iterations)
         /* TEST-4: multiply by zero */
 
         apn_set(op2, size, 0);
-
         apn_set_random(op1, size);
-        apn_set(op3, size * 2, 0);
 
         err_out = apn_mul_n(
             op3,
@@ -136,9 +130,6 @@ check_apn_mul_n(uint64_t iterations)
 
         apn_set_random(op1, size);
         apn_set_random(op2, size);
-
-        apn_set(op3, size * 2, 0);
-        apn_set(op4, size * 2, 0);
 
         apac_err_t err_out1 = apn_mul_n(
             op3,
@@ -167,9 +158,6 @@ check_apn_mul_n(uint64_t iterations)
         apn_set_random(op1, size);
         apn_set_random(op2, size);
         apn_set_random(op5, size);
-
-        apn_set(op3, size * 2, 0);
-        apn_set(op4, size * 2, 0);
 
         int cmp_res1 = apn_cmp(op5, op2, size);
 
