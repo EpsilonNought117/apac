@@ -268,63 +268,182 @@ REM_CASE 1
 #   -------------------------
 
 # Lowest common denominator x64 multiplication routine
-# Not particularly optimized
 
 mul_bc_x64:
-
 .cfi_startproc
+
     push    rbx
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset rbx, 0
 
+    push    r12
+.cfi_adjust_cfa_offset 8
+.cfi_rel_offset r12, 0
+
+    push    r13
+.cfi_adjust_cfa_offset 8
+.cfi_rel_offset r13, 0
+
 .Lx64_start_of_func:
 
     mov     rbx, rdx        # op2 in rbx
+    mov     r9,  rcx
+    mov     r11, rcx
+    mov     r12, rcx
 
-.Lx64_outer_loop_start:
+    shl     r9,  3      # size1 *= 8
+    shr     r11, 2      # size1 /= 4
+    and     r12, 3      # size1 %= 4
+    
+.Lx64_pass1_outer_start:
 
-    mov     r11, rcx        # temp size1
-    xor     r10, r10        # temp_reg
-    mov     r9,  QWORD PTR [rbx]    # op2[i]
-    mov     rax, r9
+    xor     r13d, r13d              # temp = 0
+    mov     r10, QWORD PTR [rbx]    # r10 = op2[0]
+    mov     rax, r10                # rax = r10
+    mov     rcx, r11
+    test    rcx, rcx
+    jz      .Lx64_pass1_bef_rmdr
 
 .p2align 4
-.Lx64_inner_loop:
+.Lx64_pass1_inner_unroll_loop:
 
-    mul     QWORD PTR [rsi]         # rdx : rax = rax * op1[i]
+.set i, 0
+.rept 4
 
-    # now product in rdx:rax
-    # rax = low64
-    # rdx = high64
-
-    add     r10, rax                # temp_reg += low64
-    adc     rdx, 0                  # high64 += CF
-    add     QWORD PTR [rdi], r10    # result[i + j] += temp_reg
-
-    mov     rax, r9                 # restore rax for next mul
-    mov     r10, rdx
-    adc     r10, 0
-
-    lea     rsi, [rsi + 8]          # update ptrs
-    lea     rdi, [rdi + 8]
-    dec     r11
-    jnz     .Lx64_inner_loop
-
-.Lx64_outer_loop_end:
-
-    mov     QWORD PTR [rdi], r10
-    mov     r11, rcx
-    shl     r11, 3
+    mul     QWORD PTR [rsi + i * 8]         # rdx : rax = op1[i] * op2[0]
     
-    sub     rdi, r11
-    sub     rsi, r11
+    add     rax, r13
+    adc     rdx, 0
+
+    mov     QWORD PTR [rdi + i * 8], rax
+    mov     r13, rdx
+    mov     rax, r10 
+
+.set i, i + 1
+.endr
+
+    add     rsi, 32
+    add     rdi, 32
+    dec     rcx
+    jnz     .Lx64_pass1_inner_unroll_loop
+
+.p2align 4
+.Lx64_pass1_bef_rmdr:
+
+    mov     rcx, r12
+    test    rcx, rcx
+    jz      .Lx64_pass1_outer_end
+
+.p2align 4
+.Lx64_pass1_inner_rmdr_loop:
+
+    mul     QWORD PTR [rsi]         # rdx : rax = op1[i] * op2[0]
+    
+    add     rax, r13
+    adc     rdx, 0
+
+    mov     QWORD PTR [rdi], rax
+    mov     r13, rdx
+    mov     rax, r10
+
+    add     rsi, 8
+    add     rdi, 8
+    dec     rcx
+    jnz     .Lx64_pass1_inner_rmdr_loop
+
+.Lx64_pass1_outer_end:
+
+    mov     QWORD PTR [rdi], r13
+
+    sub     rsi, r9
+    sub     rdi, r9
     add     rdi, 8
     add     rbx, 8
 
     dec     r8
-    jnz     .Lx64_outer_loop_start
+    jz      .Lx64_end_of_func
+
+.Lx64_pass2_outer_loop_start:
+
+    xor     r13d, r13d
+    mov     r10, QWORD PTR [rbx]
+    mov     rax, r10
+
+    mov     rcx, r11
+    test    rcx, rcx
+    jz      .Lx64_pass2_bef_rmdr
+
+.p2align 4
+.Lx64_pass2_inner_loop_unroll:
+
+.set i, 0
+.rept 4
+
+    mul     QWORD PTR [rsi + i * 8]         # rdx : rax = op1[i] * op2[0]
+    
+    add     rax, QWORD PTR [rdi + i * 8]
+    adc     rdx, 0
+    add     rax, r13
+    adc     rdx, 0
+
+    mov     QWORD PTR [rdi + i * 8], rax
+    mov     r13, rdx
+    mov     rax, r10 
+
+.set i, i + 1
+.endr
+
+    add     rsi, 32
+    add     rdi, 32
+    dec     rcx
+    jnz     .Lx64_pass2_inner_loop_unroll
+
+.p2align 4
+.Lx64_pass2_bef_rmdr:
+
+    mov     rcx, r12
+    test    rcx, rcx
+    jz      .Lx64_pass2_outer_loop_end
+
+.p2align 4
+.Lx64_pass2_inner_loop_rmdr:
+
+    mul     QWORD PTR [rsi]
+
+    add     rax, QWORD PTR [rdi]
+    adc     rdx, 0
+    add     rax, r13
+    adc     rdx, 0
+
+    mov     QWORD PTR [rdi], rax
+    mov     r13, rdx
+    mov     rax, r10
+
+    add     rsi, 8
+    add     rdi, 8
+    dec     rcx
+    jnz     .Lx64_pass2_inner_loop_rmdr
+
+.p2align 4
+.Lx64_pass2_outer_loop_end:
+
+    mov     QWORD PTR [rdi], r13
+    
+    sub     rdi, r9
+    sub     rsi, r9
+    add     rdi, 8
+    add     rbx, 8
+
+    dec     r8
+    jnz     .Lx64_pass2_outer_loop_start
 
 .Lx64_end_of_func:
+
+    pop     r13
+.cfi_adjust_cfa_offset -8
+
+    pop     r12
+.cfi_adjust_cfa_offset -8
 
     pop     rbx
 .cfi_adjust_cfa_offset -8
