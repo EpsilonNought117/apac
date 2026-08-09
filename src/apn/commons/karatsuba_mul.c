@@ -33,40 +33,70 @@ void apn_karatsuba_mul(
 	APAC_ASSERT(upper_b > 0 && upper_b <= lower);
 	APAC_ASSERT(upper_a + upper_b >= lower);
 
-	// the lower half is at most 1 digit larger than upper half
-	// (size + 1) / 2 = ceil(size / 2)
-	// size / 2 = floor(size / 2)
+	int cmp_res = 0;
+	int isneg1 = 0, isneg2 = 0; // false in both
 
-	// a0 = op1[0 : (lower - 1)]
-	// a1 = op1[lower : (upper - 1)]
+	if (lower == upper_a)
+	{
+		cmp_res = apn_cmp(op1, &op1[lower], lower);
 
-	// temp[0 : (lower - 1)] = (a0 - a1) 
-	// if a carry is generated that means a1 > a0 in which case 
-	// perform negation of result to get the absolute value
+		if (cmp_res < 0)
+		{
+			apn_sub_n(result, &op1[lower], op1, lower);
+			isneg1 = 1;	// true
+		}
+		else
+		{
+			apn_sub_n(result, op1, &op1[lower], lower);
+		}
+	}
+	else
+	{
+		cmp_res = (op1[lower - 1] == 0) ? apn_cmp(op1, &op1[lower], upper_a) : 1;
 
-	// carry1 = carryA
+		if (cmp_res < 0)
+		{
+			apn_sub_n(result, &op1[lower], op1, upper_a);
+			result[lower - 1] = 0;
+			isneg1 = 1; // true
+		}
+		else
+		{
+			apn_sub(result, op1, &op1[lower], lower, upper_a);
+		}
+	}
 
-	apn_dig_t carry1 = apn_sub(temp, op1, &op1[lower], lower, upper_a);
-	if (carry1) { apn_neg(temp, temp, lower); }
+	if (lower == upper_b)
+	{
+		cmp_res = apn_cmp(op2, &op2[lower], lower);
 
-	// b0 = op2[0 : (lower - 1)]
-	// b1 = op2[lower : (upper - 1)]
-	// temp[lower : (2 * lower - 1)] = (b0 - b1)
+		if (cmp_res < 0)
+		{
+			apn_sub_n(&result[lower], &op2[lower], op2, lower);
+			isneg2 = 1; // true
+		}
+		else
+		{
+			apn_sub_n(&result[lower], op2, &op2[lower], lower);
+		}
+	}
+	else
+	{
+		cmp_res = apn_is_zero(&op2[upper_b], lower - upper_b) ? apn_cmp(op2, &op2[lower], upper_b) : 1;
 
-	// carry2 = carryB
-	// rest is same
-	apn_dig_t carry2 = apn_sub(&temp[lower], op2, &op2[lower], lower, upper_b);
-	if (carry2) { apn_neg(&temp[lower], &temp[lower], lower); }
+		if (cmp_res < 0)
+		{
+			apn_sub_n(&result[lower], &op2[lower], op2, upper_b);
+			apn_set(&result[lower + upper_b], lower - upper_b, 0);
+			isneg2 = 1;
+		}
+		else
+		{
+			apn_sub(&result[lower], op2, &op2[lower], lower, upper_b);
+		}
+	}
 
-	// result[0 : (2 * lower - 1)] = temp[0 : (lower - 1)] * temp[lower : (2 * lower - 1)]
-	apn_karatsuba_mul(result, temp, &temp[lower], lower, lower, &temp[2 * lower]);
-
-	// we now have c2 in result 
-
-	// copy c2 from result to temp
-	// clear out result for accumulating c0 and c1
-	apn_cpy(temp, result, 2 * lower);
-	apn_set(result, 2 * lower, 0);
+	apn_karatsuba_mul(temp, result, &result[lower], lower, lower, &temp[2 * lower]);
 
 	// c0 = a0 * b0
 	apn_karatsuba_mul(result, op1, op2, lower, lower, &temp[2 * lower]);
@@ -76,7 +106,7 @@ void apn_karatsuba_mul(
 	// prepare (c0 + c1) in temp[(2 * lower) : (4 * lower - 1)] and then propagate any carry
 	apn_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, upper_a + upper_b);
 
-	if (carry1 == carry2) // if both signs are same
+	if (isneg1 == isneg2) // if both signs are same
 	{
 		// do c2 = c0 + c1 - c2
 		temp_val -= apn_sub_n(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower);
@@ -105,8 +135,6 @@ void apn_karatsuba_mul(
 	{
 		apn_add_one(&result[3 * lower], &result[3 * lower], upper_a + upper_b - lower, temp_val);
 	}
-	
-	apn_set(temp, 4 * lower, 0);	// clear workspace for any further calls
 
 	return;
 }
