@@ -453,5 +453,3 @@ mul_bc_x64:
 .size mul_bc_x64, .-mul_bc_x64
 
 .section .note.GNU-stack,"",@progbits
-
-
