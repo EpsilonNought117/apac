@@ -48,54 +48,131 @@ mul_bc_zen4 PROC FRAME
 
 start_of_func:
 
-    xchg    rbp, rcx
-    xchg    rbx, rdx
+    xchg    rbp, rcx    ; rbp = result_ptr
+    xchg    rbx, rdx    ; rbx = op1_ptr
+
+    ; r10 = size2
     mov     r10, QWORD PTR [rsp + 88]
-    mov     r11, r9
-    shr     r9,  3
-    mov     rax, r9
-    shl     rax, 6
-    and     r11, 7
-    mov     r13, r11
-    lea     r12, offset jump_table
-    lea     r12, [r12 + r11*8]
 
-outer_loop_start:
+    mov     r11, r9     ; r11 = size1
+    mov     r12, r9     ; r12 = size1
+    mov     r13, r9     ; r13 = size1
 
-    mov     r11, QWORD PTR [rbp]
-    mov     rcx, r9
+    shr     r9,  3      ; r9  /= 8
+    and     r11, 7      ; r11 %= 8
+    shl     r12, 3      ; r12 *= 8
+
+pass1_start:
+
     mov     rdx, QWORD PTR [r8]
-    test    rcx, rcx
-    jz      before_remainder
+    xor     rax, rax
+    
+    mov     rcx, r9
+    test    r9,  r9
+    jz      pass1_bef_rmdr
 
-ALIGN 64
-inner_loop_unrolled:
+ALIGN 16
+pass1_loop_unroll:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
 
     mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
-    adcx    rsi, r11
+    adc     rsi, rax
+    mov     QWORD PTR [rbp + i * 8], rsi
+    mov     rax, rdi
+
+ENDM
+
+    lea     rbx, [rbx + 64]
+    lea     rbp, [rbp + 64]
+    dec     rcx
+    jnz     pass1_loop_unroll
+
+pass1_bef_rmdr:
+
+    mov     rcx, r11
+    jrcxz   pass1_end
+
+ALIGN 16
+pass1_loop_rmdr:
+
+    mulx    rdi, rsi, QWORD PTR [rbx]
+    adc     rsi, rax
+    mov     QWORD PTR [rbp], rsi
+    mov     rax, rdi
+
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
+    dec     rcx
+    jnz     pass1_loop_rmdr
+
+pass1_end:
+
+    adc     rax, 0
+    mov     QWORD PTR [rbp], rax
+
+    sub     rbx, r12
+    sub     rbp, r12
+    add     rbp, 8
+    add     r8,  8
+
+    dec     r10
+    jz      end_of_func
+
+bef_pass2:
+
+    dec     r13
+    sub     r12, 8
+
+    mov     r9,  r13
+    mov     rax, r13
+    
+    shr     r9,  3
+    and     rax, 7
+    lea     r11, offset jump_table
+    lea     r11, [r11 + rax * 8]
+    
+    ; now r11 contains the proper
+    ; remainder size label offset
+    ; from the jump table
+
+ALIGN 16
+pass2_outer_loop_start:
+
+    mov     rax, QWORD PTR [rbp]
+    mov     rdx, QWORD PTR [r8]
+    mov     rcx, r9
+    test    r9,  r9
+    jz      pass2_bef_rmdr
+
+ALIGN 16
+pass2_inner_loop_unroll:
+
+FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
+
+    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
+    adcx    rsi, rax
     adox    rdi, QWORD PTR [rbp + i * 8 + 8]
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     r11, rdi
+    mov     rax, rdi
 
 ENDM
 
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   before_remainder
-    jmp     inner_loop_unrolled
+    jrcxz   pass2_bef_rmdr
+    jmp     pass2_inner_loop_unroll
 
-ALIGN 32
-before_remainder:
+ALIGN 16
+pass2_bef_rmdr:
 
-    jmp     QWORD PTR [r12]
+    jmp     QWORD PTR [r11]
 
 ALIGN 16
 jump_table:
 
-    QWORD offset outer_loop_end
+    QWORD offset pass2_outer_loop_end
     QWORD offset rem1
     QWORD offset rem2
     QWORD offset rem3
@@ -111,31 +188,39 @@ rem&outer&:
 
 i = 0
 WHILE i LT outer
+
     mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
-    adcx    rsi, r11
+    adcx    rsi, rax
     adox    rdi, QWORD PTR [rbp + i * 8 + 8]
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     r11, rdi
+    mov     rax, rdi
             
 i = i + 1
 ENDM
 
-    jmp outer_loop_end
+    lea     rbx, [rbx + outer * 8]
+    lea     rbp, [rbp + outer * 8]
+    jmp     pass2_outer_loop_end
         
 ENDM
   
-outer_loop_end:
+pass2_outer_loop_end:
 
-    adc     r11, 0
-    mov     QWORD PTR [rbp + r13 * 8], r11
-    
-    add     r8,  8
-    sub     rbx, rax
-    sub     rbp, rax
+    mulx    rdi, rsi, QWORD PTR [rbx]
+    adcx    rsi, rax
+    adox    rdi, rcx        ; rcx is zero now
+
+    mov     QWORD PTR [rbp], rsi
+    adc     rdi, 0
+    mov     QWORD PTR [rbp + 8], rdi
+
+    sub     rbp, r12
+    sub     rbx, r12
     add     rbp, 8
+    add     r8,  8
 
     dec     r10
-    jnz     outer_loop_start
+    jnz     pass2_outer_loop_start
 
 end_of_func:
 
