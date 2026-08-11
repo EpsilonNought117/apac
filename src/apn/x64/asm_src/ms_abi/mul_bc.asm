@@ -241,7 +241,6 @@ mul_bc_zen4 ENDP
 ;   -------------------------
 
 ; Lowest common denominator x64 multiplication routine
-; Not particularly optimized
 
 mul_bc_x64 PROC FRAME
 
@@ -251,58 +250,171 @@ mul_bc_x64 PROC FRAME
 .pushreg    rdi
     push    rsi
 .pushreg    rsi
+    push    r12
+.pushreg    r12
+    push    r13
+.pushreg    r13
 .endprolog
 
 start_of_func:
+    
+    mov     rbx, rdx                    ; op1 now in rbx
+    mov     r10, QWORD PTR [rsp + 80]   ; size2 in r10 at 5th arg position
 
-    xchg    rbx, rdx                    ; op1 now in rbx
-    mov     r10, QWORD PTR [rsp + 64]   ; size2 in r10 at 5th arg position
+    mov     rdi, r9     ; rdi = size1
+    mov     rsi, r9     ; rsi = size1
+    
+    shr     rdi, 2      ; rdi /= 4
+    and     rsi, 3      ; rsi %= 4
+    shl     r9,  3      ; size1 *= 8
 
-outer_loop:
+pass1_start:
 
-    xor     rdi, rdi    ; temp_reg
-    xor     rdx, rdx    ; high64
-    mov     r11, r9     ; size1 copy in r11
-    mov     rsi, QWORD PTR [r8] ; op2[i]
-    mov     rax, rsi
+    mov     r13, QWORD PTR [r8]
+    xor     r11d, r11d
+    mov     rax, r13
+
+    mov     r12, rdi
+    test    r12, r12
+    jz      pass1_bef_rmdr
 
 ALIGN 16
-inner_loop:
+pass1_loop_unroll:
 
-    mul     QWORD PTR [rbx] ; rdx : rax = rax * op1[i]
+i = 0
+WHILE i LT 4
 
-    ; now product in rdx:rax
-    ; rax = low64
-    ; rdx = high64
+    mul     QWORD PTR [rbx + i * 8]
 
-    add     rdi, rax                ; temp_reg += low64
-    adc     rdx, 0                  ; high64 += CF
-    add     QWORD PTR [rcx], rdi    ; result[i + j] += temp_reg
+    add     rax, r11
+    adc     rdx, 0
 
-    mov     rax, rsi                ; restore rax for next mul
-    mov     rdi, rdx
-    adc     rdi, 0
+    mov     QWORD PTR [rcx + i * 8], rax
+    mov     r11, rdx
+    mov     rax, r13
 
-    lea     rbx, [rbx + 8]          ; update ptrs
-    lea     rcx, [rcx + 8]          
-    dec     r11
-    jnz     inner_loop
+i = i + 1
+ENDM
 
-outer_loop_end:
+    add     rbx, 32
+    add     rcx, 32
+    dec     r12
+    jnz     pass1_loop_unroll
 
-    mov     QWORD PTR [rcx], rdi
+pass1_bef_rmdr:
 
-    mov     r11, r9
-    shl     r11, 3
-    sub     rbx, r11
-    sub     rcx, r11
+    mov     r12, rsi
+    test    r12, r12
+    jz      pass1_end 
+
+ALIGN 16
+pass1_loop_rmdr:
+
+    mul     QWORD PTR [rbx]
+
+    add     rax, r11
+    adc     rdx, 0
+
+    mov     QWORD PTR [rcx], rax
+    mov     r11, rdx
+    mov     rax, r13
+
+    add     rbx, 8
+    add     rcx, 8
+    dec     r12
+    jnz     pass1_loop_rmdr
+
+pass1_end:
+
+    mov     QWORD PTR [rcx], r11
+
+    sub     rbx, r9
+    sub     rcx, r9
     add     r8,  8
     add     rcx, 8
+
     dec     r10
-    jnz     outer_loop
+    jz      end_of_func
+
+ALIGN 16
+pass2_outer_loop_start:
+
+    mov     r13, QWORD PTR [r8]
+    xor     r11d, r11d
+    mov     rax, r13
+
+    mov     r12, rdi
+    test    r12, r12
+    jz      pass2_inner_bef_rmdr
+
+ALIGN 16
+pass2_inner_loop_unroll:
+
+i = 0
+WHILE i LT 4
+
+    mul     QWORD PTR [rbx + i * 8]
+
+    add     rax, QWORD PTR [rcx + i * 8]
+    adc     rdx, 0
+    add     rax, r11
+    adc     rdx, 0
+
+    mov     QWORD PTR [rcx + i * 8], rax
+    mov     r11, rdx
+    mov     rax, r13
+
+i = i + 1
+ENDM
+
+    add     rbx, 32
+    add     rcx, 32
+    dec     r12
+    jnz     pass2_inner_loop_unroll
+
+ALIGN 16
+pass2_inner_bef_rmdr:
+
+    mov     r12, rsi
+    test    r12, r12
+    jz      pass2_outer_loop_end
+
+ALIGN 16
+pass2_inner_loop_rmdr:
+
+    mul     QWORD PTR [rbx]
+
+    add     rax, QWORD PTR [rcx]
+    adc     rdx, 0
+    add     rax, r11
+    adc     rdx, 0
+
+    mov     QWORD PTR [rcx], rax
+    mov     r11, rdx
+    mov     rax, r13
+
+    add     rbx, 8
+    add     rcx, 8
+    dec     r12
+    jnz     pass2_inner_loop_rmdr    
+
+ALIGN 16
+pass2_outer_loop_end:
+
+    mov     QWORD PTR [rcx], r11
+
+    sub     rbx, r9
+    sub     rcx, r9
+    add     r8,  8
+    add     rcx, 8
+
+    dec     r10
+    jnz     pass2_outer_loop_start
 
 end_of_func:
 
+    pop     r13
+    pop     r12
     pop     rsi
     pop     rdi
     pop     rbx
