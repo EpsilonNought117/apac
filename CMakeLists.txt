@@ -153,10 +153,43 @@ else ()
 
 endif()
 
-# Enforce C standard
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
+# --- COMPILER ARGUMENTS ---------------------------------------------------------
+
+if (MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
+    # MSVC (cl.exe)
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>
+        $<$<COMPILE_LANGUAGE:C>:/std:c11>
+        $<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>
+    )
+
+elseif (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
+    # clang-cl (MSVC-compatible driver)
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:/clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
+        $<$<COMPILE_LANGUAGE:C>:/std:c11>
+        $<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>
+    )
+
+elseif (WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+
+    # Clang targeting the MSVC ABI, native GNU-style driver (not clang-cl)
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
+        $<$<COMPILE_LANGUAGE:C>:-std=c11>
+    )
+
+else()
+
+    # GCC / Clang (Linux, macOS)
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
+        $<$<COMPILE_LANGUAGE:C>:-std=c11>
+    )
+
+endif()
 
 # --- BUILD OPTIONS -------------------------------------------------------------
 
@@ -298,38 +331,6 @@ target_compile_definitions(${apac_target} PRIVATE
 target_compile_definitions(${apac_target} PRIVATE
     "$<$<AND:$<BOOL:${APAC_MT_FUNCS}>,$<COMPILE_LANGUAGE:C>>:APAC_MT_FUNCS>"
 )
-
-# --- STRIP PATHS FROM __FILE__ -------------------------------------------------
-
-if (MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-
-    # MSVC (cl.exe)
-    target_compile_options(${apac_target} PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>
-    )
-
-elseif (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
-
-    # clang-cl (MSVC-compatible driver)
-    target_compile_options(${apac_target} PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:/clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
-    )
-
-elseif (WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
-
-    # Clang targeting the MSVC ABI, native GNU-style driver (not clang-cl)
-    target_compile_options(${apac_target} PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
-    )
-
-else()
-
-    # GCC / Clang (Linux, macOS)
-    target_compile_options(${apac_target} PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
-    )
-
-endif()
 
 # --- APAC TESTS ----------------------------------------------------------------
 
