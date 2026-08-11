@@ -13,23 +13,18 @@ apac_err_t apn_sqr(
 	APAC_ASSERT(size != 0);
 	APAC_NO_OVERLAP(result, size * 2, op1, size);
 	
-	apn_set(result, 2 * size, 0);
-
 	if (size < KARATSUBA_SQR_THRESHOLD)
 	{
 		apn_basecase_sqr(result, op1, size);
 	}
 	else
 	{
-
 		APAC_ASSERT(apac_allocator.custom_malloc != NULL && apac_allocator.custom_free != NULL);
 
 		apn_size_t ws_size = KARATSUBA_SQR_WS_SIZE(size);
 		apn_dig_t* workspace = apac_malloc(sizeof(apn_dig_t) * ws_size);
 
 		if (!workspace) { return APAC_OOM; }
-
-		apn_set(workspace, ws_size, 0);
 
 		apn_karatsuba_sqr(result, op1, size, workspace);
 		apac_free(workspace);

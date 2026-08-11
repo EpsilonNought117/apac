@@ -25,25 +25,47 @@ void apn_karatsuba_sqr(
 	apn_size_t lower = (size + 1) >> 1;
 	apn_size_t upper = size >> 1;
 
-	apn_dig_t carry = apn_sub(temp, op1, &op1[lower], lower, upper);
-	if (carry) { apn_neg(temp, temp, lower); }
+	if (lower == upper)
+	{
+		int cmp_res = apn_cmp(op1, &op1[lower], lower);
+
+		if (cmp_res < 0)
+		{
+			apn_sub_n(result, &op1[lower], op1, lower);
+		}
+		else
+		{
+			apn_sub_n(result, op1, &op1[lower], lower);
+		}
+	}
+	else
+	{
+		int cmp_res = (op1[lower - 1] == 0) ? apn_cmp(op1, &op1[lower], upper) : 1;
+
+		if (cmp_res < 0)
+		{
+			apn_sub_n(result, &op1[lower], op1, upper);
+			result[lower - 1] = 0;
+		}
+		else
+		{
+			apn_sub(result, op1, &op1[lower], lower, upper);
+		}
+	}
 
 	// first recursive call
-	apn_karatsuba_sqr(result, temp, lower, &temp[lower]);
-
-	apn_cpy(temp, result, 2 * lower);
-	apn_set(result, 2 * lower, 0);
+	apn_karatsuba_sqr(temp, result, lower, &temp[lower * 2]);
 
 	// c0 = a0 ^ 2
-	apn_karatsuba_sqr(result, op1, lower, &temp[2 * lower]);
+	apn_karatsuba_sqr(result, op1, lower, &temp[lower * 2]);
 	// c1 = a1 ^ 2
-	apn_karatsuba_sqr(&result[2 * lower], &op1[lower], upper, &temp[2 * lower]);
+	apn_karatsuba_sqr(&result[2 * lower], &op1[lower], upper, &temp[lower * 2]);
 
 	// (c0 + c1)
 	apn_dig_t temp_val = apn_add(&temp[2 * lower], result, &result[2 * lower], 2 * lower, 2 * upper);
 	
 	// c2 = (c0 + c1 - (|c0 - c1|)^2)
-	temp_val -= apn_sub(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower, 2 * lower);
+	temp_val -= apn_sub_n(&temp[2 * lower], &temp[2 * lower], temp, 2 * lower);
 
 	apn_add(&result[lower], &result[lower], &temp[2 * lower], lower + 2 * upper, 2 * lower);
 
@@ -51,8 +73,6 @@ void apn_karatsuba_sqr(
 	{
 		apn_add_one(&result[3 * lower], &result[3 * lower], 2 * upper - lower, temp_val);
 	}
-	
-	apn_set(temp, 4 * lower, 0);
 			
 	return;
 }
