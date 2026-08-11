@@ -13,10 +13,6 @@ check_apn_sqr(uint64_t iterations)
     APAC_ALWAYS_ASSERT(op2 != NULL);
     APAC_ALWAYS_ASSERT(op3 != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX, 0);
-    apn_set(op2, TEST_SIZE_MAX * 2, 0);
-    apn_set(op3, TEST_SIZE_MAX * 2, 0);
-
     while (iterations--)
     {
         apn_size_t size = 0;
@@ -31,8 +27,6 @@ check_apn_sqr(uint64_t iterations)
         /* TEST-1: square of zero */
 
         apn_set(op1, size, 0);
-
-        apn_set(op2, size * 2, 0);
         apn_set(op3, size * 2, 0);
 
         apac_err_t err_out = apn_sqr(
@@ -47,12 +41,31 @@ check_apn_sqr(uint64_t iterations)
 
         APAC_ALWAYS_ASSERT(cmp_res == 0);
 
-        /* TEST-2: compare against multiplication */
+        /* TEST-2: maximum value squared*/
+
+        apn_set(op1, size, APN_DIG_MAX);
+        
+        apn_set(op3, size, 0);
+        op3[0] = 1;
+
+        apn_set(&op3[size], size, APN_DIG_MAX);
+        op3[size]--;
+
+        err_out = apn_sqr(
+            op2,
+            op1,
+            size
+        );
+
+        APAC_ALWAYS_ASSERT(err_out != APAC_OOM);
+
+        cmp_res = apn_cmp(op2, op3, size * 2);
+
+        APAC_ALWAYS_ASSERT(cmp_res == 0);
+
+        /* TEST-3: compare against multiplication */
 
         apn_set_random(op1, size);
-
-        apn_set(op2, size * 2, 0);
-        apn_set(op3, size * 2, 0);
 
         apac_err_t err_out1 = apn_sqr(
             op2,
