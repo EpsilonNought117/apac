@@ -39,27 +39,116 @@ start_of_func:
 
     xchg    rbp, rcx        ; free up rcx for jrcxz/loop
     xchg    rbx, rdx        ; free up rdx for mul
-    mov     r11, r8         ; copy of size in r11 to later restore from
-    dec     r11             ; curr_size = size - 1
-    jz      pass2
+
+    cmp     r8,  1
+    jne     pass1
+
+case1:
+
+    mov     rdx, QWORD PTR [rbx]
+    
+    mulx    rdi, rsi, rdx
+    mov     QWORD PTR [rbp], rsi
+    mov     QWORD PTR [rbp + 8], rdi
+
+    jmp     end_of_func
+
+pass1:
+
+    ; result[0] = 0
+    mov     QWORD PTR [rbp], 0
+
+    mov     r11, r8
+    dec     r11
+    jz      pass3
 
     mov     r10, r11
-    shl     r10, 3          ; curr_size * sizeof(apn_dig_t)
+    shl     r10, 3
     add     rbp, 8
 
-outer_loop_pass1:
+    mov     rdx, QWORD PTR [rbx]
+    xor     rax, rax
 
-    mov     rdx, QWORD PTR [rbx]  
-    mov     rax, QWORD PTR [rbp]   
     mov     rcx, r11
-    mov     r9,  r11                    ; for later finding the jump_table label
-    shr     rcx, 3                      ; curr_size /= 8 (for 8x unrolled loop)
-    and     r9,  7                      ; curr_size %= 8
-    test    rcx, rcx
-    jz      bef_inner_rmdr_pass1
+    mov     r9,  r11
+    shr     rcx, 2
+    and     r9,  3
 
-ALIGN 64
-inner_loop_unroll_pass1:
+    test    rcx, rcx
+    jz      pass1_before_rmdr
+
+ALIGN 16
+pass1_inner_loop_unroll:
+
+i = 0
+WHILE i LT 4
+
+    mulx    rdi, rsi, QWORD PTR [rbx + i * 8 + 8]
+    adc     rsi, rax
+    mov     QWORD PTR [rbp + i * 8], rsi
+    mov     rax, rdi
+
+i = i + 1
+ENDM
+
+    lea     rbx, [rbx + 32]
+    lea     rbp, [rbp + 32]
+    dec     rcx
+    jnz     pass1_inner_loop_unroll
+
+pass1_before_rmdr:
+
+    mov     rcx, r9
+    jrcxz   pass1_end
+
+ALIGN 16
+pass1_inner_loop_rmdr:
+
+    mulx    rdi, rsi, QWORD PTR [rbx + 8]
+    adc     rsi, rax
+    mov     QWORD PTR [rbp], rsi
+    mov     rax, rdi
+
+    lea     rbx, [rbx + 8]
+    lea     rbp, [rbp + 8]
+    dec     rcx
+    jnz     pass1_inner_loop_rmdr
+
+pass1_end:
+
+    adc     rax, 0
+    mov     QWORD PTR [rbp], rax
+
+    sub     rbx, r10
+    sub     rbp, r10
+    add     rbx, 8
+    add     rbp, 16
+
+    sub     r10, 8
+    dec     r11
+    jz      before_pass3
+
+pass2:
+
+    sub     r10, 8
+
+ALIGN 16
+pass2_outer_loop_start:
+
+    mov     rdx, QWORD PTR [rbx]
+    mov     rax, QWORD PTR [rbp]
+
+    lea     rcx, [r11 - 1]
+    mov     r9,  rcx
+
+    shr     rcx, 3
+    and     r9,  7
+    
+    test    rcx, rcx
+    jz      pass2_before_inner_rmdr
+
+ALIGN 16
+pass2_inner_loop_unroll:
 
 i = 0
 WHILE i LT 8
@@ -69,23 +158,24 @@ WHILE i LT 8
     adox    rdi, QWORD PTR [rbp + i * 8 + 8]
     mov     QWORD PTR [rbp + i * 8], rsi
     mov     rax, rdi
-        
+
 i = i + 1
 ENDM
 
     lea     rbx, [rbx + 64]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   bef_inner_rmdr_pass1
-    jmp     inner_loop_unroll_pass1
+    jrcxz   pass2_before_inner_rmdr
+    jmp     pass2_inner_loop_unroll
 
 ALIGN 16
-bef_inner_rmdr_pass1:
+pass2_before_inner_rmdr:
 
     mov     rcx, r9
-    jrcxz   outer_loop_end_pass1
+    jrcxz   pass2_outer_loop_end
 
-rmdr_loop_pass1:
+ALIGN 16
+pass2_inner_loop_rmdr:
 
     mulx    rdi, rsi, QWORD PTR [rbx + 8]
     adcx    rsi, rax
@@ -95,33 +185,45 @@ rmdr_loop_pass1:
 
     lea     rbx, [rbx + 8]
     lea     rbp, [rbp + 8]
-    loop    rmdr_loop_pass1
+    loop    pass2_inner_loop_rmdr
 
 ALIGN 16
-outer_loop_end_pass1:
+pass2_outer_loop_end:
 
-    adc     QWORD PTR [rbp], rax
+    mulx    rdi, rsi, QWORD PTR [rbx + 8]
+    adcx    rsi, rax
+    adox    rdi, rcx
+    
+    mov     QWORD PTR [rbp], rsi
+    adcx    rdi, rcx
+    mov     QWORD PTR [rbp + 8], rdi
+
     sub     rbx, r10
     sub     rbp, r10
     add     rbx, 8
     add     rbp, 16
+
     sub     r10, 8
     dec     r11
-    jnz     outer_loop_pass1
+    jnz     pass2_outer_loop_start
 
-before_pass2:
+before_pass3:
 
-    mov     r11, r8
+    mov     QWORD PTR [rbp], 0
+
     mov     r10, r8
-    shl     r11, 4
+    mov     r11, r8
+
     shl     r10, 3
+    shl     r11, 4
+
     sub     rbx, r10
     sub     rbp, r11
-    add     rbp, 8
-    add     rbx, 8
 
-ALIGN 32
-pass2:
+    add     rbx, 8
+    add     rbp, 8
+
+pass3:
 
     mov     rcx, r8
     mov     r9,  r8
@@ -129,10 +231,10 @@ pass2:
     and     r9,  3
 
     test    rcx, rcx
-    jz      pass2_before_rmdr
+    jz      pass3_before_rmdr
 
-ALIGN 64
-pass2_unrolled_loop:
+ALIGN 16
+pass3_unroll_loop:
 
 i = 0
 WHILE i LT 4
@@ -154,17 +256,17 @@ ENDM
     lea     rbx, [rbx + 32]
     lea     rbp, [rbp + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   pass2_before_rmdr
-    jmp     pass2_unrolled_loop
+    jrcxz   pass3_before_rmdr
+    jmp     pass3_unroll_loop
 
 ALIGN 16
-pass2_before_rmdr:
+pass3_before_rmdr:
 
     mov     rcx, r9
     jrcxz   end_of_func
 
 ALIGN 16
-pass2_rmdr_loop:
+pass3_rmdr_loop:
 
     mov     rdx, QWORD PTR [rbx]
     mov     r10, QWORD PTR [rbp]
@@ -179,7 +281,7 @@ pass2_rmdr_loop:
 
     lea     rbx, [rbx + 8]
     lea     rbp, [rbp + 16]
-    loop    pass2_rmdr_loop
+    loop    pass3_rmdr_loop
 
 end_of_func:
 
