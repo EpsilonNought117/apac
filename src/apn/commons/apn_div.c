@@ -108,8 +108,6 @@ full_division:
             return APAC_OOM;
         }
 
-        apn_set(temp_ws, ws_size, 0);
-
         apn_dnc_div_balanced(quotient, temp_divd, temp_dvsr, new_size_divd, size_dvsr, temp_ws);
         apac_free(temp_ws);
     }
@@ -123,8 +121,6 @@ full_division:
             apac_free(temp_space);
             return APAC_OOM;
         }
-
-        apn_set(temp_ws, ws_size, 0);
 
         apn_dnc_div_unbalanced(quotient, temp_divd, temp_dvsr, new_size_divd, size_dvsr, temp_ws);
         apac_free(temp_ws);

@@ -37,15 +37,18 @@ apn_dig_t apn_dnc_div_balanced(
     // q1_msd will be at most 1-bit
     q1_msd = apn_dnc_div_balanced(q1, dividend + 2 * k, b1, (n + m) - 2 * k, n - k, temp);
     APAC_ASSERT(q1_msd <= 1);
-    
+
     // temp[0 : (m - 1)] = q1 * b0 
     apn_mul(temp, q1, b0, m - k, k);
 
-    // temp[(m - k) : m] = b0 * q1_msd
-
     if (q1_msd)
     {
-        temp[m] += apn_add_n(temp + m - k, temp + m - k, b0, k);
+        temp[m] = apn_add_n(temp + m - k, temp + m - k, b0, k);
+        apn_set(temp + m + 1, n - m, 0ULL);
+    }
+    else 
+    {
+        apn_set(temp + m, n + 1 - m, 0ULL);
     }
 
     int cmp_res = apn_cmp(dividend + k, temp, n + 1);
@@ -57,18 +60,22 @@ apn_dig_t apn_dnc_div_balanced(
         cmp_res = apn_cmp(dividend + k, temp, n + 1);
     }
 
-    apn_dig_t borrow_out = apn_sub_n(dividend + k, dividend + k, temp, n + 1);
+    apn_dig_t borrow_out = apn_sub(dividend + k, dividend + k, temp, n + 1, m + 1);
     APAC_ASSERT(borrow_out == 0);
-
-    apn_set(temp, n + 1, 0ULL);
 
     q0_msd = apn_dnc_div_balanced(q0, dividend + k, b1, n, n - k, temp);
 
+    // temp[0 : 2 * k] = b0 * q0
     apn_mul_n(temp, b0, q0, k);
 
     if (q0_msd)
     {
-        temp[2 * k] += apn_add_n(temp + k, temp + k, b0, k);
+        temp[k * 2] = apn_add_n(temp + k, temp + k, b0, k);
+        apn_set(temp + k * 2 + 1, n - k * 2, 0ULL);
+    }
+    else
+    {
+        apn_set(temp + k * 2, n + 1 - k * 2, 0ULL);
     }
 
     cmp_res = apn_cmp(dividend, temp, n + 1);
@@ -80,16 +87,15 @@ apn_dig_t apn_dnc_div_balanced(
         cmp_res = apn_cmp(dividend, temp, n + 1);
     }
 
-    borrow_out = apn_sub_n(dividend, dividend, temp, n + 1);
+    borrow_out = apn_sub(dividend, dividend, temp, n + 1, 2 * k + 1);
     APAC_ASSERT(borrow_out == 0);
     
-    // this could happen in some pathological cases
+    // maybe this could happen in some 
+    // pathological case I'm not sure
     if (q0_msd)
     {
         q0_msd = apn_add_one(q1, q1, m - k, q0_msd);
     }
-
-    apn_set(temp, n + 1, 0ULL);
 
     return (q1_msd | q0_msd);
 }
