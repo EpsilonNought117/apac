@@ -317,155 +317,323 @@ sqr_bc_x64 PROC FRAME
 .pushreg    rdi
     push    r12
 .pushreg    r12
-    push    r13
-.pushreg    r13
 .endprolog
 
-    ;   5-limb bignum squaring matrix example with the 
-    ;   symmetric non-diagonal terms marked as DUP
-    ;
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   |     |    a0     |    a1     |    a2     |    a3     |    a4     |
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   |  a0 |   a0*a0   |    DUP    |    DUP    |    DUP    |    DUP    |
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   |  a1 |  2*a1*a0  |   a1*a1   |    DUP    |    DUP    |    DUP    |
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   |  a2 |  2*a2*a0  |  2*a2*a1  |   a2*a2   |    DUP    |    DUP    |
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   |  a3 |  2*a3*a0  |  2*a3*a1  |  2*a3*a2  |   a3*a3   |    DUP    |
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
-    ;   |  a4 |  2*a4*a0  |  2*a4*a1  |  2*a4*a2  |  2*a4*a3  |   a4*a4   |
-    ;   +-----+-----------+-----------+-----------+-----------+-----------+
+start_of_func:
 
-    ; the whole function works in 3 Passes
+    mov     rbx, rdx    ; free up rdx for mul
 
-    ; Pass 1: Accumulate non-diagonal products in the result
-    ;       
-    ;   For an (n * n) sized squaring operation, there will be exactly (n * (n - 1)) / 2
-    ;   number of non-diagonal multiplications since those products occur twice in the 
-    ;   multiplication matrix. In pass 1, add all those sums once.
-    ;
-    ; Pass 2: Shift left the accumulated non-diag prods by 1 bit
-    ;   
-    ;   Shift the accumulated products left by 1 bit, essentially multiplying 
-    ;   the whole lower-triangular part of the matrix by 2, getting the desired value.
-    ;
-    ; Pass 3: Accumulate the diagonal products (squares) in the result
-    ;
-    ;   These squares only need to be added once as shown along the diagonal.
+    cmp     r8,  1
+    jne     pass1
 
-    xchg    rdi, rcx        ; exchange rcx and rdi, freeing up rcx for jrcxz/loop
-    xchg    rsi, rdx        ; exchange rdx and rsi, freeing up rdx for mul
+case1:
 
-    ; op1 in rsi, result in rdi
+    mov     rax, QWORD PTR [rbx]
+    mul     rax
 
-    mov     r9,  r8         ; copy of size in r9
-    dec     r9              ; lower triangular matrix elems start with
-                            ; (n - 1) -> (n - 2) -> ... -> 2 -> 1 -> 0
-    test    r9,  r9         ; test if the basecase sqr size is 1, then no double sum prods
-    jz      before_pass3    ; do the single diagonal sqr prod
+    mov     QWORD PTR [rcx], rax
+    mov     QWORD PTR [rcx + 8], rdx
 
-    ; PASS-1 (O(n^2) step)
+    jmp     end_of_func
 
-    xor     r12, r12    ; counter (starts at 0)
-    xor     r13, r13    ; to restore rax after it has been clobbered by mul
-    
-outer_loop_pass1:
+pass1:
 
-    ; rdx:rax for accumulating the product via mul
-    ; r10 <- result (copy for loop)
-    ; r11 <- op1    (copy for loop)
-    ; r9 <- (size - 1) (copy for loop)
+    ; result[0] = 0
+    mov     QWORD PTR [rcx], 0
 
-    mov     rcx,  r9    ; rcx is inner loop counter
-    xor     rbx, rbx    ; temp_reg
-    xor     rdx, rdx    ; high64 = 0
-    mov     r13, QWORD PTR [rsi + r12 * 1]
-    mov     rax, r13
-    lea     r10, [rdi + r12 * 2 + 8]      
-    lea     r11, [rsi + r12 * 1 + 8]      
+    mov     r9,  r8
+    dec     r9
+    jz      pass4
+
+    mov     r12, r9
+    shl     r12, 3
+    add     rcx, 8
+
+pass1_outer:
+
+    mov     r10, QWORD PTR [rbx]
+    xor     r11, r11
+    mov     rax, r10
+
+    mov     rdi, r9
+    mov     rsi, r9
+    shr     rdi, 2
+    and     rsi, 3
+
+    test    rdi, rdi
+    jz      pass1_before_rmdr
 
 ALIGN 16
-inner_loop_pass1:
+pass1_loop_unroll:
 
-    mul     QWORD PTR [r11]     ; rdx:rax = rax * op1[counter + 1]
+i = 0
+WHILE i LT 4
 
-    add     rbx, rax                ; temp_reg += low64
-    adc     rdx, 0                  ; high64 += CF
-    add     QWORD PTR [r10], rbx    ; result[counter + 1] += temp_reg
+    mul     QWORD PTR [rbx + i * 8 + 8]
 
-    mov     rbx, 0
-    mov     rax, r13            ; restore clobbered rax or load for the first time
-    adc     rbx, rdx            ; temp_reg += (CF + high64)
+    add     rax, r11
+    adc     rdx, 0
 
-    lea     r10, [r10 + 8]
-    lea     r11, [r11 + 8]
-    loop    inner_loop_pass1
+    mov     QWORD PTR [rcx + i * 8], rax
+    mov     r11, rdx
+    mov     rax, r10
 
-outer_loop_end_pass1:
+i = i + 1
+ENDM
 
-    adc     QWORD PTR [r10], rbx
-    add     r12, 8
+    add     rbx, 32
+    add     rcx, 32
+    dec     rdi
+    jnz     pass1_loop_unroll
+    
+pass1_before_rmdr:
+
+    test    rsi, rsi
+    jz      pass1_end
+
+ALIGN 16
+pass1_loop_rmdr:
+
+    mul     QWORD PTR [rbx + 8]
+    
+    add     rax, r11
+    adc     rdx, 0
+
+    mov     QWORD PTR [rcx], rax
+    mov     r11, rdx
+    mov     rax, r10
+
+    add     rbx, 8
+    add     rcx, 8
+    dec     rsi
+    jnz     pass1_loop_rmdr
+
+pass1_end:
+
+    mov     QWORD PTR [rcx], r11
+    
+    sub     rbx, r12
+    sub     rcx, r12
+    add     rbx, 8
+    add     rcx, 16
+
+    sub     r12, 8
     dec     r9
-    jnz     outer_loop_pass1
+    jz      before_pass3
 
-    ; PASS-2 (O(n) step)
+ALIGN 16
+pass2_start:
 
-before_pass2:
+    mov     r10, QWORD PTR [rbx]
+    xor     r11, r11
+    mov     rax, r10
 
-    lea     r10, [rdi + 8]
-    mov     rcx, r8
-    sub     rcx, 1
-    
-    ; 2 * (n - 1) limbs in result need to be shifted left by 1
-    ; the first and last limb don't contain any values
-    ; limbs (inclusive) of result[1:2n-2]
-    ; Process two limbs at once for each decrement in rcx
+    mov     rdi, r9
+    mov     rsi, r9
+    shr     rdi, 2
+    and     rsi, 3
 
-    xor     r11, r11    ; zeroes out the carry flag
-                        ; before the rcl
-loop_pass2:
+    test    rdi, rdi
+    jz      pass2_inner_before_rmdr
 
-    rcl     QWORD PTR [r10], 1
-    rcl     QWORD PTR [r10 + 8], 1
-    
-    lea     r10, [r10 + 16]
-    loop    loop_pass2
+ALIGN 16
+pass2_inner_loop_unroll:
 
-    ; PASS-3 (O(n) step)
+i = 0
+WHILE i LT 4
 
+    mul     QWORD PTR [rbx + i * 8 + 8]
+
+    add     rax, QWORD PTR [rcx + i * 8]
+    adc     rdx, 0
+    add     rax, r11
+    adc     rdx, 0
+
+    mov     QWORD PTR [rcx + i * 8], rax
+    mov     r11, rdx
+    mov     rax, r10
+
+i = i + 1
+ENDM
+
+    add     rbx, 32
+    add     rcx, 32
+    dec     rdi
+    jnz     pass2_inner_loop_unroll
+
+ALIGN 16
+pass2_inner_before_rmdr:
+
+    test    rsi, rsi
+    jz      pass2_end
+
+ALIGN 16
+pass2_inner_loop_rmdr:
+
+    mul     QWORD PTR [rbx + 8]
+
+    add     rax, QWORD PTR [rcx]
+    adc     rdx, 0
+    add     rax, r11
+    adc     rdx, 0
+
+    mov     QWORD PTR [rcx], rax
+    mov     r11, rdx
+    mov     rax, r10
+
+    add     rbx, 8
+    add     rcx, 8
+    dec     rsi
+    jnz     pass2_inner_loop_rmdr
+
+ALIGN 16
 pass2_end:
 
-    adc     QWORD PTR [r10], 0
+    mov     QWORD PTR [rcx], r11
+
+    sub     rbx, r12
+    sub     rcx, r12
+    add     rbx, 8
+    add     rcx, 16
+    
+    sub     r12, 8
+    dec     r9
+    jnz     pass2_start
 
 before_pass3:
     
-    mov     r10, rdi
-    mov     r11, rsi
-    mov     rcx, r8
+    mov     QWORD PTR [rcx], 0
 
-    xor     r12, r12            ; to clear CF/OF
+    mov     r10, r8
+    mov     r11, r8
 
-loop_pass3:
+    shl     r10, 3
+    shl     r11, 4
 
-    adc     r12, 0                  ; accumulate CF from last iter as mul clobbers both 
-                                    ; OF & CF, does nothing in first iter
-    mov     rax, QWORD PTR [r11]
-    mul     rax                     ; rdx:rax = rax * rax (rax contains op1[i])
-    add     r12, rax                ; mul can set both OF/CF, to take care of that
-                                    ; add rax to an empty r12                 
-    add     QWORD PTR [r10], r12
-    adc     QWORD PTR [r10 + 8], rdx    
-    mov     r12, 0
+    sub     rbx, r10
+    sub     rcx, r11
 
-    lea     r11, [r11 + 8]
-    lea     r10, [r10 + 16]
-    loop    loop_pass3
-    
+    add     rbx, 8
+    add     rcx, 8
+
+pass3:
+
+    xor     rax, rax
+    mov     rdi, r8
+    mov     rsi, r8
+    dec     rdi
+    dec     rsi
+    shr     rdi, 2
+    and     rsi, 3
+
+    test    rdi, rdi
+    jz      pass3_before_rmdr
+
+ALIGN 16
+pass3_loop_unroll:
+
+i = 0
+WHILE i LT 4
+
+    rcl     QWORD PTR [rcx + i * 16 + 8], 1
+    rcl     QWORD PTR [rcx + i * 16 + 16], 1
+
+i = i + 1
+ENDM
+
+    lea     rcx, [rcx + 64]
+    dec     rdi
+    jnz     pass3_loop_unroll
+
+pass3_before_rmdr:
+
+    setc    al
+    test    rsi, rsi
+    bt      ax, 0
+    jz      pass3_end
+
+ALIGN 16
+pass3_loop_rmdr:
+
+    rcl     QWORD PTR [rcx + 8], 1
+    rcl     QWORD PTR [rcx + 16], 1
+
+    lea     rcx, [rcx + 16]
+    dec     rsi
+    jnz     pass3_loop_rmdr
+
+pass3_end:
+
+    adc     QWORD PTR [rcx + 8], 0
+
+before_pass4:
+
+    mov     r11, r8
+    dec     r11
+
+    shl     r11, 4
+    sub     rcx, r11
+
+pass4:
+
+    mov     rdi, r8
+    mov     rsi, r8
+    xor     r11d, r11d
+    xor     r9d, r9d
+
+    shr     rdi, 2
+    and     rsi, 3
+
+    test    rdi, rdi
+    jz      pass4_before_rmdr
+
+ALIGN 16
+pass4_loop_unroll:
+
+i = 0
+WHILE i LT 4
+
+    mov     rax, QWORD PTR [rbx + i * 8]
+    mul     rax
+
+    add     rax, r11
+    adc     QWORD PTR [rcx + i * 16], rax
+    adc     QWORD PTR [rcx + i * 16 + 8], rdx
+    mov     r11, r9
+    adc     r11, 0
+
+i = i + 1
+ENDM
+
+    add     rbx, 32
+    add     rcx, 64
+    dec     rdi
+    jnz     pass4_loop_unroll
+
+pass4_before_rmdr:
+
+    test    rsi, rsi
+    jz      end_of_func
+
+ALIGN 16
+pass4_loop_rmdr:
+
+    mov     rax, QWORD PTR [rbx]
+    mul     rax
+
+    add     rax, r11
+    adc     QWORD PTR [rcx], rax
+    adc     QWORD PTR [rcx + 8], rdx
+    mov     r11, r9
+    adc     r11, 0
+
+    add     rbx, 8
+    add     rcx, 16
+    dec     rsi
+    jnz     pass4_loop_rmdr
+
 end_of_func:
 
-    pop     r13
     pop     r12
     pop     rdi
     pop     rsi
