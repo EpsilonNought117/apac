@@ -240,13 +240,16 @@ i = 0
 WHILE i LT 4
 
     mov     rdx, QWORD PTR [rbx + i * 8]
+
     mov     r10, QWORD PTR [rbp + i * 16]
     mov     r11, QWORD PTR [rbp + i * 16 + 8]
-    adcx    r10, r10
-    adcx    r11, r11
+    
     mulx    rdi, rsi, rdx
+    adcx    r10, r10
     adox    r10, rsi
+    adcx    r11, r11
     adox    r11, rdi
+
     mov     QWORD PTR [rbp + i * 16], r10
     mov     QWORD PTR [rbp + i * 16 + 8], r11
         
@@ -269,13 +272,16 @@ ALIGN 16
 pass3_rmdr_loop:
 
     mov     rdx, QWORD PTR [rbx]
+    
     mov     r10, QWORD PTR [rbp]
     mov     r11, QWORD PTR [rbp + 8]
-    adcx    r10, r10
-    adcx    r11, r11
+    
     mulx    rdi, rsi, rdx
+    adcx    r10, r10
     adox    r10, rsi
+    adcx    r11, r11
     adox    r11, rdi
+
     mov     QWORD PTR [rbp], r10
     mov     QWORD PTR [rbp + 8], r11
 
