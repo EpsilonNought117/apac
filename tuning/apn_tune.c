@@ -8,7 +8,7 @@
  * regions can shift sharply across only a few limbs.
  */
 #define STEP_SIZE1 ((apn_size_t)1)
-#define STEP_SIZE2 ((apn_size_t)3)
+#define STEP_SIZE2 ((apn_size_t)5)
 
 #define APN_TUNE_ASSERT(expr)           \
     do                                  \
@@ -43,6 +43,8 @@ static apn_size_t get_karatsuba_mul_threshold(void)
 
     double global_best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
+
+    printf("Obtaining optimal Karatsuba multiplication threshold ... ");
 
     for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
@@ -97,6 +99,8 @@ static apn_size_t get_karatsuba_mul_threshold(void)
 
     KARATSUBA_MUL_THRESHOLD = best_thresh;
 
+    printf("Done\n");
+
     return best_thresh;
 }
 
@@ -119,6 +123,8 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
 
     double global_best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
+
+    printf("Obtaining optimal Karatsuba squaring threshold ... ");
 
     for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
@@ -171,6 +177,8 @@ static apn_size_t get_karatsuba_sqr_threshold(void)
 
     KARATSUBA_SQR_THRESHOLD = best_thresh;
 
+    printf("Done\n");
+
     return best_thresh;
 }
 
@@ -203,6 +211,8 @@ static apn_size_t get_dnc_div_threshold(void)
 
     double global_best_avg = 1e300;
     apn_size_t best_thresh = thresh_start;
+
+    printf("Obtaining optimal Divide-&-Conquer division threshold ... ");
 
     for (apn_size_t thresh = thresh_start;
         thresh <= thresh_end;
@@ -283,6 +293,8 @@ static apn_size_t get_dnc_div_threshold(void)
 
     DNC_DIV_THRESHOLD = best_thresh;
 
+    printf("Done\n");
+
     return best_thresh;
 }
 
@@ -294,7 +306,7 @@ int main(int argc, char** argv)
     {
         fprintf(
             stderr,
-            "Usage: %s <core_id> [hex_seed]\n",
+            "Usage: %s <core_id> <hex_seed>\n",
             argv[0]);
 
         return EXIT_FAILURE;
@@ -332,7 +344,7 @@ int main(int argc, char** argv)
     apn_seed_prng(seed);
 
     printf(
-        "Pinned to core %u, seed 0x%016llX\n",
+        "Pinned to core %u, seed 0x%016llX\n\n",
         core_id,
         (unsigned long long)seed);
 
@@ -340,23 +352,23 @@ int main(int argc, char** argv)
 
     apn_size_t kara_mul_thresh = get_karatsuba_mul_threshold();
 
+    apn_size_t kara_sqr_thresh = get_karatsuba_sqr_threshold();
+
+    apn_size_t dnc_div_thresh = get_dnc_div_threshold();
+
+    apac_restore_dfs();
+
     printf(
         "KARATSUBA_MUL_THRESHOLD  = (apn_size_t)(%" PRI_APN_SIZE ");\n",
         kara_mul_thresh);
-
-    apn_size_t kara_sqr_thresh = get_karatsuba_sqr_threshold();
 
     printf(
         "KARATSUBA_SQR_THRESHOLD  = (apn_size_t)(%" PRI_APN_SIZE ");\n",
         kara_sqr_thresh);
 
-    apn_size_t dnc_div_thresh = get_dnc_div_threshold();
-
     printf(
         "DNC_DIV_THRESHOLD        = (apn_size_t)(%" PRI_APN_SIZE ");\n",
         dnc_div_thresh);
-
-    apac_restore_dfs();
 
     return EXIT_SUCCESS;
 }
