@@ -11,9 +11,6 @@ check_apn_mul_one(uint64_t iterations)
     APAC_ALWAYS_ASSERT(op1 != NULL);
     APAC_ALWAYS_ASSERT(op2 != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX + 1, 0);
-    apn_set(op2, TEST_SIZE_MAX + 1, 0);
-
     while (iterations--)
     {
         apn_size_t size = 0;

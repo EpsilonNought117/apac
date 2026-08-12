@@ -17,12 +17,6 @@ check_apn_div(uint64_t iterations)
     APAC_ALWAYS_ASSERT(rmdr != NULL);
     APAC_ALWAYS_ASSERT(temp != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX, 0);
-    apn_set(op2, TEST_SIZE_MAX * 2, 0);
-    apn_set(quot, TEST_SIZE_MAX + 1, 0);
-    apn_set(rmdr, TEST_SIZE_MAX, 0);
-    apn_set(temp, TEST_SIZE_MAX * 2 + 1, 0);
-
     while (iterations--)
     {
         apn_size_t i = 0;
@@ -51,10 +45,6 @@ check_apn_div(uint64_t iterations)
 
         /* dividend (size i + j) */
         apn_set_random(op2, i + j);
-
-        apn_set(quot, j + 1, 0);
-        apn_set(rmdr, i, 0);
-        apn_set(temp, i + j, 0);
 
         /* divide */
         apac_err_t ret = apn_div(
@@ -121,13 +111,6 @@ check_apn_div(uint64_t iterations)
 
         /* remainder invariant */
         APAC_ALWAYS_ASSERT(cmp2 == -1);
-
-        /* reset */
-        apn_set(op1, i, 0);
-        apn_set(op2, i + j, 0);
-        apn_set(quot, j + 1, 0);
-        apn_set(rmdr, i, 0);
-        apn_set(temp, i + j, 0);
     }
 
     apac_free(temp);

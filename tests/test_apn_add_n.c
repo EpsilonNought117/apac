@@ -17,12 +17,6 @@ check_apn_add_n(uint64_t iterations)
     APAC_ALWAYS_ASSERT(op4 != NULL);
     APAC_ALWAYS_ASSERT(op5 != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX, 0);
-    apn_set(op2, TEST_SIZE_MAX, 0);
-    apn_set(op3, TEST_SIZE_MAX, 0);
-    apn_set(op4, TEST_SIZE_MAX, 0);
-    apn_set(op5, TEST_SIZE_MAX, 0);
-
     while (iterations--)
     {
         apn_size_t size = 0;

@@ -15,11 +15,6 @@ check_apn_div_one(uint64_t iterations)
     APAC_ALWAYS_ASSERT(q1 != NULL);
     APAC_ALWAYS_ASSERT(q2 != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX, 0);
-    apn_set(op2, TEST_SIZE_MAX + 1, 0);
-    apn_set(q1, TEST_SIZE_MAX, 0);
-    apn_set(q2, TEST_SIZE_MAX, 0);
-
     while (iterations--)
     {
         apn_size_t size = 0;
@@ -37,9 +32,6 @@ check_apn_div_one(uint64_t iterations)
 
         for (uint32_t sh = 1; sh <= 63; sh++)
         {
-            apn_set(q1, size, 0);
-            apn_set(q2, size, 0);
-
             apn_dig_t shift_out = apn_rshift(q2, op1, size, sh);
 
             apn_dig_t divisor = ((apn_dig_t)1 << sh);

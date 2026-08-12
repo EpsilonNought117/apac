@@ -15,11 +15,6 @@ check_apn_addmul_one(uint64_t iterations)
     APAC_ALWAYS_ASSERT(op3 != NULL);
     APAC_ALWAYS_ASSERT(op4 != NULL);
 
-    apn_set(op1, TEST_SIZE_MAX, 0);
-    apn_set(op2, TEST_SIZE_MAX + 1, 0);
-    apn_set(op3, TEST_SIZE_MAX + 1, 0);
-    apn_set(op4, TEST_SIZE_MAX + 1, 0);
-
     while (iterations--)
     {
         apn_size_t size = 0;
@@ -34,10 +29,10 @@ check_apn_addmul_one(uint64_t iterations)
         /* TEST-1: max * APN_DIG_MAX */
 
         apn_set(op1, size, APN_DIG_MAX);
-
+        
         apn_set(op2, size + 1, 0);
+        
         apn_set(op3, size + 1, APN_DIG_MAX);
-
         op3[size] = APN_DIG_MAX - 1;
         op3[0] = 1;
 

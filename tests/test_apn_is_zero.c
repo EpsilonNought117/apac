@@ -28,8 +28,6 @@ check_apn_is_zero(uint64_t iterations)
 
     APAC_ALWAYS_ASSERT(op != NULL);
 
-    apn_set(op, TEST_SIZE_MAX, 0);
-
     while (iterations--)
     {
         apn_size_t size = 0;
