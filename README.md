@@ -1,64 +1,33 @@
 ﻿# APAC - Arbitrary Precision Arithmetic and Computation
 
 **libapac** is a free, high-performance C library for
-arbitrary-precision integer arithmetic and computation.
+arbitrary-precision arithmetic and computation.
+
+> **Note**: 
+> - The library is currently under active development and far from complete
+> - Only x86-64 CPUs are supported as of now
+> - ARM64 CPU support is planned for a future release
 
 ## Build Requirements
 
 ### Windows
 
 - **Operating System:** 64-bit Windows
-- **C11 Compiler:** MSVC (`cl.exe`) or Clang (`clang-cl`)
-- **Build Generator:** CMake ≥ 3.12
-- **Build System:** MSBuild or Ninja
+- **C11 Compiler:** MSVC (`cl.exe`), Clang (`clang-cl`), or Clang with a
+  GNU-like command-line interface (`clang`/`clang++`)
 - **x86-64 Assembler:** MASM (Microsoft Macro Assembler)
 
-**NOTE:** MinGW toolchain is **not supported**.
+**NOTE:** MinGW toolchain and it's compilers are **not supported**.
 
 ### Linux
 
 - **Operating System:** 64-bit Linux (x86-64)
 - **C11 Compiler:** GCC or Clang
-- **Build Generator:** CMake ≥ 3.12
-- **Build System:** Make or Ninja
-- **x86-64 Assembler:** GAS (GNU Assembler)
+- **x86-64 Assembler:** GAS (GNU Assembler) or Clang's integrated assembler
 
-## Building the Library
+### Mac0S
 
-1. **Clone the repository**
-
-   ```sh
-   git clone https://github.com/EpsilonNought117/libapac.git
-   cd libapac
-   ```
-
-2. **Configure the project**
-
-    - Windows
-
-      ```sh
-      cmake -S . -B build
-      ```
-
-    - Linux
-
-      ```sh
-      cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-      ```
-
-3. **Build the project**
-
-    - Windows
-
-      ```sh
-      cmake --build build --config Release
-      ```
-  
-    - Linux
-
-      ```sh
-      cmake --build build --parallel
-      ```
+- Yet to be tested.
 
 ## CMake Variables
 
@@ -68,9 +37,9 @@ All options can be enabled or disabled during the CMake configuration step
 
 | Variable            | Description                                                          | Default |
 |---------------------|----------------------------------------------------------------------|---------|
-| `BUILD_SHARED_LIB`  | Build **libapac** as a shared library (`.dll` / `.so`)               | `OFF`   |
-| `BUILD_APAC_TESTS`  | Build the `apn_tests` program for correctness testing                | `OFF`   |
-| `BUILD_APN_TUNE`    | Build the `apn_tune` algorithm threshold tuning utility              | `OFF`   |
+| `APAC_SHARED`       | Build **libapac** as a shared library (`.dll` / `.so`)               | `OFF`   |
+| `APAC_TESTS`        | Build the `apn_tests` program for correctness testing                | `OFF`   |
+| `APAC_TUNE`         | Build the `apn_tune` algorithm threshold tuning utility              | `OFF`   |
 
 ## Optimized Microarchitectures
 
@@ -88,8 +57,16 @@ CPU feature detection and set up optimized dispatch tables.
 
 int main(void)
 {
-    /* Initialize (CPU detection, memory allocation functions etc.,) */
+    /* Initialize (CPU detection) */
     apac_get_cpu_spec();
+
+    /* Optionally, initialize custom memory allocators */
+    apac_init_allocator(
+        /* custom malloc here  */,
+        /* custom realloc here */,
+        /* custom free here    */,
+        /* context buffer here */
+    )
 
     /* Library is now ready for use */
 
@@ -101,7 +78,7 @@ int main(void)
 
 apac includes dedicated utilities for correctness testing and performance tuning on particular micro-architectures.
 
-### Correctness Testing (BUILD_APAC_TESTS)
+### Correctness Testing (APAC_TESTS)
 
 The testing programs validate the correctness of arbitrary-precision
 operations across a wide range of operand sizes and edge cases. It is 
@@ -110,7 +87,7 @@ intended to be run after changes to core arithmetic or assembly routines.
 By default, the test suite is not built 
 automatically. To enable it during configuration:
 
-    cmake -DBUILD_APAC_TESTS=ON
+    cmake -DAPAC_TESTS=ON
 
 After building, the tests can be run via
 
@@ -118,20 +95,20 @@ After building, the tests can be run via
 
 Optionally, you can pass in `PRNG_SEED` and `ITERATIONS` environment variables via the command line,
 where `PRNG_SEED` is a hexadecimal seed value for the pseudo-random number generator and `ITERATIONS`
-tests the `apn_*` as many times as specified.
+tests the functions as many times as specified.
 
 Example:
 
 - Windows
 
 ```sh
-set PRNG_SEED = C0FFEE && set ITERATIONS = 16384 && ctest --test-dir build --parallel 8
+set PRNG_SEED=0xC0FFEE && set ITERATIONS=16384 && ctest --test-dir build --parallel 8
 ```
 
 - Linux
 
 ```sh
-PRNG_SEED = C0FFEE ITERATIONS = 16384 ctest --test-dir build --parallel 8
+PRNG_SEED=0xC0FFEE ITERATIONS=16384 ctest --test-dir build --parallel 8
 ```
 
 ### Algorithm Threshold Tuning (apn_tune)
@@ -143,20 +120,20 @@ for the target CPU.
 This tool is not built by default.
 To enable it during configuration:
 
-    cmake -DBUILD_APN_TUNE=ON
+    cmake -DAPAC_TUNE=ON
 
 Running the tuner:
 
-    ./apn_tune <core> <seed>
+    ./<build-dir-name>/apn_tune <core_id> <seed>
 
 Where:
 
-- `<core>` is the logical CPU core index to which the tuning process will be pinned
+- `<core_id>` is the logical CPU core index to which the tuning process's main thread will be pinned
 - `<seed>` is a hexadecimal PRNG seed used to generate benchmark operands
 
 Example:
 
-    ./apn_tune 4 C0FFEEC0DE
+    ./apn_tune 4 0xC0FFEEC0DE
 
 #### Turbo Boost Handling
 
@@ -168,11 +145,9 @@ This ensures stable and reproducible timing results.
 > may prevent turbo boost from being re-enabled. In such cases, the user will have to manually turn or turbo boost 
 or run the tuning utility again and let it terminate by itself. Rebooting the system might also re-enable turbo boost.
 
-On **non-Windows platforms**, turbo boost control is not performed by libapac.
-Users must manually disable frequency scaling or turbo features if required
-to obtain stable benchmark results.
+On **non-Windows platforms**, turbo boost control is not performed by `apn_tune`.
+Users must manually disable frequency scaling or turbo features to obtain stable \
+and accurate benchmark results.
 
-Note: Tuning results are CPU-specific. For best performance, run apn_tune
+Note: Tuning results are CPU-specific. For best performance, run `apn_tune`
 on the same machine where libapac will be deployed.
-
-> **Note**: The library is currently WIP
