@@ -518,11 +518,15 @@ before_pass3:
 
 pass3:
 
+    xor     r10, r10
     xor     rax, rax
+    
     mov     rdi, r8
     mov     rsi, r8
+    
     dec     rdi
     dec     rsi
+    
     shr     rdi, 2
     and     rsi, 3
 
@@ -535,8 +539,13 @@ pass3_loop_unroll:
 i = 0
 WHILE i LT 4
 
-    rcl     QWORD PTR [rcx + i * 16 + 8], 1
-    rcl     QWORD PTR [rcx + i * 16 + 16], 1
+    mov     r10, QWORD PTR [rcx + i * 16 + 8]
+    adc     r10, r10
+    mov     QWORD PTR [rcx + i * 16 + 8], r10
+
+    mov     r10, QWORD PTR [rcx + i * 16 + 16]
+    adc     r10, r10
+    mov     QWORD PTR [rcx + i * 16 + 16], r10
 
 i = i + 1
 ENDM
@@ -555,8 +564,13 @@ pass3_before_rmdr:
 ALIGN 16
 pass3_loop_rmdr:
 
-    rcl     QWORD PTR [rcx + 8], 1
-    rcl     QWORD PTR [rcx + 16], 1
+    mov     r10, QWORD PTR [rcx + 8]
+    adc     r10, r10
+    mov     QWORD PTR [rcx + 8], r10
+
+    mov     r10, QWORD PTR [rcx + 16]
+    adc     r10, r10
+    mov     QWORD PTR [rcx + 16], r10
 
     lea     rcx, [rcx + 16]
     dec     rsi
@@ -596,11 +610,10 @@ WHILE i LT 4
     mov     rax, QWORD PTR [rbx + i * 8]
     mul     rax
 
-    add     rax, r11
+    add     r11b, -1
     adc     QWORD PTR [rcx + i * 16], rax
     adc     QWORD PTR [rcx + i * 16 + 8], rdx
-    mov     r11, r9
-    adc     r11, 0
+    setc    r11b
 
 i = i + 1
 ENDM
@@ -621,11 +634,10 @@ pass4_loop_rmdr:
     mov     rax, QWORD PTR [rbx]
     mul     rax
 
-    add     rax, r11
+    add     r11b, -1
     adc     QWORD PTR [rcx], rax
     adc     QWORD PTR [rcx + 8], rdx
-    mov     r11, r9
-    adc     r11, 0
+    setc    r11b
 
     add     rbx, 8
     add     rcx, 16
