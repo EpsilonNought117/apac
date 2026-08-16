@@ -116,11 +116,31 @@
 
     #define PRI_APN_SIZE        "llu"
 
-    #define APN_SIZE_MAX        ULLONG_MAX
+    #define APN_SIZE_MAX        (1ULL << 42)
     #define APN_DIG_MAX         ULLONG_MAX
 
     #define APN_DIG_BITS        64U
     #define APN_DIG_HIGH_BIT    (1ULL << 63)
+
+#endif
+
+#define APAC_PRAGMA(x)  _Pragma(#x)
+
+#if defined(__clang__)
+
+    #define APAC_UNROLL(x) APAC_PRAGMA(clang loop unroll_count(x))
+
+#elif defined(__GNUC__)
+
+    #define APAC_UNROLL(x) APAC_PRAGMA(GCC unroll x)
+
+#elif defined(_MSC_VER)
+
+    #define APAC_UNROLL(x)
+
+#else
+    
+    #error "Unsupported Compiler!"
 
 #endif
 
