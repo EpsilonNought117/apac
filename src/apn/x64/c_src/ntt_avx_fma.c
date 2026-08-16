@@ -98,46 +98,14 @@ dif_fwd_ntt_r4_unroll64(
     double* op1,
     __m256d vp,
     __m256d vp_inv,
-    __m256d zeta,         /* psi ^ 16 */
-    const double* twd_tbl /* always of size 60 */ 
+    __m256d zeta,
+    const double* twd_tbl // always of size 60 
 )
 {
     
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 16; j += 4)
     {
-        /*
-            Growth analysis (v(x) = |x| / p)
-
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1
-
-            d0 = c0 + c2                    => v(d0) < 2
-            d1 = c0 - c2                    => v(d1) < 2
-            d2 = c1 + c3                    => v(d2) < 2
-            d3 = c1 - c3                    => v(d3) < 2
-
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 2 * 1 = 1.5
-
-            d0 = normalize(d0)              => v(d0) < 0.5+
-
-            a0    = d0 + d2                 => v(a0)    < 0.5 + 2   = 2.5+
-            temp1 = d1 + d3                 => v(temp1) < 2 + 1.5   = 3.5
-            temp2 = d0 - d2                 => v(temp2) < 0.5 + 2   = 2.5+
-            temp3 = d1 - d3                 => v(temp3) < 2 + 1.5   = 3.5
-
-            a1 = mul_mod(temp1, twiddle)    => v(a1) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
-            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 1/2 * 2.5 * 1 = 1.75
-            a3 = mul_mod(temp3, twiddle)    => v(a3) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
-
-            Before normalize:               v(a0) < 2.5+, v(a1) <= 2.25, v(a2) <= 1.75, v(a3) <= 2.25
-
-            normalize(a0,a1,a2,a3)          => centered residues
-
-            Stored outputs:                 v(output) < 0.5+
-
-            Loop invariant restored.
-        */
-
         __m256d twd1 = _mm256_loadu_pd(&twd_tbl[j]);
         __m256d twd2 = _mm256_loadu_pd(&twd_tbl[j + 16]);
         __m256d twd3 = _mm256_loadu_pd(&twd_tbl[j + 32]);
@@ -184,39 +152,6 @@ APAC_UNROLL(4)
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
-        /*
-            Growth analysis (v(x) = |x| / p)
-
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 0.5+
-
-            d0 = c0 + c2                    => v(d0) < 1+
-            d1 = c0 - c2                    => v(d1) < 1+
-            d2 = c1 + c3                    => v(d2) < 1+
-            d3 = c1 - c3                    => v(d3) < 1+
-
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 1 * 1 = 1
-
-            d0 = normalize(d0)              => v(d0) < 0.5+
-
-            a0    = d0 + d2                 => v(a0)    < 0.5 + 1   = 1.5+
-            temp1 = d1 + d3                 => v(temp1) < 1 + 1     = 2
-            temp2 = d0 - d2                 => v(temp2) < 0.5 + 1   = 1.5+
-            temp3 = d1 - d3                 => v(temp3) < 1 + 1     = 2
-
-            a1 = mul_mod(temp1, twd1)       => v(a1) <= 1/2 + 1/2 * 2   * 1 = 1.5
-            a2 = mul_mod(temp2, twd2)       => v(a2) <= 1/2 + 1/2 * 1.5 * 1 = 1.25
-            a3 = mul_mod(temp3, twd3)       => v(a3) <= 1/2 + 1/2 * 2   * 1 = 1.5
-
-            Before normalize:               v(a0) < 1.5+, v(a1) <= 1.5,
-                                            v(a2) <= 1.25, v(a3) <= 1.5
-
-            normalize(a0,a1,a2,a3)          => centered residues
-
-            Stored outputs:                 v(output) < 0.5+
-
-            Loop invariant restored.
-        */
-
         __m256d c0 = _mm256_loadu_pd(&op1[j]);
         __m256d c1 = _mm256_loadu_pd(&op1[j + 4]);
         __m256d c2 = _mm256_loadu_pd(&op1[j + 8]);
@@ -255,38 +190,6 @@ APAC_UNROLL(4)
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
-        /*
-            Growth analysis (v(x) = |x| / p)
-
-            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 0.5+
-
-            Transpose/shuffle stage:        v(x0), v(x1), v(x2), v(x3) < 0.5+
-                                            (pure permutation, bounds unchanged)
-
-            d0 = x0 + x2                    => v(d0) < 1+
-            d1 = x0 - x2                    => v(d1) < 1+
-            d2 = x1 + x3                    => v(d2) < 1+
-            d3 = x1 - x3                    => v(d3) < 1+
-
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 1 * 1 = 1
-
-            d0 = normalize(d0)              => v(d0) < 0.5+
-
-            a0 = d0 + d2                    => v(a0) < 0.5 + 1 = 1.5+
-            a1 = d1 + d3                    => v(a1) < 1 + 1   = 2
-            a2 = d0 - d2                    => v(a2) < 0.5 + 1 = 1.5+
-            a3 = d1 - d3                    => v(a3) < 1 + 1   = 2
-
-            Before normalize:               v(a0) < 1.5+, v(a1) < 2,
-                                            v(a2) < 1.5+, v(a3) < 2
-
-            normalize(a0,a1,a2,a3)          => centered residues
-
-            Stored outputs:                 v(output) < 0.5+
-
-            Loop invariant restored.
-        */
-
         __m256d r0 = _mm256_loadu_pd(&op1[j]);
         __m256d r1 = _mm256_loadu_pd(&op1[j + 4]);
         __m256d r2 = _mm256_loadu_pd(&op1[j + 8]);
@@ -345,31 +248,10 @@ dit_inv_ntt_r4_unroll64(
     double* op1,
     __m256d vp,
     __m256d vp_inv,
-    __m256d zeta_inv,           /* psi_inv ^ 16 */
-    const double* twd_inv_tbl   /* always of size 60 */
+    __m256d zeta_inv,
+    const double* twd_inv_tbl
 )
 {
-    /*
-     * Pass 1:
-     *
-     * Inverse of the final forward DIF radix-4 pass.
-     *
-     * Scalar equivalent:
-     *
-     * for (j = 0; j < 64; j += 4)
-     * {
-     *     c0 = op1[j];
-     *     c1 = op1[j + 1];
-     *     c2 = op1[j + 2];
-     *     c3 = op1[j + 3];
-     *
-     *     ...
-     * }
-     *
-     * The AVX transpose maps the 16 contiguous radix-4 butterflies
-     * into four SIMD butterflies at a time.
-     */
-
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
@@ -410,9 +292,6 @@ APAC_UNROLL(4)
         a2 = normalize_p51_avx_fma(a2, vp, vp_inv);
         a3 = normalize_p51_avx_fma(a3, vp, vp_inv);
 
-        /*
-         * Transpose back to the original contiguous layout.
-         */
         t0 = _mm256_unpacklo_pd(a0, a1);
         t1 = _mm256_unpackhi_pd(a0, a1);
         t2 = _mm256_unpacklo_pd(a2, a3);
@@ -428,21 +307,6 @@ APAC_UNROLL(4)
         _mm256_storeu_pd(&op1[j + 8],  b2);
         _mm256_storeu_pd(&op1[j + 12], b3);
     }
-
-    /*
-     * Pass 2:
-     *
-     * Inverse of the middle forward DIF pass.
-     *
-     * Forward DIF had:
-     *
-     *     a1 *= twiddle_1
-     *     a2 *= twiddle_2
-     *     a3 *= twiddle_3
-     *
-     * Therefore the inverse removes the inverse twiddles BEFORE
-     * applying the inverse radix-4 butterfly.
-     */
 
     __m256d twd1 = _mm256_loadu_pd(&twd_inv_tbl[48]);
     __m256d twd2 = _mm256_loadu_pd(&twd_inv_tbl[52]);
@@ -503,22 +367,6 @@ APAC_UNROLL(4)
         _mm256_storeu_pd(&op1[j + 8],  a2);
         _mm256_storeu_pd(&op1[j + 12], a3);
     }
-
-    /*
-     * Pass 3:
-     *
-     * Inverse of the first forward DIF pass.
-     *
-     * Scalar equivalent:
-     *
-     *     c0 = op1[j];
-     *     c1 = op1[j + 16];
-     *     c2 = op1[j + 32];
-     *     c3 = op1[j + 48];
-     *
-     * Remove the inverse twiddles first, then apply the inverse
-     * radix-4 butterfly.
-     */
 
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 16; j += 4)
