@@ -102,40 +102,39 @@ fwd_ntt_dif_r4_unroll64(
     const double* twd_tbl // always of size 60 
 )
 {
-    
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 16; j += 4)
     {
         /*
-            Growth analysis (v(x) = |x| / p)
+            Growth analysis (v(x) = |x| / p),  p = 75*2^43 + 1 = 659706976665601 (50-bit prime)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1
+            mul_mod growth coefficient: v(d) <= 1/2 + 0.15 * v(a) * v(b)
+            (0.15 safely rounds up the exact coefficient 2C = 0.14648437500000028 for this p)
 
+            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1     (worst case, unnormalized input)
+                                                                        <= 0.5+ (best case, freshly normalized)
             d0 = c0 + c2                    => v(d0) < 2
             d1 = c0 - c2                    => v(d1) < 2
             d2 = c1 + c3                    => v(d2) < 2
             d3 = c1 - c3                    => v(d3) < 2
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 2 * 1 = 1.5
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8
 
-            d0 = normalize(d0)              => v(d0) < 0.5+
+            d0 = normalize(d0)              => v(d0) <= 0.5+   (exactly 0.5 + 5/(2p) = 0.5000000000000038)
+            d2 = normalize(d2)              => v(d2) <= 0.5+   (same as v(d0) above)
 
-            a0    = d0 + d2                 => v(a0)    < 0.5 + 2   = 2.5+
-            temp1 = d1 + d3                 => v(temp1) < 2 + 1.5   = 3.5
-            temp2 = d0 - d2                 => v(temp2) < 0.5 + 2   = 2.5+
-            temp3 = d1 - d3                 => v(temp3) < 2 + 1.5   = 3.5
+            a0    = d0 + d2                 => v(a0)    <  0.5 + 0.5  = 1+
+            temp1 = d1 + d3                 => v(temp1) <  2   + 0.8  = 2.8
+            temp2 = d0 - d2                 => v(temp2) <  0.5 + 0.5  = 1+
+            temp3 = d1 - d3                 => v(temp3) <  2   + 0.8  = 2.8
 
-            a1 = mul_mod(temp1, twiddle)    => v(a1) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
-            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 1/2 * 2.5 * 1 = 1.75
-            a3 = mul_mod(temp3, twiddle)    => v(a3) <= 1/2 + 1/2 * 3.5 * 1 = 2.25
+            a1 = mul_mod(temp1, twiddle)    => v(a1) <= 1/2 + 0.15 * 2.8 * 1 = 0.92+ < 1
+            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 0.15 * 1   * 1 = 0.65+ < 1
+            a3 = mul_mod(temp3, twiddle)    => v(a3) <= 1/2 + 0.15 * 2.8 * 1 = 0.92+ < 1
 
-            Before normalize:               v(a0) < 2.5+, v(a1) <= 2.25, v(a2) <= 1.75, v(a3) <= 2.25
+            NO NORMALIZATION DONE
 
-            normalize(a0,a1,a2,a3)          => centered residues
-
-            Stored outputs:                 v(output) < 0.5+
-
-            Loop invariant restored.
+            Stored outputs:                 v(output) < 1+
         */
 
         __m256d twd1 = _mm256_loadu_pd(&twd_tbl[j]);
@@ -154,6 +153,7 @@ APAC_UNROLL(4)
 
         d3 = mul_mod_p51_avx_fma(d3, zeta, vp, vp_inv);
         d0 = normalize_p51_avx_fma(d0, vp, vp_inv);
+        d2 = normalize_p51_avx_fma(d2, vp, vp_inv);
 
         __m256d a0 = add_mod_p51_avx(d0, d2, vp);
                 
@@ -165,11 +165,6 @@ APAC_UNROLL(4)
         
         __m256d temp3 = sub_mod_p51_avx(d1, d3, vp);
         __m256d a3 = mul_mod_p51_avx_fma(temp3, twd3, vp, vp_inv);
-
-        a0 = normalize_p51_avx_fma(a0, vp, vp_inv);
-        a1 = normalize_p51_avx_fma(a1, vp, vp_inv);
-        a2 = normalize_p51_avx_fma(a2, vp, vp_inv);
-        a3 = normalize_p51_avx_fma(a3, vp, vp_inv);
         
         _mm256_storeu_pd(&op1[j], a0);
         _mm256_storeu_pd(&op1[j + 16], a1);
@@ -185,36 +180,35 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
-            Growth analysis (v(x) = |x| / p)
+            Growth analysis (v(x) = |x| / p),  starting from v_in < 1+
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 0.5+
+            mul_mod growth coefficient: v(d) <= 1/2 + 0.15 * v(a) * v(b)
+            (0.15 safely rounds up the exact coefficient 2C = 0.14648437500000028
+            for p = 75*2^43 + 1)
 
-            d0 = c0 + c2                    => v(d0) < 1+
-            d1 = c0 - c2                    => v(d1) < 1+
-            d2 = c1 + c3                    => v(d2) < 1+
-            d3 = c1 - c3                    => v(d3) < 1+
+            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1+
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 1 * 1 = 1
+            d0 = c0 + c2                    => v(d0) < 2+
+            d1 = c0 - c2                    => v(d1) < 2+
+            d2 = c1 + c3                    => v(d2) < 2+
+            d3 = c1 - c3                    => v(d3) < 2+
 
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8+ < 1
             d0 = normalize(d0)              => v(d0) < 0.5+
 
-            a0    = d0 + d2                 => v(a0)    < 0.5 + 1   = 1.5+
-            temp1 = d1 + d3                 => v(temp1) < 1 + 1     = 2
-            temp2 = d0 - d2                 => v(temp2) < 0.5 + 1   = 1.5+
-            temp3 = d1 - d3                 => v(temp3) < 1 + 1     = 2
+            a0    = d0 + d2                 => v(a0)    < 0.5 + 2     = 2.5+
+            temp1 = d1 + d3                 => v(temp1) < 2   + 1     = 3+
+            temp2 = d0 - d2                 => v(temp2) < 0.5 + 1     = 2.5+
+            temp3 = d1 - d3                 => v(temp3) < 2   + 1     = 3+
 
-            a1 = mul_mod(temp1, twd1)       => v(a1) <= 1/2 + 1/2 * 2   * 1 = 1.5
-            a2 = mul_mod(temp2, twd2)       => v(a2) <= 1/2 + 1/2 * 1.5 * 1 = 1.25
-            a3 = mul_mod(temp3, twd3)       => v(a3) <= 1/2 + 1/2 * 2   * 1 = 1.5
+            a0 = normalize(a0)              => v(a0) <  0.5+
+            a1 = mul_mod(temp1, twd1)       => v(a1) <= 1/2 + 0.15 * 3.0 * 1 = 0.95+  < 1
+            a2 = mul_mod(temp2, twd2)       => v(a2) <= 1/2 + 0.15 * 2.5 * 1 = 0.875+ < 1
+            a3 = mul_mod(temp3, twd3)       => v(a3) <= 1/2 + 0.15 * 3.0 * 1 = 0.95+  < 1
 
-            Before normalize:               v(a0) < 1.5+, v(a1) <= 1.5,
-                                            v(a2) <= 1.25, v(a3) <= 1.5
+            NO NORMALIZATION STEP
 
-            normalize(a0,a1,a2,a3)          => centered residues
-
-            Stored outputs:                 v(output) < 0.5+
-
-            Loop invariant restored.
+            Stored outputs:                 v(output) < 1+
         */
 
         __m256d c0 = _mm256_loadu_pd(&op1[j]);
@@ -231,21 +225,15 @@ APAC_UNROLL(4)
         d0 = normalize_p51_avx_fma(d0, vp, vp_inv);
 
         __m256d a0 = add_mod_p51_avx(d0, d2, vp);
-        
         __m256d temp1 = add_mod_p51_avx(d1, d3, vp);
-        __m256d a1 = mul_mod_p51_avx_fma(temp1, twd1, vp, vp_inv);
-
         __m256d temp2 = sub_mod_p51_avx(d0, d2, vp);
-        __m256d a2 = mul_mod_p51_avx_fma(temp2, twd2, vp, vp_inv);
-
         __m256d temp3 = sub_mod_p51_avx(d1, d3, vp);
-        __m256d a3 = mul_mod_p51_avx_fma(temp3, twd3, vp, vp_inv);
 
         a0 = normalize_p51_avx_fma(a0, vp, vp_inv);
-        a1 = normalize_p51_avx_fma(a1, vp, vp_inv);
-        a2 = normalize_p51_avx_fma(a2, vp, vp_inv);
-        a3 = normalize_p51_avx_fma(a3, vp, vp_inv);
-        
+        __m256d a1 = mul_mod_p51_avx_fma(temp1, twd1, vp, vp_inv);
+        __m256d a2 = mul_mod_p51_avx_fma(temp2, twd2, vp, vp_inv);
+        __m256d a3 = mul_mod_p51_avx_fma(temp3, twd3, vp, vp_inv);
+
         _mm256_storeu_pd(&op1[j], a0);
         _mm256_storeu_pd(&op1[j + 4], a1);
         _mm256_storeu_pd(&op1[j + 8], a2);
@@ -256,29 +244,28 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
-            Growth analysis (v(x) = |x| / p)
+            Growth analysis (v(x) = |x| / p),  starting from v_in < 1+
 
-            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 0.5+
+            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 1+
 
-            Transpose/shuffle stage:        v(x0), v(x1), v(x2), v(x3) < 0.5+
+            Transpose/shuffle stage:        v(x0), v(x1), v(x2), v(x3) < 1+
                                             (pure permutation, bounds unchanged)
 
-            d0 = x0 + x2                    => v(d0) < 1+
-            d1 = x0 - x2                    => v(d1) < 1+
-            d2 = x1 + x3                    => v(d2) < 1+
-            d3 = x1 - x3                    => v(d3) < 1+
+            d0 = x0 + x2                    => v(d0) < 2+
+            d1 = x0 - x2                    => v(d1) < 2+
+            d2 = x1 + x3                    => v(d2) < 2+
+            d3 = x1 - x3                    => v(d3) < 2+
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 1/2 * 1 * 1 = 1
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8 < 1+
+            d0 = normalize(d0)              => v(d0) <  0.5+
 
-            d0 = normalize(d0)              => v(d0) < 0.5+
+            a0 = d0 + d2                    => v(a0) < 0.5 + 2  = 2.5+
+            a1 = d1 + d3                    => v(a1) < 2 + 1    = 3+
+            a2 = d0 - d2                    => v(a2) < 0.5 + 2  = 2.5+
+            a3 = d1 - d3                    => v(a3) < 2 + 1    = 3+
 
-            a0 = d0 + d2                    => v(a0) < 0.5 + 1 = 1.5+
-            a1 = d1 + d3                    => v(a1) < 1 + 1   = 2
-            a2 = d0 - d2                    => v(a2) < 0.5 + 1 = 1.5+
-            a3 = d1 - d3                    => v(a3) < 1 + 1   = 2
-
-            Before normalize:               v(a0) < 1.5+, v(a1) < 2,
-                                            v(a2) < 1.5+, v(a3) < 2
+            Before normalize:               v(a0) < 2.5+, v(a1) < 3+,
+                                            v(a2) < 2.5+, v(a3) < 3+
 
             normalize(a0,a1,a2,a3)          => centered residues
 
@@ -352,39 +339,37 @@ inv_ntt_dit_r4_unroll64(
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
-        /*
-            Growth analysis (v(x) = |x| / p)
+    /*
+        Growth analysis (v(x) = |x| / p)
 
-            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 1
+        mul_mod growth coefficient: v(d) <= 1/2 + 0.15 * v(a) * v(b)
+        (0.15 safely rounds up the exact coefficient 2C = 0.14648437500000028
+        for p = 75*2^43 + 1)
 
-            Transpose/shuffle stage:        v(c0), v(c1), v(c2), v(c3) < 1
-                                            (pure permutation, bounds unchanged)
+        Inputs:                         v(r0), v(r1), v(r2), v(r3) < 1
 
-            d0 = c0 + c2                    => v(d0) < 2
-            d1 = c0 - c2                    => v(d1) < 2
-            d2 = c1 + c3                    => v(d2) < 2
-            d3 = c1 - c3                    => v(d3) < 2
+        Transpose/shuffle stage:        v(c0), v(c1), v(c2), v(c3) < 1
+                                        (pure permutation, bounds unchanged)
 
-            d3 = mul_mod(d3, zeta_inv)      => v(d3) <= 1/2 + 1/2 * 2 * 1 = 1.5
+        d0 = c0 + c2                    => v(d0) < 2
+        d1 = c0 - c2                    => v(d1) < 2
+        d2 = c1 + c3                    => v(d2) < 2
+        d3 = c1 - c3                    => v(d3) < 2
 
-            NOTE: unlike the forward pass, d0 is NOT normalized here before
-            being combined into a0/a2 below - both d0 and d2 are carried
-            through at their raw (un-normalized) growth bound.
+        d3 = mul_mod(d3, zeta_inv)      => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8
 
-            a0 = d0 + d2                    => v(a0) < 2 + 2   = 4
-            a1 = d1 + d3                    => v(a1) < 2 + 1.5 = 3.5
-            a2 = d0 - d2                    => v(a2) < 2 + 2   = 4
-            a3 = d1 - d3                    => v(a3) < 2 + 1.5 = 3.5
+        d0 = normalize(d0)              => v(d0) < 0.5+
 
-            Before normalize:               v(a0) < 4, v(a1) < 3.5,
-                                            v(a2) < 4, v(a3) < 3.5
+        a0 = d0 + d2                    => v(a0) < 0.5 + 2   = 2.5+
+        a1 = d1 + d3                    => v(a1) < 2 + 0.8   = 2.8
+        a2 = d0 - d2                    => v(a2) < 0.5 + 2   = 2.5+
+        a3 = d1 - d3                    => v(a3) < 2 + 0.8   = 2.8
 
-            normalize(a0,a1,a2,a3)          => centered residues
+        NO NORMALIZATION DONE
 
-            Stored outputs:                 v(output) < 0.5+
+        Stored outputs:                 v(output) < 2.8 (worst case)
 
-            Loop invariant restored.
-        */
+    */
 
         __m256d r0 = _mm256_loadu_pd(&op1[j]);
         __m256d r1 = _mm256_loadu_pd(&op1[j + 4]);
@@ -407,16 +392,12 @@ APAC_UNROLL(4)
         __m256d d3 = sub_mod_p51_avx(c1, c3, vp);
 
         d3 = mul_mod_p51_avx_fma(d3, zeta_inv, vp, vp_inv);
+        d0 = normalize_p51_avx_fma(d0, vp, vp_inv);
 
         __m256d a0 = add_mod_p51_avx(d0, d2, vp);
         __m256d a1 = add_mod_p51_avx(d1, d3, vp);
         __m256d a2 = sub_mod_p51_avx(d0, d2, vp);
         __m256d a3 = sub_mod_p51_avx(d1, d3, vp);
-
-        a0 = normalize_p51_avx_fma(a0, vp, vp_inv);
-        a1 = normalize_p51_avx_fma(a1, vp, vp_inv);
-        a2 = normalize_p51_avx_fma(a2, vp, vp_inv);
-        a3 = normalize_p51_avx_fma(a3, vp, vp_inv);
 
         t0 = _mm256_unpacklo_pd(a0, a1);
         t1 = _mm256_unpackhi_pd(a0, a1);
@@ -444,33 +425,30 @@ APAC_UNROLL(4)
         /*
             Growth analysis (v(x) = |x| / p)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 0.5+
+            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 2.8
 
-            d0 = c0                         => v(d0) < 0.5+
-            d1 = mul_mod(c1, twd1)          => v(d1) <= 1/2 + 1/2 * 0.5 * 1 = 0.75+
-            d2 = mul_mod(c2, twd2)          => v(d2) <= 0.75+
-            d3 = mul_mod(c3, twd3)          => v(d3) <= 0.75+
+            d0 = c0                         => v(d0) <  2.8
+            d1 = mul_mod(c1, twd1)          => v(d1) <= 1/2 + 0.15 * 2.8 * 1 = 0.92 < 1
+            d2 = mul_mod(c2, twd2)          => v(d2) <= 0.92 < 1
+            d3 = mul_mod(c3, twd3)          => v(d3) <= 0.92 < 1
 
-            t0 = d0 + d2                    => v(t0) < 0.5 + 0.75 = 1.25+
-            t1 = d0 - d2                    => v(t1) < 0.5 + 0.75 = 1.25+
-            t2 = d1 + d3                    => v(t2) < 0.75 + 0.75 = 1.5+
-            t3 = d1 - d3                    => v(t3) < 0.75 + 0.75 = 1.5+
+            d0 = normalize(d0)              => v(d0) < 0.5+
 
-            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 1/2 + 1/2 * 1.5 * 1 = 1.25+
+            t0 = d0 + d2                    => v(t0) < 0.5 + 1 = 1.5+
+            t1 = d0 - d2                    => v(t1) < 0.5 + 1 = 1.5+
+            t2 = d1 + d3                    => v(t2) < 1 + 1   = 2.0
+            t3 = d1 - d3                    => v(t3) < 1 + 1   = 2.0
 
-            a0 = t0 + t2                    => v(a0) < 1.25 + 1.5  = 2.75+
-            a1 = t1 + t3                    => v(a1) < 1.25 + 1.25 = 2.5+
-            a2 = t0 - t2                    => v(a2) < 1.25 + 1.5  = 2.75+
-            a3 = t1 - t3                    => v(a3) < 1.25 + 1.25 = 2.5+
+            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 1/2 + 0.15 * 2 * 1 = 0.8 < 1
 
-            Before normalize:               v(a0) < 2.75+, v(a1) < 2.5+,
-                                            v(a2) < 2.75+, v(a3) < 2.5+
+            a0 = t0 + t2                    => v(a0) < 1.5 + 2.0 = 3.5
+            a1 = t1 + t3                    => v(a1) < 1.5 + 0.8 = 2.3
+            a2 = t0 - t2                    => v(a2) < 1.5 + 2.0 = 3.5
+            a3 = t1 - t3                    => v(a3) < 1.5 + 0.8 = 2.3
 
-            normalize(a0,a1,a2,a3)          => centered residues
+            NO NORMALIZATION DONE
 
-            Stored outputs:                 v(output) < 0.5+
-
-            Loop invariant restored.
+            Stored outputs:                 v(output) < 3.5 (worst case)
         */
 
         __m256d c0 = _mm256_loadu_pd(&op1[j]);
@@ -482,6 +460,8 @@ APAC_UNROLL(4)
         __m256d d1 = mul_mod_p51_avx_fma(c1, twd1, vp, vp_inv);
         __m256d d2 = mul_mod_p51_avx_fma(c2, twd2, vp, vp_inv);
         __m256d d3 = mul_mod_p51_avx_fma(c3, twd3, vp, vp_inv);
+
+        d0 = normalize_p51_avx_fma(d0, vp, vp_inv);
 
         __m256d t0 = add_mod_p51_avx(d0, d2, vp);
         __m256d t1 = sub_mod_p51_avx(d0, d2, vp);
@@ -495,11 +475,6 @@ APAC_UNROLL(4)
         __m256d a2 = sub_mod_p51_avx(t0, t2, vp);
         __m256d a3 = sub_mod_p51_avx(t1, t3, vp);
 
-        a0 = normalize_p51_avx_fma(a0, vp, vp_inv);
-        a1 = normalize_p51_avx_fma(a1, vp, vp_inv);
-        a2 = normalize_p51_avx_fma(a2, vp, vp_inv);
-        a3 = normalize_p51_avx_fma(a3, vp, vp_inv);
-
         _mm256_storeu_pd(&op1[j],      a0);
         _mm256_storeu_pd(&op1[j + 4],  a1);
         _mm256_storeu_pd(&op1[j + 8],  a2);
@@ -512,27 +487,30 @@ APAC_UNROLL(4)
         /*
             Growth analysis (v(x) = |x| / p)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 0.5+
+            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 3.5
 
-            d0 = c0                         => v(d0) < 0.5+
-            d1 = mul_mod(c1, twd_1j)        => v(d1) <= 1/2 + 1/2 * 0.5 * 1 = 0.75+
-            d2 = mul_mod(c2, twd_2j)        => v(d2) <= 0.75+
-            d3 = mul_mod(c3, twd_3j)        => v(d3) <= 0.75+
+            d0 = c0                         => v(d0) < 3.5
+            d1 = mul_mod(c1, twd_1j)        => v(d1) <= 1/2 + 0.15 * 3.5 * 1 = 1.025+ < 1.5
+            d2 = mul_mod(c2, twd_2j)        => v(d2) <  1.5
+            d3 = mul_mod(c3, twd_3j)        => v(d3) <  1.5
 
-            t0 = d0 + d2                    => v(t0) < 0.5 + 0.75 = 1.25+
-            t1 = d0 - d2                    => v(t1) < 0.5 + 0.75 = 1.25+
-            t2 = d1 + d3                    => v(t2) < 0.75 + 0.75 = 1.5+
-            t3 = d1 - d3                    => v(t3) < 0.75 + 0.75 = 1.5+
+            d0 = normalize(d0)              => v(d0) <= 0.5+
 
-            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 1/2 + 1/2 * 1.5 * 1 = 1.25+
+            t0 = d0 + d2                    => v(t0) < 0.5 + 1.5 = 2+
+            t1 = d0 - d2                    => v(t1) < 0.5 + 1.5 = 2+
+            t2 = d1 + d3                    => v(t2) < 1.5 + 1.5 = 3
+            t3 = d1 - d3                    => v(t3) < 1.5 + 1.5 = 3
 
-            a0 = t0 + t2                    => v(a0) < 1.25 + 1.5  = 2.75+
-            a1 = t1 + t3                    => v(a1) < 1.25 + 1.25 = 2.5+
-            a2 = t0 - t2                    => v(a2) < 1.25 + 1.5  = 2.75+
-            a3 = t1 - t3                    => v(a3) < 1.25 + 1.25 = 2.5+
+            t2 = normalize(t2)              => v(t2) <= 0.5+
+            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 1/2 + 0.15 * 3 * 1 = 0.95+ < 1
 
-            Before normalize:               v(a0) < 2.75+, v(a1) < 2.5+,
-                                            v(a2) < 2.75+, v(a3) < 2.5+
+            a0 = t0 + t2                    => v(a0) < 2 + 0.5 = 2.5+
+            a1 = t1 + t3                    => v(a1) < 2 + 1   = 3+
+            a2 = t0 - t2                    => v(a2) < 2 + 0.5 = 2.5+
+            a3 = t1 - t3                    => v(a3) < 2 + 1   = 3+
+
+            Before normalize:               v(a0) < 2.5+, v(a1) < 3+,
+                                            v(a2) < 2.5+, v(a3) < 3+
 
             normalize(a0,a1,a2,a3)          => centered residues
 
@@ -555,11 +533,14 @@ APAC_UNROLL(4)
         __m256d d2 = mul_mod_p51_avx_fma(c2, twd_2j, vp, vp_inv);
         __m256d d3 = mul_mod_p51_avx_fma(c3, twd_3j, vp, vp_inv);
 
+        d0 = normalize_p51_avx_fma(d0, vp, vp_inv);
+
         __m256d t0 = add_mod_p51_avx(d0, d2, vp);
         __m256d t1 = sub_mod_p51_avx(d0, d2, vp);
         __m256d t2 = add_mod_p51_avx(d1, d3, vp);
         __m256d t3 = sub_mod_p51_avx(d1, d3, vp);
 
+        t2 = normalize_p51_avx_fma(t2, vp, vp_inv);
         t3 = mul_mod_p51_avx_fma(t3, zeta_inv, vp, vp_inv);
 
         __m256d a0 = add_mod_p51_avx(t0, t2, vp);
@@ -607,6 +588,8 @@ fwd_ntt_r2_dif(
 
     // safe cast as per C11 Standard
     // and not considered UB
+    // just need to be careful to not mix
+    // the function pointers accidentally
     double* op = (double*)op1;
 
     __m256d vp = _mm256_set1_pd((double)prime->p);
@@ -616,24 +599,125 @@ fwd_ntt_r2_dif(
 
     for (apn_size_t m = n / 2; m >= MIN_CONV_LEN * 2; m /= 2, twdl_idx++)
     {
-        double curr_omega = (double)prime->twiddle[twdl_idx];
-        double omega_sqr = curr_omega * curr_omega;
+        /*
+            Growth analysis (v(x) = |x| / p)
 
-        __m256d scaler = _mm256_set1_pd(omega_sqr * omega_sqr /* curr_omega ^ 4 */ );
-        __m256d twdl = _mm256_set_pd(
-            omega_sqr * curr_omega  /* curr_omega ^ 3 */,     
-            omega_sqr               /* curr_omega ^ 2 */,
-            curr_omega              /* curr_omega ^ 1 */,
-            1.0                     /* curr_omega ^ 0 */
+            Inputs:                         v(omega),v(omega_sqr), v(omega_quad) < 1
+
+            v(omega_cube) ≤ 1/2 + 0.15 * 1 * 1 = 0.65+ < 1
+
+            Inputs:                         v(twdl0)  < 1
+                                            v(scaler) < 1
+
+            twdl1 = mul_mod(twdl0, scaler)  => v(twdl1) <= 1/2 + 0.15 * 1 * 1 = 0.65+ < 1
+            twdl2 = mul_mod(twdl1, scaler)  => v(twdl2) <= 1/2 + 0.15 * 1 * 1 = 0.65+ < 1
+            twdl3 = mul_mod(twdl2, scaler)  => v(twdl3) <= 1/2 + 0.15 * 1 * 1 = 0.65+ < 1
+        */
+
+        double curr_omega = (double)prime->twiddle[twdl_idx];       /* curr_omega ^ 1 */ 
+        double omega_sqr  = (double)prime->twiddle[twdl_idx + 1];   /* curr_omega ^ 2 */ 
+        double omega_quad = (double)prime->twiddle[twdl_idx + 2];   /* curr_omega ^ 4 */
+
+        __m256d omega_v      = _mm256_set1_pd(curr_omega);
+        __m256d omega_sqr_v  = _mm256_set1_pd(omega_sqr);
+        __m256d omega_cube_v = mul_mod_p51_avx_fma(omega_v, omega_sqr_v, vp, vp_inv);
+
+        __m256d scaler = _mm256_set1_pd(omega_quad);
+        __m256d twdl0  = _mm256_set_pd(
+            _mm256_cvtsd_f64(omega_cube_v)  /* curr_omega ^ 3 */,     
+            omega_sqr                       /* curr_omega ^ 2 */,
+            curr_omega                      /* curr_omega ^ 1 */,
+            1.0                             /* curr_omega ^ 0 */
         );
+
+        __m256d twdl1 = mul_mod_p51_avx_fma(twdl0, scaler, vp, vp_inv);
+        __m256d twdl2 = mul_mod_p51_avx_fma(twdl1, scaler, vp, vp_inv);
+        __m256d twdl3 = mul_mod_p51_avx_fma(twdl2, scaler, vp, vp_inv);
 
         for (apn_size_t j = 0; j <= m; j += 16)
         {
+            for (apn_size_t i = j; i < n; i += m * 2)
+            {
+                /*
+                    Growth analysis (v(x) = |x| / p)
 
+                    Inputs:                         v(u0..u3), v(v0..v3) < 1
+                                                    v(twdl0, twdl1, twdl2, twdl3) < 1
+
+                    sum0..3  = u + v                => v(sum)  < 2
+                    diff0..3 = u - v                => v(diff) < 2
+
+                    diff0..3 = mul_mod(diff, twdl)  => v(diff) <= 1/2 + 0.15 * 2 * 1
+                                                                = 0.8+ < 1
+
+                    sum0..3  = normalize(sum)       => v(sum)  <= 0.5+
+                    
+                    Stored outputs:                 v(output) = max(v(sum_i), v(diff_i)) < 1
+
+                    Hence for the next "i-loop" pass, the values are all under 1 as needed
+                */
+
+                __m256d u0 = _mm256_loadu_pd(&op[i]);
+                __m256d u1 = _mm256_loadu_pd(&op[i + 4]);
+                __m256d u2 = _mm256_loadu_pd(&op[i + 8]);
+                __m256d u3 = _mm256_loadu_pd(&op[i + 12]);
+
+                __m256d v0 = _mm256_loadu_pd(&op[i + m]);
+                __m256d v1 = _mm256_loadu_pd(&op[i + m + 4]);
+                __m256d v2 = _mm256_loadu_pd(&op[i + m + 8]);
+                __m256d v3 = _mm256_loadu_pd(&op[i + m + 12]);
+
+                __m256d sum0 = add_mod_p51_avx(u0, v0, vp);
+                __m256d sum1 = add_mod_p51_avx(u1, v1, vp);
+                __m256d sum2 = add_mod_p51_avx(u2, v2, vp);
+                __m256d sum3 = add_mod_p51_avx(u3, v3, vp);
+
+                __m256d diff0 = sub_mod_p51_avx(u0, v0, vp);
+                __m256d diff1 = sub_mod_p51_avx(u1, v1, vp);
+                __m256d diff2 = sub_mod_p51_avx(u2, v2, vp);
+                __m256d diff3 = sub_mod_p51_avx(u3, v3, vp);
+
+                diff0 = mul_mod_p51_avx_fma(diff0, twdl0, vp, vp_inv);
+                diff1 = mul_mod_p51_avx_fma(diff1, twdl1, vp, vp_inv);
+                diff2 = mul_mod_p51_avx_fma(diff2, twdl2, vp, vp_inv);
+                diff3 = mul_mod_p51_avx_fma(diff3, twdl3, vp, vp_inv);
+
+                sum0 = normalize_p51_avx_fma(sum0, vp, vp_inv);
+                sum1 = normalize_p51_avx_fma(sum1, vp, vp_inv);
+                sum2 = normalize_p51_avx_fma(sum2, vp, vp_inv);
+                sum3 = normalize_p51_avx_fma(sum3, vp, vp_inv);
+
+                diff0 = normalize_p51_avx_fma(diff0, vp, vp_inv);
+                diff1 = normalize_p51_avx_fma(diff1, vp, vp_inv);
+                diff2 = normalize_p51_avx_fma(diff2, vp, vp_inv);
+                diff3 = normalize_p51_avx_fma(diff3, vp, vp_inv);
+
+                _mm256_storeu_pd(&op[i], sum0);
+                _mm256_storeu_pd(&op[i + 4], sum1);
+                _mm256_storeu_pd(&op[i + 8], sum2);
+                _mm256_storeu_pd(&op[i + 12], sum3);
+
+                _mm256_storeu_pd(&op[i + m], diff0);
+                _mm256_storeu_pd(&op[i + m + 4], diff1);
+                _mm256_storeu_pd(&op[i + m + 8], diff2);
+                _mm256_storeu_pd(&op[i + m + 12], diff3);
+            }
+
+            /*
+                v(twdl_i) = 1/2 + 0.15 * 1 * 1 = 0.65+ < 1
+                for i in { 0, 1, 2, 3 }
+
+                invariant ok for next "i-loop" pass
+            */
+
+            twdl0 = mul_mod_p51_avx_fma(twdl0, scaler, vp, vp_inv);
+            twdl1 = mul_mod_p51_avx_fma(twdl1, scaler, vp, vp_inv);
+            twdl2 = mul_mod_p51_avx_fma(twdl2, scaler, vp, vp_inv);
+            twdl3 = mul_mod_p51_avx_fma(twdl3, scaler, vp, vp_inv);
         }
     }
 
-
+    // finish this here
 }
 
 /*
