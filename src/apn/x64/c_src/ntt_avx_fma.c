@@ -573,7 +573,7 @@ fwd_ntt_r2_dif(
 {
     APAC_ASSERT(op1 != NULL);
     APAC_ASSERT(prime != NULL);
-    APAC_ASSERT((size & (tf - 1) == 0));    // size is power of 2
+    APAC_ASSERT((size & (size - 1) == 0));    // size is power of 2
     APAC_ASSERT(size >= MIN_CONV_LEN);
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(tf == CYCLIC || tf == NEGACYCLIC);
@@ -581,7 +581,7 @@ fwd_ntt_r2_dif(
     apn_size_t k = 0;
     CTZ(size, k);
 
-    APAC_ASSERT(k >= 6U);
+    APAC_ASSERT(k >= 6U && k <= 42U);   // size should at least be 64ULL 
 
     apn_size_t twdl_idx = NTT_PRIME_POW2 - k;
     twdl_idx -= (tf == NEGACYCLIC);
@@ -687,10 +687,10 @@ fwd_ntt_r2_dif(
                 sum2 = normalize_p51_avx_fma(sum2, vp, vp_inv);
                 sum3 = normalize_p51_avx_fma(sum3, vp, vp_inv);
 
-                diff0 = normalize_p51_avx_fma(diff0, vp, vp_inv);
-                diff1 = normalize_p51_avx_fma(diff1, vp, vp_inv);
-                diff2 = normalize_p51_avx_fma(diff2, vp, vp_inv);
-                diff3 = normalize_p51_avx_fma(diff3, vp, vp_inv);
+                // diff0 = normalize_p51_avx_fma(diff0, vp, vp_inv);
+                // diff1 = normalize_p51_avx_fma(diff1, vp, vp_inv);
+                // diff2 = normalize_p51_avx_fma(diff2, vp, vp_inv);
+                // diff3 = normalize_p51_avx_fma(diff3, vp, vp_inv);
 
                 _mm256_storeu_pd(&op[i], sum0);
                 _mm256_storeu_pd(&op[i + 4], sum1);
@@ -717,13 +717,64 @@ fwd_ntt_r2_dif(
         }
     }
 
-    // finish this here
+    const double* table = (tf == CYCLIC) ? prime->cdltf64_cyclic_fwd : prime->cdltf64_negacyclic_fwd;
+    __m256d zeta_v = _mm256_set1_pd(table[24]); // psi ^ 16
+
+    for (apn_size_t i = 0; i < size; i += MIN_CONV_LEN)
+    {
+        fwd_ntt_dif_r4_unroll64(&op1[i], vp, vp_inv, zeta_v, table);
+    }
+
+    // exiting here, the entire op1 arr contains all normalized values
+    return;
+}
+
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((target("avx,fma")))
+#endif
+void
+inv_ntt_r2_dit(
+    void* op1,
+    apn_size_t size,
+    const ntt_prime_t* prime,
+    ntt_tf_t tf
+)
+{
+    APAC_ASSERT(op1 != NULL);
+    APAC_ASSERT(prime != NULL);
+    APAC_ASSERT((size & (size - 1) == 0));    // size is power of 2
+    APAC_ASSERT(size >= MIN_CONV_LEN);
+    APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
+    APAC_ASSERT(tf == CYCLIC || tf == NEGACYCLIC);
+
+    apn_size_t twdl_idx = NTT_PRIME_POW2 - 6;
+    twdl_idx -= (tf == NEGACYCLIC);
+
+    // same as fwd transform
+    double* op1 = (double*)op1;
+
+    __m256d vp = _mm256_set1_pd((double)prime->p);
+    __m256d vp_inv = _mm256_set1_pd(prime->prime_inv);
+    
+    const double* table = (tf == CYCLIC) ? prime->cdltf64_cyclic_inv : prime->cdltf64_negacyclic_inv;
+    __m256d zeta_inv_v = _mm256_set1_pd(table[24]); // psi_inv ^ 16
+
+    for (apn_size_t i = 0; i < size; i += MIN_CONV_LEN)
+    {
+        inv_ntt_dit_r4_unroll64(&op1[i], vp, vp_inv, zeta_inv_v, table);
+    }
+
+    apn_size_t n = size;
+
+    for (apn_size_t m = MIN_CONV_LEN * 2; m < n; m *= 2, twdl_idx--)
+    {
+        
+    }
 }
 
 /*
     TO WRITE:
 
-    - dit_inv_ntt_avx_fma
     - pointwise_mul_avx_fma
     - matrix_trans_avx_fma
     - garner_crt_avx_fma

@@ -12,10 +12,11 @@ typedef enum ntt_tf_t
 
 } ntt_tf_t;
 
-#define NTT_PRIME_POW2      (43ULL)      /* Power of 2 in each prime of the table */
-#define MIN_CONV_LEN		(1ULL << 6)  /* smallest codelet size is 64           */
-#define CRT3_MAX_CONV_LEN   (1ULL << 17) /* using the larger 3 primes             */
-#define CRT4_MAX_CONV_LEN   (1ULL << 42) /* when using all 4 primes               */
+#define CDLT64_TBL_SIZE     (60ULL)      /* Size of radix-4 unrolled codelet tables */
+#define NTT_PRIME_POW2      (43ULL)      /* Power of 2 in each prime of the table   */
+#define MIN_CONV_LEN		(1ULL << 6)  /* smallest codelet size is 64             */
+#define CRT3_MAX_CONV_LEN   (1ULL << 17) /* using the larger 3 primes               */
+#define CRT4_MAX_CONV_LEN   (1ULL << 42) /* when using all 4 primes                 */
 
 typedef struct ntt_prime_t
 {
@@ -26,19 +27,19 @@ typedef struct ntt_prime_t
 
     double    prime_inv;
 
-    apn_dig_t twiddle[43];
-    apn_dig_t twiddle_inv[43];
-    apn_dig_t size_inv[43];
+    apn_dig_t twiddle[NTT_PRIME_POW2];
+    apn_dig_t twiddle_inv[NTT_PRIME_POW2];
+    apn_dig_t size_inv[NTT_PRIME_POW2];
 
-    double cdltf64_cyclic_fwd[60];
-    double cdltf64_cyclic_inv[60];
-    double cdltf64_negacyclic_fwd[60];
-    double cdltf64_negacyclic_inv[60];
+    double cdltf64_cyclic_fwd[CDLT64_TBL_SIZE];
+    double cdltf64_cyclic_inv[CDLT64_TBL_SIZE];
+    double cdltf64_negacyclic_fwd[CDLT64_TBL_SIZE];
+    double cdltf64_negacyclic_inv[CDLT64_TBL_SIZE];
 
-    apn_dig_t cdltu64_cyclic_fwd[60];
-    apn_dig_t cdltu64_cyclic_inv[60];
-    apn_dig_t cdltu64_negacyclic_fwd[60];
-    apn_dig_t cdltu64_negacyclic_inv[60];
+    apn_dig_t cdltu64_cyclic_fwd[CDLT64_TBL_SIZE];
+    apn_dig_t cdltu64_cyclic_inv[CDLT64_TBL_SIZE];
+    apn_dig_t cdltu64_negacyclic_fwd[CDLT64_TBL_SIZE];
+    apn_dig_t cdltu64_negacyclic_inv[CDLT64_TBL_SIZE];
 
 } ntt_prime_t;
 
