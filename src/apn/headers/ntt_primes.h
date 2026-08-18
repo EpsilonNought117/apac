@@ -12,15 +12,19 @@ typedef enum ntt_tf_t
 
 } ntt_tf_t;
 
+#define NTT_PRIME_POW2      (43ULL)      /* Power of 2 in each prime of the table */
+#define MIN_CONV_LEN		(1ULL << 6)  /* smallest codelet size is 64           */
+#define CRT3_MAX_CONV_LEN   (1ULL << 17) /* using the larger 3 primes             */
+#define CRT4_MAX_CONV_LEN   (1ULL << 42) /* when using all 4 primes               */
+
 typedef struct ntt_prime_t
 {
-    apn_dig_t k, g, p;
-
+    apn_dig_t p;
     apn_dig_t magic, shift;
-
-    double    prime_inv;
     apn_dig_t prime_inv52;
     apn_dig_t r0;
+
+    double    prime_inv;
 
     apn_dig_t twiddle[43];
     apn_dig_t twiddle_inv[43];
@@ -41,12 +45,11 @@ typedef struct ntt_prime_t
 static const ntt_prime_t NTT_PRIMES[4] =
 {
     {
-
-    /* --------------------------------------------------------------- */
-    /* k = 11     g = 3    p = 96757023244289     (0x580000000001)     */
-    /* --------------------------------------------------------------- */
-        
-        .k = 11ULL, .g = 3ULL, .p = (11ULL << 43) + 1ULL,
+	    /* --------------------------------------------------------------- */
+	    /* p = 96757023244289     (0x580000000001)                         */
+	    /* --------------------------------------------------------------- */
+    
+        .p = 96757023244289ULL,
 
         .magic = 0xBA2E8BA2E8B810EDULL,
 
@@ -255,12 +258,11 @@ static const ntt_prime_t NTT_PRIMES[4] =
     },
 
     {
+	    /* --------------------------------------------------------------- */
+	    /* p = 255086697644033    (0xe80000000001)                         */
+	    /* --------------------------------------------------------------- */
 
-    /* --------------------------------------------------------------- */
-    /* k = 29     g = 3    p = 255086697644033    (0xe80000000001)     */
-    /* --------------------------------------------------------------- */
-        
-        .k = 29ULL, .g = 3ULL, .p = (29ULL << 43) + 1ULL,
+        .p = 255086697644033ULL,
 
         .magic = 0x8D3DCB08D3DC14B3ULL,
 
@@ -469,12 +471,11 @@ static const ntt_prime_t NTT_PRIMES[4] =
     },
 
     {
-
-    /* --------------------------------------------------------------- */
-    /* k = 51     g = 11   p = 448600744132609    (0x1980000000001)    */
-    /* --------------------------------------------------------------- */
-
-        .k = 51ULL, .g = 11ULL, .p = (51ULL << 43) + 1ULL,
+        /* --------------------------------------------------------------- */
+        /* p = 448600744132609    (0x1980000000001) */
+        /* --------------------------------------------------------------- */
+        
+        .p = 448600744132609ULL,
 
         .magic = 0x141414141414077BULL,
 
@@ -683,12 +684,11 @@ static const ntt_prime_t NTT_PRIMES[4] =
     },
 
     {
-
-    /* --------------------------------------------------------------- */
-    /* k = 75     g = 11   p = 659706976665601    (0x2580000000001)    */
-    /* --------------------------------------------------------------- */
-
-        .k = 75ULL, .g = 11ULL, .p = (75ULL << 43) + 1ULL,
+	    /* --------------------------------------------------------------- */
+	    /* p = 659706976665601    (0x2580000000001) */
+	    /* --------------------------------------------------------------- */
+        
+        .p = 659706976665601ULL,
 
         .magic = 0xDA740DA740DA16D9ULL,
 
@@ -893,14 +893,15 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x1E099516D8692ULL /* psi_inv^(4 ) */, 0x08F92CCCE1DD9ULL /* psi_inv^(8 ) */, 0x0E7D18890DD12ULL /* psi_inv^(12) */,
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x08F92CCCE1DD9ULL /* psi_inv^(8 ) */, 0x1CCAEDF2C6C0FULL /* psi_inv^(16) */, 0x006AF96964A06ULL /* psi_inv^(24) */,
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x0E7D18890DD12ULL /* psi_inv^(12) */, 0x006AF96964A06ULL /* psi_inv^(24) */, 0x06785DBFBF609ULL /* psi_inv^(36) */
-        }
+        },
     }
+
 };
 
-#define NTT_PRIME_POW2      (43ULL)      /* Power of 2 in each prime of the table */
-#define MIN_CONV_LEN		(1ULL << 6)  /* smallest codelet size is 64 */
-#define CRT3_MAX_CONV_LEN   (1ULL << 17) /* using the larger 3 primes */
-#define CRT4_MAX_CONV_LEN   (1ULL << 42) /* when using all 4 primes */
+/* Garner CRT: mixed-radix inverses of running prime products -- 3 values */
+#define INV01  0x04071C71C71C9ULL
+#define INV02  0x09030DF6B0DFAULL
+#define INV03  0x1B2E49BD37A76ULL
 
 #else
     #error "Only 64-bit systems supported!"
