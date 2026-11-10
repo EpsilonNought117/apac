@@ -36,40 +36,135 @@ uint64_t apac_cpu_timer(void)
 #endif
 }
 
+/*
+ * Pins the calling thread to a logical processor.
+ *
+ * core_id is a zero-based global logical processor index.
+ *
+ * Windows:
+ *   Maps core_id to a processor group and group-relative CPU index.
+ *
+ * Linux:
+ *   Uses dynamically allocated CPU sets, supporting CPU IDs
+ *   beyond CPU_SETSIZE.
+ *
+ * Returns:
+ *    0  Success
+ *   -1  Failure or unsupported platform
+ */
 int apac_pin_thread_to_core(uint32_t core_id)
 {
 #if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
 
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
-    uint32_t num_cores = (uint32_t)sysinfo.dwNumberOfProcessors;
-    core_id = core_id % num_cores;
+    WORD num_groups = GetActiveProcessorGroupCount();
 
-    DWORD_PTR mask = (DWORD_PTR)1 << core_id;
-    HANDLE thread = GetCurrentThread();
-    return (SetThreadAffinityMask(thread, mask) != 0) ? 0 : -1;
+    uint32_t remaining = core_id;
 
-#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)
-
-    long num_cores = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_cores > 0)
+    for (WORD group = 0; group < num_groups; ++group)
     {
-        core_id = core_id % (uint32_t)num_cores;
+        DWORD num_cores = GetActiveProcessorCount(group);
+
+        if (remaining < num_cores)
+        {
+            if (remaining >= (sizeof(KAFFINITY) * CHAR_BIT))
+            {
+                return -1;
+            }
+
+            GROUP_AFFINITY affinity = { 0 };
+
+            affinity.Group = group;
+            affinity.Mask = ((KAFFINITY)1) << remaining;
+
+            return SetThreadGroupAffinity(
+                GetCurrentThread(),
+                &affinity,
+                NULL
+            ) ? 0 : -1;
+        }
+
+        remaining -= num_cores;
     }
 
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(core_id, &cpuset);
-    pthread_t thread = pthread_self();
-    return (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset) == 0) ? 0 : -1;
+    return -1;
+    
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)
+
+    if (core_id > INT_MAX)
+        return -1;
+
+    size_t ncpus = (size_t)core_id + 1;
+
+    if (ncpus < CPU_SETSIZE)
+        ncpus = CPU_SETSIZE;
+
+    cpu_set_t* cpuset;
+    size_t setsize;
+
+    /*
+     * Allocate a sufficiently large CPU set.
+     */
+    for (;;)
+    {
+        setsize = CPU_ALLOC_SIZE(ncpus);
+        cpuset = CPU_ALLOC(ncpus);
+
+        if (cpuset == NULL)
+            return -1;
+
+        CPU_ZERO_S(setsize, cpuset);
+
+        if (sched_getaffinity(0, setsize, cpuset) == 0)
+            break;
+
+        int error = errno;
+
+        CPU_FREE(cpuset);
+
+        if (error != EINVAL || ncpus > SIZE_MAX / 2)
+            return -1;
+
+        ncpus *= 2;
+    }
+
+    /*
+     * Check whether the requested CPU is available.
+     */
+    if (!CPU_ISSET_S(core_id, setsize, cpuset))
+    {
+        CPU_FREE(cpuset);
+        return -1;
+    }
+
+    /*
+     * Restrict the CPU set to the requested CPU.
+     */
+    CPU_ZERO_S(setsize, cpuset);
+    CPU_SET_S(core_id, setsize, cpuset);
+
+    /*
+     * Apply affinity to the calling thread.
+     */
+    int result = pthread_setaffinity_np(
+        pthread_self(),
+        setsize,
+        cpuset
+    );
+
+    CPU_FREE(cpuset);
+
+    return result == 0 ? 0 : -1;
 
 #else
+
+    (void)core_id;
+
+    APAC_WARN("Core affinity cannot be set on this platform!\n");
 
     return -1;
 
 #endif
 }
-
 
 #if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
     static GUID* CurrentScheme;
@@ -90,14 +185,13 @@ void apac_disable_dfs(void)
 
 #else
 
-    fprintf(stderr,
+    APAC_WARN(
         "\n"
         "WARNING: Dynamic Frequency Scaling (Turbo Boost) cannot be disabled on this platform.\n"
         "         Disable it manually for optimal, consistent, and accurate results.          \n"
         "\n"
         "Continue anyway? (y/n): "
     );
-    fflush(stderr);
 
     char buffer[16];
     if (fgets(buffer, sizeof(buffer), stdin) == NULL)
@@ -109,7 +203,7 @@ void apac_disable_dfs(void)
     if (buffer[0] != 'y' && buffer[0] != 'Y')
     {
         fprintf(stderr, "Exiting ...\n");
-        exit(EXIT_FAILURE);
+        exit(EXIT_SUCCESS);
     }
 
     fprintf(stderr, "\n");
@@ -130,7 +224,5 @@ void apac_restore_dfs(void)
     LocalFree(CurrentScheme);
     CurrentScheme = NULL;
 
-#else
-     /* Nothing to restore on non-Windows platforms */
 #endif
 }
