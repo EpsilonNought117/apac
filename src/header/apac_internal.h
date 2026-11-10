@@ -14,6 +14,7 @@
 #include <memory.h>
 #include <inttypes.h>
 #include <stdint.h>
+#include <errno.h>
 
 /* ---------------------------------------------------------------------------------------------- */
 /*                            COMPILER AND PLATFORM SPECIFIC HEADERS                              */
@@ -21,84 +22,80 @@
 
 #if defined(APAC_WIN_X64) || defined(APAC_WIN_ARM64)
 
-	#define WIN32_LEAN_AND_MEAN
-	#include <Windows.h>
+    #define WIN32_LEAN_AND_MEAN
 
-	#include <intrin.h>
+    #include <Windows.h>
+    #include <intrin.h>
 
-	#if defined(APAC_WIN_X64)
-		#include <immintrin.h>
-	#endif
+    #if defined(APAC_WIN_X64)
+        #include <immintrin.h>
+    #endif
 
-	/* --- MSVC always uses C11 threads --- */
+    /* --- Win32 Threads --- */
 
-	#if (_MSC_VER < 1939)
-		#error "C11 <threads.h> requires MSVC 19.39 (Visual Studio 2022 17.9) or later."
-	#endif
+    #define APAC_USE_WIN32_THREADS    1
+    #define APAC_THRD_LOCAL           __declspec(thread)
 
-    #include <stdatomic.h>
-	#include <threads.h>
+    #define CLZ(value, count)                                                                    \
+        do                                                                                       \
+        {                                                                                        \
+            unsigned long idx = 0;                                                               \
+            (count) = _BitScanReverse64(&idx, (value)) ? (apn_dig_t)63 - idx : (apn_dig_t)64;    \
+        } while (0)
 
-	#define APAC_USE_C11_THREADS	1
-	#define APAC_THRD_LOCAL			_Thread_local
+    #define CTZ(value, count)                                                                    \
+        do                                                                                       \
+        {                                                                                        \
+            unsigned long idx = 0;                                                               \
+            (count) = _BitScanForward64(&idx, (value)) ? idx : (apn_dig_t)64;                    \
+        } while (0)
 
-	#define CLZ(value, count)																		\
-			do																						\
-			{																						\
-				unsigned long idx = 0;																\
-				(count) = _BitScanReverse64(&idx, (value)) ? (apn_dig_t)63 - idx : (apn_dig_t)64;	\
-			} while (0)
+    #define ROTL(value, count) do { value = _rotl64((value), (count)); } while (0)
 
-	#define CTZ(value, count)														\
-			do																		\
-			{																		\
-				unsigned long idx = 0;												\
-				(count) = _BitScanForward64(&idx, (value)) ? idx : (apn_dig_t)64;	\
-			} while (0)
 
-	#define ROTL(value, count)	do { value = _rotl64((value), (count)); } while (0)
+#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64) || \
+      defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
 
-#elif defined(APAC_LINUX_X64) || defined(APAC_LINUX_ARM64)	|| \
-	  defined(APAC_MACOS_X64) || defined(APAC_MACOS_ARM64)
+    #include <unistd.h>
+    #include <time.h>
+    #include <sched.h>
+    #include <pthread.h>
 
-	#include <unistd.h>
-	#include <time.h>
-	#include <sched.h>
-    #include <stdatomic.h>
-	#include <pthread.h>
+    #if defined(APAC_LINUX_X64)
 
-	#if defined(APAC_LINUX_X64)
+        #include <cpuid.h>
+        #include <immintrin.h>
 
-		#include <cpuid.h>
-		#include <immintrin.h>
+    #elif defined(APAC_LINUX_ARM64)
 
-	#elif defined(APAC_LINUX_ARM64)
-	
-	#endif
+    #endif
 
-	#define APAC_USE_PTHREADS		1
-	#define APAC_THRD_LOCAL			__thread	/* GCC/Clang extension */
+    /* --- POSIX Threads --- */
 
-	#define CLZ(value, count)																\
-			do																				\
-			{																				\
-				(count) = (value) ? (apn_dig_t)__builtin_clzll((value)) : (apn_dig_t)64;	\
-			} while (0)
+    #define APAC_USE_PTHREADS    1
+    #define APAC_THRD_LOCAL      __thread
 
-	#define CTZ(value, count)																\
-			do																				\
-			{																				\
-				(count) = (value) ? (apn_dig_t)__builtin_ctzll((value)) : (apn_dig_t)64;	\
-			} while(0)
+    #define CLZ(value, count)                                                                    \
+        do                                                                                       \
+        {                                                                                        \
+            (count) = (value) ? (apn_dig_t)__builtin_clzll((value)) : (apn_dig_t)64;             \
+        } while (0)
 
-	#define ROTL(value, count)											\
-			do															\
-			{															\
-				value = (												\
-					(((apn_dig_t)(value)) << ((count) & 63)) 	   	| 	\
-					(((apn_dig_t)(value)) >> (64 - ((count) & 63)))		\
-				);														\
-			} while (0)
+    #define CTZ(value, count)                                                                    \
+        do                                                                                       \
+        {                                                                                        \
+            (count) = (value) ? (apn_dig_t)__builtin_ctzll((value)) : (apn_dig_t)64;             \
+        } while (0)
+
+    #define ROTL(value, count)                                                                   \
+        do                                                                                       \
+        {                                                                                        \
+            value = (                                                                            \
+                (((apn_dig_t)(value)) << ((count) & 63)) |                                       \
+                (((apn_dig_t)(value)) >> (64 - ((count) & 63)))                                  \
+            );                                                                                   \
+        } while (0)
+
 #endif
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -216,6 +213,13 @@
     #define APAC_PARTIAL_OVERLAP_BELOW(op1, size1, op2, size2)  do { /* nothing */ } while (0)
 
 #endif
+
+#define APAC_WARN(msg)                  \
+    do                                  \
+    {                                   \
+        fprintf(stderr, "%s\n", msg);   \
+        fflush(stderr);                 \
+    } while (0)
 
 /* ---------------------------------------------------------------------------------------------- */
 /*                                      GLOBAL MEMORY ALLOCATOR                                   */
