@@ -1,13 +1,13 @@
-
-#   O---------------------------------------------------------------------------O
-#   |                                                                           |
-#   |            APAC - Arbitrary Precision Arithmetic and Computation          |
-#   |                                                                           |
-#   O---------------------------------------------------------------------------O
+# O---------------------------------------------------------------------------O
+# |                                                                           |
+# |            APAC - Arbitrary Precision Arithmetic and Computation          |
+# |                                                                           |
+# O---------------------------------------------------------------------------O
 
 # --- CHECKS --------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.26)
+
 project(apac)
 
 enable_testing()
@@ -15,27 +15,42 @@ enable_testing()
 # Requires a 64-bit target architecture
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 
-    message(FATAL_ERROR "This project requires a 64-bit target architecture. "
-                        "Detected a ${CMAKE_SIZEOF_VOID_P}-byte pointer width, "
-                        "indicating a 32-bit target. 32-bit builds are not supported.")
+    message(FATAL_ERROR
+        "This project requires a 64-bit target architecture. "
+        "Detected a ${CMAKE_SIZEOF_VOID_P}-byte pointer width."
+    )
 
 endif()
 
-# detect CPU ISA
+# Detect CPU ISA
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64|x64)$")
-    set(APAC_CMAKE_X64 TRUE)
-else()
-    set(APAC_CMAKE_X64 FALSE)
-endif()
+set(APAC_CPU_IS_X64   FALSE)
+set(APAC_CPU_IS_ARM64 FALSE)
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|ARM64|arm64)$")
-    set(APAC_CMAKE_ARM64 TRUE)
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" APAC_SYSTEM_PROCESSOR)
+
+if (APAC_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|x64)$")
+
+    set(APAC_CPU_IS_X64 TRUE)
+
+elseif (APAC_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+
+    set(APAC_CPU_IS_ARM64 TRUE)
+
 else()
-    set(APAC_CMAKE_ARM64 FALSE)
+
+    message(FATAL_ERROR
+        "Unsupported CPU ISA: ${CMAKE_SYSTEM_PROCESSOR}"
+    )
+
 endif()
 
 # Detect platform and compiler
+
+set(APAC_C11_COMPILER_IS_MSVC        FALSE)
+set(APAC_C11_COMPILER_IS_CLANG_CL    FALSE)
+set(APAC_C11_COMPILER_IS_APPLE_CLANG FALSE)
+set(APAC_C11_COMPILER_IS_GCC_CLANG   FALSE)
 
 if (WIN32)
 
@@ -44,7 +59,8 @@ if (WIN32)
     if (MINGW)
 
         message(FATAL_ERROR "Unsupported toolchain on Windows: MinGW (GCC/Clang). "
-                            "Supported toolchains are MSVC, Clang-cl, and Clang targeting the MSVC ABI.")
+                            "Supported toolchains are MSVC, Clang-cl and GNU-style command line Clang."
+        )
 
     endif()
 
@@ -52,31 +68,35 @@ if (WIN32)
 
         if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
+            set(APAC_C11_COMPILER_IS_CLANG_CL TRUE)            
             message(STATUS "Selected C11 compiler: Clang-cl (version ${CMAKE_C_COMPILER_VERSION})")
 
         else ()
 
+            set(APAC_C11_COMPILER_IS_MSVC TRUE)
             message(STATUS "Selected C11 compiler: MSVC (version ${CMAKE_C_COMPILER_VERSION})")
 
         endif()
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
-        message(STATUS "Selected C11 compiler: Clang (version ${CMAKE_C_COMPILER_VERSION}), targeting the MSVC ABI")
+        set(APAC_C11_COMPILER_IS_GCC_CLANG TRUE)
+        message(STATUS "Selected C11 compiler: Clang (version ${CMAKE_C_COMPILER_VERSION}) with GNU-style command line.")
 
     else ()
 
         message(FATAL_ERROR "Unsupported C11 compiler on Windows: ${CMAKE_C_COMPILER_ID}. "
-                            "Supported compilers are MSVC, Clang-cl, and Clang.")
+                            "Supported compilers are MSVC, Clang-cl, and Clang."
+        )
 
     endif()
 
-    if (APAC_CMAKE_X64)
+    if (APAC_CPU_IS_X64)
 
         message(STATUS "Target processor ISA: x86-64/AMD64")
         enable_language(ASM_MASM)
 
-    elseif (APAC_CMAKE_ARM64)
+    elseif (APAC_CPU_IS_ARM64)
 
         message(STATUS "Target processor ISA: AArch64/ARM64")
         enable_language(ASM_MARMASM)
@@ -84,7 +104,8 @@ if (WIN32)
     else ()
 
         message(FATAL_ERROR "Unsupported processor ISA on Windows: ${CMAKE_SYSTEM_PROCESSOR}. "
-                            "Supported ISAs are x86-64/AMD64 and AArch64/ARM64.")
+                            "Supported ISAs are x86-64/AMD64 and AArch64/ARM64."
+        )
 
     endif()
 
@@ -94,16 +115,18 @@ elseif (APPLE)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 
+        set(APAC_C11_COMPILER_IS_APPLE_CLANG TRUE)
         message(STATUS "Selected C11 compiler: Apple Clang (version ${CMAKE_C_COMPILER_VERSION})")
 
     else ()
 
         message(FATAL_ERROR "Unsupported C11 compiler on macOS: ${CMAKE_C_COMPILER_ID}. "
-                            "Only Apple Clang is supported.")
+                            "Only Apple Clang is supported."
+        )
 
     endif()
 
-    if (APAC_CMAKE_X64 OR APAC_CMAKE_ARM64)
+    if (APAC_CPU_IS_X64 OR APAC_CPU_IS_ARM64)
 
         message(STATUS "Target processor ISA: ${CMAKE_SYSTEM_PROCESSOR}")
         enable_language(ASM)
@@ -111,7 +134,8 @@ elseif (APPLE)
     else ()
 
         message(FATAL_ERROR "Unsupported processor ISA on macOS: ${CMAKE_SYSTEM_PROCESSOR}. "
-                            "Supported ISAs are x86-64 and ARM64.")
+                            "Supported ISAs are x86-64 and ARM64."
+        )
 
     endif()
 
@@ -121,16 +145,19 @@ elseif (LINUX)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
+        set(APAC_C11_COMPILER_IS_GCC_CLANG TRUE)
         message(STATUS "Selected C11 compiler: GCC (version ${CMAKE_C_COMPILER_VERSION})")
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
 
+        set(APAC_C11_COMPILER_IS_GCC_CLANG TRUE)
         message(STATUS "Selected C11 compiler: Clang (version ${CMAKE_C_COMPILER_VERSION})")
 
     else ()
 
         message(FATAL_ERROR "Unsupported C11 compiler on Linux: ${CMAKE_C_COMPILER_ID}. "
-                            "Supported compilers are GCC and Clang.")
+                            "Supported compilers are GCC and Clang."
+        )
 
     endif()
 
@@ -142,48 +169,40 @@ elseif (LINUX)
     else ()
 
         message(FATAL_ERROR "Unsupported processor ISA on Linux: ${CMAKE_SYSTEM_PROCESSOR}. "
-                            "Supported ISAs are x86-64 and AArch64/ARM64.")
+                            "Supported ISAs are x86-64 and AArch64/ARM64."
+        )
 
     endif()
 
 else ()
 
     message(FATAL_ERROR "Unsupported target platform. "
-                        "This project supports Windows, macOS, and Linux only.")
+                        "This project supports Windows, MacOS and Linux only."
+    )
 
 endif()
 
 # --- COMPILER ARGUMENTS ---------------------------------------------------------
 
-if (MSVC AND NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if (APAC_C11_COMPILER_IS_MSVC)
 
     # MSVC (cl.exe)
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C>:/d1trimfile:${CMAKE_SOURCE_DIR}/>
         $<$<COMPILE_LANGUAGE:C>:/std:c11>
-        $<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>
     )
 
-elseif (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+elseif (APAC_C11_COMPILER_IS_CLANG_CL)
 
     # clang-cl (MSVC-compatible driver)
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C>:/clang:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
         $<$<COMPILE_LANGUAGE:C>:/std:c11>
-        $<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>
     )
 
-elseif (WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+elseif (APAC_C11_COMPILER_IS_GCC_CLANG OR APAC_C11_COMPILER_IS_APPLE_CLANG)
 
-    # Clang targeting the MSVC ABI, native GNU-style driver (not clang-cl)
-    add_compile_options(
-        $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
-        $<$<COMPILE_LANGUAGE:C>:-std=c11>
-    )
-
-else()
-
-    # GCC / Clang (Linux, macOS)
+    # GCC / Clang (Linux, Unix, macOS)
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}/=>
         $<$<COMPILE_LANGUAGE:C>:-std=c11>
@@ -196,7 +215,6 @@ endif()
 option(APAC_SHARED   "Build apac as a shared library"   OFF)
 option(APAC_TESTS    "Build property tests"             OFF)
 option(APAC_TUNE     "Build performance tuning utility" OFF)
-option(APAC_MT_FUNCS "Build multi-threaded functions"   OFF)
 
 # --- Single-Threaded C Sources -------------------------------------------------
 
@@ -248,7 +266,7 @@ set (mt_c_sources
 
 # --- x64 specific sources ------------------------------------------------------
 
-if (APAC_CMAKE_X64)
+if (APAC_CPU_IS_X64)
 
     # Common C sources (always used on x64)
     set(x64_c_sources
@@ -304,7 +322,7 @@ if (APAC_CMAKE_X64)
 
 # --- AArch64/ARM64 specific sources --------------------------------------------------
 
-elseif (APAC_CMAKE_ARM64)
+elseif (APAC_CPU_IS_ARM64)
 
 endif()
 
