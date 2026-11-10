@@ -25,7 +25,7 @@ arbitrary-precision arithmetic and computation.
 - **C11 Compiler:** GCC or Clang
 - **x86-64 Assembler:** GAS (GNU Assembler) or Clang's integrated assembler
 
-### Mac0S
+### MacOS
 
 - Yet to be tested.
 
