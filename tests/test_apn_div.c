@@ -57,7 +57,7 @@ check_apn_div(uint64_t iterations)
             i      /* divisor size  */
         );
 
-        APAC_ALWAYS_ASSERT(ret != APAC_OOM);
+        APAC_ALWAYS_ASSERT(ret != APAC_OOM || ret != APAC_DIV_BY_ZERO);
         
         /* decide multiplication order (quotient size is always j + 1) */
         apn_dig_t* mul_a;

@@ -36,18 +36,22 @@ check_apn_div_one(uint64_t iterations)
 
             apn_dig_t divisor = ((apn_dig_t)1 << sh);
 
-            apn_dig_t rem = apn_div_one(
+            apn_dig_t rem = 0ULL;
+            
+            apac_err_t err1 = apn_div_one(
                 q1,
+                &rem,
                 op1,
                 divisor,
                 size,
                 0
             );
 
+            APAC_ALWAYS_ASSERT(err1 != APAC_DIV_BY_ZERO);
+
             int cmp_q = apn_cmp(q1, q2, size);
 
-            apn_dig_t expected_rem =
-                shift_out >> (APN_DIG_BITS - sh);
+            apn_dig_t expected_rem = shift_out >> (APN_DIG_BITS - sh);
 
             APAC_ALWAYS_ASSERT(cmp_q == 0);
             APAC_ALWAYS_ASSERT(rem == expected_rem);
@@ -68,27 +72,26 @@ check_apn_div_one(uint64_t iterations)
         apn_set(q1, size, 0);
         apn_set(op2, size + 1, 0);
 
-        apn_dig_t rem = apn_div_one(
+        apn_dig_t rem = 0ULL;
+        
+        apac_err_t err2 = apn_div_one(
             q1,
+            &rem,
             op1,
             divisor,
             size,
             0
         );
 
+        APAC_ALWAYS_ASSERT(err2 != APAC_DIV_BY_ZERO);
+
         op2[0] = rem;
 
-        apn_dig_t carry = apn_addmul_one(
-                            op2,
-                            q1,
-                            size,
-                            divisor
-                        );
+        apn_dig_t carry = apn_addmul_one(op2, q1, size, divisor);
 
         int cmp_res = apn_cmp(op1, op2, size);
 
         APAC_ALWAYS_ASSERT(carry == 0);
-
         APAC_ALWAYS_ASSERT(cmp_res == 0);
 
         /* TEST-3: division by one */
@@ -97,13 +100,16 @@ check_apn_div_one(uint64_t iterations)
 
         apn_set(q1, size, 0);
 
-        rem = apn_div_one(
+        err2 = apn_div_one(
             q1,
+            &rem,
             op1,
             1,
             size,
             0
         );
+
+        APAC_ALWAYS_ASSERT(err2 != APAC_DIV_BY_ZERO);
 
         int cmp_identity = apn_cmp(op1, q1, size);
 
