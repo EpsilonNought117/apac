@@ -583,7 +583,7 @@ fwd_ntt_r2_dif(
 
     APAC_ASSERT(k >= 6U && k <= 42U);   // size should at least be 64ULL 
 
-    apn_size_t twdl_idx = NTT_PRIME_POW2 - k;
+    apn_size_t twdl_idx = NTT_PRIMES_POW2 - k;
     twdl_idx -= (tf == NEGACYCLIC);
 
     // safe cast as per C11 Standard
@@ -722,7 +722,7 @@ fwd_ntt_r2_dif(
 
     for (apn_size_t i = 0; i < size; i += MIN_CONV_LEN)
     {
-        fwd_ntt_dif_r4_unroll64(&op1[i], vp, vp_inv, zeta_v, table);
+        fwd_ntt_dif_r4_unroll64(&op[i], vp, vp_inv, zeta_v, table);
     }
 
     // exiting here, the entire op1 arr contains all normalized values
@@ -747,11 +747,11 @@ inv_ntt_r2_dit(
     APAC_ASSERT(size <= CRT4_MAX_CONV_LEN);
     APAC_ASSERT(tf == CYCLIC || tf == NEGACYCLIC);
 
-    apn_size_t twdl_idx = NTT_PRIME_POW2 - 6;
+    apn_size_t twdl_idx = NTT_PRIMES_POW2 - 6;
     twdl_idx -= (tf == NEGACYCLIC);
 
     // same as fwd transform
-    double* op1 = (double*)op1;
+    double* op = (double*)op1;
 
     __m256d vp = _mm256_set1_pd((double)prime->p);
     __m256d vp_inv = _mm256_set1_pd(prime->prime_inv);
@@ -761,7 +761,7 @@ inv_ntt_r2_dit(
 
     for (apn_size_t i = 0; i < size; i += MIN_CONV_LEN)
     {
-        inv_ntt_dit_r4_unroll64(&op1[i], vp, vp_inv, zeta_inv_v, table);
+        inv_ntt_dit_r4_unroll64(&op[i], vp, vp_inv, zeta_inv_v, table);
     }
 
     apn_size_t n = size;
@@ -777,5 +777,4 @@ inv_ntt_r2_dit(
 
     - pointwise_mul_avx_fma
     - matrix_trans_avx_fma
-    - garner_crt_avx_fma
 */
