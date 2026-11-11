@@ -19,6 +19,7 @@ apac_err_t apn_div(
     APAC_ASSERT(divisor != NULL);
     APAC_ASSERT(size_dvsr != 0);
     APAC_ASSERT(size_divd >= size_dvsr);
+    APAC_ASSERT(size_divd < (APN_SIZE_MAX - size_divd_frac));
 
     apn_size_t size_quot = size_divd + size_divd_frac - size_dvsr + 1;
     apn_size_t size_rmdr = size_dvsr;
@@ -28,15 +29,19 @@ apac_err_t apn_div(
     APAC_NO_OVERLAP(quotient, size_quot, divisor, size_dvsr);
     APAC_NO_OVERLAP(dividend, size_divd, divisor, size_dvsr);
     APAC_NO_OVERLAP(divisor, size_dvsr, remainder, size_rmdr);
-    APAC_ASSERT(divisor[size_dvsr - 1] != 0);
-
-    apn_dig_t dvsr_shift_val = 0;
 
     if (size_dvsr == 1)
     {
-        remainder[0] = apn_div_one(quotient, dividend, divisor[0], size_divd, size_divd_frac);
-        return APAC_OK;
+        // can return APAC_DIV_BY_ZERO is divisor[0] is 0ULL
+        return apn_div_one(quotient, &remainder[0], dividend, divisor[0], size_divd, size_divd_frac);
     }
+
+    // very important check
+    if (apn_is_zero(divisor, size_dvsr) == 1)
+    {
+        return APAC_DIV_BY_ZERO;
+    }
+
     if (size_divd == size_dvsr)
     {
         int cmp_res = apn_cmp(dividend, divisor, size_divd);
@@ -76,7 +81,8 @@ full_division:
     if (size_divd_frac != 0) { apn_set(temp_divd, size_divd_frac, 0); } // must check
     apn_cpy(&temp_divd[size_divd_frac], dividend, size_divd);
     temp_divd[size_divd + size_divd_frac] = 0ULL;
-    
+
+    apn_dig_t dvsr_shift_val = 0;
     apn_size_t new_size_divd = size_divd + size_divd_frac + 1;
 
     if (!(temp_dvsr[size_dvsr - 1] & (APN_DIG_HIGH_BIT)))
