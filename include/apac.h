@@ -321,9 +321,10 @@ apn_div(
     apn_size_t size_dvsr
 );
 
-APAC_API apn_dig_t 
+APAC_API apac_err_t
 apn_div_one(
     apn_dig_t* quotient,
+    apn_dig_t* remainder,
     const apn_dig_t* dividend,
     apn_dig_t divisor,
     apn_size_t size_divd,
