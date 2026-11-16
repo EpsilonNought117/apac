@@ -44,11 +44,23 @@ addmul_one_zen4:
 .set i, 0
 .rept 8
 
-    mulx    r11, r10, QWORD PTR [rsi + i * 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [rdi + i * 8 + 8]
+    # Even iteration
+    .if (i & 1) == 0
+    
+        mulx    r11, r10, QWORD PTR [rsi + i * 8]
+        adcx    r10, rax
+        adox    r11, QWORD PTR [rdi + i * 8 + 8]
+
+    # Odd iteration
+    .else
+
+        mulx    rax, r10, QWORD PTR [rsi + i * 8]
+        adcx    r10, r11
+        adox    rax, QWORD PTR [rdi + i * 8 + 8]
+    
+    .endif
+
     mov     QWORD PTR [rdi + i * 8], r10
-    mov     rax, r11
 
 .set i, i + 1
 .endr

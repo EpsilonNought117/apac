@@ -41,12 +41,23 @@ submul_one_zen4:
 .set i, 0
 .rept 4
 
-    mulx    r11, r10, QWORD PTR [rsi + i * 8]
-    adox    r10, r9
+    # Even iteration
+    .if (i & 1) == 0
+
+        mulx    r11, r10, QWORD PTR [rsi + i * 8]
+        adox    r10, r9
+
+    # Odd iteration
+    .else
+    
+        mulx    r9, r10, QWORD PTR [rsi + i * 8]
+        adox    r10, r11
+    
+    .endif
+
     not     r10
     adcx    r10, QWORD PTR [rdi + i * 8]
     mov     QWORD PTR [rdi + i * 8], r10
-    mov     r9,  r11
 
 .set i, i + 1
 .endr
