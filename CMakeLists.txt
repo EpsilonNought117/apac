@@ -161,7 +161,7 @@ elseif (LINUX)
 
     endif()
 
-    if (APAC_CMAKE_X64 OR APAC_CMAKE_ARM64)
+    if (APAC_CPU_IS_X64 OR APAC_CPU_IS_ARM64)
 
         message(STATUS "Target processor ISA: ${CMAKE_SYSTEM_PROCESSOR}")
         enable_language(ASM)
