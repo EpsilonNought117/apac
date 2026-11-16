@@ -49,12 +49,25 @@ unrolled_loop:
 i = 0
 WHILE i LT 4
 
-    mulx    rdi, rsi, QWORD PTR [r11 + i * 8]
-    adox    rsi, r9
-    not     rsi
-    adcx    rsi, QWORD PTR [r10 + i * 8]
+    ; Even iteration
+    IF (i AND 1) EQ 0
+    
+        mulx    rdi, rsi, QWORD PTR [r11 + i * 8]
+        adox    rsi, r9
+        not     rsi
+        adcx    rsi, QWORD PTR [r10 + i * 8]
+
+    ; Odd iteration
+    ELSE
+
+        mulx    r9, rsi, QWORD PTR [r11 + i * 8]
+        adox    rsi, rdi
+        not     rsi
+        adcx    rsi, QWORD PTR [r10 + i * 8]
+    
+    ENDIF
+
     mov     QWORD PTR [r10 + i * 8], rsi
-    mov     r9,  rdi
 
 i = i + 1
 ENDM

@@ -42,19 +42,31 @@ start_of_func:
     test    rcx, rcx            ; test if (size / 8) == 0
     jz      before_remainder    ; jump to rmdr if zero
     
-ALIGN 64
+ALIGN 16
 unroll8_loop:
 
 i = 0
 WHILE i LT 8
 
-    mulx    r11, r10, QWORD PTR [rbx + i * 8]
-    adcx    r10, rax
-    adox    r11, QWORD PTR [r9 + i * 8 + 8]
-    mov     QWORD PTR [r9 + i * 8], r10
-    mov     rax, r11
+    ; Even iteration: high64 in r11, previous high64 in rax
+    IF (i AND 1) EQ 0
+    
+        mulx    r11, r10, QWORD PTR [rbx + i * 8]
+        adcx    r10, rax
+        adox    r11, QWORD PTR [r9 + i * 8 + 8]
+    
+    ; Odd iteration: high64 in rax, previous high64 in r11
+    ELSE
+    
+        mulx    rax, r10, QWORD PTR [rbx + i * 8]
+        adcx    r10, r11
+        adox    rax, QWORD PTR [r9 + i * 8 + 8]
+    
+    ENDIF
 
-i = i + 1
+    mov     QWORD PTR [r9 + i * 8], r10
+
+    i = i + 1
 ENDM
 
     lea     rbx, [rbx + 64]
@@ -90,7 +102,9 @@ end_of_loop:
 
 end_of_func:
 
+    setc    cl
     seto    al
+    or      al, cl
     movzx   rax, al
 
     pop     rbx

@@ -83,10 +83,21 @@ pass1_inner_loop_unroll:
 i = 0
 WHILE i LT 4
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i * 8 + 8]
-    adc     rsi, rax
+    ; Even iteration
+    IF (i AND 1) EQ 0
+    
+        mulx    rdi, rsi, QWORD PTR [rbx + i * 8 + 8]
+        adc     rsi, rax
+
+    ; Odd iteration
+    ELSE
+
+        mulx    rax, rsi, QWORD PTR [rbx + i * 8 + 8]
+        adc     rsi, rdi
+    
+    ENDIF
+
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     rax, rdi
 
 i = i + 1
 ENDM
@@ -153,11 +164,23 @@ pass2_inner_loop_unroll:
 i = 0
 WHILE i LT 8
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i * 8 + 8]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+    ; Even iteration
+    IF (i AND 1) EQ 0
+        
+        mulx    rdi, rsi, QWORD PTR [rbx + i * 8 + 8]
+        adcx    rsi, rax
+        adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+
+    ; Odd iteration
+    ELSE
+        
+        mulx    rax, rsi, QWORD PTR [rbx + i * 8 + 8]
+        adcx    rsi, rdi
+        adox    rax, QWORD PTR [rbp + i * 8 + 8]
+
+    ENDIF
+
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     rax, rdi
 
 i = i + 1
 ENDM

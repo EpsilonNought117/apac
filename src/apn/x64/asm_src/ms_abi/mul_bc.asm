@@ -76,10 +76,21 @@ pass1_loop_unroll:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
-    adc     rsi, rax
+    ; Even iteration
+    IF (i AND 1) EQ 0
+
+        mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
+        adc     rsi, rax
+
+    ; Odd iteration
+    ELSE
+    
+        mulx    rax, rsi, QWORD PTR [rbx + i * 8]
+        adc     rsi, rdi
+    
+    ENDIF
+
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     rax, rdi
 
 ENDM
 
@@ -150,11 +161,23 @@ pass2_inner_loop_unroll:
 
 FOR i, <0, 1, 2, 3, 4, 5, 6, 7>
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+    ; Even iteration
+    IF (i AND 1) EQ 0
+    
+        mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
+        adcx    rsi, rax
+        adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+
+    ; Odd iteration
+    ELSE
+
+        mulx    rax, rsi, QWORD PTR [rbx + i * 8]
+        adcx    rsi, rdi
+        adox    rax, QWORD PTR [rbp + i * 8 + 8]
+    
+    ENDIF
+
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     rax, rdi
 
 ENDM
 
@@ -189,19 +212,36 @@ rem&outer&:
 i = 0
 WHILE i LT outer
 
-    mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
-    adcx    rsi, rax
-    adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+    ; Even iteration
+    IF (i AND 1) EQ 0
+
+        mulx    rdi, rsi, QWORD PTR [rbx + i * 8]
+        adcx    rsi, rax
+        adox    rdi, QWORD PTR [rbp + i * 8 + 8]
+
+    ; Odd iteration
+    ELSE
+    
+        mulx    rax, rsi, QWORD PTR [rbx + i * 8]
+        adcx    rsi, rdi
+        adox    rax, QWORD PTR [rbp + i * 8 + 8]
+    
+    ENDIF
+
     mov     QWORD PTR [rbp + i * 8], rsi
-    mov     rax, rdi
-            
+
 i = i + 1
 ENDM
+
+; Odd-sized loop: final iteration is even
+IF (outer AND 1) EQ 1
+    mov     rax, rdi
+ENDIF
 
     lea     rbx, [rbx + outer * 8]
     lea     rbp, [rbp + outer * 8]
     jmp     pass2_outer_loop_end
-        
+
 ENDM
   
 pass2_outer_loop_end:

@@ -46,11 +46,22 @@ unroll8_loop:
 i = 0
 WHILE i LT 8
 
-    mulx    r11, r10, QWORD PTR [rbx + i * 8]
-    adc     r10, rax
-    mov     QWORD PTR [rcx + i * 8], r10
-    mov     rax, r11
+    ; Even iteration
+    IF (i AND 1) EQ 0
+
+        mulx    r11, r10, QWORD PTR [rbx + i * 8]
+        adc     r10, rax
+
+    ; Odd iteration
+    ELSE
     
+        mulx    rax, r10, QWORD PTR [rbx + i * 8]
+        adc     r10, r11
+    
+    ENDIF
+
+    mov     QWORD PTR [rcx + i * 8], r10
+
 i = i + 1
 ENDM
 
