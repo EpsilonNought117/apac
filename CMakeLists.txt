@@ -224,7 +224,6 @@ set(st_c_sources
 
     "src/misc/apac_init_alloc.c"
     "src/misc/apac_get_cpu_spec.c"
-    "src/misc/apac_utilities.c"
 
     # APN PUBLIC API
 
