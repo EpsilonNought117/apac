@@ -3,7 +3,7 @@
 #if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx512f,bmi2")))
 #endif
-void set_avx512f_4unroll(
+void set_avx512f(
 	apn_dig_t* result,
 	apn_size_t size,
 	apn_dig_t val
@@ -37,7 +37,7 @@ void set_avx512f_4unroll(
 #if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx")))
 #endif
-void set_avx_4unroll(
+void set_avx(
 	apn_dig_t* result,
 	apn_size_t size,
 	apn_dig_t val
@@ -70,7 +70,7 @@ void set_avx_4unroll(
 #if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("sse2")))
 #endif
-void set_sse2_4unroll(
+void set_sse2(
 	apn_dig_t* result,
 	apn_size_t size,
 	apn_dig_t val

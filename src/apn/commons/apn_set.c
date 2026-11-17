@@ -8,7 +8,7 @@ void apn_set(
 {
 	APAC_ASSERT(result != NULL);
 	APAC_ASSERT(size != 0);
-	APAC_ASSERT(curr_cpu.apn_set_ptr != NULL);
+	APAC_ASSERT(apn_set_ptr != NULL);
 
-	curr_cpu.apn_set_ptr(result, size, val);
+	apn_set_ptr(result, size, val);
 }

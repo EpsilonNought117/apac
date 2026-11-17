@@ -11,9 +11,9 @@
 
 .intel_syntax noprefix
 .text
-.globl sqr_bc_x64, sqr_bc_zen4
+.globl sqr_bc_x64, sqr_bc_adx_bmi2_x64
 .type  sqr_bc_x64, @function
-.type  sqr_bc_zen4, @function
+.type  sqr_bc_adx_bmi2_x64, @function
 
 #   -------------------------
 #
@@ -21,7 +21,7 @@
 #
 #   -------------------------
 
-sqr_bc_zen4:
+sqr_bc_adx_bmi2_x64:
 
 .cfi_startproc
 
@@ -33,7 +33,7 @@ sqr_bc_zen4:
 .cfi_adjust_cfa_offset 8
 .cfi_rel_offset r12, 0
 
-.Lzen4_start_of_func:
+.Ladx_bmi2_x64_start_of_func:
 
     mov     rbx, rdx
 
@@ -41,9 +41,9 @@ sqr_bc_zen4:
     # and rdx is free for mulx
 
     cmp     rbx, 1
-    jne     .Lzen4_pass1
+    jne     .Ladx_bmi2_x64_pass1
 
-.Lzen4_case1:
+.Ladx_bmi2_x64_case1:
 
     mov     rdx, QWORD PTR [rsi]
 
@@ -52,16 +52,16 @@ sqr_bc_zen4:
     mov     QWORD PTR [rdi], r10
     mov     QWORD PTR [rdi + 8], r11
 
-    jmp     .Lzen4_end_of_func
+    jmp     .Ladx_bmi2_x64_end_of_func
 
-.Lzen4_pass1:
+.Ladx_bmi2_x64_pass1:
 
     # result[0] = 0
     mov     QWORD PTR [rdi], 0
 
     mov     r12, rbx
     dec     r12
-    jz      .Lzen4_pass3
+    jz      .Ladx_bmi2_x64_pass3
 
     mov     r8,  r12
     shl     r8,  3
@@ -77,10 +77,10 @@ sqr_bc_zen4:
     and     r9,  3
 
     test    rcx, rcx
-    jz      .Lzen4_pass1_before_rmdr
+    jz      .Ladx_bmi2_x64_pass1_before_rmdr
 
 .p2align 4
-.Lzen4_pass1_loop_unroll:
+.Ladx_bmi2_x64_pass1_loop_unroll:
 
 .set i, 0
 .rept 4
@@ -107,15 +107,15 @@ sqr_bc_zen4:
     lea     rsi, [rsi + 32]
     lea     rdi, [rdi + 32]
     dec     rcx
-    jnz     .Lzen4_pass1_loop_unroll
+    jnz     .Ladx_bmi2_x64_pass1_loop_unroll
 
-.Lzen4_pass1_before_rmdr:
+.Ladx_bmi2_x64_pass1_before_rmdr:
 
     mov     rcx, r9
-    jrcxz   .Lzen4_pass1_end
+    jrcxz   .Ladx_bmi2_x64_pass1_end
 
 .p2align 4
-.Lzen4_pass1_loop_rmdr:
+.Ladx_bmi2_x64_pass1_loop_rmdr:
 
     mulx    r11, r10, QWORD PTR [rsi + 8]
     adc     r10, rax
@@ -125,9 +125,9 @@ sqr_bc_zen4:
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     rcx
-    jnz     .Lzen4_pass1_loop_rmdr
+    jnz     .Ladx_bmi2_x64_pass1_loop_rmdr
 
-.Lzen4_pass1_end:
+.Ladx_bmi2_x64_pass1_end:
 
     adc     rax, 0
     mov     QWORD PTR [rdi], rax
@@ -139,14 +139,14 @@ sqr_bc_zen4:
 
     sub     r8,  8
     dec     r12
-    jz      .Lzen4_before_pass3
+    jz      .Ladx_bmi2_x64_before_pass3
 
-.Lzen4_pass2:
+.Ladx_bmi2_x64_pass2:
 
     sub     r8,  8
 
 .p2align 4
-.Lzen4_pass2_start:
+.Ladx_bmi2_x64_pass2_start:
 
     mov     rax, QWORD PTR [rdi]
     mov     rdx, QWORD PTR [rsi]
@@ -157,10 +157,10 @@ sqr_bc_zen4:
     and     r9,  7
 
     test    rcx, rcx
-    jz      .Lzen4_pass2_before_inner_rmdr
+    jz      .Ladx_bmi2_x64_pass2_before_inner_rmdr
 
 .p2align 4
-.Lzen4_pass2_inner_loop_unroll:
+.Ladx_bmi2_x64_pass2_inner_loop_unroll:
 
 .set i, 0
 .rept 8
@@ -189,17 +189,17 @@ sqr_bc_zen4:
     lea     rsi, [rsi + 64]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   .Lzen4_pass2_before_inner_rmdr
-    jmp     .Lzen4_pass2_inner_loop_unroll
+    jrcxz   .Ladx_bmi2_x64_pass2_before_inner_rmdr
+    jmp     .Ladx_bmi2_x64_pass2_inner_loop_unroll
 
 .p2align 4
-.Lzen4_pass2_before_inner_rmdr:
+.Ladx_bmi2_x64_pass2_before_inner_rmdr:
 
     mov     rcx, r9
-    jrcxz   .Lzen4_pass2_end
+    jrcxz   .Ladx_bmi2_x64_pass2_end
 
 .p2align 4
-.Lzen4_pass2_inner_loop_rmdr:
+.Ladx_bmi2_x64_pass2_inner_loop_rmdr:
 
     mulx    r11, r10, QWORD PTR [rsi + 8]
     adcx    r10, rax
@@ -209,10 +209,10 @@ sqr_bc_zen4:
 
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
-    loop    .Lzen4_pass2_inner_loop_rmdr
+    loop    .Ladx_bmi2_x64_pass2_inner_loop_rmdr
 
 .p2align 4
-.Lzen4_pass2_end:
+.Ladx_bmi2_x64_pass2_end:
 
     mulx    r11, r10, QWORD PTR [rsi + 8]
     adcx    r10, rax
@@ -229,9 +229,9 @@ sqr_bc_zen4:
 
     sub     r8,  8
     dec     r12
-    jnz     .Lzen4_pass2_start
+    jnz     .Ladx_bmi2_x64_pass2_start
 
-.Lzen4_before_pass3:
+.Ladx_bmi2_x64_before_pass3:
 
     mov     QWORD PTR [rdi], 0
 
@@ -247,7 +247,7 @@ sqr_bc_zen4:
     add     rsi, 8
     add     rdi, 8
 
-.Lzen4_pass3:
+.Ladx_bmi2_x64_pass3:
 
     mov     rcx, rbx
     mov     r9,  rbx
@@ -255,10 +255,10 @@ sqr_bc_zen4:
     and     r9,  3
     
     test    rcx, rcx
-    jz      .Lzen4_pass3_before_rmdr
+    jz      .Ladx_bmi2_x64_pass3_before_rmdr
 
 .p2align 4
-.Lzen4_pass3_loop_unroll:
+.Ladx_bmi2_x64_pass3_loop_unroll:
 
 .set i, 0
 .rept 4
@@ -282,16 +282,16 @@ sqr_bc_zen4:
     lea     rsi, [rsi + 32]
     lea     rdi, [rdi + 64]
     lea     rcx, [rcx - 1]
-    jrcxz   .Lzen4_pass3_before_rmdr
-    jmp     .Lzen4_pass3_loop_unroll
+    jrcxz   .Ladx_bmi2_x64_pass3_before_rmdr
+    jmp     .Ladx_bmi2_x64_pass3_loop_unroll
 
-.Lzen4_pass3_before_rmdr:
+.Ladx_bmi2_x64_pass3_before_rmdr:
 
     mov     rcx, r9
-    jrcxz   .Lzen4_end_of_func
+    jrcxz   .Ladx_bmi2_x64_end_of_func
 
 .p2align 4
-.Lzen4_pass3_loop_rmdr:
+.Ladx_bmi2_x64_pass3_loop_rmdr:
 
     mov     rdx, QWORD PTR [rsi]
     mov     rbx, QWORD PTR [rdi]
@@ -308,9 +308,9 @@ sqr_bc_zen4:
 
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 16]
-    loop    .Lzen4_pass3_loop_rmdr
+    loop    .Ladx_bmi2_x64_pass3_loop_rmdr
 
-.Lzen4_end_of_func:
+.Ladx_bmi2_x64_end_of_func:
 
     pop     r12
 .cfi_adjust_cfa_offset -8
@@ -321,7 +321,7 @@ sqr_bc_zen4:
     ret
 
 .cfi_endproc
-.size sqr_bc_zen4, .-sqr_bc_zen4
+.size sqr_bc_adx_bmi2_x64, .-sqr_bc_adx_bmi2_x64
 
 #   -------------------------
 #

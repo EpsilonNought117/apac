@@ -5,13 +5,6 @@
 
 /* --------------------- ADD SINGLE-LIMB TO APN-ARR FUNCTIONS ------------------------- */
 
-extern apn_dig_t add_one_zen4(
-	apn_dig_t* result,
-	const apn_dig_t* op1,
-	apn_size_t size,
-	apn_dig_t val
-);
-
 extern apn_dig_t add_one_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
@@ -20,13 +13,6 @@ extern apn_dig_t add_one_x64(
 );
 
 /* -------------------- SUB SINGLE-LIMB FROM APN-ARR FUNCTIONS ------------------------ */
-
-extern apn_dig_t sub_one_zen4(
-	apn_dig_t* result,
-	const apn_dig_t* op1,
-	apn_size_t size,
-	apn_dig_t val
-);
 
 extern apn_dig_t sub_one_x64(
 	apn_dig_t* result,
@@ -37,13 +23,6 @@ extern apn_dig_t sub_one_x64(
 
 /* ----------------------------- ADDITION FUNCTIONS ----------------------------------- */
 
-extern apn_dig_t add_n_zen4(
-	apn_dig_t* result,
-	const apn_dig_t* op1,
-	const apn_dig_t* op2,
-	apn_size_t size
-);
-
 extern apn_dig_t add_n_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
@@ -52,13 +31,6 @@ extern apn_dig_t add_n_x64(
 );
 
 /* ---------------------------- SUBTRACTION FUNCTIONS --------------------------------- */
-
-extern apn_dig_t sub_n_zen4(
-	apn_dig_t* result,
-	const apn_dig_t* op1,
-	const apn_dig_t* op2,
-	apn_size_t size
-);
 
 extern apn_dig_t sub_n_x64(
 	apn_dig_t* result,
@@ -69,12 +41,6 @@ extern apn_dig_t sub_n_x64(
 
 /* ------------------------------- NEGATION FUNCTIONS --------------------------------- */
 
-extern void neg_zen4(
-	apn_dig_t* result,
-	const apn_dig_t* op1,
-	apn_size_t size
-);
-
 extern void neg_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
@@ -83,7 +49,7 @@ extern void neg_x64(
 
 /* ------------------------ BASECASE MULTIPLICATION FUNCTIONS ------------------------- */
 
-extern void mul_bc_zen4(
+extern void mul_bc_adx_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	const apn_dig_t* op2,
@@ -101,7 +67,7 @@ extern void mul_bc_x64(
 
 /* ------------------------- FUSED-MULTIPLY-ADD-ONE FUNCTIONS ------------------------- */
 
-extern apn_dig_t addmul_one_zen4(
+extern apn_dig_t addmul_one_adx_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size,
@@ -117,7 +83,7 @@ extern apn_dig_t addmul_one_x64(
 
 /* ------------------------- FUSED-MULTIPLY-SUB-ONE FUNCTIONS ------------------------- */
 
-extern apn_dig_t submul_one_zen4(
+extern apn_dig_t submul_one_adx_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size,
@@ -133,7 +99,7 @@ extern apn_dig_t submul_one_x64(
 
 /* ------------------------------ MULTIPLY-ONE FUNCTIONS ------------------------------ */
 
-extern void mul_one_zen4(
+extern void mul_one_adx_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size,
@@ -149,7 +115,7 @@ extern void mul_one_x64(
 
 /* --------------------------- BASECASE SQUARING FUNCTIONS ---------------------------- */
 
-extern void sqr_bc_zen4(
+extern void sqr_bc_adx_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size
@@ -163,19 +129,19 @@ extern void sqr_bc_x64(
 
 /* -------------------------------- COPYING FUNCTIONS --------------------------------- */
 
-extern void cpy_avx512f_4unroll(
+extern void cpy_avx512f(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size
 );
 
-extern void cpy_avx_4unroll(
+extern void cpy_avx(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size
 );
 
-extern void cpy_sse2_4unroll(
+extern void cpy_sse2(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size
@@ -183,19 +149,19 @@ extern void cpy_sse2_4unroll(
 
 /* ------------------------------- SET TO VAL FUNCTIONS ------------------------------- */
 
-extern void set_avx512f_4unroll(
+extern void set_avx512f(
 	apn_dig_t* result,
 	apn_size_t size,
 	apn_dig_t val
 );
 
-extern void set_avx_4unroll(
+extern void set_avx(
 	apn_dig_t* result,
 	apn_size_t size,
 	apn_dig_t val
 );
 
-extern void set_sse2_4unroll(
+extern void set_sse2(
 	apn_dig_t* result,
 	apn_size_t size,
 	apn_dig_t val
@@ -203,7 +169,7 @@ extern void set_sse2_4unroll(
 
 /* ---------------------------- BIT-SHIFTING FUNCTIONS -------------------------------- */
 
-extern apn_dig_t lshift_lt64_zen4(
+extern apn_dig_t lshift_lt64_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size,
@@ -217,7 +183,7 @@ extern apn_dig_t lshift_lt64_x64(
 	apn_dig_t bit_cnt
 );
 
-extern apn_dig_t rshift_lt64_zen4(
+extern apn_dig_t rshift_lt64_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size,
@@ -233,13 +199,13 @@ extern apn_dig_t rshift_lt64_x64(
 
 /* ------------------------------- COMPARISION FUNCTION ------------------------------- */
 
-extern int cmp_avx2_4unroll(
+extern int cmp_avx2(
 	const apn_dig_t* op1,
 	const apn_dig_t* op2,
 	apn_size_t size
 );
 
-extern int cmp_sse2_4unroll(
+extern int cmp_sse2(
 	const apn_dig_t* op1,
 	const apn_dig_t* op2,
 	apn_size_t size
@@ -247,17 +213,17 @@ extern int cmp_sse2_4unroll(
 
 /* ---------------------------- CHECK-IF-ZERO FUNCTION -------------------------------- */
 
-extern int is_zero_avx512f_4unroll(
+extern int is_zero_avx512f(
 	const apn_dig_t* op1,
 	apn_size_t size
 );
 
-extern int is_zero_avx2_4unroll(
+extern int is_zero_avx2(
 	const apn_dig_t* op1,
 	apn_size_t size
 );
 
-extern int is_zero_sse2_4unroll(
+extern int is_zero_sse2(
 	const apn_dig_t* op1,
 	apn_size_t size
 );

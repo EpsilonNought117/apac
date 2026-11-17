@@ -237,18 +237,6 @@ typedef struct apac_alloc_t
 extern apac_alloc_t apac_allocator;
 
 /* ---------------------------------------------------------------------------------------------- */
-/*                                         UTILITY FUNCTIONS                                      */
-/* ---------------------------------------------------------------------------------------------- */
-
-uint64_t apac_cpu_timer(void);
-
-int apac_pin_thread_to_core(uint32_t core_id);
-
-void apac_disable_dfs(void);
-
-void apac_restore_dfs(void);
-
-/* ---------------------------------------------------------------------------------------------- */
 /*                                   RUNTIME CPU DISPATCH STRUCT                                  */
 /* ---------------------------------------------------------------------------------------------- */
 
@@ -257,28 +245,6 @@ typedef struct apac_cpu_params
     apn_size_t karatsuba_mul_threshold;
     apn_size_t karatsuba_sqr_threshold;
     apn_size_t dnc_div_threshold;
-
-    apn_dig_t(*apn_add_n_ptr)(apn_dig_t*, const apn_dig_t*, const apn_dig_t*, apn_size_t);
-    apn_dig_t(*apn_sub_n_ptr)(apn_dig_t*, const apn_dig_t*, const apn_dig_t*, apn_size_t);
-    apn_dig_t(*apn_add_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-    apn_dig_t(*apn_sub_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-    void (*apn_neg_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t);
-
-    void (*apn_mul_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-    apn_dig_t(*apn_addmul_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-    apn_dig_t(*apn_submul_one_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-
-    apn_dig_t(*apn_lshift_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-    apn_dig_t(*apn_rshift_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t, apn_dig_t);
-
-    void (*apn_mul_bc_ptr)(apn_dig_t*, const apn_dig_t*, const apn_dig_t*, apn_size_t, apn_size_t);
-    void (*apn_sqr_bc_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t);
-
-    void (*apn_cpy_ptr)(apn_dig_t*, const apn_dig_t*, apn_size_t);
-    void (*apn_set_ptr)(apn_dig_t*, apn_size_t, apn_dig_t);
-
-    int (*apn_cmp_ptr)(const apn_dig_t*, const apn_dig_t*, apn_size_t);
-    int (*apn_is_zero_ptr)(const apn_dig_t*, apn_size_t);
 
 } apac_cpu_params;
 
@@ -291,5 +257,115 @@ extern apac_cpu_params curr_cpu;
 #define KARATSUBA_MUL_THRESHOLD (curr_cpu.karatsuba_mul_threshold)
 #define KARATSUBA_SQR_THRESHOLD	(curr_cpu.karatsuba_sqr_threshold)
 #define DNC_DIV_THRESHOLD	    (curr_cpu.dnc_div_threshold)
+
+/* ---------------------------------------------------------------------------------------------- */
+/*                           FUNCTION-POINTERS FOR APN FUNCTION DISPATCH                          */
+/* ---------------------------------------------------------------------------------------------- */
+
+extern apn_dig_t (*apn_add_n_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t
+);
+
+extern apn_dig_t (*apn_sub_n_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t
+);
+
+extern apn_dig_t (*apn_add_one_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern apn_dig_t (*apn_sub_one_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern void (*apn_neg_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t
+);
+
+extern void (*apn_mul_one_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern apn_dig_t (*apn_addmul_one_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern apn_dig_t (*apn_submul_one_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern apn_dig_t (*apn_lshift_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern apn_dig_t(*apn_rshift_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern void (*apn_mul_bc_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t,
+    apn_size_t
+);
+
+extern void (*apn_sqr_bc_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t
+);
+
+extern void (*apn_cpy_ptr)(
+    apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t
+);
+
+extern void (*apn_set_ptr)(
+    apn_dig_t*,
+    apn_size_t,
+    apn_dig_t
+);
+
+extern int (*apn_cmp_ptr)(
+    const apn_dig_t*,
+    const apn_dig_t*,
+    apn_size_t
+);
+
+extern int (*apn_is_zero_ptr)(
+    const apn_dig_t*,
+    apn_size_t
+);
 
 #endif

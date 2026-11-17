@@ -16,33 +16,33 @@
 
 .intel_syntax noprefix
 .text
-.globl lshift_lt64_x64, lshift_lt64_zen4
+.globl lshift_lt64_x64, lshift_lt64_bmi2_x64
 .type lshift_lt64_x64, @function
-.type lshift_lt64_zen4, @function
+.type lshift_lt64_bmi2_x64, @function
 
-lshift_lt64_zen4:
+lshift_lt64_bmi2_x64:
 .cfi_startproc
     
     mov     r9,  64
     sub     r9,  rcx
 
-.Lzen4_start_of_func:
+.Lbmi2_x64_start_of_func:
 
     lea     rsi, [rsi + rdx * 8 - 8]
     lea     rdi, [rdi + rdx * 8 - 8]
     shrx    rax, QWORD PTR [rsi], r9
 
     dec     rdx
-    jz      .Lzen4_end_of_func
+    jz      .Lbmi2_x64_end_of_func
 
     mov     r8, rdx
     and     r8,  3
     shr     rdx, 2
     test    rdx, rdx
-    jz      .Lzen4_before_rmdr_loop
+    jz      .Lbmi2_x64_before_rmdr_loop
 
-.p2align 6
-.Lzen4_unroll4_loop:
+.p2align 4
+.Lbmi2_x64_unroll4_loop:
 
 .set i, 0
 .rept 4
@@ -58,14 +58,14 @@ lshift_lt64_zen4:
     sub     rsi, 32
     sub     rdi, 32
     dec     rdx
-    jnz     .Lzen4_unroll4_loop
+    jnz     .Lbmi2_x64_unroll4_loop
 
-.Lzen4_before_rmdr_loop:
+.Lbmi2_x64_before_rmdr_loop:
 
     test    r8, r8
-    jz      .Lzen4_end_of_func
+    jz      .Lbmi2_x64_end_of_func
 
-.Lzen4_rmdr_loop:
+.Lbmi2_x64_rmdr_loop:
 
     shlx    r10, QWORD PTR [rsi], rcx
     shrx    r11, QWORD PTR [rsi - 8], r9
@@ -74,18 +74,18 @@ lshift_lt64_zen4:
     sub     rsi, 8
     sub     rdi, 8
     dec     r8
-    jnz     .Lzen4_rmdr_loop
+    jnz     .Lbmi2_x64_rmdr_loop
 
-.Lzen4_end_of_func:
+.Lbmi2_x64_end_of_func:
 
     shlx    r11, QWORD PTR [rsi], rcx
     mov     QWORD PTR [rdi], r11
     ret
 
 .cfi_endproc
-.size lshift_lt64_zen4, .-lshift_lt64_zen4
+.size lshift_lt64_bmi2_x64, .-lshift_lt64_bmi2_x64
 
-
+# ---------------------------------------------------
 
 lshift_lt64_x64:
 .cfi_startproc

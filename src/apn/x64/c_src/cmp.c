@@ -12,7 +12,7 @@
 #if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("avx2")))
 #endif
-int cmp_avx2_4unroll(
+int cmp_avx2(
 	const apn_dig_t* op1,
 	const apn_dig_t* op2,
 	apn_size_t size
@@ -102,7 +102,7 @@ int cmp_avx2_4unroll(
 #if (defined(__GNUC__) || defined(__clang__))
 __attribute__((target("sse2")))
 #endif
-int cmp_sse2_4unroll(
+int cmp_sse2(
 	const apn_dig_t* op1,
 	const apn_dig_t* op2,
 	apn_size_t size

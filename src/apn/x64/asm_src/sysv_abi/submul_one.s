@@ -14,9 +14,9 @@
 
 .intel_syntax noprefix
 .text
-.globl submul_one_x64, submul_one_zen4
+.globl submul_one_x64, submul_one_adx_bmi2_x64
 .type  submul_one_x64, @function
-.type  submul_one_zen4, @function
+.type  submul_one_adx_bmi2_x64, @function
 
 #   -------------------------
 #
@@ -24,7 +24,7 @@
 #
 #   -------------------------
 
-submul_one_zen4:
+submul_one_adx_bmi2_x64:
 .cfi_startproc
 
     xchg    rcx, rdx
@@ -34,9 +34,9 @@ submul_one_zen4:
     xor     r9,  r9
     test    rcx, rcx
     stc
-    jz      .Lzen4_before_rmdr
+    jz      .Ladx_bmi2_x64_before_rmdr
 
-.Lzen4_unroll4_loop:
+.Ladx_bmi2_x64_unroll4_loop:
 
 .set i, 0
 .rept 4
@@ -66,16 +66,16 @@ submul_one_zen4:
     lea     rsi, [rsi + 32]
     lea     rcx, [rcx - 1]
 
-    jrcxz   .Lzen4_before_rmdr
-    jmp     .Lzen4_unroll4_loop
+    jrcxz   .Ladx_bmi2_x64_before_rmdr
+    jmp     .Ladx_bmi2_x64_unroll4_loop
 
 .p2align 4
-.Lzen4_before_rmdr:
+.Ladx_bmi2_x64_before_rmdr:
     
     mov     rcx, r8
-    jrcxz   .Lzen4_final_carry
+    jrcxz   .Ladx_bmi2_x64_final_carry
 
-.Lzen4_rmdr_loop:
+.Ladx_bmi2_x64_rmdr_loop:
     
     mulx    r11, r10, QWORD PTR [rsi]
     adox    r10, r9
@@ -86,23 +86,25 @@ submul_one_zen4:
     
     lea     rdi, [rdi + 8]
     lea     rsi, [rsi + 8]
-    loop    .Lzen4_rmdr_loop
+    loop    .Ladx_bmi2_x64_rmdr_loop
 
-.Lzen4_final_carry:
+.Ladx_bmi2_x64_final_carry:
 
     adox    r9,  rcx
     not     r9
     adcx    r9,  QWORD PTR [rdi]
     mov     QWORD PTR [rdi], r9
 
-.Lzen4_end_of_func:
+.Ladx_bmi2_x64_end_of_func:
 
+    seto    cl
     setnc   al
+    or      al, cl
     movzx   rax, al
     ret
 
 .cfi_endproc
-.size submul_one_zen4, .-submul_one_zen4
+.size submul_one_adx_bmi2_x64, .-submul_one_adx_bmi2_x64
 
 #   -------------------------
 #
@@ -150,4 +152,3 @@ submul_one_x64:
 .size submul_one_x64, .-submul_one_x64
 
 .section .note.GNU-stack,"",@progbits
-

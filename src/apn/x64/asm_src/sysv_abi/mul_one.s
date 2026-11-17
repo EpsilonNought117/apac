@@ -14,14 +14,14 @@
 
 .intel_syntax noprefix
 .text
-.globl mul_one_x64, mul_one_zen4
+.globl mul_one_x64, mul_one_adx_bmi2_x64
 .type  mul_one_x64, @function
-.type  mul_one_zen4, @function
+.type  mul_one_adx_bmi2_x64, @function
 
-mul_one_zen4:
+mul_one_adx_bmi2_x64:
 .cfi_startproc
 
-.Lzen4_start_of_func:
+.Ladx_bmi2_x64_start_of_func:
     
     xchg    rcx, rdx    # convenient, innit?
     mov     r8,  rcx
@@ -30,10 +30,10 @@ mul_one_zen4:
     
     xor     rax, rax
     test    rcx, rcx
-    jz      .Lzen4_before_remainder
+    jz      .Ladx_bmi2_x64_before_remainder
 
-.p2align 6
-.Lzen4_unroll8_loop:
+.p2align 4
+.Ladx_bmi2_x64_unroll8_loop:
 
 .set i, 0
 .rept 8
@@ -60,18 +60,18 @@ mul_one_zen4:
     lea     rsi, [rsi + 64]
     lea     rdi, [rdi + 64]
     dec     rcx
-    jnz     .Lzen4_unroll8_loop
+    jnz     .Ladx_bmi2_x64_unroll8_loop
 
 .p2align 4
-.Lzen4_before_remainder:
+.Ladx_bmi2_x64_before_remainder:
 
     setc    r9b
     test    r8,  r8
     bt      r9w, 0
-    jz      .Lzen4_end_of_loop
+    jz      .Ladx_bmi2_x64_end_of_loop
 
-.p2align 6
-.Lzen4_rmdr_loop:
+.p2align 4
+.Ladx_bmi2_x64_rmdr_loop:
 
     mulx    r11, r10, QWORD PTR [rsi]
     adc     r10, rax
@@ -81,20 +81,20 @@ mul_one_zen4:
     lea     rsi, [rsi + 8]
     lea     rdi, [rdi + 8]
     dec     r8
-    jnz     .Lzen4_rmdr_loop
+    jnz     .Ladx_bmi2_x64_rmdr_loop
 
 .p2align 5
-.Lzen4_end_of_loop:
+.Ladx_bmi2_x64_end_of_loop:
 
     adc     rax, 0
     mov     QWORD PTR [rdi], rax
 
-.Lzen4_end_of_func:
+.Ladx_bmi2_x64_end_of_func:
 
     ret
 
 .cfi_endproc
-.size mul_one_zen4, .-mul_one_zen4
+.size mul_one_adx_bmi2_x64, .-mul_one_adx_bmi2_x64
 
 #   -------------------------
 #
