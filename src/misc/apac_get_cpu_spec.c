@@ -375,7 +375,6 @@ void apac_get_cpu_spec(void)
 
     if (has_adx && has_bmi2)
     {
-        apn_mul_one_ptr    = mul_one_adx_bmi2_x64;
         apn_addmul_one_ptr = addmul_one_adx_bmi2_x64;
         apn_submul_one_ptr = submul_one_adx_bmi2_x64;
         apn_mul_bc_ptr     = mul_bc_adx_bmi2_x64;
@@ -384,8 +383,9 @@ void apac_get_cpu_spec(void)
 
     if (has_bmi2)
     {
-        apn_lshift_ptr = lshift_lt64_bmi2_x64;
-        apn_rshift_ptr = rshift_lt64_bmi2_x64;
+        apn_mul_one_ptr = mul_one_bmi2_x64;
+        apn_lshift_ptr  = lshift_lt64_bmi2_x64;
+        apn_rshift_ptr  = rshift_lt64_bmi2_x64;
     }
 
     if (has_avx)

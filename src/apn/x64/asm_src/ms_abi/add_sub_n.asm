@@ -18,9 +18,9 @@ ADD_SUB_N SEGMENT ALIGN(64) 'CODE'
     ;   r8  -> op2          (const apn_dig_t*)
     ;   r9  -> size         (apn_size_t)
 
-GEN_ADD_SUB_N_ZEN4 MACRO OP, INSTR
+GEN_ADD_SUB_N_X64 MACRO OP, INSTR
 
-OP&_n_zen4 PROC FRAME
+OP&_n_x64 PROC FRAME
 .endprolog
 
     xor     rax, rax            ; clear rax, also clears CF
@@ -74,36 +74,6 @@ end_of_func:
     movzx   rax, al             ; zero-extend to RAX
     ret
 
-OP&_n_zen4 ENDP
-
-ENDM
-
-GEN_ADD_SUB_N_X64 MACRO OP, INSTR
-
-OP&_n_x64 PROC FRAME
-.endprolog
-
-    xor     rax, rax
-
-main_loop:
-
-    mov     rax, QWORD PTR [rdx] 
-    INSTR   rax, QWORD PTR [r8]
-    mov     QWORD PTR [rcx], rax
-
-    lea     rdx, [rdx + 8]
-    lea     r8,  [r8  + 8]
-    lea     rcx, [rcx + 8]
-    dec     r9
-    jnz     main_loop
-
-ALIGN 16
-end_of_func:
-
-    setc    al
-    movzx   rax, al
-    ret
-
 OP&_n_x64 ENDP
 
 ENDM
@@ -112,11 +82,6 @@ ENDM
 ; Instantiations
 ; ---------------------------------------------------------------------------
 
-; Zen4 optimized versions (unrolled)
-GEN_ADD_SUB_N_ZEN4 add, adc
-GEN_ADD_SUB_N_ZEN4 sub, sbb
-
-; Generic x64 versions
 GEN_ADD_SUB_N_X64 add, adc
 GEN_ADD_SUB_N_X64 sub, sbb
 

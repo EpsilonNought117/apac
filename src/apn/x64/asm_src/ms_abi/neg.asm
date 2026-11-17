@@ -18,19 +18,21 @@ NEGATE SEGMENT ALIGN(64) 'CODE'
 ; Negations (2's Complement) procedure tuned for
 ; AMD's Zen4 Microarchitecture with 4x unroll
 
-neg_zen4 PROC FRAME
+neg_x64 PROC FRAME
 .endprolog
 
     mov     r11, r8
     shr     r8,  2
     and     r11, 3
+    test    r11, r11
+    stc     
     jz      unroll_loop_outer
 
 small_loop:
 
-    mov     rax, 0
-    mov     r9, QWORD PTR [rdx]
-    sbb     rax, r9
+    mov     rax, QWORD PTR [rdx]
+    not     rax
+    adc     rax, 0
     mov     QWORD PTR [rcx], rax
 
     lea     rdx, [rdx + 8]
@@ -50,9 +52,10 @@ main_loop:
 i = 0
     
 WHILE i LT 4
-    mov     rax, 0
-    mov     r9, QWORD PTR [rdx + i * 8]
-    sbb     rax, r9
+
+    mov     rax, QWORD PTR [rdx + i * 8]
+    not     rax
+    adc     rax, 0
     mov     QWORD PTR [rcx + i * 8], rax
         
     i = i + 1
@@ -67,34 +70,6 @@ ALIGN 16
 end_of_func:
 
     ; discard any carry or borrow if generated
-
-    ret
-
-neg_zen4 ENDP
-
-; lowest common denominator generic implementation
-
-neg_x64 PROC FRAME
-.endprolog
-
-    xor     rax, rax
-
-small_loop:
-
-    mov     rax, 0
-    mov     r9, QWORD PTR [rdx]
-    sbb     rax, r9
-    mov     QWORD PTR [rcx], rax
-
-    lea     rdx, [rdx + 8]
-    lea     rcx, [rcx + 8]
-    dec     r8
-    jnz     small_loop
-
-end_of_func:
-
-    ; no need to return the borrow as this is
-    ; 2's complement negation
 
     ret
 

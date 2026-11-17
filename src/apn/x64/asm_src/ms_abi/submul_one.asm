@@ -22,7 +22,7 @@ SUBMUL_ONE SEGMENT ALIGN(64) 'CODE'
 ;
 ;   -------------------------
 
-submul_one_zen4 PROC FRAME
+submul_one_adx_bmi2_x64 PROC FRAME
 
     push    rdi
 .pushreg    rdi
@@ -43,7 +43,7 @@ start_of_func:
     stc                 ; set carry flag
     jz      before_remainder
 
-ALIGN 64
+ALIGN 16
 unrolled_loop:
 
 i = 0
@@ -106,14 +106,16 @@ end_of_loop:
 
 end_of_func:
 
+    seto    cl
     setnc   al
+    or      al, cl
     movzx   rax, al
 
     pop     rsi
     pop     rdi
     ret
 
-submul_one_zen4 ENDP
+submul_one_adx_bmi2_x64 ENDP
 
 ;   -------------------------
 ;

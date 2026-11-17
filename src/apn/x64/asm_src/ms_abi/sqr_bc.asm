@@ -23,7 +23,7 @@ SQR_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 ;   Optimized routine for AMD Zen 4
 
-sqr_bc_zen4 PROC FRAME
+sqr_bc_adx_bmi2_x64 PROC FRAME
 
     push    rbp
 .pushreg    rbp
@@ -320,7 +320,7 @@ end_of_func:
     pop     rbp
     ret
     
-sqr_bc_zen4 ENDP
+sqr_bc_adx_bmi2_x64 ENDP
 
 ;   -------------------------
 ;

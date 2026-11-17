@@ -30,7 +30,7 @@ MUL_BASECASE SEGMENT ALIGN(64) 'CODE'
 
 ; 8x unroll adx/bmi2 variant with jump table
 
-mul_bc_zen4 PROC FRAME
+mul_bc_adx_bmi2_x64 PROC FRAME
 
     push    rbp
 .pushreg    rbp
@@ -272,7 +272,7 @@ end_of_func:
     pop     rbp
     ret
 
-mul_bc_zen4 ENDP
+mul_bc_adx_bmi2_x64 ENDP
 
 ;   -------------------------
 ;

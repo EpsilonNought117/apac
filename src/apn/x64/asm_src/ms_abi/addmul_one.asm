@@ -22,7 +22,7 @@ ADDMUL_ONE SEGMENT ALIGN(64) 'CODE'
 ;
 ;   -------------------------
 
-addmul_one_zen4 PROC FRAME
+addmul_one_adx_bmi2_x64 PROC FRAME
     
     push    rbx
 .pushreg    rbx
@@ -81,7 +81,7 @@ before_remainder:
     mov     rcx, r8
     jrcxz   end_of_loop
 
-ALIGN 64
+ALIGN 16
 rmdr_loop:
 
     mulx    r11, r10, QWORD PTR [rbx]
@@ -110,7 +110,7 @@ end_of_func:
     pop     rbx
     ret
 
-addmul_one_zen4 ENDP
+addmul_one_adx_bmi2_x64 ENDP
 
 ;   -------------------------
 ;

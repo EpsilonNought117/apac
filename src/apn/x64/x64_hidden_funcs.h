@@ -99,7 +99,7 @@ extern apn_dig_t submul_one_x64(
 
 /* ------------------------------ MULTIPLY-ONE FUNCTIONS ------------------------------ */
 
-extern void mul_one_adx_bmi2_x64(
+extern void mul_one_bmi2_x64(
 	apn_dig_t* result,
 	const apn_dig_t* op1,
 	apn_size_t size,

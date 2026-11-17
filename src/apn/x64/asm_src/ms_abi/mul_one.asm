@@ -22,7 +22,7 @@ MUL_ONE SEGMENT ALIGN(64) 'CODE'
 ;
 ;   -------------------------
 
-mul_one_zen4 PROC FRAME
+mul_one_bmi2_x64 PROC FRAME
     
     push    rbx
 .pushreg    rbx
@@ -40,7 +40,7 @@ start_of_func:
     test    r8,  r8     ; test if (size / 8) == 0
     jz      bef_rmdr    ; jump to before rmdr loop
 
-ALIGN 64
+ALIGN 16
 unroll8_loop:
 
 i = 0
@@ -97,7 +97,7 @@ end_of_func:
     pop     rbx
     ret
 
-mul_one_zen4 ENDP
+mul_one_bmi2_x64 ENDP
 
 ;   -------------------------
 ;

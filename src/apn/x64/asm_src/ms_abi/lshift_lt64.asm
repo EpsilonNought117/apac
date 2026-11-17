@@ -19,9 +19,7 @@ LSHIFT_LT64 SEGMENT ALIGN(64) 'CODE'
     ; The wrapper calling this will assert that (bit_cnt < 64 && bit_cnt > 0)
     ; also asserts that size >= 1
 
-; optimized routine for zen4 microarchitecture
-
-lshift_lt64_zen4 PROC FRAME
+lshift_lt64_bmi2_x64 PROC FRAME
     
     push    rdi
 .pushreg    rdi
@@ -48,7 +46,7 @@ before_loop:
     test    r8,  r8
     jz      before_rmdr_loop
 
-ALIGN 64
+ALIGN 16
 inner_loop_4x_unroll:
 
 i = 0
@@ -95,7 +93,7 @@ end_of_func:
     pop     rdi
     ret
 
-lshift_lt64_zen4 ENDP
+lshift_lt64_bmi2_x64 ENDP
 
 ; Lowest common denominator routine
 
