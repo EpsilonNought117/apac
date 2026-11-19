@@ -13,13 +13,12 @@ typedef enum ntt_tf_t
 } ntt_tf_t;
 
 #define MAX_CONV_LEN_POW2   (42U)
-#define MIN_CONV_LEN_POW2   (6U)
+#define MIN_CONV_LEN_POW2   (5U)
 
 #define CDLT_TBL_SIZE       (60ULL)      /* Size of radix-4 unrolled codelet tables */
+#define NTT_PRIMES_POW2     (43ULL)      /* Power of 2 in each prime                */
 
-#define NTT_PRIMES_POW2     (43ULL)      /* Power of 2 in each prime            */
-
-#define MIN_CONV_LEN		(1ULL << 6)  /* smallest transform size supported   */
+#define MIN_CONV_LEN        (1ULL << 5)  /* smallest transform size supported   */
 #define CRT3_MAX_CONV_LEN   (1ULL << 17) /* using the larger 3 primes           */
 #define CRT4_MAX_CONV_LEN   (1ULL << 42) /* when using all 4 primes             */
 
@@ -39,29 +38,35 @@ typedef struct ntt_prime_t
     double cdltf64_negacyclic_fwd[CDLT_TBL_SIZE];
     double cdltf64_negacyclic_inv[CDLT_TBL_SIZE];
 
-// For x86-64 CPUs that support either 
+// For x86-64 CPUs that support either
 // AVX512-IFMA or AVX-IFMA
-// Not needed on ARM64 CPUs currently
 #if defined(APAC_WIN_X64) || defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64)
 
     apn_dig_t prime_inv52;
-    apn_dig_t r0;
+    apn_dig_t mtgmy_r2_ifma;
+
+// For ARM64 CPUs that support ARMv9 SVE (or SVE2 as well)
+#elif defined(APAC_WIN_ARM64) || defined(APAC_LINUX_ARM64) || defined(APAC_MACOS_ARM64)
+
+    apn_dig_t prime_inv64;
+    apn_dig_t mtgmy_r2_sve;
+
+#endif
 
     apn_dig_t cdltu64_cyclic_fwd[CDLT_TBL_SIZE];
     apn_dig_t cdltu64_cyclic_inv[CDLT_TBL_SIZE];
     apn_dig_t cdltu64_negacyclic_fwd[CDLT_TBL_SIZE];
     apn_dig_t cdltu64_negacyclic_inv[CDLT_TBL_SIZE];
 
-#endif
 } ntt_prime_t;
 
 static const ntt_prime_t NTT_PRIMES[4] =
 {
     {
-	    /* --------------------------------------------------------------- */
-	    /* p = 96757023244289     (0x580000000001)                         */
-	    /* --------------------------------------------------------------- */
-    
+        /* --------------------------------------------------------------- */
+        /* p = 96757023244289       (0x580000000001)                       */
+        /* --------------------------------------------------------------- */
+
         .p = 96757023244289ULL,
 
         .magic = 0xBA2E8BA2E8B810EDULL,
@@ -113,89 +118,97 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x057FFFFFFFFA9ULL /* (2^40) */, 0x057FFFFFFFFD5ULL /* (2^41) */, 0x057FFFFFFFFEBULL /* (2^42) */
         },
 
-        .prime_inv = 0X1.745D1745D1702P-47,
+        .prime_inv =    0X1.745D1745D1702P-47,
 
         .cdltf64_cyclic_fwd =
         {
-                          0X1P+0 /* psi^(0 ) */, 0X1.552E604B842CP+46 /* psi^(1 ) */,  0X1.633819A5B78P+45 /* psi^(2 ) */, 0X1.EEC181AEFCF8P+45 /* psi^(3 ) */,
-             0X1.2EE7C37AE8CP+45 /* psi^(4 ) */, 0X1.7A425C8D0938P+45 /* psi^(5 ) */,  0X1.82DDABC753CP+42 /* psi^(6 ) */,  0X1.67097E036D8P+41 /* psi^(7 ) */,
-            0X1.6E2EAA0AB708P+45 /* psi^(8 ) */,  0X1.354CE4868DFP+45 /* psi^(9 ) */,  0X1.3734A8F3E27P+46 /* psi^(10) */, 0X1.A10C08A308B8P+45 /* psi^(11) */,
-             0X1.72D9D80FFFEP+44 /* psi^(12) */,  0X1.0CF6E1D481AP+43 /* psi^(13) */,   0X1.5C59F9C07AP+42 /* psi^(14) */, 0X1.CA166D6A0498P+45 /* psi^(15) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.633819A5B78P+45 /* psi^(2 ) */,  0X1.2EE7C37AE8CP+45 /* psi^(4 ) */,  0X1.82DDABC753CP+42 /* psi^(6 ) */,
-            0X1.6E2EAA0AB708P+45 /* psi^(8 ) */,  0X1.3734A8F3E27P+46 /* psi^(10) */,  0X1.72D9D80FFFEP+44 /* psi^(12) */,   0X1.5C59F9C07AP+42 /* psi^(14) */,
-            0X1.4EEAAFED8FBCP+46 /* psi^(16) */,  0X1.55AED3AFA17P+46 /* psi^(18) */,  0X1.E93E12840BDP+45 /* psi^(20) */,  0X1.484AA90CDCCP+44 /* psi^(22) */,
-             0X1.C17D8BB3118P+45 /* psi^(24) */,  0X1.C84B626B8CBP+45 /* psi^(26) */, 0X1.D3B78A593C58P+45 /* psi^(28) */,  0X1.99AB2736844P+45 /* psi^(30) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.EEC181AEFCF8P+45 /* psi^(3 ) */,  0X1.82DDABC753CP+42 /* psi^(6 ) */,  0X1.354CE4868DFP+45 /* psi^(9 ) */,
-             0X1.72D9D80FFFEP+44 /* psi^(12) */, 0X1.CA166D6A0498P+45 /* psi^(15) */,  0X1.55AED3AFA17P+46 /* psi^(18) */,  0X1.CFE25E14018P+43 /* psi^(21) */,
-             0X1.C17D8BB3118P+45 /* psi^(24) */,  0X1.1121005A3B6P+45 /* psi^(27) */,  0X1.99AB2736844P+45 /* psi^(30) */,   0X1.5A33F68F7BP+41 /* psi^(33) */,
-            0X1.91183C851748P+45 /* psi^(36) */, 0X1.54C7B40FE498P+46 /* psi^(39) */,  0X1.465AB860ECAP+43 /* psi^(42) */,  0X1.3E6123C56FDP+46 /* psi^(45) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.2EE7C37AE8CP+45 /* psi^(4 ) */, 0X1.6E2EAA0AB708P+45 /* psi^(8 ) */,  0X1.72D9D80FFFEP+44 /* psi^(12) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.6E2EAA0AB708P+45 /* psi^(8 ) */, 0X1.4EEAAFED8FBCP+46 /* psi^(16) */,  0X1.C17D8BB3118P+45 /* psi^(24) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.72D9D80FFFEP+44 /* psi^(12) */,  0X1.C17D8BB3118P+45 /* psi^(24) */, 0X1.91183C851748P+45 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.552E604B842C0P+46 /* psi^(1 ) */, 0X1.633819A5B7800P+45 /* psi^(2 ) */, 0X1.EEC181AEFCF80P+45 /* psi^(3 ) */,
+            0X1.2EE7C37AE8C00P+45 /* psi^(4 ) */, 0X1.7A425C8D09380P+45 /* psi^(5 ) */, 0X1.82DDABC753C00P+42 /* psi^(6 ) */, 0X1.67097E036D800P+41 /* psi^(7 ) */,
+            0X1.6E2EAA0AB7080P+45 /* psi^(8 ) */, 0X1.354CE4868DF00P+45 /* psi^(9 ) */, 0X1.3734A8F3E2700P+46 /* psi^(10) */, 0X1.A10C08A308B80P+45 /* psi^(11) */,
+            0X1.72D9D80FFFE00P+44 /* psi^(12) */, 0X1.0CF6E1D481A00P+43 /* psi^(13) */, 0X1.5C59F9C07A000P+42 /* psi^(14) */, 0X1.CA166D6A04980P+45 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.633819A5B7800P+45 /* psi^(2 ) */, 0X1.2EE7C37AE8C00P+45 /* psi^(4 ) */, 0X1.82DDABC753C00P+42 /* psi^(6 ) */,
+            0X1.6E2EAA0AB7080P+45 /* psi^(8 ) */, 0X1.3734A8F3E2700P+46 /* psi^(10) */, 0X1.72D9D80FFFE00P+44 /* psi^(12) */, 0X1.5C59F9C07A000P+42 /* psi^(14) */,
+            0X1.4EEAAFED8FBC0P+46 /* psi^(16) */, 0X1.55AED3AFA1700P+46 /* psi^(18) */, 0X1.E93E12840BD00P+45 /* psi^(20) */, 0X1.484AA90CDCC00P+44 /* psi^(22) */,
+            0X1.C17D8BB311800P+45 /* psi^(24) */, 0X1.C84B626B8CB00P+45 /* psi^(26) */, 0X1.D3B78A593C580P+45 /* psi^(28) */, 0X1.99AB273684400P+45 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.EEC181AEFCF80P+45 /* psi^(3 ) */, 0X1.82DDABC753C00P+42 /* psi^(6 ) */, 0X1.354CE4868DF00P+45 /* psi^(9 ) */,
+            0X1.72D9D80FFFE00P+44 /* psi^(12) */, 0X1.CA166D6A04980P+45 /* psi^(15) */, 0X1.55AED3AFA1700P+46 /* psi^(18) */, 0X1.CFE25E1401800P+43 /* psi^(21) */,
+            0X1.C17D8BB311800P+45 /* psi^(24) */, 0X1.1121005A3B600P+45 /* psi^(27) */, 0X1.99AB273684400P+45 /* psi^(30) */, 0X1.5A33F68F7B000P+41 /* psi^(33) */,
+            0X1.91183C8517480P+45 /* psi^(36) */, 0X1.54C7B40FE4980P+46 /* psi^(39) */, 0X1.465AB860ECA00P+43 /* psi^(42) */, 0X1.3E6123C56FD00P+46 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.2EE7C37AE8C00P+45 /* psi^(4 ) */, 0X1.6E2EAA0AB7080P+45 /* psi^(8 ) */, 0X1.72D9D80FFFE00P+44 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.6E2EAA0AB7080P+45 /* psi^(8 ) */, 0X1.4EEAAFED8FBC0P+46 /* psi^(16) */, 0X1.C17D8BB311800P+45 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.72D9D80FFFE00P+44 /* psi^(12) */, 0X1.C17D8BB311800P+45 /* psi^(24) */, 0X1.91183C8517480P+45 /* psi^(36) */
         },
 
         .cdltf64_cyclic_inv =
         {
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.4C4DC28352FP+44 /* psi_inv^(1 ) */, 0X1.2654D8C97BC8P+45 /* psi_inv^(2 ) */,  0X1.7FF98F2D144P+45 /* psi_inv^(3 ) */,
-             0X1.D890EB4D876P+44 /* psi_inv^(4 ) */, 0X1.AEDEFFA5C4A8P+45 /* psi_inv^(5 ) */,  0X1.EF693B28E6BP+44 /* psi_inv^(6 ) */, 0X1.43021CDC4D1CP+46 /* psi_inv^(7 ) */,
-             0X1.FD04E899DD1P+44 /* psi_inv^(8 ) */, 0X1.048C1F56986CP+46 /* psi_inv^(9 ) */, 0X1.0DED55BCC8D4P+46 /* psi_inv^(10) */, 0X1.2603B43D7FD4P+46 /* psi_inv^(11) */,
-             0X1.AD83DAF7E87P+44 /* psi_inv^(12) */,   0X1.D34242902BP+41 /* psi_inv^(13) */,  0X1.4A258A0BD28P+41 /* psi_inv^(14) */, 0X1.47CA64C8AA68P+46 /* psi_inv^(15) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.2654D8C97BC8P+45 /* psi_inv^(2 ) */,  0X1.D890EB4D876P+44 /* psi_inv^(4 ) */,  0X1.EF693B28E6BP+44 /* psi_inv^(6 ) */,
-             0X1.FD04E899DD1P+44 /* psi_inv^(8 ) */, 0X1.0DED55BCC8D4P+46 /* psi_inv^(10) */,  0X1.AD83DAF7E87P+44 /* psi_inv^(12) */,  0X1.4A258A0BD28P+41 /* psi_inv^(14) */,
-             0X1.11550127048P+42 /* psi_inv^(16) */, 0X1.4A3A6063F864P+46 /* psi_inv^(18) */, 0X1.034989FC000CP+46 /* psi_inv^(20) */,  0X1.465AB860ECAP+43 /* psi_inv^(22) */,
-              0X1.51D155F549P+45 /* psi_inv^(24) */, 0X1.47D225438AC8P+46 /* psi_inv^(26) */, 0X1.91183C851748P+45 /* psi_inv^(28) */, 0X1.5CC7E65A4888P+45 /* psi_inv^(30) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.7FF98F2D144P+45 /* psi_inv^(3 ) */,  0X1.EF693B28E6BP+44 /* psi_inv^(6 ) */, 0X1.048C1F56986CP+46 /* psi_inv^(9 ) */,
-             0X1.AD83DAF7E87P+44 /* psi_inv^(12) */, 0X1.47CA64C8AA68P+46 /* psi_inv^(15) */, 0X1.4A3A6063F864P+46 /* psi_inv^(18) */,  0X1.1EF3F75CF75P+45 /* psi_inv^(21) */,
-              0X1.51D155F549P+45 /* psi_inv^(24) */,  0X1.45BDA372F6DP+45 /* psi_inv^(27) */, 0X1.5CC7E65A4888P+45 /* psi_inv^(30) */, 0X1.0CEC8F5F2B48P+46 /* psi_inv^(33) */,
-            0X1.D3B78A593C58P+45 /* psi_inv^(36) */,  0X1.CFDE323B2E8P+42 /* psi_inv^(39) */,  0X1.484AA90CDCCP+44 /* psi_inv^(42) */, 0X1.5165EDEB7EACP+46 /* psi_inv^(45) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.D890EB4D876P+44 /* psi_inv^(4 ) */,  0X1.FD04E899DD1P+44 /* psi_inv^(8 ) */,  0X1.AD83DAF7E87P+44 /* psi_inv^(12) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.FD04E899DD1P+44 /* psi_inv^(8 ) */,  0X1.11550127048P+42 /* psi_inv^(16) */,   0X1.51D155F549P+45 /* psi_inv^(24) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.AD83DAF7E87P+44 /* psi_inv^(12) */,   0X1.51D155F549P+45 /* psi_inv^(24) */, 0X1.D3B78A593C58P+45 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.4C4DC28352F00P+44 /* psi_inv^(1 ) */, 0X1.2654D8C97BC80P+45 /* psi_inv^(2 ) */, 0X1.7FF98F2D14400P+45 /* psi_inv^(3 ) */,
+            0X1.D890EB4D87600P+44 /* psi_inv^(4 ) */, 0X1.AEDEFFA5C4A80P+45 /* psi_inv^(5 ) */, 0X1.EF693B28E6B00P+44 /* psi_inv^(6 ) */, 0X1.43021CDC4D1C0P+46 /* psi_inv^(7 ) */,
+            0X1.FD04E899DD100P+44 /* psi_inv^(8 ) */, 0X1.048C1F56986C0P+46 /* psi_inv^(9 ) */, 0X1.0DED55BCC8D40P+46 /* psi_inv^(10) */, 0X1.2603B43D7FD40P+46 /* psi_inv^(11) */,
+            0X1.AD83DAF7E8700P+44 /* psi_inv^(12) */, 0X1.D34242902B000P+41 /* psi_inv^(13) */, 0X1.4A258A0BD2800P+41 /* psi_inv^(14) */, 0X1.47CA64C8AA680P+46 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.2654D8C97BC80P+45 /* psi_inv^(2 ) */, 0X1.D890EB4D87600P+44 /* psi_inv^(4 ) */, 0X1.EF693B28E6B00P+44 /* psi_inv^(6 ) */,
+            0X1.FD04E899DD100P+44 /* psi_inv^(8 ) */, 0X1.0DED55BCC8D40P+46 /* psi_inv^(10) */, 0X1.AD83DAF7E8700P+44 /* psi_inv^(12) */, 0X1.4A258A0BD2800P+41 /* psi_inv^(14) */,
+            0X1.1155012704800P+42 /* psi_inv^(16) */, 0X1.4A3A6063F8640P+46 /* psi_inv^(18) */, 0X1.034989FC000C0P+46 /* psi_inv^(20) */, 0X1.465AB860ECA00P+43 /* psi_inv^(22) */,
+            0X1.51D155F549000P+45 /* psi_inv^(24) */, 0X1.47D225438AC80P+46 /* psi_inv^(26) */, 0X1.91183C8517480P+45 /* psi_inv^(28) */, 0X1.5CC7E65A48880P+45 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.7FF98F2D14400P+45 /* psi_inv^(3 ) */, 0X1.EF693B28E6B00P+44 /* psi_inv^(6 ) */, 0X1.048C1F56986C0P+46 /* psi_inv^(9 ) */,
+            0X1.AD83DAF7E8700P+44 /* psi_inv^(12) */, 0X1.47CA64C8AA680P+46 /* psi_inv^(15) */, 0X1.4A3A6063F8640P+46 /* psi_inv^(18) */, 0X1.1EF3F75CF7500P+45 /* psi_inv^(21) */,
+            0X1.51D155F549000P+45 /* psi_inv^(24) */, 0X1.45BDA372F6D00P+45 /* psi_inv^(27) */, 0X1.5CC7E65A48880P+45 /* psi_inv^(30) */, 0X1.0CEC8F5F2B480P+46 /* psi_inv^(33) */,
+            0X1.D3B78A593C580P+45 /* psi_inv^(36) */, 0X1.CFDE323B2E800P+42 /* psi_inv^(39) */, 0X1.484AA90CDCC00P+44 /* psi_inv^(42) */, 0X1.5165EDEB7EAC0P+46 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.D890EB4D87600P+44 /* psi_inv^(4 ) */, 0X1.FD04E899DD100P+44 /* psi_inv^(8 ) */, 0X1.AD83DAF7E8700P+44 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.FD04E899DD100P+44 /* psi_inv^(8 ) */, 0X1.1155012704800P+42 /* psi_inv^(16) */, 0X1.51D155F549000P+45 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.AD83DAF7E8700P+44 /* psi_inv^(12) */, 0X1.51D155F549000P+45 /* psi_inv^(24) */, 0X1.D3B78A593C580P+45 /* psi_inv^(36) */
         },
 
         .cdltf64_negacyclic_fwd =
         {
-                          0X1P+0 /* psi^(0 ) */, 0X1.258258E63358P+46 /* psi^(1 ) */, 0X1.552E604B842CP+46 /* psi^(2 ) */, 0X1.21B30F930B7CP+46 /* psi^(3 ) */,
-             0X1.633819A5B78P+45 /* psi^(4 ) */,  0X1.2C4AD41C64CP+44 /* psi^(5 ) */, 0X1.EEC181AEFCF8P+45 /* psi^(6 ) */,   0X1.2A5197ED75P+40 /* psi^(7 ) */,
-             0X1.2EE7C37AE8CP+45 /* psi^(8 ) */, 0X1.CAD068E10718P+45 /* psi^(9 ) */, 0X1.7A425C8D0938P+45 /* psi^(10) */, 0X1.173E58074DE4P+46 /* psi^(11) */,
-             0X1.82DDABC753CP+42 /* psi^(12) */,  0X1.51E3BC56AD4P+45 /* psi^(13) */,  0X1.67097E036D8P+41 /* psi^(14) */,  0X1.0E4328D507CP+46 /* psi^(15) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.552E604B842CP+46 /* psi^(2 ) */,  0X1.633819A5B78P+45 /* psi^(4 ) */, 0X1.EEC181AEFCF8P+45 /* psi^(6 ) */,
-             0X1.2EE7C37AE8CP+45 /* psi^(8 ) */, 0X1.7A425C8D0938P+45 /* psi^(10) */,  0X1.82DDABC753CP+42 /* psi^(12) */,  0X1.67097E036D8P+41 /* psi^(14) */,
-            0X1.6E2EAA0AB708P+45 /* psi^(16) */,  0X1.354CE4868DFP+45 /* psi^(18) */,  0X1.3734A8F3E27P+46 /* psi^(20) */, 0X1.A10C08A308B8P+45 /* psi^(22) */,
-             0X1.72D9D80FFFEP+44 /* psi^(24) */,  0X1.0CF6E1D481AP+43 /* psi^(26) */,   0X1.5C59F9C07AP+42 /* psi^(28) */, 0X1.CA166D6A0498P+45 /* psi^(30) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.21B30F930B7CP+46 /* psi^(3 ) */, 0X1.EEC181AEFCF8P+45 /* psi^(6 ) */, 0X1.CAD068E10718P+45 /* psi^(9 ) */,
-             0X1.82DDABC753CP+42 /* psi^(12) */,  0X1.0E4328D507CP+46 /* psi^(15) */,  0X1.354CE4868DFP+45 /* psi^(18) */,  0X1.6F3A6E421FAP+43 /* psi^(21) */,
-             0X1.72D9D80FFFEP+44 /* psi^(24) */, 0X1.203C048DECF8P+46 /* psi^(27) */, 0X1.CA166D6A0498P+45 /* psi^(30) */, 0X1.F37CCF9CBBF8P+45 /* psi^(33) */,
-             0X1.55AED3AFA17P+46 /* psi^(36) */,  0X1.4890F27E41DP+44 /* psi^(39) */,  0X1.CFE25E14018P+43 /* psi^(42) */,  0X1.E65477EF086P+44 /* psi^(45) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.633819A5B78P+45 /* psi^(4 ) */,  0X1.2EE7C37AE8CP+45 /* psi^(8 ) */,  0X1.82DDABC753CP+42 /* psi^(12) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.2EE7C37AE8CP+45 /* psi^(8 ) */, 0X1.6E2EAA0AB708P+45 /* psi^(16) */,  0X1.72D9D80FFFEP+44 /* psi^(24) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.82DDABC753CP+42 /* psi^(12) */,  0X1.72D9D80FFFEP+44 /* psi^(24) */,  0X1.55AED3AFA17P+46 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.258258E633580P+46 /* psi^(1 ) */, 0X1.552E604B842C0P+46 /* psi^(2 ) */, 0X1.21B30F930B7C0P+46 /* psi^(3 ) */,
+            0X1.633819A5B7800P+45 /* psi^(4 ) */, 0X1.2C4AD41C64C00P+44 /* psi^(5 ) */, 0X1.EEC181AEFCF80P+45 /* psi^(6 ) */, 0X1.2A5197ED75000P+40 /* psi^(7 ) */,
+            0X1.2EE7C37AE8C00P+45 /* psi^(8 ) */, 0X1.CAD068E107180P+45 /* psi^(9 ) */, 0X1.7A425C8D09380P+45 /* psi^(10) */, 0X1.173E58074DE40P+46 /* psi^(11) */,
+            0X1.82DDABC753C00P+42 /* psi^(12) */, 0X1.51E3BC56AD400P+45 /* psi^(13) */, 0X1.67097E036D800P+41 /* psi^(14) */, 0X1.0E4328D507C00P+46 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.552E604B842C0P+46 /* psi^(2 ) */, 0X1.633819A5B7800P+45 /* psi^(4 ) */, 0X1.EEC181AEFCF80P+45 /* psi^(6 ) */,
+            0X1.2EE7C37AE8C00P+45 /* psi^(8 ) */, 0X1.7A425C8D09380P+45 /* psi^(10) */, 0X1.82DDABC753C00P+42 /* psi^(12) */, 0X1.67097E036D800P+41 /* psi^(14) */,
+            0X1.6E2EAA0AB7080P+45 /* psi^(16) */, 0X1.354CE4868DF00P+45 /* psi^(18) */, 0X1.3734A8F3E2700P+46 /* psi^(20) */, 0X1.A10C08A308B80P+45 /* psi^(22) */,
+            0X1.72D9D80FFFE00P+44 /* psi^(24) */, 0X1.0CF6E1D481A00P+43 /* psi^(26) */, 0X1.5C59F9C07A000P+42 /* psi^(28) */, 0X1.CA166D6A04980P+45 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.21B30F930B7C0P+46 /* psi^(3 ) */, 0X1.EEC181AEFCF80P+45 /* psi^(6 ) */, 0X1.CAD068E107180P+45 /* psi^(9 ) */,
+            0X1.82DDABC753C00P+42 /* psi^(12) */, 0X1.0E4328D507C00P+46 /* psi^(15) */, 0X1.354CE4868DF00P+45 /* psi^(18) */, 0X1.6F3A6E421FA00P+43 /* psi^(21) */,
+            0X1.72D9D80FFFE00P+44 /* psi^(24) */, 0X1.203C048DECF80P+46 /* psi^(27) */, 0X1.CA166D6A04980P+45 /* psi^(30) */, 0X1.F37CCF9CBBF80P+45 /* psi^(33) */,
+            0X1.55AED3AFA1700P+46 /* psi^(36) */, 0X1.4890F27E41D00P+44 /* psi^(39) */, 0X1.CFE25E1401800P+43 /* psi^(42) */, 0X1.E65477EF08600P+44 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.633819A5B7800P+45 /* psi^(4 ) */, 0X1.2EE7C37AE8C00P+45 /* psi^(8 ) */, 0X1.82DDABC753C00P+42 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.2EE7C37AE8C00P+45 /* psi^(8 ) */, 0X1.6E2EAA0AB7080P+45 /* psi^(16) */, 0X1.72D9D80FFFE00P+44 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.82DDABC753C00P+42 /* psi^(12) */, 0X1.72D9D80FFFE00P+44 /* psi^(24) */, 0X1.55AED3AFA1700P+46 /* psi^(36) */
         },
 
         .cdltf64_negacyclic_inv =
         {
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.431046311028P+45 /* psi_inv^(1 ) */,  0X1.4C4DC28352FP+44 /* psi_inv^(2 ) */, 0X1.213967ACAFF8P+46 /* psi_inv^(3 ) */,
-            0X1.2654D8C97BC8P+45 /* psi_inv^(4 ) */, 0X1.17A59CB03528P+45 /* psi_inv^(5 ) */,  0X1.7FF98F2D144P+45 /* psi_inv^(6 ) */, 0X1.1AAEFA9B1CB8P+45 /* psi_inv^(7 ) */,
-             0X1.D890EB4D876P+44 /* psi_inv^(8 ) */, 0X1.AF15518D10E8P+45 /* psi_inv^(9 ) */, 0X1.AEDEFFA5C4A8P+45 /* psi_inv^(10) */, 0X1.39A050F0E828P+46 /* psi_inv^(11) */,
-             0X1.EF693B28E6BP+44 /* psi_inv^(12) */,  0X1.46F271B9F7DP+46 /* psi_inv^(13) */, 0X1.43021CDC4D1CP+46 /* psi_inv^(14) */, 0X1.5C2A1511AE64P+46 /* psi_inv^(15) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.4C4DC28352FP+44 /* psi_inv^(2 ) */, 0X1.2654D8C97BC8P+45 /* psi_inv^(4 ) */,  0X1.7FF98F2D144P+45 /* psi_inv^(6 ) */,
-             0X1.D890EB4D876P+44 /* psi_inv^(8 ) */, 0X1.AEDEFFA5C4A8P+45 /* psi_inv^(10) */,  0X1.EF693B28E6BP+44 /* psi_inv^(12) */, 0X1.43021CDC4D1CP+46 /* psi_inv^(14) */,
-             0X1.FD04E899DD1P+44 /* psi_inv^(16) */, 0X1.048C1F56986CP+46 /* psi_inv^(18) */, 0X1.0DED55BCC8D4P+46 /* psi_inv^(20) */, 0X1.2603B43D7FD4P+46 /* psi_inv^(22) */,
-             0X1.AD83DAF7E87P+44 /* psi_inv^(24) */,   0X1.D34242902BP+41 /* psi_inv^(26) */,  0X1.4A258A0BD28P+41 /* psi_inv^(28) */, 0X1.47CA64C8AA68P+46 /* psi_inv^(30) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.213967ACAFF8P+46 /* psi_inv^(3 ) */,  0X1.7FF98F2D144P+45 /* psi_inv^(6 ) */, 0X1.AF15518D10E8P+45 /* psi_inv^(9 ) */,
-             0X1.EF693B28E6BP+44 /* psi_inv^(12) */, 0X1.5C2A1511AE64P+46 /* psi_inv^(15) */, 0X1.048C1F56986CP+46 /* psi_inv^(18) */, 0X1.8D329818C0F8P+45 /* psi_inv^(21) */,
-             0X1.AD83DAF7E87P+44 /* psi_inv^(24) */,  0X1.5C4C79D7E04P+46 /* psi_inv^(27) */, 0X1.47CA64C8AA68P+46 /* psi_inv^(30) */,    0X1.F8B3465FCP+42 /* psi_inv^(33) */,
-            0X1.4A3A6063F864P+46 /* psi_inv^(36) */, 0X1.105E6D4F0494P+46 /* psi_inv^(39) */,  0X1.1EF3F75CF75P+45 /* psi_inv^(42) */,  0X1.01C364762E5P+46 /* psi_inv^(45) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.2654D8C97BC8P+45 /* psi_inv^(4 ) */,  0X1.D890EB4D876P+44 /* psi_inv^(8 ) */,  0X1.EF693B28E6BP+44 /* psi_inv^(12) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.D890EB4D876P+44 /* psi_inv^(8 ) */,  0X1.FD04E899DD1P+44 /* psi_inv^(16) */,  0X1.AD83DAF7E87P+44 /* psi_inv^(24) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.EF693B28E6BP+44 /* psi_inv^(12) */,  0X1.AD83DAF7E87P+44 /* psi_inv^(24) */, 0X1.4A3A6063F864P+46 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.4310463110280P+45 /* psi_inv^(1 ) */, 0X1.4C4DC28352F00P+44 /* psi_inv^(2 ) */, 0X1.213967ACAFF80P+46 /* psi_inv^(3 ) */,
+            0X1.2654D8C97BC80P+45 /* psi_inv^(4 ) */, 0X1.17A59CB035280P+45 /* psi_inv^(5 ) */, 0X1.7FF98F2D14400P+45 /* psi_inv^(6 ) */, 0X1.1AAEFA9B1CB80P+45 /* psi_inv^(7 ) */,
+            0X1.D890EB4D87600P+44 /* psi_inv^(8 ) */, 0X1.AF15518D10E80P+45 /* psi_inv^(9 ) */, 0X1.AEDEFFA5C4A80P+45 /* psi_inv^(10) */, 0X1.39A050F0E8280P+46 /* psi_inv^(11) */,
+            0X1.EF693B28E6B00P+44 /* psi_inv^(12) */, 0X1.46F271B9F7D00P+46 /* psi_inv^(13) */, 0X1.43021CDC4D1C0P+46 /* psi_inv^(14) */, 0X1.5C2A1511AE640P+46 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.4C4DC28352F00P+44 /* psi_inv^(2 ) */, 0X1.2654D8C97BC80P+45 /* psi_inv^(4 ) */, 0X1.7FF98F2D14400P+45 /* psi_inv^(6 ) */,
+            0X1.D890EB4D87600P+44 /* psi_inv^(8 ) */, 0X1.AEDEFFA5C4A80P+45 /* psi_inv^(10) */, 0X1.EF693B28E6B00P+44 /* psi_inv^(12) */, 0X1.43021CDC4D1C0P+46 /* psi_inv^(14) */,
+            0X1.FD04E899DD100P+44 /* psi_inv^(16) */, 0X1.048C1F56986C0P+46 /* psi_inv^(18) */, 0X1.0DED55BCC8D40P+46 /* psi_inv^(20) */, 0X1.2603B43D7FD40P+46 /* psi_inv^(22) */,
+            0X1.AD83DAF7E8700P+44 /* psi_inv^(24) */, 0X1.D34242902B000P+41 /* psi_inv^(26) */, 0X1.4A258A0BD2800P+41 /* psi_inv^(28) */, 0X1.47CA64C8AA680P+46 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.213967ACAFF80P+46 /* psi_inv^(3 ) */, 0X1.7FF98F2D14400P+45 /* psi_inv^(6 ) */, 0X1.AF15518D10E80P+45 /* psi_inv^(9 ) */,
+            0X1.EF693B28E6B00P+44 /* psi_inv^(12) */, 0X1.5C2A1511AE640P+46 /* psi_inv^(15) */, 0X1.048C1F56986C0P+46 /* psi_inv^(18) */, 0X1.8D329818C0F80P+45 /* psi_inv^(21) */,
+            0X1.AD83DAF7E8700P+44 /* psi_inv^(24) */, 0X1.5C4C79D7E0400P+46 /* psi_inv^(27) */, 0X1.47CA64C8AA680P+46 /* psi_inv^(30) */, 0X1.F8B3465FC0000P+42 /* psi_inv^(33) */,
+            0X1.4A3A6063F8640P+46 /* psi_inv^(36) */, 0X1.105E6D4F04940P+46 /* psi_inv^(39) */, 0X1.1EF3F75CF7500P+45 /* psi_inv^(42) */, 0X1.01C364762E500P+46 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.2654D8C97BC80P+45 /* psi_inv^(4 ) */, 0X1.D890EB4D87600P+44 /* psi_inv^(8 ) */, 0X1.EF693B28E6B00P+44 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.D890EB4D87600P+44 /* psi_inv^(8 ) */, 0X1.FD04E899DD100P+44 /* psi_inv^(16) */, 0X1.AD83DAF7E8700P+44 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.EF693B28E6B00P+44 /* psi_inv^(12) */, 0X1.AD83DAF7E8700P+44 /* psi_inv^(24) */, 0X1.4A3A6063F8640P+46 /* psi_inv^(36) */
         },
 
 #if defined(APAC_WIN_X64) || defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64)
-
-        .prime_inv52 = 0x057FFFFFFFFFFULL,
         
-        .r0 = 0x03DD1745D1FBDULL,
+        .prime_inv52 = 0x057FFFFFFFFFFULL,
+
+        .mtgmy_r2_ifma = 0x03DD1745D1FBDULL,
+
+#elif defined(APAC_WIN_ARM64) || defined(APAC_LINUX_ARM64) || defined(APAC_MACOS_ARM64)
+        
+        .prime_inv64 = 0x000057FFFFFFFFFFULL,
+
+        .mtgmy_r2_sve = 0x0351FBC4C2A51ULL,
+
+#endif
 
         .cdltu64_cyclic_fwd =
         {
@@ -272,13 +285,12 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x01D890EB4D876ULL /* psi_inv^(8 ) */, 0x01FD04E899DD1ULL /* psi_inv^(16) */, 0x01AD83DAF7E87ULL /* psi_inv^(24) */,
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x01EF693B28E6BULL /* psi_inv^(12) */, 0x01AD83DAF7E87ULL /* psi_inv^(24) */, 0x0528E9818FE19ULL /* psi_inv^(36) */
         }
-#endif
     },
 
     {
-	    /* --------------------------------------------------------------- */
-	    /* p = 255086697644033    (0xe80000000001)                         */
-	    /* --------------------------------------------------------------- */
+        /* --------------------------------------------------------------- */
+        /* p = 255086697644033      (0xE80000000001)                       */
+        /* --------------------------------------------------------------- */
 
         .p = 255086697644033ULL,
 
@@ -331,90 +343,97 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x0E7FFFFFFFF19ULL /* (2^40) */, 0x0E7FFFFFFFF8DULL /* (2^41) */, 0x0E7FFFFFFFFC7ULL /* (2^42) */
         },
 
-        .prime_inv = 0X1.1A7B9611A7B83P-48,
+        .prime_inv =    0X1.1A7B9611A7B83P-48,
 
         .cdltf64_cyclic_fwd =
         {
-                          0X1P+0 /* psi^(0 ) */,  0X1.E7057610CDCP+43 /* psi^(1 ) */, 0X1.1013D16CC7E8P+45 /* psi^(2 ) */,  0X1.24B38DBA877P+46 /* psi^(3 ) */,
-             0X1.A39FE1970ACP+46 /* psi^(4 ) */, 0X1.69F34393E336P+47 /* psi^(5 ) */,  0X1.3B38C356674P+45 /* psi^(6 ) */,  0X1.1C5A0E5C2C6P+46 /* psi^(7 ) */,
-            0X1.67B0D895D5A6P+47 /* psi^(8 ) */, 0X1.7FF156DBFAA4P+46 /* psi^(9 ) */, 0X1.67183A8F8924P+47 /* psi^(10) */,  0X1.BC3218A98C1P+46 /* psi^(11) */,
-            0X1.CDF1497776D2P+47 /* psi^(12) */,  0X1.D5B68C1D1C7P+46 /* psi^(13) */, 0X1.0341853B0378P+46 /* psi^(14) */,  0X1.DA938D41B42P+45 /* psi^(15) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.1013D16CC7E8P+45 /* psi^(2 ) */,  0X1.A39FE1970ACP+46 /* psi^(4 ) */,  0X1.3B38C356674P+45 /* psi^(6 ) */,
-            0X1.67B0D895D5A6P+47 /* psi^(8 ) */, 0X1.67183A8F8924P+47 /* psi^(10) */, 0X1.CDF1497776D2P+47 /* psi^(12) */, 0X1.0341853B0378P+46 /* psi^(14) */,
-            0X1.35A256F2BC98P+45 /* psi^(16) */, 0X1.B5D9EDF30E5EP+47 /* psi^(18) */, 0X1.1EC726715F66P+47 /* psi^(20) */,   0X1.E540E55A1AP+40 /* psi^(22) */,
-             0X1.A3B416CFFD8P+41 /* psi^(24) */, 0X1.4E557801E356P+47 /* psi^(26) */, 0X1.941BA0965D04P+46 /* psi^(28) */,  0X1.819F49C3902P+43 /* psi^(30) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.24B38DBA877P+46 /* psi^(3 ) */,  0X1.3B38C356674P+45 /* psi^(6 ) */, 0X1.7FF156DBFAA4P+46 /* psi^(9 ) */,
-            0X1.CDF1497776D2P+47 /* psi^(12) */,  0X1.DA938D41B42P+45 /* psi^(15) */, 0X1.B5D9EDF30E5EP+47 /* psi^(18) */, 0X1.18A5EA3BBAB8P+45 /* psi^(21) */,
-             0X1.A3B416CFFD8P+41 /* psi^(24) */, 0X1.16E78B2B1A72P+47 /* psi^(27) */,  0X1.819F49C3902P+43 /* psi^(30) */, 0X1.B18FA89EF326P+47 /* psi^(33) */,
-            0X1.FC601E68F544P+46 /* psi^(36) */, 0X1.41D2F8D1E9D2P+47 /* psi^(39) */, 0X1.A39F15C1DB78P+45 /* psi^(42) */, 0X1.CA4973E2E394P+46 /* psi^(45) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.A39FE1970ACP+46 /* psi^(4 ) */, 0X1.67B0D895D5A6P+47 /* psi^(8 ) */, 0X1.CDF1497776D2P+47 /* psi^(12) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.67B0D895D5A6P+47 /* psi^(8 ) */, 0X1.35A256F2BC98P+45 /* psi^(16) */,  0X1.A3B416CFFD8P+41 /* psi^(24) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.CDF1497776D2P+47 /* psi^(12) */,  0X1.A3B416CFFD8P+41 /* psi^(24) */, 0X1.FC601E68F544P+46 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.E7057610CDC00P+43 /* psi^(1 ) */, 0X1.1013D16CC7E80P+45 /* psi^(2 ) */, 0X1.24B38DBA87700P+46 /* psi^(3 ) */,
+            0X1.A39FE1970AC00P+46 /* psi^(4 ) */, 0X1.69F34393E3360P+47 /* psi^(5 ) */, 0X1.3B38C35667400P+45 /* psi^(6 ) */, 0X1.1C5A0E5C2C600P+46 /* psi^(7 ) */,
+            0X1.67B0D895D5A60P+47 /* psi^(8 ) */, 0X1.7FF156DBFAA40P+46 /* psi^(9 ) */, 0X1.67183A8F89240P+47 /* psi^(10) */, 0X1.BC3218A98C100P+46 /* psi^(11) */,
+            0X1.CDF1497776D20P+47 /* psi^(12) */, 0X1.D5B68C1D1C700P+46 /* psi^(13) */, 0X1.0341853B03780P+46 /* psi^(14) */, 0X1.DA938D41B4200P+45 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.1013D16CC7E80P+45 /* psi^(2 ) */, 0X1.A39FE1970AC00P+46 /* psi^(4 ) */, 0X1.3B38C35667400P+45 /* psi^(6 ) */,
+            0X1.67B0D895D5A60P+47 /* psi^(8 ) */, 0X1.67183A8F89240P+47 /* psi^(10) */, 0X1.CDF1497776D20P+47 /* psi^(12) */, 0X1.0341853B03780P+46 /* psi^(14) */,
+            0X1.35A256F2BC980P+45 /* psi^(16) */, 0X1.B5D9EDF30E5E0P+47 /* psi^(18) */, 0X1.1EC726715F660P+47 /* psi^(20) */, 0X1.E540E55A1A000P+40 /* psi^(22) */,
+            0X1.A3B416CFFD800P+41 /* psi^(24) */, 0X1.4E557801E3560P+47 /* psi^(26) */, 0X1.941BA0965D040P+46 /* psi^(28) */, 0X1.819F49C390200P+43 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.24B38DBA87700P+46 /* psi^(3 ) */, 0X1.3B38C35667400P+45 /* psi^(6 ) */, 0X1.7FF156DBFAA40P+46 /* psi^(9 ) */,
+            0X1.CDF1497776D20P+47 /* psi^(12) */, 0X1.DA938D41B4200P+45 /* psi^(15) */, 0X1.B5D9EDF30E5E0P+47 /* psi^(18) */, 0X1.18A5EA3BBAB80P+45 /* psi^(21) */,
+            0X1.A3B416CFFD800P+41 /* psi^(24) */, 0X1.16E78B2B1A720P+47 /* psi^(27) */, 0X1.819F49C390200P+43 /* psi^(30) */, 0X1.B18FA89EF3260P+47 /* psi^(33) */,
+            0X1.FC601E68F5440P+46 /* psi^(36) */, 0X1.41D2F8D1E9D20P+47 /* psi^(39) */, 0X1.A39F15C1DB780P+45 /* psi^(42) */, 0X1.CA4973E2E3940P+46 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.A39FE1970AC00P+46 /* psi^(4 ) */, 0X1.67B0D895D5A60P+47 /* psi^(8 ) */, 0X1.CDF1497776D20P+47 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.67B0D895D5A60P+47 /* psi^(8 ) */, 0X1.35A256F2BC980P+45 /* psi^(16) */, 0X1.A3B416CFFD800P+41 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.CDF1497776D20P+47 /* psi^(12) */, 0X1.A3B416CFFD800P+41 /* psi^(24) */, 0X1.FC601E68F5440P+46 /* psi^(36) */
         },
 
         .cdltf64_cyclic_inv =
         {
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.C1F2B1CBB58CP+46 /* psi_inv^(1 ) */,   0X1.B7E60B63C7P+47 /* psi_inv^(2 ) */, 0X1.315A98F756C6P+47 /* psi_inv^(3 ) */,
-             0X1.05F22FB4D18P+47 /* psi_inv^(4 ) */,  0X1.7230E9A9CB2P+46 /* psi_inv^(5 ) */, 0X1.03550FFC3958P+46 /* psi_inv^(6 ) */, 0X1.C3B68BEAB6BEP+47 /* psi_inv^(7 ) */,
-            0X1.C9712FA4C00CP+47 /* psi_inv^(8 ) */,  0X1.02595AE959CP+44 /* psi_inv^(9 ) */, 0X1.CC357E354BCEP+47 /* psi_inv^(10) */, 0X1.89D685711154P+47 /* psi_inv^(11) */,
-            0X1.6271B31D4138P+46 /* psi_inv^(12) */,  0X1.5D0469C7468P+41 /* psi_inv^(13) */,  0X1.A26120CF1A4P+43 /* psi_inv^(14) */, 0X1.2C9E2B510588P+46 /* psi_inv^(15) */,
-                          0X1P+0 /* psi_inv^(0 ) */,   0X1.B7E60B63C7P+47 /* psi_inv^(2 ) */,  0X1.05F22FB4D18P+47 /* psi_inv^(4 ) */, 0X1.03550FFC3958P+46 /* psi_inv^(6 ) */,
-            0X1.C9712FA4C00CP+47 /* psi_inv^(8 ) */, 0X1.CC357E354BCEP+47 /* psi_inv^(10) */, 0X1.6271B31D4138P+46 /* psi_inv^(12) */,  0X1.A26120CF1A4P+43 /* psi_inv^(14) */,
-            0X1.82976A4350DCP+47 /* psi_inv^(16) */, 0X1.4E5F3D627E46P+47 /* psi_inv^(18) */,   0X1.075B444498P+40 /* psi_inv^(20) */, 0X1.A39F15C1DB78P+45 /* psi_inv^(22) */,
-             0X1.A13C9DA8A97P+45 /* psi_inv^(24) */, 0X1.8131CF2A6632P+47 /* psi_inv^(26) */, 0X1.FC601E68F544P+46 /* psi_inv^(28) */, 0X1.8BFB0BA4CE08P+47 /* psi_inv^(30) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.315A98F756C6P+47 /* psi_inv^(3 ) */, 0X1.03550FFC3958P+46 /* psi_inv^(6 ) */,  0X1.02595AE959CP+44 /* psi_inv^(9 ) */,
-            0X1.6271B31D4138P+46 /* psi_inv^(12) */, 0X1.2C9E2B510588P+46 /* psi_inv^(15) */, 0X1.4E5F3D627E46P+47 /* psi_inv^(18) */, 0X1.E3CDE75673F4P+46 /* psi_inv^(21) */,
-             0X1.A13C9DA8A97P+45 /* psi_inv^(24) */,  0X1.9832F1B0733P+45 /* psi_inv^(27) */, 0X1.8BFB0BA4CE08P+47 /* psi_inv^(30) */, 0X1.DE0D4E344A78P+46 /* psi_inv^(33) */,
-            0X1.941BA0965D04P+46 /* psi_inv^(36) */,  0X1.892E82A9288P+42 /* psi_inv^(39) */,   0X1.E540E55A1AP+40 /* psi_inv^(42) */, 0X1.CA8BEE58E2E8P+47 /* psi_inv^(45) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.05F22FB4D18P+47 /* psi_inv^(4 ) */, 0X1.C9712FA4C00CP+47 /* psi_inv^(8 ) */, 0X1.6271B31D4138P+46 /* psi_inv^(12) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.C9712FA4C00CP+47 /* psi_inv^(8 ) */, 0X1.82976A4350DCP+47 /* psi_inv^(16) */,  0X1.A13C9DA8A97P+45 /* psi_inv^(24) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.6271B31D4138P+46 /* psi_inv^(12) */,  0X1.A13C9DA8A97P+45 /* psi_inv^(24) */, 0X1.941BA0965D04P+46 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.C1F2B1CBB58C0P+46 /* psi_inv^(1 ) */, 0X1.B7E60B63C7000P+47 /* psi_inv^(2 ) */, 0X1.315A98F756C60P+47 /* psi_inv^(3 ) */,
+            0X1.05F22FB4D1800P+47 /* psi_inv^(4 ) */, 0X1.7230E9A9CB200P+46 /* psi_inv^(5 ) */, 0X1.03550FFC39580P+46 /* psi_inv^(6 ) */, 0X1.C3B68BEAB6BE0P+47 /* psi_inv^(7 ) */,
+            0X1.C9712FA4C00C0P+47 /* psi_inv^(8 ) */, 0X1.02595AE959C00P+44 /* psi_inv^(9 ) */, 0X1.CC357E354BCE0P+47 /* psi_inv^(10) */, 0X1.89D6857111540P+47 /* psi_inv^(11) */,
+            0X1.6271B31D41380P+46 /* psi_inv^(12) */, 0X1.5D0469C746800P+41 /* psi_inv^(13) */, 0X1.A26120CF1A400P+43 /* psi_inv^(14) */, 0X1.2C9E2B5105880P+46 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.B7E60B63C7000P+47 /* psi_inv^(2 ) */, 0X1.05F22FB4D1800P+47 /* psi_inv^(4 ) */, 0X1.03550FFC39580P+46 /* psi_inv^(6 ) */,
+            0X1.C9712FA4C00C0P+47 /* psi_inv^(8 ) */, 0X1.CC357E354BCE0P+47 /* psi_inv^(10) */, 0X1.6271B31D41380P+46 /* psi_inv^(12) */, 0X1.A26120CF1A400P+43 /* psi_inv^(14) */,
+            0X1.82976A4350DC0P+47 /* psi_inv^(16) */, 0X1.4E5F3D627E460P+47 /* psi_inv^(18) */, 0X1.075B444498000P+40 /* psi_inv^(20) */, 0X1.A39F15C1DB780P+45 /* psi_inv^(22) */,
+            0X1.A13C9DA8A9700P+45 /* psi_inv^(24) */, 0X1.8131CF2A66320P+47 /* psi_inv^(26) */, 0X1.FC601E68F5440P+46 /* psi_inv^(28) */, 0X1.8BFB0BA4CE080P+47 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.315A98F756C60P+47 /* psi_inv^(3 ) */, 0X1.03550FFC39580P+46 /* psi_inv^(6 ) */, 0X1.02595AE959C00P+44 /* psi_inv^(9 ) */,
+            0X1.6271B31D41380P+46 /* psi_inv^(12) */, 0X1.2C9E2B5105880P+46 /* psi_inv^(15) */, 0X1.4E5F3D627E460P+47 /* psi_inv^(18) */, 0X1.E3CDE75673F40P+46 /* psi_inv^(21) */,
+            0X1.A13C9DA8A9700P+45 /* psi_inv^(24) */, 0X1.9832F1B073300P+45 /* psi_inv^(27) */, 0X1.8BFB0BA4CE080P+47 /* psi_inv^(30) */, 0X1.DE0D4E344A780P+46 /* psi_inv^(33) */,
+            0X1.941BA0965D040P+46 /* psi_inv^(36) */, 0X1.892E82A928800P+42 /* psi_inv^(39) */, 0X1.E540E55A1A000P+40 /* psi_inv^(42) */, 0X1.CA8BEE58E2E80P+47 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.05F22FB4D1800P+47 /* psi_inv^(4 ) */, 0X1.C9712FA4C00C0P+47 /* psi_inv^(8 ) */, 0X1.6271B31D41380P+46 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.C9712FA4C00C0P+47 /* psi_inv^(8 ) */, 0X1.82976A4350DC0P+47 /* psi_inv^(16) */, 0X1.A13C9DA8A9700P+45 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.6271B31D41380P+46 /* psi_inv^(12) */, 0X1.A13C9DA8A9700P+45 /* psi_inv^(24) */, 0X1.941BA0965D040P+46 /* psi_inv^(36) */
         },
 
         .cdltf64_negacyclic_fwd =
         {
-                          0X1P+0 /* psi^(0 ) */, 0X1.11CF12FBAC72P+47 /* psi^(1 ) */,  0X1.E7057610CDCP+43 /* psi^(2 ) */,  0X1.A5C296C5A36P+46 /* psi^(3 ) */,
-            0X1.1013D16CC7E8P+45 /* psi^(4 ) */,  0X1.18175ADF5BAP+47 /* psi^(5 ) */,  0X1.24B38DBA877P+46 /* psi^(6 ) */, 0X1.E8B415526F68P+45 /* psi^(7 ) */,
-             0X1.A39FE1970ACP+46 /* psi^(8 ) */,  0X1.4C4F151C18BP+46 /* psi^(9 ) */, 0X1.69F34393E336P+47 /* psi^(10) */, 0X1.9598C8F6B58AP+47 /* psi^(11) */,
-             0X1.3B38C356674P+45 /* psi^(12) */, 0X1.B90DE5A7143CP+46 /* psi^(13) */,  0X1.1C5A0E5C2C6P+46 /* psi^(14) */, 0X1.E34641FC7FC8P+45 /* psi^(15) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.E7057610CDCP+43 /* psi^(2 ) */, 0X1.1013D16CC7E8P+45 /* psi^(4 ) */,  0X1.24B38DBA877P+46 /* psi^(6 ) */,
-             0X1.A39FE1970ACP+46 /* psi^(8 ) */, 0X1.69F34393E336P+47 /* psi^(10) */,  0X1.3B38C356674P+45 /* psi^(12) */,  0X1.1C5A0E5C2C6P+46 /* psi^(14) */,
-            0X1.67B0D895D5A6P+47 /* psi^(16) */, 0X1.7FF156DBFAA4P+46 /* psi^(18) */, 0X1.67183A8F8924P+47 /* psi^(20) */,  0X1.BC3218A98C1P+46 /* psi^(22) */,
-            0X1.CDF1497776D2P+47 /* psi^(24) */,  0X1.D5B68C1D1C7P+46 /* psi^(26) */, 0X1.0341853B0378P+46 /* psi^(28) */,  0X1.DA938D41B42P+45 /* psi^(30) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.A5C296C5A36P+46 /* psi^(3 ) */,  0X1.24B38DBA877P+46 /* psi^(6 ) */,  0X1.4C4F151C18BP+46 /* psi^(9 ) */,
-             0X1.3B38C356674P+45 /* psi^(12) */, 0X1.E34641FC7FC8P+45 /* psi^(15) */, 0X1.7FF156DBFAA4P+46 /* psi^(18) */, 0X1.9967EA304E3AP+47 /* psi^(21) */,
-            0X1.CDF1497776D2P+47 /* psi^(24) */,  0X1.08B1CAED64EP+43 /* psi^(27) */,  0X1.DA938D41B42P+45 /* psi^(30) */, 0X1.9BDC1B139A2CP+46 /* psi^(33) */,
-            0X1.B5D9EDF30E5EP+47 /* psi^(36) */,  0X1.B5FC13AD10EP+47 /* psi^(39) */, 0X1.18A5EA3BBAB8P+45 /* psi^(42) */, 0X1.03AF769C4E96P+47 /* psi^(45) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.1013D16CC7E8P+45 /* psi^(4 ) */,  0X1.A39FE1970ACP+46 /* psi^(8 ) */,  0X1.3B38C356674P+45 /* psi^(12) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.A39FE1970ACP+46 /* psi^(8 ) */, 0X1.67B0D895D5A6P+47 /* psi^(16) */, 0X1.CDF1497776D2P+47 /* psi^(24) */,
-                          0X1P+0 /* psi^(0 ) */,  0X1.3B38C356674P+45 /* psi^(12) */, 0X1.CDF1497776D2P+47 /* psi^(24) */, 0X1.B5D9EDF30E5EP+47 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.11CF12FBAC720P+47 /* psi^(1 ) */, 0X1.E7057610CDC00P+43 /* psi^(2 ) */, 0X1.A5C296C5A3600P+46 /* psi^(3 ) */,
+            0X1.1013D16CC7E80P+45 /* psi^(4 ) */, 0X1.18175ADF5BA00P+47 /* psi^(5 ) */, 0X1.24B38DBA87700P+46 /* psi^(6 ) */, 0X1.E8B415526F680P+45 /* psi^(7 ) */,
+            0X1.A39FE1970AC00P+46 /* psi^(8 ) */, 0X1.4C4F151C18B00P+46 /* psi^(9 ) */, 0X1.69F34393E3360P+47 /* psi^(10) */, 0X1.9598C8F6B58A0P+47 /* psi^(11) */,
+            0X1.3B38C35667400P+45 /* psi^(12) */, 0X1.B90DE5A7143C0P+46 /* psi^(13) */, 0X1.1C5A0E5C2C600P+46 /* psi^(14) */, 0X1.E34641FC7FC80P+45 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.E7057610CDC00P+43 /* psi^(2 ) */, 0X1.1013D16CC7E80P+45 /* psi^(4 ) */, 0X1.24B38DBA87700P+46 /* psi^(6 ) */,
+            0X1.A39FE1970AC00P+46 /* psi^(8 ) */, 0X1.69F34393E3360P+47 /* psi^(10) */, 0X1.3B38C35667400P+45 /* psi^(12) */, 0X1.1C5A0E5C2C600P+46 /* psi^(14) */,
+            0X1.67B0D895D5A60P+47 /* psi^(16) */, 0X1.7FF156DBFAA40P+46 /* psi^(18) */, 0X1.67183A8F89240P+47 /* psi^(20) */, 0X1.BC3218A98C100P+46 /* psi^(22) */,
+            0X1.CDF1497776D20P+47 /* psi^(24) */, 0X1.D5B68C1D1C700P+46 /* psi^(26) */, 0X1.0341853B03780P+46 /* psi^(28) */, 0X1.DA938D41B4200P+45 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.A5C296C5A3600P+46 /* psi^(3 ) */, 0X1.24B38DBA87700P+46 /* psi^(6 ) */, 0X1.4C4F151C18B00P+46 /* psi^(9 ) */,
+            0X1.3B38C35667400P+45 /* psi^(12) */, 0X1.E34641FC7FC80P+45 /* psi^(15) */, 0X1.7FF156DBFAA40P+46 /* psi^(18) */, 0X1.9967EA304E3A0P+47 /* psi^(21) */,
+            0X1.CDF1497776D20P+47 /* psi^(24) */, 0X1.08B1CAED64E00P+43 /* psi^(27) */, 0X1.DA938D41B4200P+45 /* psi^(30) */, 0X1.9BDC1B139A2C0P+46 /* psi^(33) */,
+            0X1.B5D9EDF30E5E0P+47 /* psi^(36) */, 0X1.B5FC13AD10E00P+47 /* psi^(39) */, 0X1.18A5EA3BBAB80P+45 /* psi^(42) */, 0X1.03AF769C4E960P+47 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.1013D16CC7E80P+45 /* psi^(4 ) */, 0X1.A39FE1970AC00P+46 /* psi^(8 ) */, 0X1.3B38C35667400P+45 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.A39FE1970AC00P+46 /* psi^(8 ) */, 0X1.67B0D895D5A60P+47 /* psi^(16) */, 0X1.CDF1497776D20P+47 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.3B38C35667400P+45 /* psi^(12) */, 0X1.CDF1497776D20P+47 /* psi^(24) */, 0X1.B5D9EDF30E5E0P+47 /* psi^(36) */
         },
 
         .cdltf64_negacyclic_inv =
         {
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.EC1928891FD8P+46 /* psi_inv^(1 ) */, 0X1.C1F2B1CBB58CP+46 /* psi_inv^(2 ) */,  0X1.84BDEC23714P+46 /* psi_inv^(3 ) */,
-              0X1.B7E60B63C7P+47 /* psi_inv^(4 ) */, 0X1.AFB942F711CAP+47 /* psi_inv^(5 ) */, 0X1.315A98F756C6P+47 /* psi_inv^(6 ) */, 0X1.CC4459B49748P+46 /* psi_inv^(7 ) */,
-             0X1.05F22FB4D18P+47 /* psi_inv^(8 ) */, 0X1.9AA0505BBA68P+47 /* psi_inv^(9 ) */,  0X1.7230E9A9CB2P+46 /* psi_inv^(10) */, 0X1.6784F48C9004P+46 /* psi_inv^(11) */,
-            0X1.03550FFC3958P+46 /* psi_inv^(12) */, 0X1.89CAAFDE5EF4P+46 /* psi_inv^(13) */, 0X1.C3B68BEAB6BEP+47 /* psi_inv^(14) */, 0X1.264640DA432CP+46 /* psi_inv^(15) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.C1F2B1CBB58CP+46 /* psi_inv^(2 ) */,   0X1.B7E60B63C7P+47 /* psi_inv^(4 ) */, 0X1.315A98F756C6P+47 /* psi_inv^(6 ) */,
-             0X1.05F22FB4D18P+47 /* psi_inv^(8 ) */,  0X1.7230E9A9CB2P+46 /* psi_inv^(10) */, 0X1.03550FFC3958P+46 /* psi_inv^(12) */, 0X1.C3B68BEAB6BEP+47 /* psi_inv^(14) */,
-            0X1.C9712FA4C00CP+47 /* psi_inv^(16) */,  0X1.02595AE959CP+44 /* psi_inv^(18) */, 0X1.CC357E354BCEP+47 /* psi_inv^(20) */, 0X1.89D685711154P+47 /* psi_inv^(22) */,
-            0X1.6271B31D4138P+46 /* psi_inv^(24) */,  0X1.5D0469C7468P+41 /* psi_inv^(26) */,  0X1.A26120CF1A4P+43 /* psi_inv^(28) */, 0X1.2C9E2B510588P+46 /* psi_inv^(30) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.84BDEC23714P+46 /* psi_inv^(3 ) */, 0X1.315A98F756C6P+47 /* psi_inv^(6 ) */, 0X1.9AA0505BBA68P+47 /* psi_inv^(9 ) */,
-            0X1.03550FFC3958P+46 /* psi_inv^(12) */, 0X1.264640DA432CP+46 /* psi_inv^(15) */,  0X1.02595AE959CP+44 /* psi_inv^(18) */, 0X1.F25F77BB8AD4P+46 /* psi_inv^(21) */,
-            0X1.6271B31D4138P+46 /* psi_inv^(24) */,  0X1.FB058C06D31P+45 /* psi_inv^(27) */, 0X1.2C9E2B510588P+46 /* psi_inv^(30) */,  0X1.1A70D733343P+47 /* psi_inv^(33) */,
-            0X1.4E5F3D627E46P+47 /* psi_inv^(36) */, 0X1.2D0BA293FA66P+47 /* psi_inv^(39) */, 0X1.E3CDE75673F4P+46 /* psi_inv^(42) */,  0X1.D58D80DD75EP+43 /* psi_inv^(45) */,
-                          0X1P+0 /* psi_inv^(0 ) */,   0X1.B7E60B63C7P+47 /* psi_inv^(4 ) */,  0X1.05F22FB4D18P+47 /* psi_inv^(8 ) */, 0X1.03550FFC3958P+46 /* psi_inv^(12) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.05F22FB4D18P+47 /* psi_inv^(8 ) */, 0X1.C9712FA4C00CP+47 /* psi_inv^(16) */, 0X1.6271B31D4138P+46 /* psi_inv^(24) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.03550FFC3958P+46 /* psi_inv^(12) */, 0X1.6271B31D4138P+46 /* psi_inv^(24) */, 0X1.4E5F3D627E46P+47 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.EC1928891FD80P+46 /* psi_inv^(1 ) */, 0X1.C1F2B1CBB58C0P+46 /* psi_inv^(2 ) */, 0X1.84BDEC2371400P+46 /* psi_inv^(3 ) */,
+            0X1.B7E60B63C7000P+47 /* psi_inv^(4 ) */, 0X1.AFB942F711CA0P+47 /* psi_inv^(5 ) */, 0X1.315A98F756C60P+47 /* psi_inv^(6 ) */, 0X1.CC4459B497480P+46 /* psi_inv^(7 ) */,
+            0X1.05F22FB4D1800P+47 /* psi_inv^(8 ) */, 0X1.9AA0505BBA680P+47 /* psi_inv^(9 ) */, 0X1.7230E9A9CB200P+46 /* psi_inv^(10) */, 0X1.6784F48C90040P+46 /* psi_inv^(11) */,
+            0X1.03550FFC39580P+46 /* psi_inv^(12) */, 0X1.89CAAFDE5EF40P+46 /* psi_inv^(13) */, 0X1.C3B68BEAB6BE0P+47 /* psi_inv^(14) */, 0X1.264640DA432C0P+46 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.C1F2B1CBB58C0P+46 /* psi_inv^(2 ) */, 0X1.B7E60B63C7000P+47 /* psi_inv^(4 ) */, 0X1.315A98F756C60P+47 /* psi_inv^(6 ) */,
+            0X1.05F22FB4D1800P+47 /* psi_inv^(8 ) */, 0X1.7230E9A9CB200P+46 /* psi_inv^(10) */, 0X1.03550FFC39580P+46 /* psi_inv^(12) */, 0X1.C3B68BEAB6BE0P+47 /* psi_inv^(14) */,
+            0X1.C9712FA4C00C0P+47 /* psi_inv^(16) */, 0X1.02595AE959C00P+44 /* psi_inv^(18) */, 0X1.CC357E354BCE0P+47 /* psi_inv^(20) */, 0X1.89D6857111540P+47 /* psi_inv^(22) */,
+            0X1.6271B31D41380P+46 /* psi_inv^(24) */, 0X1.5D0469C746800P+41 /* psi_inv^(26) */, 0X1.A26120CF1A400P+43 /* psi_inv^(28) */, 0X1.2C9E2B5105880P+46 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.84BDEC2371400P+46 /* psi_inv^(3 ) */, 0X1.315A98F756C60P+47 /* psi_inv^(6 ) */, 0X1.9AA0505BBA680P+47 /* psi_inv^(9 ) */,
+            0X1.03550FFC39580P+46 /* psi_inv^(12) */, 0X1.264640DA432C0P+46 /* psi_inv^(15) */, 0X1.02595AE959C00P+44 /* psi_inv^(18) */, 0X1.F25F77BB8AD40P+46 /* psi_inv^(21) */,
+            0X1.6271B31D41380P+46 /* psi_inv^(24) */, 0X1.FB058C06D3100P+45 /* psi_inv^(27) */, 0X1.2C9E2B5105880P+46 /* psi_inv^(30) */, 0X1.1A70D73334300P+47 /* psi_inv^(33) */,
+            0X1.4E5F3D627E460P+47 /* psi_inv^(36) */, 0X1.2D0BA293FA660P+47 /* psi_inv^(39) */, 0X1.E3CDE75673F40P+46 /* psi_inv^(42) */, 0X1.D58D80DD75E00P+43 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.B7E60B63C7000P+47 /* psi_inv^(4 ) */, 0X1.05F22FB4D1800P+47 /* psi_inv^(8 ) */, 0X1.03550FFC39580P+46 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.05F22FB4D1800P+47 /* psi_inv^(8 ) */, 0X1.C9712FA4C00C0P+47 /* psi_inv^(16) */, 0X1.6271B31D41380P+46 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.03550FFC39580P+46 /* psi_inv^(12) */, 0X1.6271B31D41380P+46 /* psi_inv^(24) */, 0X1.4E5F3D627E460P+47 /* psi_inv^(36) */
         },
 
 #if defined(APAC_WIN_X64) || defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64)
-
-
+        
         .prime_inv52 = 0x0E7FFFFFFFFFFULL,
 
-        .r0 = 0x05C69EE5847D7ULL,
+        .mtgmy_r2_ifma = 0x05C69EE5847D7ULL,
+
+#elif defined(APAC_WIN_ARM64) || defined(APAC_LINUX_ARM64) || defined(APAC_MACOS_ARM64)
+        
+        .prime_inv64 = 0x0000E7FFFFFFFFFFULL,
+        
+        .mtgmy_r2_sve = 0x09047D69A06B3ULL,
+
+#endif
 
         .cdltu64_cyclic_fwd =
         {
@@ -491,14 +510,13 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x082F917DA68C0ULL /* psi_inv^(8 ) */, 0x0E4B897D26006ULL /* psi_inv^(16) */, 0x0589C6CC7504EULL /* psi_inv^(24) */,
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x040D543FF0E56ULL /* psi_inv^(12) */, 0x0589C6CC7504EULL /* psi_inv^(24) */, 0x0A72F9EB13F23ULL /* psi_inv^(36) */
         }
-#endif
     },
 
     {
         /* --------------------------------------------------------------- */
-        /* p = 448600744132609    (0x1980000000001) */
+        /* p = 448600744132609      (0x1980000000001)                      */
         /* --------------------------------------------------------------- */
-        
+
         .p = 448600744132609ULL,
 
         .magic = 0x141414141414077BULL,
@@ -550,89 +568,97 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x197FFFFFFFE69ULL /* (2^40) */, 0x197FFFFFFFF35ULL /* (2^41) */, 0x197FFFFFFFF9BULL /* (2^42) */
         },
 
-        .prime_inv = 0X1.4141414141407P-49,
+        .prime_inv =    0X1.4141414141407P-49,
 
         .cdltf64_cyclic_fwd =
         {
-                          0X1P+0 /* psi^(0 ) */, 0X1.1CC104E916B8P+47 /* psi^(1 ) */, 0X1.4BD1ADB71184P+47 /* psi^(2 ) */, 0X1.261D70B2CDD9P+48 /* psi^(3 ) */,
-            0X1.EA20D4A3ABA8P+47 /* psi^(4 ) */, 0X1.928CFA3B08D8P+47 /* psi^(5 ) */, 0X1.0425FD18AE8AP+48 /* psi^(6 ) */,  0X1.75B88D56E68P+47 /* psi^(7 ) */,
-            0X1.DA2871CD619CP+46 /* psi^(8 ) */, 0X1.AAFF13EBA076P+47 /* psi^(9 ) */, 0X1.3CFB2ECAB2AEP+47 /* psi^(10) */, 0X1.72F268832DD6P+48 /* psi^(11) */,
-            0X1.32C3ADD744ECP+47 /* psi^(12) */,  0X1.CDA61FC92DFP+44 /* psi^(13) */,  0X1.6459224A58CP+44 /* psi^(14) */, 0X1.10C0E30AAE98P+48 /* psi^(15) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.4BD1ADB71184P+47 /* psi^(2 ) */, 0X1.EA20D4A3ABA8P+47 /* psi^(4 ) */, 0X1.0425FD18AE8AP+48 /* psi^(6 ) */,
-            0X1.DA2871CD619CP+46 /* psi^(8 ) */, 0X1.3CFB2ECAB2AEP+47 /* psi^(10) */, 0X1.32C3ADD744ECP+47 /* psi^(12) */,  0X1.6459224A58CP+44 /* psi^(14) */,
-            0X1.FF5303416C18P+45 /* psi^(16) */, 0X1.5B72766D258EP+47 /* psi^(18) */, 0X1.B9D247D18172P+47 /* psi^(20) */, 0X1.1F971B5C988EP+47 /* psi^(22) */,
-            0X1.9886F62D04B4P+47 /* psi^(24) */, 0X1.09007C720B18P+46 /* psi^(26) */, 0X1.8E536E2D838AP+48 /* psi^(28) */, 0X1.3DE65DA19DD8P+45 /* psi^(30) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.261D70B2CDD9P+48 /* psi^(3 ) */, 0X1.0425FD18AE8AP+48 /* psi^(6 ) */, 0X1.AAFF13EBA076P+47 /* psi^(9 ) */,
-            0X1.32C3ADD744ECP+47 /* psi^(12) */, 0X1.10C0E30AAE98P+48 /* psi^(15) */, 0X1.5B72766D258EP+47 /* psi^(18) */, 0X1.5F9A5BCD57A8P+46 /* psi^(21) */,
-            0X1.9886F62D04B4P+47 /* psi^(24) */, 0X1.526501990111P+48 /* psi^(27) */, 0X1.3DE65DA19DD8P+45 /* psi^(30) */, 0X1.099F7D8B74A5P+48 /* psi^(33) */,
-            0X1.45DF2B5C545AP+47 /* psi^(36) */, 0X1.BA4772A91982P+47 /* psi^(39) */, 0X1.F304D1354D54P+47 /* psi^(42) */, 0X1.7B259E036D22P+48 /* psi^(45) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.EA20D4A3ABA8P+47 /* psi^(4 ) */, 0X1.DA2871CD619CP+46 /* psi^(8 ) */, 0X1.32C3ADD744ECP+47 /* psi^(12) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.DA2871CD619CP+46 /* psi^(8 ) */, 0X1.FF5303416C18P+45 /* psi^(16) */, 0X1.9886F62D04B4P+47 /* psi^(24) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.32C3ADD744ECP+47 /* psi^(12) */, 0X1.9886F62D04B4P+47 /* psi^(24) */, 0X1.45DF2B5C545AP+47 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.1CC104E916B80P+47 /* psi^(1 ) */, 0X1.4BD1ADB711840P+47 /* psi^(2 ) */, 0X1.261D70B2CDD90P+48 /* psi^(3 ) */,
+            0X1.EA20D4A3ABA80P+47 /* psi^(4 ) */, 0X1.928CFA3B08D80P+47 /* psi^(5 ) */, 0X1.0425FD18AE8A0P+48 /* psi^(6 ) */, 0X1.75B88D56E6800P+47 /* psi^(7 ) */,
+            0X1.DA2871CD619C0P+46 /* psi^(8 ) */, 0X1.AAFF13EBA0760P+47 /* psi^(9 ) */, 0X1.3CFB2ECAB2AE0P+47 /* psi^(10) */, 0X1.72F268832DD60P+48 /* psi^(11) */,
+            0X1.32C3ADD744EC0P+47 /* psi^(12) */, 0X1.CDA61FC92DF00P+44 /* psi^(13) */, 0X1.6459224A58C00P+44 /* psi^(14) */, 0X1.10C0E30AAE980P+48 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.4BD1ADB711840P+47 /* psi^(2 ) */, 0X1.EA20D4A3ABA80P+47 /* psi^(4 ) */, 0X1.0425FD18AE8A0P+48 /* psi^(6 ) */,
+            0X1.DA2871CD619C0P+46 /* psi^(8 ) */, 0X1.3CFB2ECAB2AE0P+47 /* psi^(10) */, 0X1.32C3ADD744EC0P+47 /* psi^(12) */, 0X1.6459224A58C00P+44 /* psi^(14) */,
+            0X1.FF5303416C180P+45 /* psi^(16) */, 0X1.5B72766D258E0P+47 /* psi^(18) */, 0X1.B9D247D181720P+47 /* psi^(20) */, 0X1.1F971B5C988E0P+47 /* psi^(22) */,
+            0X1.9886F62D04B40P+47 /* psi^(24) */, 0X1.09007C720B180P+46 /* psi^(26) */, 0X1.8E536E2D838A0P+48 /* psi^(28) */, 0X1.3DE65DA19DD80P+45 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.261D70B2CDD90P+48 /* psi^(3 ) */, 0X1.0425FD18AE8A0P+48 /* psi^(6 ) */, 0X1.AAFF13EBA0760P+47 /* psi^(9 ) */,
+            0X1.32C3ADD744EC0P+47 /* psi^(12) */, 0X1.10C0E30AAE980P+48 /* psi^(15) */, 0X1.5B72766D258E0P+47 /* psi^(18) */, 0X1.5F9A5BCD57A80P+46 /* psi^(21) */,
+            0X1.9886F62D04B40P+47 /* psi^(24) */, 0X1.5265019901110P+48 /* psi^(27) */, 0X1.3DE65DA19DD80P+45 /* psi^(30) */, 0X1.099F7D8B74A50P+48 /* psi^(33) */,
+            0X1.45DF2B5C545A0P+47 /* psi^(36) */, 0X1.BA4772A919820P+47 /* psi^(39) */, 0X1.F304D1354D540P+47 /* psi^(42) */, 0X1.7B259E036D220P+48 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.EA20D4A3ABA80P+47 /* psi^(4 ) */, 0X1.DA2871CD619C0P+46 /* psi^(8 ) */, 0X1.32C3ADD744EC0P+47 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.DA2871CD619C0P+46 /* psi^(8 ) */, 0X1.FF5303416C180P+45 /* psi^(16) */, 0X1.9886F62D04B40P+47 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.32C3ADD744EC0P+47 /* psi^(12) */, 0X1.9886F62D04B40P+47 /* psi^(24) */, 0X1.45DF2B5C545A0P+47 /* psi^(36) */
         },
 
         .cdltf64_cyclic_inv =
         {
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.635D7ADFC602P+48 /* psi_inv^(1 ) */, 0X1.7043344BCC46P+48 /* psi_inv^(2 ) */, 0X1.DC1927556F6CP+46 /* psi_inv^(3 ) */,
-             0X1.35923A4F8EEP+43 /* psi_inv^(4 ) */,  0X1.166BF99BFBCP+46 /* psi_inv^(5 ) */, 0X1.55BFE0E37D3BP+48 /* psi_inv^(6 ) */, 0X1.890D93F35316P+48 /* psi_inv^(7 ) */,
-            0X1.977909D2FB4EP+47 /* psi_inv^(8 ) */, 0X1.84C2B4867079P+48 /* psi_inv^(9 ) */, 0X1.08347251B3BAP+48 /* psi_inv^(10) */, 0X1.4019690CAA17P+48 /* psi_inv^(11) */,
-             0X1.762DB82E7E9P+47 /* psi_inv^(12) */, 0X1.0608182085A8P+47 /* psi_inv^(13) */, 0X1.D48D8992DA74P+47 /* psi_inv^(14) */, 0X1.4A498291A0F4P+48 /* psi_inv^(15) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.7043344BCC46P+48 /* psi_inv^(2 ) */,  0X1.35923A4F8EEP+43 /* psi_inv^(4 ) */, 0X1.55BFE0E37D3BP+48 /* psi_inv^(6 ) */,
-            0X1.977909D2FB4EP+47 /* psi_inv^(8 ) */, 0X1.08347251B3BAP+48 /* psi_inv^(10) */,  0X1.762DB82E7E9P+47 /* psi_inv^(12) */, 0X1.D48D8992DA74P+47 /* psi_inv^(14) */,
-            0X1.58159F97D27EP+48 /* psi_inv^(16) */, 0X1.81BA6DDB5A75P+48 /* psi_inv^(18) */, 0X1.FD3C5228BB16P+47 /* psi_inv^(20) */, 0X1.F304D1354D54P+47 /* psi_inv^(22) */,
-            0X1.2175E38CA79AP+48 /* psi_inv^(24) */, 0X1.27B405CEA2EEP+47 /* psi_inv^(26) */, 0X1.45DF2B5C545AP+47 /* psi_inv^(28) */, 0X1.E42E5248EE7EP+47 /* psi_inv^(30) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.DC1927556F6CP+46 /* psi_inv^(3 ) */, 0X1.55BFE0E37D3BP+48 /* psi_inv^(6 ) */, 0X1.84C2B4867079P+48 /* psi_inv^(9 ) */,
-             0X1.762DB82E7E9P+47 /* psi_inv^(12) */, 0X1.4A498291A0F4P+48 /* psi_inv^(15) */, 0X1.81BA6DDB5A75P+48 /* psi_inv^(18) */, 0X1.286CBBE69158P+45 /* psi_inv^(21) */,
-            0X1.2175E38CA79AP+48 /* psi_inv^(24) */, 0X1.9D7305C4F72AP+47 /* psi_inv^(27) */, 0X1.E42E5248EE7EP+47 /* psi_inv^(30) */, 0X1.A5142901CFF8P+45 /* psi_inv^(33) */,
-            0X1.8E536E2D838AP+48 /* psi_inv^(36) */,  0X1.DE4D81959D6P+43 /* psi_inv^(39) */, 0X1.1F971B5C988EP+47 /* psi_inv^(42) */, 0X1.14FBF3EFBD2DP+48 /* psi_inv^(45) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.35923A4F8EEP+43 /* psi_inv^(4 ) */, 0X1.977909D2FB4EP+47 /* psi_inv^(8 ) */,  0X1.762DB82E7E9P+47 /* psi_inv^(12) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.977909D2FB4EP+47 /* psi_inv^(8 ) */, 0X1.58159F97D27EP+48 /* psi_inv^(16) */, 0X1.2175E38CA79AP+48 /* psi_inv^(24) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.762DB82E7E9P+47 /* psi_inv^(12) */, 0X1.2175E38CA79AP+48 /* psi_inv^(24) */, 0X1.8E536E2D838AP+48 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.635D7ADFC6020P+48 /* psi_inv^(1 ) */, 0X1.7043344BCC460P+48 /* psi_inv^(2 ) */, 0X1.DC1927556F6C0P+46 /* psi_inv^(3 ) */,
+            0X1.35923A4F8EE00P+43 /* psi_inv^(4 ) */, 0X1.166BF99BFBC00P+46 /* psi_inv^(5 ) */, 0X1.55BFE0E37D3B0P+48 /* psi_inv^(6 ) */, 0X1.890D93F353160P+48 /* psi_inv^(7 ) */,
+            0X1.977909D2FB4E0P+47 /* psi_inv^(8 ) */, 0X1.84C2B48670790P+48 /* psi_inv^(9 ) */, 0X1.08347251B3BA0P+48 /* psi_inv^(10) */, 0X1.4019690CAA170P+48 /* psi_inv^(11) */,
+            0X1.762DB82E7E900P+47 /* psi_inv^(12) */, 0X1.0608182085A80P+47 /* psi_inv^(13) */, 0X1.D48D8992DA740P+47 /* psi_inv^(14) */, 0X1.4A498291A0F40P+48 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.7043344BCC460P+48 /* psi_inv^(2 ) */, 0X1.35923A4F8EE00P+43 /* psi_inv^(4 ) */, 0X1.55BFE0E37D3B0P+48 /* psi_inv^(6 ) */,
+            0X1.977909D2FB4E0P+47 /* psi_inv^(8 ) */, 0X1.08347251B3BA0P+48 /* psi_inv^(10) */, 0X1.762DB82E7E900P+47 /* psi_inv^(12) */, 0X1.D48D8992DA740P+47 /* psi_inv^(14) */,
+            0X1.58159F97D27E0P+48 /* psi_inv^(16) */, 0X1.81BA6DDB5A750P+48 /* psi_inv^(18) */, 0X1.FD3C5228BB160P+47 /* psi_inv^(20) */, 0X1.F304D1354D540P+47 /* psi_inv^(22) */,
+            0X1.2175E38CA79A0P+48 /* psi_inv^(24) */, 0X1.27B405CEA2EE0P+47 /* psi_inv^(26) */, 0X1.45DF2B5C545A0P+47 /* psi_inv^(28) */, 0X1.E42E5248EE7E0P+47 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.DC1927556F6C0P+46 /* psi_inv^(3 ) */, 0X1.55BFE0E37D3B0P+48 /* psi_inv^(6 ) */, 0X1.84C2B48670790P+48 /* psi_inv^(9 ) */,
+            0X1.762DB82E7E900P+47 /* psi_inv^(12) */, 0X1.4A498291A0F40P+48 /* psi_inv^(15) */, 0X1.81BA6DDB5A750P+48 /* psi_inv^(18) */, 0X1.286CBBE691580P+45 /* psi_inv^(21) */,
+            0X1.2175E38CA79A0P+48 /* psi_inv^(24) */, 0X1.9D7305C4F72A0P+47 /* psi_inv^(27) */, 0X1.E42E5248EE7E0P+47 /* psi_inv^(30) */, 0X1.A5142901CFF80P+45 /* psi_inv^(33) */,
+            0X1.8E536E2D838A0P+48 /* psi_inv^(36) */, 0X1.DE4D81959D600P+43 /* psi_inv^(39) */, 0X1.1F971B5C988E0P+47 /* psi_inv^(42) */, 0X1.14FBF3EFBD2D0P+48 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.35923A4F8EE00P+43 /* psi_inv^(4 ) */, 0X1.977909D2FB4E0P+47 /* psi_inv^(8 ) */, 0X1.762DB82E7E900P+47 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.977909D2FB4E0P+47 /* psi_inv^(8 ) */, 0X1.58159F97D27E0P+48 /* psi_inv^(16) */, 0X1.2175E38CA79A0P+48 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.762DB82E7E900P+47 /* psi_inv^(12) */, 0X1.2175E38CA79A0P+48 /* psi_inv^(24) */, 0X1.8E536E2D838A0P+48 /* psi_inv^(36) */
         },
 
         .cdltf64_negacyclic_fwd =
         {
-                          0X1P+0 /* psi^(0 ) */, 0X1.95AE353D36C4P+48 /* psi^(1 ) */, 0X1.1CC104E916B8P+47 /* psi^(2 ) */, 0X1.25FCD682C8C6P+47 /* psi^(3 ) */,
-            0X1.4BD1ADB71184P+47 /* psi^(4 ) */,  0X1.10D970D781AP+45 /* psi^(5 ) */, 0X1.261D70B2CDD9P+48 /* psi^(6 ) */, 0X1.6CACAAB608E8P+45 /* psi^(7 ) */,
-            0X1.EA20D4A3ABA8P+47 /* psi^(8 ) */, 0X1.0C2FBFD144BFP+48 /* psi^(9 ) */, 0X1.928CFA3B08D8P+47 /* psi^(10) */, 0X1.8A155F6481B6P+48 /* psi^(11) */,
-            0X1.0425FD18AE8AP+48 /* psi^(12) */,  0X1.B277118FC6FP+46 /* psi^(13) */,  0X1.75B88D56E68P+47 /* psi^(14) */, 0X1.20F8A8C3B39FP+48 /* psi^(15) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.1CC104E916B8P+47 /* psi^(2 ) */, 0X1.4BD1ADB71184P+47 /* psi^(4 ) */, 0X1.261D70B2CDD9P+48 /* psi^(6 ) */,
-            0X1.EA20D4A3ABA8P+47 /* psi^(8 ) */, 0X1.928CFA3B08D8P+47 /* psi^(10) */, 0X1.0425FD18AE8AP+48 /* psi^(12) */,  0X1.75B88D56E68P+47 /* psi^(14) */,
-            0X1.DA2871CD619CP+46 /* psi^(16) */, 0X1.AAFF13EBA076P+47 /* psi^(18) */, 0X1.3CFB2ECAB2AEP+47 /* psi^(20) */, 0X1.72F268832DD6P+48 /* psi^(22) */,
-            0X1.32C3ADD744ECP+47 /* psi^(24) */,  0X1.CDA61FC92DFP+44 /* psi^(26) */,  0X1.6459224A58CP+44 /* psi^(28) */, 0X1.10C0E30AAE98P+48 /* psi^(30) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.25FCD682C8C6P+47 /* psi^(3 ) */, 0X1.261D70B2CDD9P+48 /* psi^(6 ) */, 0X1.0C2FBFD144BFP+48 /* psi^(9 ) */,
-            0X1.0425FD18AE8AP+48 /* psi^(12) */, 0X1.20F8A8C3B39FP+48 /* psi^(15) */, 0X1.AAFF13EBA076P+47 /* psi^(18) */, 0X1.2D1EA5E0DBCCP+46 /* psi^(21) */,
-            0X1.32C3ADD744ECP+47 /* psi^(24) */, 0X1.95571272620FP+48 /* psi^(27) */, 0X1.10C0E30AAE98P+48 /* psi^(30) */, 0X1.2883658635BAP+48 /* psi^(33) */,
-            0X1.5B72766D258EP+47 /* psi^(36) */, 0X1.0B4B8EF060D4P+46 /* psi^(39) */, 0X1.5F9A5BCD57A8P+46 /* psi^(42) */,  0X1.E2AEB268F02P+45 /* psi^(45) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.4BD1ADB71184P+47 /* psi^(4 ) */, 0X1.EA20D4A3ABA8P+47 /* psi^(8 ) */, 0X1.0425FD18AE8AP+48 /* psi^(12) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.EA20D4A3ABA8P+47 /* psi^(8 ) */, 0X1.DA2871CD619CP+46 /* psi^(16) */, 0X1.32C3ADD744ECP+47 /* psi^(24) */,
-                          0X1P+0 /* psi^(0 ) */, 0X1.0425FD18AE8AP+48 /* psi^(12) */, 0X1.32C3ADD744ECP+47 /* psi^(24) */, 0X1.5B72766D258EP+47 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.95AE353D36C40P+48 /* psi^(1 ) */, 0X1.1CC104E916B80P+47 /* psi^(2 ) */, 0X1.25FCD682C8C60P+47 /* psi^(3 ) */,
+            0X1.4BD1ADB711840P+47 /* psi^(4 ) */, 0X1.10D970D781A00P+45 /* psi^(5 ) */, 0X1.261D70B2CDD90P+48 /* psi^(6 ) */, 0X1.6CACAAB608E80P+45 /* psi^(7 ) */,
+            0X1.EA20D4A3ABA80P+47 /* psi^(8 ) */, 0X1.0C2FBFD144BF0P+48 /* psi^(9 ) */, 0X1.928CFA3B08D80P+47 /* psi^(10) */, 0X1.8A155F6481B60P+48 /* psi^(11) */,
+            0X1.0425FD18AE8A0P+48 /* psi^(12) */, 0X1.B277118FC6F00P+46 /* psi^(13) */, 0X1.75B88D56E6800P+47 /* psi^(14) */, 0X1.20F8A8C3B39F0P+48 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.1CC104E916B80P+47 /* psi^(2 ) */, 0X1.4BD1ADB711840P+47 /* psi^(4 ) */, 0X1.261D70B2CDD90P+48 /* psi^(6 ) */,
+            0X1.EA20D4A3ABA80P+47 /* psi^(8 ) */, 0X1.928CFA3B08D80P+47 /* psi^(10) */, 0X1.0425FD18AE8A0P+48 /* psi^(12) */, 0X1.75B88D56E6800P+47 /* psi^(14) */,
+            0X1.DA2871CD619C0P+46 /* psi^(16) */, 0X1.AAFF13EBA0760P+47 /* psi^(18) */, 0X1.3CFB2ECAB2AE0P+47 /* psi^(20) */, 0X1.72F268832DD60P+48 /* psi^(22) */,
+            0X1.32C3ADD744EC0P+47 /* psi^(24) */, 0X1.CDA61FC92DF00P+44 /* psi^(26) */, 0X1.6459224A58C00P+44 /* psi^(28) */, 0X1.10C0E30AAE980P+48 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.25FCD682C8C60P+47 /* psi^(3 ) */, 0X1.261D70B2CDD90P+48 /* psi^(6 ) */, 0X1.0C2FBFD144BF0P+48 /* psi^(9 ) */,
+            0X1.0425FD18AE8A0P+48 /* psi^(12) */, 0X1.20F8A8C3B39F0P+48 /* psi^(15) */, 0X1.AAFF13EBA0760P+47 /* psi^(18) */, 0X1.2D1EA5E0DBCC0P+46 /* psi^(21) */,
+            0X1.32C3ADD744EC0P+47 /* psi^(24) */, 0X1.95571272620F0P+48 /* psi^(27) */, 0X1.10C0E30AAE980P+48 /* psi^(30) */, 0X1.2883658635BA0P+48 /* psi^(33) */,
+            0X1.5B72766D258E0P+47 /* psi^(36) */, 0X1.0B4B8EF060D40P+46 /* psi^(39) */, 0X1.5F9A5BCD57A80P+46 /* psi^(42) */, 0X1.E2AEB268F0200P+45 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.4BD1ADB711840P+47 /* psi^(4 ) */, 0X1.EA20D4A3ABA80P+47 /* psi^(8 ) */, 0X1.0425FD18AE8A0P+48 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.EA20D4A3ABA80P+47 /* psi^(8 ) */, 0X1.DA2871CD619C0P+46 /* psi^(16) */, 0X1.32C3ADD744EC0P+47 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.0425FD18AE8A0P+48 /* psi^(12) */, 0X1.32C3ADD744EC0P+47 /* psi^(24) */, 0X1.5B72766D258E0P+47 /* psi^(36) */
         },
 
         .cdltf64_negacyclic_inv =
         {
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.A68CA813631P+45 /* psi_inv^(1 ) */, 0X1.635D7ADFC602P+48 /* psi_inv^(2 ) */, 0X1.273EF30EC645P+48 /* psi_inv^(3 ) */,
-            0X1.7043344BCC46P+48 /* psi_inv^(4 ) */, 0X1.4F7F6567C458P+47 /* psi_inv^(5 ) */, 0X1.DC1927556F6CP+46 /* psi_inv^(6 ) */, 0X1.3C11D945CF8FP+48 /* psi_inv^(7 ) */,
-             0X1.35923A4F8EEP+43 /* psi_inv^(8 ) */,  0X1.E44FAC5C47CP+42 /* psi_inv^(9 ) */,  0X1.166BF99BFBCP+46 /* psi_inv^(10) */, 0X1.118B6E714F9AP+47 /* psi_inv^(11) */,
-            0X1.55BFE0E37D3BP+48 /* psi_inv^(12) */, 0X1.24EB6A0100FDP+48 /* psi_inv^(13) */, 0X1.890D93F35316P+48 /* psi_inv^(14) */, 0X1.22F38552A422P+48 /* psi_inv^(15) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.635D7ADFC602P+48 /* psi_inv^(2 ) */, 0X1.7043344BCC46P+48 /* psi_inv^(4 ) */, 0X1.DC1927556F6CP+46 /* psi_inv^(6 ) */,
-             0X1.35923A4F8EEP+43 /* psi_inv^(8 ) */,  0X1.166BF99BFBCP+46 /* psi_inv^(10) */, 0X1.55BFE0E37D3BP+48 /* psi_inv^(12) */, 0X1.890D93F35316P+48 /* psi_inv^(14) */,
-            0X1.977909D2FB4EP+47 /* psi_inv^(16) */, 0X1.84C2B4867079P+48 /* psi_inv^(18) */, 0X1.08347251B3BAP+48 /* psi_inv^(20) */, 0X1.4019690CAA17P+48 /* psi_inv^(22) */,
-             0X1.762DB82E7E9P+47 /* psi_inv^(24) */, 0X1.0608182085A8P+47 /* psi_inv^(26) */, 0X1.D48D8992DA74P+47 /* psi_inv^(28) */, 0X1.4A498291A0F4P+48 /* psi_inv^(30) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.273EF30EC645P+48 /* psi_inv^(3 ) */, 0X1.DC1927556F6CP+46 /* psi_inv^(6 ) */,  0X1.E44FAC5C47CP+42 /* psi_inv^(9 ) */,
-            0X1.55BFE0E37D3BP+48 /* psi_inv^(12) */, 0X1.22F38552A422P+48 /* psi_inv^(15) */, 0X1.84C2B4867079P+48 /* psi_inv^(18) */, 0X1.2732D81CFC6AP+48 /* psi_inv^(21) */,
-             0X1.762DB82E7E9P+47 /* psi_inv^(24) */,  0X1.738EC1DB102P+47 /* psi_inv^(27) */, 0X1.4A498291A0F4P+48 /* psi_inv^(30) */, 0X1.C2831A58BB24P+46 /* psi_inv^(33) */,
-            0X1.81BA6DDB5A75P+48 /* psi_inv^(36) */,  0X1.A906F656CC8P+43 /* psi_inv^(39) */, 0X1.286CBBE69158P+45 /* psi_inv^(42) */, 0X1.79810533F686P+47 /* psi_inv^(45) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.7043344BCC46P+48 /* psi_inv^(4 ) */,  0X1.35923A4F8EEP+43 /* psi_inv^(8 ) */, 0X1.55BFE0E37D3BP+48 /* psi_inv^(12) */,
-                          0X1P+0 /* psi_inv^(0 ) */,  0X1.35923A4F8EEP+43 /* psi_inv^(8 ) */, 0X1.977909D2FB4EP+47 /* psi_inv^(16) */,  0X1.762DB82E7E9P+47 /* psi_inv^(24) */,
-                          0X1P+0 /* psi_inv^(0 ) */, 0X1.55BFE0E37D3BP+48 /* psi_inv^(12) */,  0X1.762DB82E7E9P+47 /* psi_inv^(24) */, 0X1.81BA6DDB5A75P+48 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.A68CA81363100P+45 /* psi_inv^(1 ) */, 0X1.635D7ADFC6020P+48 /* psi_inv^(2 ) */, 0X1.273EF30EC6450P+48 /* psi_inv^(3 ) */,
+            0X1.7043344BCC460P+48 /* psi_inv^(4 ) */, 0X1.4F7F6567C4580P+47 /* psi_inv^(5 ) */, 0X1.DC1927556F6C0P+46 /* psi_inv^(6 ) */, 0X1.3C11D945CF8F0P+48 /* psi_inv^(7 ) */,
+            0X1.35923A4F8EE00P+43 /* psi_inv^(8 ) */, 0X1.E44FAC5C47C00P+42 /* psi_inv^(9 ) */, 0X1.166BF99BFBC00P+46 /* psi_inv^(10) */, 0X1.118B6E714F9A0P+47 /* psi_inv^(11) */,
+            0X1.55BFE0E37D3B0P+48 /* psi_inv^(12) */, 0X1.24EB6A0100FD0P+48 /* psi_inv^(13) */, 0X1.890D93F353160P+48 /* psi_inv^(14) */, 0X1.22F38552A4220P+48 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.635D7ADFC6020P+48 /* psi_inv^(2 ) */, 0X1.7043344BCC460P+48 /* psi_inv^(4 ) */, 0X1.DC1927556F6C0P+46 /* psi_inv^(6 ) */,
+            0X1.35923A4F8EE00P+43 /* psi_inv^(8 ) */, 0X1.166BF99BFBC00P+46 /* psi_inv^(10) */, 0X1.55BFE0E37D3B0P+48 /* psi_inv^(12) */, 0X1.890D93F353160P+48 /* psi_inv^(14) */,
+            0X1.977909D2FB4E0P+47 /* psi_inv^(16) */, 0X1.84C2B48670790P+48 /* psi_inv^(18) */, 0X1.08347251B3BA0P+48 /* psi_inv^(20) */, 0X1.4019690CAA170P+48 /* psi_inv^(22) */,
+            0X1.762DB82E7E900P+47 /* psi_inv^(24) */, 0X1.0608182085A80P+47 /* psi_inv^(26) */, 0X1.D48D8992DA740P+47 /* psi_inv^(28) */, 0X1.4A498291A0F40P+48 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.273EF30EC6450P+48 /* psi_inv^(3 ) */, 0X1.DC1927556F6C0P+46 /* psi_inv^(6 ) */, 0X1.E44FAC5C47C00P+42 /* psi_inv^(9 ) */,
+            0X1.55BFE0E37D3B0P+48 /* psi_inv^(12) */, 0X1.22F38552A4220P+48 /* psi_inv^(15) */, 0X1.84C2B48670790P+48 /* psi_inv^(18) */, 0X1.2732D81CFC6A0P+48 /* psi_inv^(21) */,
+            0X1.762DB82E7E900P+47 /* psi_inv^(24) */, 0X1.738EC1DB10200P+47 /* psi_inv^(27) */, 0X1.4A498291A0F40P+48 /* psi_inv^(30) */, 0X1.C2831A58BB240P+46 /* psi_inv^(33) */,
+            0X1.81BA6DDB5A750P+48 /* psi_inv^(36) */, 0X1.A906F656CC800P+43 /* psi_inv^(39) */, 0X1.286CBBE691580P+45 /* psi_inv^(42) */, 0X1.79810533F6860P+47 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.7043344BCC460P+48 /* psi_inv^(4 ) */, 0X1.35923A4F8EE00P+43 /* psi_inv^(8 ) */, 0X1.55BFE0E37D3B0P+48 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.35923A4F8EE00P+43 /* psi_inv^(8 ) */, 0X1.977909D2FB4E0P+47 /* psi_inv^(16) */, 0X1.762DB82E7E900P+47 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.55BFE0E37D3B0P+48 /* psi_inv^(12) */, 0X1.762DB82E7E900P+47 /* psi_inv^(24) */, 0X1.81BA6DDB5A750P+48 /* psi_inv^(36) */
         },
 
 #if defined(APAC_WIN_X64) || defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64)
 
         .prime_inv52 = 0x197FFFFFFFFFFULL,
 
-        .r0 = 0x1575F5F5F5FC5ULL,
+        .mtgmy_r2_ifma = 0x1575F5F5F5FC5ULL,
+
+#elif defined(APAC_WIN_ARM64) || defined(APAC_LINUX_ARM64) || defined(APAC_MACOS_ARM64)
+        
+        .prime_inv64 = 0x000197FFFFFFFFFFULL,
+
+        .mtgmy_r2_sve = 0x10F5FC4288CF2ULL,
+
+#endif
 
         .cdltu64_cyclic_fwd =
         {
@@ -709,14 +735,13 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x009AC91D27C77ULL /* psi_inv^(8 ) */, 0x0CBBC84E97DA7ULL /* psi_inv^(16) */, 0x0BB16DC173F48ULL /* psi_inv^(24) */,
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x155BFE0E37D3BULL /* psi_inv^(12) */, 0x0BB16DC173F48ULL /* psi_inv^(24) */, 0x181BA6DDB5A75ULL /* psi_inv^(36) */
         }
-#endif
     },
 
     {
-	    /* --------------------------------------------------------------- */
-	    /* p = 659706976665601    (0x2580000000001) */
-	    /* --------------------------------------------------------------- */
-        
+        /* --------------------------------------------------------------- */
+        /* p = 659706976665601      (0x2580000000001)                      */
+        /* --------------------------------------------------------------- */
+
         .p = 659706976665601ULL,
 
         .magic = 0xDA740DA740DA16D9ULL,
@@ -768,90 +793,97 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x257FFFFFFFDA9ULL /* (2^40) */, 0x257FFFFFFFED5ULL /* (2^41) */, 0x257FFFFFFFF6BULL /* (2^42) */
         },
 
-        .prime_inv = 0X1.B4E81B4E81B43P-50,
+        .prime_inv =    0X1.B4E81B4E81B43P-50,
 
         .cdltf64_cyclic_fwd =
         {
-                           0X1P+0 /* psi^(0 ) */,  0X1.07EA07FB743BP+49 /* psi^(1 ) */,  0X1.D47AE4270ADEP+48 /* psi^(2 ) */,  0X1.EC471E772396P+48 /* psi^(3 ) */,
-             0X1.1C76CE9D49B4P+46 /* psi^(4 ) */,  0X1.04E91D21A7D7P+49 /* psi^(5 ) */,   0X1.7D17F386D92P+48 /* psi^(6 ) */,  0X1.B749201BEA86P+48 /* psi^(7 ) */,
-             0X1.69CA6C3E4E76P+47 /* psi^(8 ) */,  0X1.6AA879A7FCE1P+48 /* psi^(9 ) */,  0X1.32E2E06AFDEAP+47 /* psi^(10) */,  0X1.ECBA204663BBP+48 /* psi^(11) */,
-             0X1.11D9FAFF2174P+47 /* psi^(12) */,  0X1.D937A3ED39FCP+47 /* psi^(13) */,  0X1.F07A240409F8P+48 /* psi^(14) */,  0X1.5C0ABACA248AP+47 /* psi^(15) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.D47AE4270ADEP+48 /* psi^(2 ) */,  0X1.1C76CE9D49B4P+46 /* psi^(4 ) */,   0X1.7D17F386D92P+48 /* psi^(6 ) */,
-             0X1.69CA6C3E4E76P+47 /* psi^(8 ) */,  0X1.32E2E06AFDEAP+47 /* psi^(10) */,  0X1.11D9FAFF2174P+47 /* psi^(12) */,  0X1.F07A240409F8P+48 /* psi^(14) */,
-             0X1.28ADC5EEB087P+49 /* psi^(16) */,   0X1.1B281CF382AP+45 /* psi^(18) */, 0X1.28A834B4DAFD8P+49 /* psi^(20) */,   0X1.E6C6A8BCC7DP+47 /* psi^(22) */,
-             0X1.16A241A727E4P+47 /* psi^(24) */,  0X1.702E776F22EFP+48 /* psi^(26) */,  0X1.C86D3331E228P+48 /* psi^(28) */,  0X1.DD9ABA49E5BCP+46 /* psi^(30) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.EC471E772396P+48 /* psi^(3 ) */,   0X1.7D17F386D92P+48 /* psi^(6 ) */,  0X1.6AA879A7FCE1P+48 /* psi^(9 ) */,
-             0X1.11D9FAFF2174P+47 /* psi^(12) */,  0X1.5C0ABACA248AP+47 /* psi^(15) */,   0X1.1B281CF382AP+45 /* psi^(18) */,  0X1.5B02748A0178P+46 /* psi^(21) */,
-             0X1.16A241A727E4P+47 /* psi^(24) */,  0X1.0A432FC34024P+49 /* psi^(27) */,  0X1.DD9ABA49E5BCP+46 /* psi^(30) */,  0X1.20AFC0245E2CP+46 /* psi^(33) */,
-             0X1.0871262C56CAP+49 /* psi^(36) */,  0X1.416DBFC82AF6P+47 /* psi^(39) */,  0X1.BE8E8FCA810CP+48 /* psi^(42) */,  0X1.6B642E096303P+48 /* psi^(45) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.1C76CE9D49B4P+46 /* psi^(4 ) */,  0X1.69CA6C3E4E76P+47 /* psi^(8 ) */,  0X1.11D9FAFF2174P+47 /* psi^(12) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.69CA6C3E4E76P+47 /* psi^(8 ) */,  0X1.28ADC5EEB087P+49 /* psi^(16) */,  0X1.16A241A727E4P+47 /* psi^(24) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.11D9FAFF2174P+47 /* psi^(12) */,  0X1.16A241A727E4P+47 /* psi^(24) */,  0X1.0871262C56CAP+49 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.07EA07FB743B0P+49 /* psi^(1 ) */, 0X1.D47AE4270ADE0P+48 /* psi^(2 ) */, 0X1.EC471E7723960P+48 /* psi^(3 ) */,
+            0X1.1C76CE9D49B40P+46 /* psi^(4 ) */, 0X1.04E91D21A7D70P+49 /* psi^(5 ) */, 0X1.7D17F386D9200P+48 /* psi^(6 ) */, 0X1.B749201BEA860P+48 /* psi^(7 ) */,
+            0X1.69CA6C3E4E760P+47 /* psi^(8 ) */, 0X1.6AA879A7FCE10P+48 /* psi^(9 ) */, 0X1.32E2E06AFDEA0P+47 /* psi^(10) */, 0X1.ECBA204663BB0P+48 /* psi^(11) */,
+            0X1.11D9FAFF21740P+47 /* psi^(12) */, 0X1.D937A3ED39FC0P+47 /* psi^(13) */, 0X1.F07A240409F80P+48 /* psi^(14) */, 0X1.5C0ABACA248A0P+47 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.D47AE4270ADE0P+48 /* psi^(2 ) */, 0X1.1C76CE9D49B40P+46 /* psi^(4 ) */, 0X1.7D17F386D9200P+48 /* psi^(6 ) */,
+            0X1.69CA6C3E4E760P+47 /* psi^(8 ) */, 0X1.32E2E06AFDEA0P+47 /* psi^(10) */, 0X1.11D9FAFF21740P+47 /* psi^(12) */, 0X1.F07A240409F80P+48 /* psi^(14) */,
+            0X1.28ADC5EEB0870P+49 /* psi^(16) */, 0X1.1B281CF382A00P+45 /* psi^(18) */, 0X1.28A834B4DAFD8P+49 /* psi^(20) */, 0X1.E6C6A8BCC7D00P+47 /* psi^(22) */,
+            0X1.16A241A727E40P+47 /* psi^(24) */, 0X1.702E776F22EF0P+48 /* psi^(26) */, 0X1.C86D3331E2280P+48 /* psi^(28) */, 0X1.DD9ABA49E5BC0P+46 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.EC471E7723960P+48 /* psi^(3 ) */, 0X1.7D17F386D9200P+48 /* psi^(6 ) */, 0X1.6AA879A7FCE10P+48 /* psi^(9 ) */,
+            0X1.11D9FAFF21740P+47 /* psi^(12) */, 0X1.5C0ABACA248A0P+47 /* psi^(15) */, 0X1.1B281CF382A00P+45 /* psi^(18) */, 0X1.5B02748A01780P+46 /* psi^(21) */,
+            0X1.16A241A727E40P+47 /* psi^(24) */, 0X1.0A432FC340240P+49 /* psi^(27) */, 0X1.DD9ABA49E5BC0P+46 /* psi^(30) */, 0X1.20AFC0245E2C0P+46 /* psi^(33) */,
+            0X1.0871262C56CA0P+49 /* psi^(36) */, 0X1.416DBFC82AF60P+47 /* psi^(39) */, 0X1.BE8E8FCA810C0P+48 /* psi^(42) */, 0X1.6B642E0963030P+48 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.1C76CE9D49B40P+46 /* psi^(4 ) */, 0X1.69CA6C3E4E760P+47 /* psi^(8 ) */, 0X1.11D9FAFF21740P+47 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.69CA6C3E4E760P+47 /* psi^(8 ) */, 0X1.28ADC5EEB0870P+49 /* psi^(16) */, 0X1.16A241A727E40P+47 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.11D9FAFF21740P+47 /* psi^(12) */, 0X1.16A241A727E40P+47 /* psi^(24) */, 0X1.0871262C56CA0P+49 /* psi^(36) */
         },
 
         .cdltf64_cyclic_inv =
         {
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.EAB6887EB956P+48 /* psi_inv^(1 ) */,  0X1.E099516D8692P+48 /* psi_inv^(2 ) */,  0X1.A17BE1C359FFP+48 /* psi_inv^(3 ) */,
-             0X1.1F25999C3BB2P+47 /* psi_inv^(4 ) */,  0X1.0DE681E5FEE4P+46 /* psi_inv^(5 ) */,  0X1.CFA31121BA24P+47 /* psi_inv^(6 ) */,  0X1.903721A3AFE8P+45 /* psi_inv^(7 ) */,
-             0X1.CCAEDF2C6C0FP+48 /* psi_inv^(8 ) */,   0X1.32F997D9DD4P+44 /* psi_inv^(9 ) */,  0X1.649CABA19C19P+48 /* psi_inv^(10) */, 0X1.009FB16EBFD18P+49 /* psi_inv^(11) */,
-              0X1.ABE5A592818P+42 /* psi_inv^(12) */,  0X1.56E6FC2F7F33P+48 /* psi_inv^(13) */, 0X1.1A4D7E30C7D68P+49 /* psi_inv^(14) */,  0X1.8205F8D679FCP+48 /* psi_inv^(15) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.E099516D8692P+48 /* psi_inv^(2 ) */,  0X1.1F25999C3BB2P+47 /* psi_inv^(4 ) */,  0X1.CFA31121BA24P+47 /* psi_inv^(6 ) */,
-             0X1.CCAEDF2C6C0FP+48 /* psi_inv^(8 ) */,  0X1.649CABA19C19P+48 /* psi_inv^(10) */,   0X1.ABE5A592818P+42 /* psi_inv^(12) */, 0X1.1A4D7E30C7D68P+49 /* psi_inv^(14) */,
-              0X1.A91D08A7BCCP+42 /* psi_inv^(16) */,  0X1.9E176FEFD824P+46 /* psi_inv^(18) */,  0X1.CF1302806F47P+48 /* psi_inv^(20) */,  0X1.BE8E8FCA810CP+48 /* psi_inv^(22) */,
-             0X1.A31AC9E0D8C6P+48 /* psi_inv^(24) */,  0X1.B5D018F24DC2P+47 /* psi_inv^(26) */,  0X1.0871262C56CAP+49 /* psi_inv^(28) */,  0X1.070A37B1EA46P+47 /* psi_inv^(30) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.A17BE1C359FFP+48 /* psi_inv^(3 ) */,  0X1.CFA31121BA24P+47 /* psi_inv^(6 ) */,   0X1.32F997D9DD4P+44 /* psi_inv^(9 ) */,
-              0X1.ABE5A592818P+42 /* psi_inv^(12) */,  0X1.8205F8D679FCP+48 /* psi_inv^(15) */,  0X1.9E176FEFD824P+46 /* psi_inv^(18) */,  0X1.AD177EE67118P+46 /* psi_inv^(21) */,
-             0X1.A31AC9E0D8C6P+48 /* psi_inv^(24) */,  0X1.38B716F2C14CP+46 /* psi_inv^(27) */,  0X1.070A37B1EA46P+47 /* psi_inv^(30) */,  0X1.B525DE051AACP+46 /* psi_inv^(33) */,
-             0X1.C86D3331E228P+48 /* psi_inv^(36) */,  0X1.12FC8DE5C502P+49 /* psi_inv^(39) */,   0X1.E6C6A8BCC7DP+47 /* psi_inv^(42) */,  0X1.011903D080CEP+48 /* psi_inv^(45) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.1F25999C3BB2P+47 /* psi_inv^(4 ) */,  0X1.CCAEDF2C6C0FP+48 /* psi_inv^(8 ) */,   0X1.ABE5A592818P+42 /* psi_inv^(12) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.CCAEDF2C6C0FP+48 /* psi_inv^(8 ) */,   0X1.A91D08A7BCCP+42 /* psi_inv^(16) */,  0X1.A31AC9E0D8C6P+48 /* psi_inv^(24) */,
-                           0X1P+0 /* psi_inv^(0 ) */,   0X1.ABE5A592818P+42 /* psi_inv^(12) */,  0X1.A31AC9E0D8C6P+48 /* psi_inv^(24) */,  0X1.C86D3331E228P+48 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.EAB6887EB9560P+48 /* psi_inv^(1 ) */, 0X1.E099516D86920P+48 /* psi_inv^(2 ) */, 0X1.A17BE1C359FF0P+48 /* psi_inv^(3 ) */,
+            0X1.1F25999C3BB20P+47 /* psi_inv^(4 ) */, 0X1.0DE681E5FEE40P+46 /* psi_inv^(5 ) */, 0X1.CFA31121BA240P+47 /* psi_inv^(6 ) */, 0X1.903721A3AFE80P+45 /* psi_inv^(7 ) */,
+            0X1.CCAEDF2C6C0F0P+48 /* psi_inv^(8 ) */, 0X1.32F997D9DD400P+44 /* psi_inv^(9 ) */, 0X1.649CABA19C190P+48 /* psi_inv^(10) */, 0X1.009FB16EBFD18P+49 /* psi_inv^(11) */,
+            0X1.ABE5A59281800P+42 /* psi_inv^(12) */, 0X1.56E6FC2F7F330P+48 /* psi_inv^(13) */, 0X1.1A4D7E30C7D68P+49 /* psi_inv^(14) */, 0X1.8205F8D679FC0P+48 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.E099516D86920P+48 /* psi_inv^(2 ) */, 0X1.1F25999C3BB20P+47 /* psi_inv^(4 ) */, 0X1.CFA31121BA240P+47 /* psi_inv^(6 ) */,
+            0X1.CCAEDF2C6C0F0P+48 /* psi_inv^(8 ) */, 0X1.649CABA19C190P+48 /* psi_inv^(10) */, 0X1.ABE5A59281800P+42 /* psi_inv^(12) */, 0X1.1A4D7E30C7D68P+49 /* psi_inv^(14) */,
+            0X1.A91D08A7BCC00P+42 /* psi_inv^(16) */, 0X1.9E176FEFD8240P+46 /* psi_inv^(18) */, 0X1.CF1302806F470P+48 /* psi_inv^(20) */, 0X1.BE8E8FCA810C0P+48 /* psi_inv^(22) */,
+            0X1.A31AC9E0D8C60P+48 /* psi_inv^(24) */, 0X1.B5D018F24DC20P+47 /* psi_inv^(26) */, 0X1.0871262C56CA0P+49 /* psi_inv^(28) */, 0X1.070A37B1EA460P+47 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.A17BE1C359FF0P+48 /* psi_inv^(3 ) */, 0X1.CFA31121BA240P+47 /* psi_inv^(6 ) */, 0X1.32F997D9DD400P+44 /* psi_inv^(9 ) */,
+            0X1.ABE5A59281800P+42 /* psi_inv^(12) */, 0X1.8205F8D679FC0P+48 /* psi_inv^(15) */, 0X1.9E176FEFD8240P+46 /* psi_inv^(18) */, 0X1.AD177EE671180P+46 /* psi_inv^(21) */,
+            0X1.A31AC9E0D8C60P+48 /* psi_inv^(24) */, 0X1.38B716F2C14C0P+46 /* psi_inv^(27) */, 0X1.070A37B1EA460P+47 /* psi_inv^(30) */, 0X1.B525DE051AAC0P+46 /* psi_inv^(33) */,
+            0X1.C86D3331E2280P+48 /* psi_inv^(36) */, 0X1.12FC8DE5C5020P+49 /* psi_inv^(39) */, 0X1.E6C6A8BCC7D00P+47 /* psi_inv^(42) */, 0X1.011903D080CE0P+48 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.1F25999C3BB20P+47 /* psi_inv^(4 ) */, 0X1.CCAEDF2C6C0F0P+48 /* psi_inv^(8 ) */, 0X1.ABE5A59281800P+42 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.CCAEDF2C6C0F0P+48 /* psi_inv^(8 ) */, 0X1.A91D08A7BCC00P+42 /* psi_inv^(16) */, 0X1.A31AC9E0D8C60P+48 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.ABE5A59281800P+42 /* psi_inv^(12) */, 0X1.A31AC9E0D8C60P+48 /* psi_inv^(24) */, 0X1.C86D3331E2280P+48 /* psi_inv^(36) */
         },
 
         .cdltf64_negacyclic_fwd =
         {
-                           0X1P+0 /* psi^(0 ) */,  0X1.E3C59F3C279BP+48 /* psi^(1 ) */,  0X1.07EA07FB743BP+49 /* psi^(2 ) */, 0X1.0FA6AA7D4BE68P+49 /* psi^(3 ) */,
-             0X1.D47AE4270ADEP+48 /* psi^(4 ) */, 0X1.1695EC4FBFE58P+49 /* psi^(5 ) */,  0X1.EC471E772396P+48 /* psi^(6 ) */,  0X1.373D591C5713P+48 /* psi^(7 ) */,
-             0X1.1C76CE9D49B4P+46 /* psi^(8 ) */,  0X1.C04D44FA897AP+48 /* psi^(9 ) */,  0X1.04E91D21A7D7P+49 /* psi^(10) */,  0X1.AD967D984335P+48 /* psi^(11) */,
-              0X1.7D17F386D92P+48 /* psi^(12) */,  0X1.24D4F248A692P+47 /* psi^(13) */,  0X1.B749201BEA86P+48 /* psi^(14) */,  0X1.A34C369F96CAP+48 /* psi^(15) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.07EA07FB743BP+49 /* psi^(2 ) */,  0X1.D47AE4270ADEP+48 /* psi^(4 ) */,  0X1.EC471E772396P+48 /* psi^(6 ) */,
-             0X1.1C76CE9D49B4P+46 /* psi^(8 ) */,  0X1.04E91D21A7D7P+49 /* psi^(10) */,   0X1.7D17F386D92P+48 /* psi^(12) */,  0X1.B749201BEA86P+48 /* psi^(14) */,
-             0X1.69CA6C3E4E76P+47 /* psi^(16) */,  0X1.6AA879A7FCE1P+48 /* psi^(18) */,  0X1.32E2E06AFDEAP+47 /* psi^(20) */,  0X1.ECBA204663BBP+48 /* psi^(22) */,
-             0X1.11D9FAFF2174P+47 /* psi^(24) */,  0X1.D937A3ED39FCP+47 /* psi^(26) */,  0X1.F07A240409F8P+48 /* psi^(28) */,  0X1.5C0ABACA248AP+47 /* psi^(30) */,
-                           0X1P+0 /* psi^(0 ) */, 0X1.0FA6AA7D4BE68P+49 /* psi^(3 ) */,  0X1.EC471E772396P+48 /* psi^(6 ) */,  0X1.C04D44FA897AP+48 /* psi^(9 ) */,
-              0X1.7D17F386D92P+48 /* psi^(12) */,  0X1.A34C369F96CAP+48 /* psi^(15) */,  0X1.6AA879A7FCE1P+48 /* psi^(18) */, 0X1.0DFDF51BBF588P+49 /* psi^(21) */,
-             0X1.11D9FAFF2174P+47 /* psi^(24) */,   0X1.6A6010B8F5CP+43 /* psi^(27) */,  0X1.5C0ABACA248AP+47 /* psi^(30) */,  0X1.FE8490DFF36AP+47 /* psi^(33) */,
-              0X1.1B281CF382AP+45 /* psi^(36) */,  0X1.2FD2D49058FBP+48 /* psi^(39) */,  0X1.5B02748A0178P+46 /* psi^(42) */,  0X1.F275681A2F4DP+48 /* psi^(45) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.D47AE4270ADEP+48 /* psi^(4 ) */,  0X1.1C76CE9D49B4P+46 /* psi^(8 ) */,   0X1.7D17F386D92P+48 /* psi^(12) */,
-                           0X1P+0 /* psi^(0 ) */,  0X1.1C76CE9D49B4P+46 /* psi^(8 ) */,  0X1.69CA6C3E4E76P+47 /* psi^(16) */,  0X1.11D9FAFF2174P+47 /* psi^(24) */,
-                           0X1P+0 /* psi^(0 ) */,   0X1.7D17F386D92P+48 /* psi^(12) */,  0X1.11D9FAFF2174P+47 /* psi^(24) */,   0X1.1B281CF382AP+45 /* psi^(36) */
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.E3C59F3C279B0P+48 /* psi^(1 ) */, 0X1.07EA07FB743B0P+49 /* psi^(2 ) */, 0X1.0FA6AA7D4BE68P+49 /* psi^(3 ) */,
+            0X1.D47AE4270ADE0P+48 /* psi^(4 ) */, 0X1.1695EC4FBFE58P+49 /* psi^(5 ) */, 0X1.EC471E7723960P+48 /* psi^(6 ) */, 0X1.373D591C57130P+48 /* psi^(7 ) */,
+            0X1.1C76CE9D49B40P+46 /* psi^(8 ) */, 0X1.C04D44FA897A0P+48 /* psi^(9 ) */, 0X1.04E91D21A7D70P+49 /* psi^(10) */, 0X1.AD967D9843350P+48 /* psi^(11) */,
+            0X1.7D17F386D9200P+48 /* psi^(12) */, 0X1.24D4F248A6920P+47 /* psi^(13) */, 0X1.B749201BEA860P+48 /* psi^(14) */, 0X1.A34C369F96CA0P+48 /* psi^(15) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.07EA07FB743B0P+49 /* psi^(2 ) */, 0X1.D47AE4270ADE0P+48 /* psi^(4 ) */, 0X1.EC471E7723960P+48 /* psi^(6 ) */,
+            0X1.1C76CE9D49B40P+46 /* psi^(8 ) */, 0X1.04E91D21A7D70P+49 /* psi^(10) */, 0X1.7D17F386D9200P+48 /* psi^(12) */, 0X1.B749201BEA860P+48 /* psi^(14) */,
+            0X1.69CA6C3E4E760P+47 /* psi^(16) */, 0X1.6AA879A7FCE10P+48 /* psi^(18) */, 0X1.32E2E06AFDEA0P+47 /* psi^(20) */, 0X1.ECBA204663BB0P+48 /* psi^(22) */,
+            0X1.11D9FAFF21740P+47 /* psi^(24) */, 0X1.D937A3ED39FC0P+47 /* psi^(26) */, 0X1.F07A240409F80P+48 /* psi^(28) */, 0X1.5C0ABACA248A0P+47 /* psi^(30) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.0FA6AA7D4BE68P+49 /* psi^(3 ) */, 0X1.EC471E7723960P+48 /* psi^(6 ) */, 0X1.C04D44FA897A0P+48 /* psi^(9 ) */,
+            0X1.7D17F386D9200P+48 /* psi^(12) */, 0X1.A34C369F96CA0P+48 /* psi^(15) */, 0X1.6AA879A7FCE10P+48 /* psi^(18) */, 0X1.0DFDF51BBF588P+49 /* psi^(21) */,
+            0X1.11D9FAFF21740P+47 /* psi^(24) */, 0X1.6A6010B8F5C00P+43 /* psi^(27) */, 0X1.5C0ABACA248A0P+47 /* psi^(30) */, 0X1.FE8490DFF36A0P+47 /* psi^(33) */,
+            0X1.1B281CF382A00P+45 /* psi^(36) */, 0X1.2FD2D49058FB0P+48 /* psi^(39) */, 0X1.5B02748A01780P+46 /* psi^(42) */, 0X1.F275681A2F4D0P+48 /* psi^(45) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.D47AE4270ADE0P+48 /* psi^(4 ) */, 0X1.1C76CE9D49B40P+46 /* psi^(8 ) */, 0X1.7D17F386D9200P+48 /* psi^(12) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.1C76CE9D49B40P+46 /* psi^(8 ) */, 0X1.69CA6C3E4E760P+47 /* psi^(16) */, 0X1.11D9FAFF21740P+47 /* psi^(24) */,
+            0X1.0000000000000P+00 /* psi^(0 ) */, 0X1.7D17F386D9200P+48 /* psi^(12) */, 0X1.11D9FAFF21740P+47 /* psi^(24) */, 0X1.1B281CF382A00P+45 /* psi^(36) */
         },
 
         .cdltf64_negacyclic_inv =
         {
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.4E9824BC27D8P+46 /* psi_inv^(1 ) */,  0X1.EAB6887EB956P+48 /* psi_inv^(2 ) */,  0X1.BAAC2EB7727AP+47 /* psi_inv^(3 ) */,
-             0X1.E099516D8692P+48 /* psi_inv^(4 ) */,  0X1.31B3554DFD3DP+48 /* psi_inv^(5 ) */,  0X1.A17BE1C359FFP+48 /* psi_inv^(6 ) */,  0X1.5F28461617AFP+48 /* psi_inv^(7 ) */,
-             0X1.1F25999C3BB2P+47 /* psi_inv^(8 ) */,  0X1.82DA03F1AD5DP+48 /* psi_inv^(9 ) */,  0X1.0DE681E5FEE4P+46 /* psi_inv^(10) */,  0X1.066F1EB76468P+49 /* psi_inv^(11) */,
-             0X1.CFA31121BA24P+47 /* psi_inv^(12) */,  0X1.A5BDDB49BFB2P+47 /* psi_inv^(13) */,  0X1.903721A3AFE8P+45 /* psi_inv^(14) */,   0X1.0409D24E32AP+45 /* psi_inv^(15) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.EAB6887EB956P+48 /* psi_inv^(2 ) */,  0X1.E099516D8692P+48 /* psi_inv^(4 ) */,  0X1.A17BE1C359FFP+48 /* psi_inv^(6 ) */,
-             0X1.1F25999C3BB2P+47 /* psi_inv^(8 ) */,  0X1.0DE681E5FEE4P+46 /* psi_inv^(10) */,  0X1.CFA31121BA24P+47 /* psi_inv^(12) */,  0X1.903721A3AFE8P+45 /* psi_inv^(14) */,
-             0X1.CCAEDF2C6C0FP+48 /* psi_inv^(16) */,   0X1.32F997D9DD4P+44 /* psi_inv^(18) */,  0X1.649CABA19C19P+48 /* psi_inv^(20) */, 0X1.009FB16EBFD18P+49 /* psi_inv^(22) */,
-              0X1.ABE5A592818P+42 /* psi_inv^(24) */,  0X1.56E6FC2F7F33P+48 /* psi_inv^(26) */, 0X1.1A4D7E30C7D68P+49 /* psi_inv^(28) */,  0X1.8205F8D679FCP+48 /* psi_inv^(30) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.BAAC2EB7727AP+47 /* psi_inv^(3 ) */,  0X1.A17BE1C359FFP+48 /* psi_inv^(6 ) */,  0X1.82DA03F1AD5DP+48 /* psi_inv^(9 ) */,
-             0X1.CFA31121BA24P+47 /* psi_inv^(12) */,   0X1.0409D24E32AP+45 /* psi_inv^(15) */,   0X1.32F997D9DD4P+44 /* psi_inv^(18) */,  0X1.D9E524110B58P+45 /* psi_inv^(21) */,
-              0X1.ABE5A592818P+42 /* psi_inv^(24) */,  0X1.9523C9F5A7FCP+46 /* psi_inv^(27) */,  0X1.8205F8D679FCP+48 /* psi_inv^(30) */,   0X1.DB3792D6398P+44 /* psi_inv^(33) */,
-             0X1.9E176FEFD824P+46 /* psi_inv^(36) */,  0X1.5A5F64C05E76P+48 /* psi_inv^(39) */,  0X1.AD177EE67118P+46 /* psi_inv^(42) */,  0X1.9049C40837E1P+48 /* psi_inv^(45) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.E099516D8692P+48 /* psi_inv^(4 ) */,  0X1.1F25999C3BB2P+47 /* psi_inv^(8 ) */,  0X1.CFA31121BA24P+47 /* psi_inv^(12) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.1F25999C3BB2P+47 /* psi_inv^(8 ) */,  0X1.CCAEDF2C6C0FP+48 /* psi_inv^(16) */,   0X1.ABE5A592818P+42 /* psi_inv^(24) */,
-                           0X1P+0 /* psi_inv^(0 ) */,  0X1.CFA31121BA24P+47 /* psi_inv^(12) */,   0X1.ABE5A592818P+42 /* psi_inv^(24) */,  0X1.9E176FEFD824P+46 /* psi_inv^(36) */
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.4E9824BC27D80P+46 /* psi_inv^(1 ) */, 0X1.EAB6887EB9560P+48 /* psi_inv^(2 ) */, 0X1.BAAC2EB7727A0P+47 /* psi_inv^(3 ) */,
+            0X1.E099516D86920P+48 /* psi_inv^(4 ) */, 0X1.31B3554DFD3D0P+48 /* psi_inv^(5 ) */, 0X1.A17BE1C359FF0P+48 /* psi_inv^(6 ) */, 0X1.5F28461617AF0P+48 /* psi_inv^(7 ) */,
+            0X1.1F25999C3BB20P+47 /* psi_inv^(8 ) */, 0X1.82DA03F1AD5D0P+48 /* psi_inv^(9 ) */, 0X1.0DE681E5FEE40P+46 /* psi_inv^(10) */, 0X1.066F1EB764680P+49 /* psi_inv^(11) */,
+            0X1.CFA31121BA240P+47 /* psi_inv^(12) */, 0X1.A5BDDB49BFB20P+47 /* psi_inv^(13) */, 0X1.903721A3AFE80P+45 /* psi_inv^(14) */, 0X1.0409D24E32A00P+45 /* psi_inv^(15) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.EAB6887EB9560P+48 /* psi_inv^(2 ) */, 0X1.E099516D86920P+48 /* psi_inv^(4 ) */, 0X1.A17BE1C359FF0P+48 /* psi_inv^(6 ) */,
+            0X1.1F25999C3BB20P+47 /* psi_inv^(8 ) */, 0X1.0DE681E5FEE40P+46 /* psi_inv^(10) */, 0X1.CFA31121BA240P+47 /* psi_inv^(12) */, 0X1.903721A3AFE80P+45 /* psi_inv^(14) */,
+            0X1.CCAEDF2C6C0F0P+48 /* psi_inv^(16) */, 0X1.32F997D9DD400P+44 /* psi_inv^(18) */, 0X1.649CABA19C190P+48 /* psi_inv^(20) */, 0X1.009FB16EBFD18P+49 /* psi_inv^(22) */,
+            0X1.ABE5A59281800P+42 /* psi_inv^(24) */, 0X1.56E6FC2F7F330P+48 /* psi_inv^(26) */, 0X1.1A4D7E30C7D68P+49 /* psi_inv^(28) */, 0X1.8205F8D679FC0P+48 /* psi_inv^(30) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.BAAC2EB7727A0P+47 /* psi_inv^(3 ) */, 0X1.A17BE1C359FF0P+48 /* psi_inv^(6 ) */, 0X1.82DA03F1AD5D0P+48 /* psi_inv^(9 ) */,
+            0X1.CFA31121BA240P+47 /* psi_inv^(12) */, 0X1.0409D24E32A00P+45 /* psi_inv^(15) */, 0X1.32F997D9DD400P+44 /* psi_inv^(18) */, 0X1.D9E524110B580P+45 /* psi_inv^(21) */,
+            0X1.ABE5A59281800P+42 /* psi_inv^(24) */, 0X1.9523C9F5A7FC0P+46 /* psi_inv^(27) */, 0X1.8205F8D679FC0P+48 /* psi_inv^(30) */, 0X1.DB3792D639800P+44 /* psi_inv^(33) */,
+            0X1.9E176FEFD8240P+46 /* psi_inv^(36) */, 0X1.5A5F64C05E760P+48 /* psi_inv^(39) */, 0X1.AD177EE671180P+46 /* psi_inv^(42) */, 0X1.9049C40837E10P+48 /* psi_inv^(45) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.E099516D86920P+48 /* psi_inv^(4 ) */, 0X1.1F25999C3BB20P+47 /* psi_inv^(8 ) */, 0X1.CFA31121BA240P+47 /* psi_inv^(12) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.1F25999C3BB20P+47 /* psi_inv^(8 ) */, 0X1.CCAEDF2C6C0F0P+48 /* psi_inv^(16) */, 0X1.ABE5A59281800P+42 /* psi_inv^(24) */,
+            0X1.0000000000000P+00 /* psi_inv^(0 ) */, 0X1.CFA31121BA240P+47 /* psi_inv^(12) */, 0X1.ABE5A59281800P+42 /* psi_inv^(24) */, 0X1.9E176FEFD8240P+46 /* psi_inv^(36) */
         },
 
-
 #if defined(APAC_WIN_X64) || defined(APAC_LINUX_X64) || defined(APAC_MACOS_X64)
-
+        
         .prime_inv52 = 0x257FFFFFFFFFFULL,
 
-        .r0 = 0x0FDF92C5F92F5ULL,
+        .mtgmy_r2_ifma = 0x0FDF92C5F92F5ULL,
+
+#elif defined(APAC_WIN_ARM64) || defined(APAC_LINUX_ARM64) || defined(APAC_MACOS_ARM64)
+
+        .prime_inv64 = 0x000257FFFFFFFFFFULL,
+
+        .mtgmy_r2_sve = 0x04792F493A357ULL,
+
+#endif
 
         .cdltu64_cyclic_fwd =
         {
@@ -928,9 +960,7 @@ static const ntt_prime_t NTT_PRIMES[4] =
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x08F92CCCE1DD9ULL /* psi_inv^(8 ) */, 0x1CCAEDF2C6C0FULL /* psi_inv^(16) */, 0x006AF96964A06ULL /* psi_inv^(24) */,
             0x0000000000001ULL /* psi_inv^(0 ) */, 0x0E7D18890DD12ULL /* psi_inv^(12) */, 0x006AF96964A06ULL /* psi_inv^(24) */, 0x06785DBFBF609ULL /* psi_inv^(36) */
         }
-#endif
     }
-
 };
 
 /* Garner CRT: mixed-radix inverses of running prime products */
