@@ -60,6 +60,15 @@ typedef struct ntt_prime_t
 
 } ntt_prime_t;
 
+/*
+    Primes used:
+
+    P0 = 11 * (2 ^ 43) + 1
+    P1 = 29 * (2 ^ 43) + 1
+    P2 = 51 * (2 ^ 43) + 1
+    P3 = 75 * (2 ^ 43) + 1
+*/
+
 static const ntt_prime_t NTT_PRIMES[4] =
 {
     {
