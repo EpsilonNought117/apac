@@ -326,7 +326,7 @@ APAC_UNROLL(4)
 __attribute__((target("avx,fma")))
 #endif
 static void
-inv_ntt_dit_r4_unroll64(
+inv_ntt_dit_cdlt64(
     double* op1,
     __m256d vp,
     __m256d vp_inv,
@@ -337,37 +337,38 @@ inv_ntt_dit_r4_unroll64(
 APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
-    /*
-        Growth analysis (v(x) = |x| / p)
+        /*
+            Growth analysis (v(x) = |x| / p),
+            p = 75 * 2^43 + 1 = 659706976665601 (p50 prime)
 
-        mul_mod growth coefficient: v(d) <= 1/2 + 0.15 * v(a) * v(b)
-        (0.15 safely rounds up the exact coefficient 2C = 0.14648437500000028
-        for p = 75*2^43 + 1)
+            mul_mod growth coefficient: v(d) <= 0.5 + 0.15 * v(a) * v(b)
 
-        Inputs:                         v(r0), v(r1), v(r2), v(r3) < 1
+            Twiddle factor: v(zeta_inv) < 1
 
-        Transpose/shuffle stage:        v(c0), v(c1), v(c2), v(c3) < 1
-                                        (pure permutation, bounds unchanged)
+            Inputs: v(r0), v(r1), v(r2), v(r3) < 1
 
-        d0 = c0 + c2                    => v(d0) < 2
-        d1 = c0 - c2                    => v(d1) < 2
-        d2 = c1 + c3                    => v(d2) < 2
-        d3 = c1 - c3                    => v(d3) < 2
+            Transpose/shuffle stage: v(c0), v(c1), v(c2), v(c3) < 1
+                                     (pure permutation, bounds unchanged)
 
-        d3 = mul_mod(d3, zeta_inv)      => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8
+            d0 = c0 + c2                    => v(d0) < 2
+            d1 = c0 - c2                    => v(d1) < 2
+            d2 = c1 + c3                    => v(d2) < 2
+            d3 = c1 - c3                    => v(d3) < 2
 
-        d0 = normalize(d0)              => v(d0) < 0.5+
+            d3 = mul_mod(d3, zeta_inv)      => v(d3) <= 0.5 + 0.15 * 2 * 1 = 0.8
 
-        a0 = d0 + d2                    => v(a0) < 0.5 + 2   = 2.5+
-        a1 = d1 + d3                    => v(a1) < 2 + 0.8   = 2.8
-        a2 = d0 - d2                    => v(a2) < 0.5 + 2   = 2.5+
-        a3 = d1 - d3                    => v(a3) < 2 + 0.8   = 2.8
+            d0 = normalize(d0)              => v(d0) < 0.51
 
-        NO NORMALIZATION DONE
+            a0 = d0 + d2                    => v(a0) < 0.51 + 2   = 2.51
+            a1 = d1 + d3                    => v(a1) < 2    + 0.8 = 2.8
+            a2 = d0 - d2                    => v(a2) < 0.51 + 2   = 2.51
+            a3 = d1 - d3                    => v(a3) < 2    + 0.8 = 2.8
 
-        Stored outputs:                 v(output) < 2.8 (worst case)
+            NO FURTHER NORMALIZATION DONE
 
-    */
+            Stored outputs:
+                v(output) < 2.8
+        */
 
         __m256d r0 = _mm256_loadu_pd(&op1[j]);
         __m256d r1 = _mm256_loadu_pd(&op1[j + 4]);
@@ -421,32 +422,37 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
-            Growth analysis (v(x) = |x| / p)
+            Growth analysis (v(x) = |x| / p),
+            p = 75 * 2^43 + 1 = 659706976665601 (p50 prime)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 2.8
+            mul_mod growth coefficient: v(d) <= 0.5 + 0.15 * v(a) * v(b)
 
-            d0 = c0                         => v(d0) <  2.8
-            d1 = mul_mod(c1, twd1)          => v(d1) <= 1/2 + 0.15 * 2.8 * 1 = 0.92 < 1
-            d2 = mul_mod(c2, twd2)          => v(d2) <= 0.92 < 1
-            d3 = mul_mod(c3, twd3)          => v(d3) <= 0.92 < 1
+            Twiddle factors: v(twd1), v(twd2), v(twd3), v(zeta_inv) < 1
 
-            d0 = normalize(d0)              => v(d0) < 0.5+
+            Inputs: v(c0), v(c1), v(c2), v(c3) < 2.8
 
-            t0 = d0 + d2                    => v(t0) < 0.5 + 1 = 1.5+
-            t1 = d0 - d2                    => v(t1) < 0.5 + 1 = 1.5+
-            t2 = d1 + d3                    => v(t2) < 1 + 1   = 2.0
-            t3 = d1 - d3                    => v(t3) < 1 + 1   = 2.0
+            d0 = c0                         => v(d0) < 2.8
+            d1 = mul_mod(c1, twd1)          => v(d1) <= 0.5 + 0.15 * 2.8 * 1 = 0.92
+            d2 = mul_mod(c2, twd2)          => v(d2) <= 0.92
+            d3 = mul_mod(c3, twd3)          => v(d3) <= 0.92
 
-            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 1/2 + 0.15 * 2 * 1 = 0.8 < 1
+            d0 = normalize(d0)              => v(d0) <= 0.51
 
-            a0 = t0 + t2                    => v(a0) < 1.5 + 2.0 = 3.5
-            a1 = t1 + t3                    => v(a1) < 1.5 + 0.8 = 2.3
-            a2 = t0 - t2                    => v(a2) < 1.5 + 2.0 = 3.5
-            a3 = t1 - t3                    => v(a3) < 1.5 + 0.8 = 2.3
+            t0 = d0 + d2                    => v(t0) < 0.51 + 0.92 = 1.43
+            t1 = d0 - d2                    => v(t1) < 0.51 + 0.92 = 1.43
+            t2 = d1 + d3                    => v(t2) < 0.92 + 0.92 = 1.84
+            t3 = d1 - d3                    => v(t3) < 0.92 + 0.92 = 1.84
+
+            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 0.5 + 0.15 * 1.84 * 1 = 0.776
+
+            a0 = t0 + t2                    => v(a0) < 1.43 + 1.84  = 3.27
+            a1 = t1 + t3                    => v(a1) < 1.43 + 0.776 = 2.206
+            a2 = t0 - t2                    => v(a2) < 1.43 + 1.84  = 3.27
+            a3 = t1 - t3                    => v(a3) < 1.43 + 0.776 = 2.206
 
             NO NORMALIZATION DONE
 
-            Stored outputs:                 v(output) < 3.5 (worst case)
+            Stored outputs: v(output) < 3.27 (worst case)
         */
 
         __m256d c0 = _mm256_loadu_pd(&op1[j]);
@@ -483,38 +489,48 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 16; j += 4)
     {
         /*
-            Growth analysis (v(x) = |x| / p)
+            Growth analysis (v(x) = |x| / p),
+            p = 75 * 2^43 + 1 = 659706976665601 (p50 prime)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 3.5
+            mul_mod growth coefficient: v(d) <= 0.5 + 0.15 * v(a) * v(b)
 
-            d0 = c0                         => v(d0) < 3.5
-            d1 = mul_mod(c1, twd_1j)        => v(d1) <= 1/2 + 0.15 * 3.5 * 1 = 1.025+ < 1.5
-            d2 = mul_mod(c2, twd_2j)        => v(d2) <  1.5
-            d3 = mul_mod(c3, twd_3j)        => v(d3) <  1.5
+            Inputs: v(c0), v(c1), v(c2), v(c3) < 3.27
 
-            d0 = normalize(d0)              => v(d0) <= 0.5+
+            d0 = c0                         => v(d0) < 3.27
+            d1 = mul_mod(c1, twd_1j)        => v(d1) <= 0.5 + 0.15 * 3.27 * 1
+                                                                = 0.9905 < 1
+            d2 = mul_mod(c2, twd_2j)        => v(d2) < 1
+            d3 = mul_mod(c3, twd_3j)        => v(d3) < 1
 
-            t0 = d0 + d2                    => v(t0) < 0.5 + 1.5 = 2+
-            t1 = d0 - d2                    => v(t1) < 0.5 + 1.5 = 2+
-            t2 = d1 + d3                    => v(t2) < 1.5 + 1.5 = 3
-            t3 = d1 - d3                    => v(t3) < 1.5 + 1.5 = 3
+            d0 = normalize(d0)              => v(d0) <= 0.51
 
-            t2 = normalize(t2)              => v(t2) <= 0.5+
-            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 1/2 + 0.15 * 3 * 1 = 0.95+ < 1
+            t0 = d0 + d2                    => v(t0) < 0.51 + 1 = 1.51
+            t1 = d0 - d2                    => v(t1) < 0.51 + 1 = 1.51
+            t2 = d1 + d3                    => v(t2) < 1 + 1 = 2
+            t3 = d1 - d3                    => v(t3) < 1 + 1 = 2
 
-            a0 = t0 + t2                    => v(a0) < 2 + 0.5 = 2.5+
-            a1 = t1 + t3                    => v(a1) < 2 + 1   = 3+
-            a2 = t0 - t2                    => v(a2) < 2 + 0.5 = 2.5+
-            a3 = t1 - t3                    => v(a3) < 2 + 1   = 3+
+            t2 = normalize(t2)              => v(t2) <= 0.51
 
-            Before normalize:               v(a0) < 2.5+, v(a1) < 3+,
-                                            v(a2) < 2.5+, v(a3) < 3+
+            t3 = mul_mod(t3, zeta_inv)      => v(t3) <= 0.5 + 0.15 * 2 * 1
+                                                                = 0.8
 
-            normalize(a0,a1,a2,a3)          => centered residues
+            a0 = t0 + t2                    => v(a0) < 1.51 + 0.51 = 2.02
+            a1 = t1 + t3                    => v(a1) < 1.51 + 0.8  = 2.31
+            a2 = t0 - t2                    => v(a2) < 1.51 + 0.51 = 2.02
+            a3 = t1 - t3                    => v(a3) < 1.51 + 0.8  = 2.31
 
-            Stored outputs:                 v(output) < 0.5+
+            Before normalization:
+                v(a0) < 2.02
+                v(a1) < 2.31
+                v(a2) < 2.02
+                v(a3) < 2.31
 
-            Loop invariant restored.
+            normalize(a0, a1, a2, a3)      => v(output) <= 0.51
+
+            Stored outputs:
+                v(output) <= 0.51
+
+            Invariant restored.
         */
 
         __m256d c0 = _mm256_loadu_pd(&op1[j]);
