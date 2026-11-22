@@ -90,11 +90,12 @@ normalize_p50_avx_fma(
     return _mm256_fnmadd_pd(q, p, a);
 }
 
+// v(x) < 13.65 always
 #if defined(__GNUC__) || defined(__clang__)
 __attribute((target("avx,fma")))
 #endif
 static void
-fwd_ntt_dif_r4_unroll64(
+fwd_ntt_dif_cdlt64(
     double* op1,
     __m256d vp,
     __m256d vp_inv,
@@ -106,35 +107,34 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 16; j += 4)
     {
         /*
-            Growth analysis (v(x) = |x| / p),  p = 75*2^43 + 1 = 659706976665601 (50-bit prime)
+            Growth analysis (v(x) = |x| / p),  p = 75 * (2 ^ 43) + 1 (50-bit prime)
 
-            mul_mod growth coefficient: v(d) <= 1/2 + 0.15 * v(a) * v(b)
-            (0.15 safely rounds up the exact coefficient 2C = 0.14648437500000028 for this p)
+            mul_mod growth coefficient: v(d) <= 0.5 + 0.15 * v(a) * v(b)
 
             Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1     (worst case, unnormalized input)
-                                                                        <= 0.5+ (best case, freshly normalized)
+
             d0 = c0 + c2                    => v(d0) < 2
             d1 = c0 - c2                    => v(d1) < 2
             d2 = c1 + c3                    => v(d2) < 2
             d3 = c1 - c3                    => v(d3) < 2
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 0.5 + 0.15 * 2 * 1 = 0.8
 
-            d0 = normalize(d0)              => v(d0) <= 0.5+   (exactly 0.5 + 5/(2p) = 0.5000000000000038)
-            d2 = normalize(d2)              => v(d2) <= 0.5+   (same as v(d0) above)
+            d0 = normalize(d0)              => v(d0) <= 0.51
+            d2 = normalize(d2)              => v(d2) <= 0.51
 
-            a0    = d0 + d2                 => v(a0)    <  0.5 + 0.5  = 1+
-            temp1 = d1 + d3                 => v(temp1) <  2   + 0.8  = 2.8
-            temp2 = d0 - d2                 => v(temp2) <  0.5 + 0.5  = 1+
-            temp3 = d1 - d3                 => v(temp3) <  2   + 0.8  = 2.8
+            a0    = d0 + d2                 => v(a0)    <  0.51 + 0.51  = 1.02
+            temp1 = d1 + d3                 => v(temp1) <  2    + 0.8   = 2.8
+            temp2 = d0 - d2                 => v(temp2) <  0.51 + 0.51  = 1.02
+            temp3 = d1 - d3                 => v(temp3) <  2    + 0.8   = 2.8
 
-            a1 = mul_mod(temp1, twiddle)    => v(a1) <= 1/2 + 0.15 * 2.8 * 1 = 0.92+ < 1
-            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 0.15 * 1   * 1 = 0.65+ < 1
-            a3 = mul_mod(temp3, twiddle)    => v(a3) <= 1/2 + 0.15 * 2.8 * 1 = 0.92+ < 1
+            a1 = mul_mod(temp1, twiddle)    => v(a1) <= 1/2 + 0.15 * 2.8  * 1 = 0.92 < 1
+            a2 = mul_mod(temp2, twiddle)    => v(a2) <= 1/2 + 0.15 * 1.02 * 1 = 0.66 < 1
+            a3 = mul_mod(temp3, twiddle)    => v(a3) <= 1/2 + 0.15 * 2.8  * 1 = 0.92 < 1
 
-            NO NORMALIZATION DONE
+            NO NORMALIZATION STEP
 
-            Stored outputs:                 v(output) < 1+
+            Stored outputs:                 v(output) <= 1.02
         */
 
         __m256d twd1 = _mm256_loadu_pd(&twd_tbl[j]);
@@ -180,35 +180,33 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
-            Growth analysis (v(x) = |x| / p),  starting from v_in < 1+
+            Growth analysis (v(x) = |x| / p),  p = 75 * (2 ^ 43) + 1 (50-bit prime)
 
-            mul_mod growth coefficient: v(d) <= 1/2 + 0.15 * v(a) * v(b)
-            (0.15 safely rounds up the exact coefficient 2C = 0.14648437500000028
-            for p = 75*2^43 + 1)
+            mul_mod growth coefficient: v(d) <= 0.5 + 0.15 * v(a) * v(b)
 
-            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1+
+            Inputs:                         v(c0), v(c1), v(c2), v(c3) < 1.02
 
-            d0 = c0 + c2                    => v(d0) < 2+
-            d1 = c0 - c2                    => v(d1) < 2+
-            d2 = c1 + c3                    => v(d2) < 2+
-            d3 = c1 - c3                    => v(d3) < 2+
+            d0 = c0 + c2                    => v(d0) <= 2.04
+            d1 = c0 - c2                    => v(d1) <= 2.04
+            d2 = c1 + c3                    => v(d2) <= 2.04
+            d3 = c1 - c3                    => v(d3) <= 2.04
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8+ < 1
-            d0 = normalize(d0)              => v(d0) < 0.5+
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 0.5 + 0.15 * 2.04 * 1 = 0.81
+            d0 = normalize(d0)              => v(d0) <= 0.51
 
-            a0    = d0 + d2                 => v(a0)    < 0.5 + 2     = 2.5+
-            temp1 = d1 + d3                 => v(temp1) < 2   + 1     = 3+
-            temp2 = d0 - d2                 => v(temp2) < 0.5 + 1     = 2.5+
-            temp3 = d1 - d3                 => v(temp3) < 2   + 1     = 3+
+            a0    = d0 + d2                 => v(a0)    < 0.51 + 2.04 = 2.55
+            temp1 = d1 + d3                 => v(temp1) < 2.04 + 0.81 = 2.85
+            temp2 = d0 - d2                 => v(temp2) < 0.51 + 2.04 = 2.55
+            temp3 = d1 - d3                 => v(temp3) < 2.04 + 0.81 = 2.85
 
-            a0 = normalize(a0)              => v(a0) <  0.5+
-            a1 = mul_mod(temp1, twd1)       => v(a1) <= 1/2 + 0.15 * 3.0 * 1 = 0.95+  < 1
-            a2 = mul_mod(temp2, twd2)       => v(a2) <= 1/2 + 0.15 * 2.5 * 1 = 0.875+ < 1
-            a3 = mul_mod(temp3, twd3)       => v(a3) <= 1/2 + 0.15 * 3.0 * 1 = 0.95+  < 1
+            a0 = normalize(a0)              => v(a0) <= 0.51
+            a1 = mul_mod(temp1, twd1)       => v(a1) <= 0.5 + 0.15 * 2.85 * 1 = 0.93 < 1
+            a2 = mul_mod(temp2, twd2)       => v(a2) <= 0.5 + 0.15 * 2.55 * 1 = 0.89 < 1
+            a3 = mul_mod(temp3, twd3)       => v(a3) <= 0.5 + 0.15 * 2.85 * 1 = 0.93 < 1
 
-            NO NORMALIZATION STEP
+            NO FURTHER NORMALIZATION STEP
 
-            Stored outputs:                 v(output) < 1+
+            Stored outputs:                 v(output) <= 0.93 < 1
         */
 
         __m256d c0 = _mm256_loadu_pd(&op1[j]);
@@ -244,32 +242,32 @@ APAC_UNROLL(4)
     for (apn_size_t j = 0; j < 64; j += 16)
     {
         /*
-            Growth analysis (v(x) = |x| / p),  starting from v_in < 1+
+            Growth analysis (v(x) = |x| / p),  starting from v_in < 1
 
-            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 1+
+            Inputs:                         v(r0), v(r1), v(r2), v(r3) < 1
 
-            Transpose/shuffle stage:        v(x0), v(x1), v(x2), v(x3) < 1+
+            Transpose/shuffle stage:        v(x0), v(x1), v(x2), v(x3) < 1
                                             (pure permutation, bounds unchanged)
 
-            d0 = x0 + x2                    => v(d0) < 2+
-            d1 = x0 - x2                    => v(d1) < 2+
-            d2 = x1 + x3                    => v(d2) < 2+
-            d3 = x1 - x3                    => v(d3) < 2+
+            d0 = x0 + x2                    => v(d0) < 2
+            d1 = x0 - x2                    => v(d1) < 2
+            d2 = x1 + x3                    => v(d2) < 2
+            d3 = x1 - x3                    => v(d3) < 2
 
-            d3 = mul_mod(d3, zeta)          => v(d3) <= 1/2 + 0.15 * 2 * 1 = 0.8 < 1+
-            d0 = normalize(d0)              => v(d0) <  0.5+
+            d3 = mul_mod(d3, zeta)          => v(d3) <= 0.5 + 0.15 * 2 * 1 = 0.8
+            d0 = normalize(d0)              => v(d0) <= 0.51
 
-            a0 = d0 + d2                    => v(a0) < 0.5 + 2  = 2.5+
-            a1 = d1 + d3                    => v(a1) < 2 + 1    = 3+
-            a2 = d0 - d2                    => v(a2) < 0.5 + 2  = 2.5+
-            a3 = d1 - d3                    => v(a3) < 2 + 1    = 3+
+            a0 = d0 + d2                    => v(a0) < 0.51 + 2  = 2.51
+            a1 = d1 + d3                    => v(a1) < 2 + 1    = 3
+            a2 = d0 - d2                    => v(a2) < 0.5 + 2  = 2.51
+            a3 = d1 - d3                    => v(a3) < 2 + 1    = 3
 
             Before normalize:               v(a0) < 2.5+, v(a1) < 3+,
                                             v(a2) < 2.5+, v(a3) < 3+
 
             normalize(a0,a1,a2,a3)          => centered residues
 
-            Stored outputs:                 v(output) < 0.5+
+            Stored outputs:                 v(output) < 0.51
 
             Loop invariant restored.
         */
